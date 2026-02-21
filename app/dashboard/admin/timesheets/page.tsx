@@ -8,7 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Timer, Clock, Users, Search } from "lucide-react";
 import type { Timesheet } from "@/lib/types";
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
+const fetcher = async (url: string) => {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`Failed to fetch: ${r.status}`);
+  const data = await r.json();
+  return Array.isArray(data) ? data : [];
+};
 
 function formatDuration(mins: number) {
   const h = Math.floor(mins / 60);
@@ -32,13 +37,28 @@ interface TutorSummary {
   isActive: boolean;
 }
 
+function fmtDate(d: string) {
+  const dt = new Date(d);
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return `${months[dt.getUTCMonth()]} ${dt.getUTCDate()}, ${dt.getUTCFullYear()}`;
+}
+
+function fmtTime(d: string) {
+  const dt = new Date(d);
+  const h = dt.getUTCHours();
+  const m = dt.getUTCMinutes().toString().padStart(2, "0");
+  const ampm = h >= 12 ? "PM" : "AM";
+  return `${(h % 12) || 12}:${m} ${ampm}`;
+}
+
 export default function AdminTimesheetsPage() {
   const { data: entries, isLoading } = useSWR<Timesheet[]>("/api/admin/timesheets", fetcher, { refreshInterval: 30000 });
   const [search, setSearch] = useState("");
 
   // Aggregate per tutor
+  const safeEntries = Array.isArray(entries) ? entries : [];
   const tutorMap = new Map<string, TutorSummary>();
-  for (const e of entries || []) {
+  for (const e of safeEntries) {
     const tid = e.tutor_id;
     const profile = e.tutors?.profiles;
     const existing = tutorMap.get(tid);
@@ -66,7 +86,7 @@ export default function AdminTimesheetsPage() {
       t.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  const filteredEntries = (entries || []).filter((e) => {
+  const filteredEntries = safeEntries.filter((e) => {
     const name = e.tutors?.profiles?.full_name || "";
     const email = e.tutors?.profiles?.email || "";
     return name.toLowerCase().includes(search.toLowerCase()) || email.toLowerCase().includes(search.toLowerCase());
@@ -213,15 +233,13 @@ export default function AdminTimesheetsPage() {
                       <tr key={entry.id} className="border-b border-border/30">
                         <td className="py-3 pr-4 text-foreground">{profile?.full_name || "Unknown"}</td>
                         <td className="py-3 pr-4 text-foreground">
-                          {new Date(entry.clock_in).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                          {fmtDate(entry.clock_in)}
                         </td>
                         <td className="py-3 pr-4 font-mono text-foreground">
-                          {new Date(entry.clock_in).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                          {fmtTime(entry.clock_in)}
                         </td>
                         <td className="py-3 pr-4 font-mono text-foreground">
-                          {entry.clock_out
-                            ? new Date(entry.clock_out).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
-                            : "--:--"}
+                          {entry.clock_out ? fmtTime(entry.clock_out) : "--:--"}
                         </td>
                         <td className="py-3 pr-4 font-mono text-foreground">{formatDuration(mins)}</td>
                         <td className="py-3">
