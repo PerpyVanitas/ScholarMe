@@ -1,5 +1,5 @@
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
 import type { UserRole } from "@/lib/types";
 import { LearnerDashboard } from "@/components/dashboard/learner-dashboard";
 import { TutorDashboard } from "@/components/dashboard/tutor-dashboard";
@@ -8,6 +8,8 @@ import { AdminDashboard } from "@/components/dashboard/admin-dashboard";
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  const cookieStore = await cookies();
+  const devRole = cookieStore.get("dev_role")?.value as UserRole | undefined;
 
   let profile: any = null;
 
@@ -20,19 +22,27 @@ export default async function DashboardPage() {
     profile = p;
   }
 
+  const isDemoMode = !user;
+
   // Demo profile for development
   if (!profile) {
+    const selectedRole = devRole || "administrator";
+    const demoNames: Record<string, string> = {
+      learner: "Learner Demo",
+      tutor: "Tutor Demo",
+      administrator: "Admin Demo",
+    };
     profile = {
       id: "demo",
-      full_name: "Admin Demo",
-      email: "admin@scholarme.org",
+      full_name: demoNames[selectedRole],
+      email: "demo@scholarme.org",
       avatar_url: null,
       created_at: new Date().toISOString(),
-      roles: { id: "demo-role", name: "administrator" },
+      roles: { id: "demo-role", name: selectedRole },
     };
   }
 
-  const role = (profile.roles?.name || "learner") as UserRole;
+  const role = (isDemoMode && devRole ? devRole : (profile.roles?.name || "learner")) as UserRole;
 
   if (role === "administrator") {
     // Admin stats
@@ -69,16 +79,17 @@ export default async function DashboardPage() {
   }
 
   if (role === "tutor") {
+    const userId = user?.id || "demo";
     const { data: tutor } = await supabase
       .from("tutors")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .single();
 
     const { data: sessions } = await supabase
       .from("sessions")
       .select("*, specializations(*)")
-      .eq("tutor_id", tutor?.id || "")
+      .eq("tutor_id", tutor?.id || "none")
       .in("status", ["pending", "confirmed"])
       .order("scheduled_date", { ascending: true })
       .limit(5);
@@ -86,13 +97,13 @@ export default async function DashboardPage() {
     const { count: completedCount } = await supabase
       .from("sessions")
       .select("*", { count: "exact", head: true })
-      .eq("tutor_id", tutor?.id || "")
+      .eq("tutor_id", tutor?.id || "none")
       .eq("status", "completed");
 
     const { count: upcomingCount } = await supabase
       .from("sessions")
       .select("*", { count: "exact", head: true })
-      .eq("tutor_id", tutor?.id || "")
+      .eq("tutor_id", tutor?.id || "none")
       .in("status", ["pending", "confirmed"]);
 
     return (
@@ -111,10 +122,11 @@ export default async function DashboardPage() {
   }
 
   // Learner
+  const learnerId = user?.id || "demo";
   const { data: sessions } = await supabase
     .from("sessions")
     .select("*, tutors(*, profiles(*)), specializations(*)")
-    .eq("learner_id", user.id)
+    .eq("learner_id", learnerId)
     .in("status", ["pending", "confirmed"])
     .order("scheduled_date", { ascending: true })
     .limit(5);
@@ -122,13 +134,13 @@ export default async function DashboardPage() {
   const { count: completedCount } = await supabase
     .from("sessions")
     .select("*", { count: "exact", head: true })
-    .eq("learner_id", user.id)
+    .eq("learner_id", learnerId)
     .eq("status", "completed");
 
   const { count: totalSessionCount } = await supabase
     .from("sessions")
     .select("*", { count: "exact", head: true })
-    .eq("learner_id", user.id);
+    .eq("learner_id", learnerId);
 
   return (
     <LearnerDashboard
