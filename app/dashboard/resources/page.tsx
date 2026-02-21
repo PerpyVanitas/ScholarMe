@@ -54,6 +54,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Repository, Resource, UserRole } from "@/lib/types";
+import { DEMO_USERS } from "@/lib/demo";
 
 const accessLabels: Record<string, string> = {
   all: "Everyone",
@@ -97,16 +98,29 @@ export default function ResourcesPage() {
     async function load() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      setUserId(user.id);
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("*, roles(*)")
-        .eq("id", user.id)
-        .single();
+      let effectiveUserId = user?.id;
+      let userRole: UserRole = "learner";
 
-      setRole((profile?.roles?.name || "learner") as UserRole);
+      if (effectiveUserId) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("*, roles(*)")
+          .eq("id", effectiveUserId)
+          .single();
+        userRole = (profile?.roles?.name || "learner") as UserRole;
+      } else {
+        // Demo mode
+        const devRoleCookie = document.cookie
+          .split("; ")
+          .find((c) => c.startsWith("dev_role="))
+          ?.split("=")[1];
+        userRole = (devRoleCookie as UserRole) || "learner";
+        effectiveUserId = DEMO_USERS[userRole as keyof typeof DEMO_USERS]?.profileId || DEMO_USERS.learner.profileId;
+      }
+
+      setUserId(effectiveUserId);
+      setRole(userRole);
 
       const { data } = await supabase
         .from("repositories")

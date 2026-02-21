@@ -28,7 +28,8 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Loader2, Save, UserCircle } from "lucide-react";
 import { toast } from "sonner";
-import type { Profile } from "@/lib/types";
+import type { Profile, UserRole } from "@/lib/types";
+import { DEMO_USERS } from "@/lib/demo";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -56,26 +57,34 @@ export default function ProfilePage() {
         }
       }
 
-      // Demo mode fallback
-      const devRole = document.cookie
+      // Demo mode: fetch real seeded profile
+      const devRole = (document.cookie
         .split("; ")
         .find((c) => c.startsWith("dev_role="))
-        ?.split("=")[1] || "administrator";
-      const demoNames: Record<string, string> = {
-        learner: "Learner Demo",
-        tutor: "Tutor Demo",
-        administrator: "Admin Demo",
-      };
-      setProfile({
-        id: "demo",
-        full_name: demoNames[devRole],
-        email: "demo@scholarme.org",
-        avatar_url: null,
-        created_at: new Date().toISOString(),
-        role_id: "demo-role",
-        roles: { id: "demo-role", name: devRole },
-      } as Profile);
-      setFullName(demoNames[devRole]);
+        ?.split("=")[1] || "administrator") as UserRole;
+      const demoInfo = DEMO_USERS[devRole as keyof typeof DEMO_USERS] || DEMO_USERS.administrator;
+
+      const { data: demoProfile } = await supabase
+        .from("profiles")
+        .select("*, roles(*)")
+        .eq("id", demoInfo.profileId)
+        .maybeSingle();
+
+      if (demoProfile) {
+        setProfile(demoProfile);
+        setFullName(demoProfile.full_name || "");
+      } else {
+        setProfile({
+          id: demoInfo.profileId,
+          full_name: demoInfo.fullName,
+          email: demoInfo.email,
+          avatar_url: null,
+          created_at: new Date().toISOString(),
+          role_id: "demo-role",
+          roles: { id: "demo-role", name: devRole },
+        } as Profile);
+        setFullName(demoInfo.fullName);
+      }
       setLoading(false);
     }
     loadProfile();

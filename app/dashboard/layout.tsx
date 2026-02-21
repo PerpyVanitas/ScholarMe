@@ -34,6 +34,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import { DevRoleSwitcher } from "@/components/dev-role-switcher";
 import type { UserRole } from "@/lib/types";
+import { DEMO_USERS, getDemoProfileId } from "@/lib/demo";
 
 export default async function DashboardLayout({
   children,
@@ -75,32 +76,44 @@ export default async function DashboardLayout({
     }
   }
 
-  // Demo profile for bypassing auth during development
-  if (!profile) {
-    profile = {
-      id: "demo",
-      full_name: "Demo User",
-      email: "demo@scholarme.org",
-      avatar_url: null,
-      created_at: new Date().toISOString(),
-      roles: { id: "demo-role", name: "administrator" },
-    };
-  }
-
   // Allow dev role override via cookie (demo mode)
   const isDemoMode = !user;
-  const role = (isDemoMode && devRole ? devRole : (profile.roles?.name || "learner")) as UserRole;
+  const selectedRole = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "administrator")) as UserRole;
 
-  // Override demo profile name based on role
-  if (isDemoMode) {
-    const demoNames: Record<string, string> = {
-      learner: "Learner Demo",
-      tutor: "Tutor Demo",
-      administrator: "Admin Demo",
-    };
-    profile.full_name = demoNames[role] || "Demo User";
-    profile.roles = { id: "demo-role", name: role };
+  // In demo mode, fetch the real seeded profile from the database
+  if (!profile && isDemoMode) {
+    const demoProfileId = getDemoProfileId(selectedRole);
+    const { data: demoProfile } = await supabase
+      .from("profiles")
+      .select("*, roles(*)")
+      .eq("id", demoProfileId)
+      .maybeSingle();
+
+    if (demoProfile) {
+      profile = demoProfile;
+    } else {
+      // Fallback if seed data doesn't exist yet
+      const demoInfo = DEMO_USERS[selectedRole as keyof typeof DEMO_USERS] || DEMO_USERS.administrator;
+      profile = {
+        id: demoInfo.profileId,
+        full_name: demoInfo.fullName,
+        email: demoInfo.email,
+        avatar_url: null,
+        created_at: new Date().toISOString(),
+        roles: { id: "demo-role", name: selectedRole },
+      };
+    }
+
+    // Fetch notification count for the demo user
+    const { count } = await supabase
+      .from("notifications")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", profile.id)
+      .eq("is_read", false);
+    notificationCount = count || 0;
   }
+
+  const role = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "learner")) as UserRole;
 
   return (
     <SidebarProvider>

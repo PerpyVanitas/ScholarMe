@@ -28,6 +28,7 @@
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import type { UserRole } from "@/lib/types";
+import { DEMO_USERS, getDemoProfileId, getDemoTutorId } from "@/lib/demo";
 import { LearnerDashboard } from "@/components/dashboard/learner-dashboard";
 import { TutorDashboard } from "@/components/dashboard/tutor-dashboard";
 import { AdminDashboard } from "@/components/dashboard/admin-dashboard";
@@ -57,26 +58,33 @@ export default async function DashboardPage() {
   }
 
   const isDemoMode = !user;
+  const selectedRole = (isDemoMode && devRole ? devRole : "administrator") as UserRole;
 
-  // Demo profile for development
-  if (!profile) {
-    const selectedRole = devRole || "administrator";
-    const demoNames: Record<string, string> = {
-      learner: "Learner Demo",
-      tutor: "Tutor Demo",
-      administrator: "Admin Demo",
-    };
-    profile = {
-      id: "demo",
-      full_name: demoNames[selectedRole],
-      email: "demo@scholarme.org",
-      avatar_url: null,
-      created_at: new Date().toISOString(),
-      roles: { id: "demo-role", name: selectedRole },
-    };
+  // In demo mode, fetch the real seeded profile
+  if (!profile && isDemoMode) {
+    const demoProfileId = getDemoProfileId(selectedRole);
+    const { data: demoProfile } = await supabase
+      .from("profiles")
+      .select("*, roles(*)")
+      .eq("id", demoProfileId)
+      .maybeSingle();
+
+    if (demoProfile) {
+      profile = demoProfile;
+    } else {
+      const demoInfo = DEMO_USERS[selectedRole as keyof typeof DEMO_USERS] || DEMO_USERS.administrator;
+      profile = {
+        id: demoInfo.profileId,
+        full_name: demoInfo.fullName,
+        email: demoInfo.email,
+        avatar_url: null,
+        created_at: new Date().toISOString(),
+        roles: { id: "demo-role", name: selectedRole },
+      };
+    }
   }
 
-  const role = (isDemoMode && devRole ? devRole : (profile.roles?.name || "learner")) as UserRole;
+  const role = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "learner")) as UserRole;
 
   try {
     if (role === "administrator") {
@@ -114,17 +122,20 @@ export default async function DashboardPage() {
     }
 
     if (role === "tutor") {
-      const userId = user?.id || "demo";
+      const userId = user?.id || getDemoProfileId("tutor");
+      const demoTutorId = getDemoTutorId("tutor");
       const { data: tutor } = await supabase
         .from("tutors")
         .select("*")
         .eq("user_id", userId)
         .maybeSingle();
 
+      const effectiveTutorId = tutor?.id || demoTutorId || "none";
+
       const { data: sessions } = await supabase
         .from("sessions")
         .select("*, specializations(*)")
-        .eq("tutor_id", tutor?.id || "none")
+        .eq("tutor_id", effectiveTutorId)
         .in("status", ["pending", "confirmed"])
         .order("scheduled_date", { ascending: true })
         .limit(5);
@@ -132,13 +143,13 @@ export default async function DashboardPage() {
       const { count: completedCount } = await supabase
         .from("sessions")
         .select("*", { count: "exact", head: true })
-        .eq("tutor_id", tutor?.id || "none")
+        .eq("tutor_id", effectiveTutorId)
         .eq("status", "completed");
 
       const { count: upcomingCount } = await supabase
         .from("sessions")
         .select("*", { count: "exact", head: true })
-        .eq("tutor_id", tutor?.id || "none")
+        .eq("tutor_id", effectiveTutorId)
         .in("status", ["pending", "confirmed"]);
 
       return (
@@ -157,7 +168,7 @@ export default async function DashboardPage() {
     }
 
     // Learner
-    const learnerId = user?.id || "demo";
+    const learnerId = user?.id || getDemoProfileId("learner");
     const { data: sessions } = await supabase
       .from("sessions")
       .select("*, tutors(*, profiles(*)), specializations(*)")

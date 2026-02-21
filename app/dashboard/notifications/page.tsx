@@ -29,6 +29,8 @@ import { Badge } from "@/components/ui/badge";
 import { Bell, Calendar, BookOpen, Settings, CheckCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Notification } from "@/lib/types";
+import { DEMO_USERS } from "@/lib/demo";
+import type { UserRole } from "@/lib/types";
 
 const typeIcons: Record<string, React.ReactNode> = {
   session: <Calendar className="h-4 w-4" />,
@@ -49,9 +51,23 @@ export default function NotificationsPage() {
   useEffect(() => {
     async function load() {
       const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      let userId = user?.id;
+      if (!userId) {
+        // Demo mode: read role from cookie and use seeded user ID
+        const devRoleCookie = document.cookie
+          .split("; ")
+          .find((c) => c.startsWith("dev_role="))
+          ?.split("=")[1];
+        const demoRole = (devRoleCookie as UserRole) || "administrator";
+        userId = DEMO_USERS[demoRole as keyof typeof DEMO_USERS]?.profileId || DEMO_USERS.administrator.profileId;
+      }
+
       const { data } = await supabase
         .from("notifications")
         .select("*")
+        .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(50);
       setNotifications(data || []);

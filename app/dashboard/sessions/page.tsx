@@ -53,6 +53,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Session, UserRole } from "@/lib/types";
+import { DEMO_USERS } from "@/lib/demo";
 
 const statusColors: Record<string, string> = {
   pending: "bg-warning/10 text-warning-foreground border-warning/30",
@@ -74,34 +75,50 @@ export default function SessionsPage() {
     async function load() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("*, roles(*)")
-        .eq("id", user.id)
-        .single();
+      // Determine user ID and role - support demo mode
+      let userId = user?.id;
+      let userRole: UserRole = "learner";
 
-      const userRole = (profile?.roles?.name || "learner") as UserRole;
+      if (userId) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("*, roles(*)")
+          .eq("id", userId)
+          .single();
+        userRole = (profile?.roles?.name || "learner") as UserRole;
+      } else {
+        // Demo mode: read role from cookie and use seeded user IDs
+        const devRoleCookie = document.cookie
+          .split("; ")
+          .find((c) => c.startsWith("dev_role="))
+          ?.split("=")[1];
+        userRole = (devRoleCookie as UserRole) || "learner";
+        userId = DEMO_USERS[userRole as keyof typeof DEMO_USERS]?.profileId || DEMO_USERS.learner.profileId;
+      }
+
       setRole(userRole);
 
       let query;
       if (userRole === "tutor") {
+        // For tutor, find their tutor record first
         const { data: tutor } = await supabase
           .from("tutors")
           .select("id")
-          .eq("user_id", user.id)
-          .single();
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        const tutorId = tutor?.id || (userRole === "tutor" ? DEMO_USERS.tutor.tutorId : "");
         query = supabase
           .from("sessions")
           .select("*, specializations(*), session_ratings(*)")
-          .eq("tutor_id", tutor?.id || "")
+          .eq("tutor_id", tutorId)
           .order("scheduled_date", { ascending: false });
       } else {
         query = supabase
           .from("sessions")
           .select("*, tutors(*, profiles(*)), specializations(*), session_ratings(*)")
-          .eq("learner_id", user.id)
+          .eq("learner_id", userId)
           .order("scheduled_date", { ascending: false });
       }
 

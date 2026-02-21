@@ -39,6 +39,7 @@ import { Clock, Plus, Trash2, Loader2, Save, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import type { TutorAvailability, Tutor } from "@/lib/types";
 import { DAYS_OF_WEEK } from "@/lib/types";
+import { DEMO_USERS } from "@/lib/demo";
 
 export default function AvailabilityPage() {
   const [tutor, setTutor] = useState<Tutor | null>(null);
@@ -56,13 +57,15 @@ export default function AvailabilityPage() {
     async function load() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+
+      // Support demo mode - use seeded tutor profile ID
+      const userId = user?.id || DEMO_USERS.tutor.profileId;
 
       const { data: tutorData } = await supabase
         .from("tutors")
         .select("*")
-        .eq("user_id", user.id)
-        .single();
+        .eq("user_id", userId)
+        .maybeSingle();
 
       if (tutorData) {
         setTutor(tutorData);
