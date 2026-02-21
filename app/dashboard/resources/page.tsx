@@ -1,3 +1,28 @@
+/**
+ * ==========================================================================
+ * RESOURCES PAGE - Study Material Repository Browser
+ * ==========================================================================
+ *
+ * PURPOSE: Shows a list of resource repositories (like folders). Each repository
+ * contains links to study materials (PDFs, videos, web links, etc.).
+ *
+ * FEATURES:
+ * - Browse repositories with access level badges (Everyone/Tutors/Admins)
+ * - Click a repository to expand and see its resources
+ * - Tutors and admins can create new repositories
+ * - Repository owners and admins can add resources to repositories
+ *
+ * ACCESS CONTROL:
+ * - Learners: Can view "all" repositories and their resources
+ * - Tutors: Can view "all" + "tutor" repos, can create repos and add resources
+ * - Admins: Can view everything, create repos, add resources to any repo
+ *
+ * NOTE: Access control is currently UI-level only. For production, add
+ * Supabase RLS policies to enforce at the database level.
+ *
+ * ROUTE: /dashboard/resources
+ * ==========================================================================
+ */
 "use client";
 
 import { useState, useEffect } from "react";

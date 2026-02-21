@@ -1,3 +1,25 @@
+/**
+ * ==========================================================================
+ * TUTOR DETAIL PAGE - View Profile & Book Session
+ * ==========================================================================
+ *
+ * PURPOSE: Shows a single tutor's full profile including:
+ * - Name, avatar, rating, specializations
+ * - Bio text
+ * - Weekly availability schedule (grouped by day)
+ * - "Book Session" button that opens a booking dialog
+ *
+ * BOOKING FLOW:
+ * 1. Learner clicks "Book Session"
+ * 2. Dialog opens with date, time, subject, and notes fields
+ * 3. On submit, POST /api/sessions creates the session with status "pending"
+ * 4. Redirects to /dashboard/sessions where the new booking appears
+ *
+ * DYNAMIC ROUTE: /dashboard/tutors/[id]
+ * The `[id]` is the tutor's UUID (from the tutors table, NOT profiles.id).
+ * Next.js 16: params is a Promise, so we use React's `use()` to unwrap it.
+ * ==========================================================================
+ */
 "use client";
 
 import { useState, useEffect, use } from "react";

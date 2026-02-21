@@ -1,3 +1,9 @@
+/**
+ * SIGN-UP SUCCESS PAGE - Shown after successful registration.
+ * Tells the user to check their email for a confirmation link.
+ * This is a Server Component (no "use client") since it's purely static.
+ * ROUTE: /auth/sign-up-success
+ */
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { GraduationCap, Mail } from "lucide-react";

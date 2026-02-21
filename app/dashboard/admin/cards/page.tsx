@@ -1,3 +1,30 @@
+/**
+ * ==========================================================================
+ * ADMIN: CARD MANAGEMENT PAGE
+ * ==========================================================================
+ *
+ * PURPOSE: Allows administrators to issue and manage authentication cards.
+ * Cards are an alternative login method where users enter a Card ID + PIN
+ * instead of email/password.
+ *
+ * FEATURES:
+ * - Table/card list of all issued cards with card ID, user, status, date
+ * - "Issue Card" dialog to create a new card for a specific user
+ * - Activate/Revoke toggle to enable or disable cards
+ *
+ * ISSUE CARD FLOW:
+ * 1. Admin selects a user, enters a card ID and PIN
+ * 2. POST /api/admin/cards inserts into auth_cards table
+ * 3. The user can now login with that card ID + PIN
+ *
+ * REVOKE FLOW:
+ * 1. Admin clicks "Revoke" on an active card
+ * 2. PUT /api/admin/cards updates status to "revoked"
+ * 3. The card can no longer be used for login (card-login API checks status)
+ *
+ * ROUTE: /dashboard/admin/cards
+ * ==========================================================================
+ */
 "use client";
 
 import { useState, useEffect } from "react";

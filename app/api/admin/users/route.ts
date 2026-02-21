@@ -1,3 +1,22 @@
+/**
+ * ==========================================================================
+ * API: ADMIN USER CREATION - POST /api/admin/users
+ * ==========================================================================
+ *
+ * PURPOSE: Creates a new user account. Admin-only endpoint.
+ *
+ * FLOW:
+ * 1. Verify the requester is an administrator (checks their profile's role)
+ * 2. Look up the role ID for the requested role name
+ * 3. Create the user via Supabase Admin API (createUser) - this bypasses
+ *    email confirmation and creates the user immediately
+ * 4. The database trigger auto-creates a profile with the role_id
+ * 5. If role is "tutor", also create a tutors record
+ *
+ * USES ADMIN CLIENT: Supabase's admin API (auth.admin.createUser) requires
+ * the SERVICE_ROLE_KEY. This is why we create a separate admin client here.
+ * ==========================================================================
+ */
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";

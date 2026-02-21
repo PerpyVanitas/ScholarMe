@@ -1,3 +1,21 @@
+/**
+ * ==========================================================================
+ * PROFILE PAGE - View and Edit User Profile
+ * ==========================================================================
+ *
+ * PURPOSE: Shows the current user's profile with their avatar, name, email,
+ * role badge, and member-since date. The user can edit their full name.
+ *
+ * DEMO MODE: If no authenticated user is found, it creates a fake demo profile
+ * based on the "dev_role" cookie. This allows the profile page to render
+ * properly when using the DevRoleSwitcher.
+ *
+ * NOTE: Email and role cannot be changed by the user -- email changes require
+ * admin action, and roles are set by administrators.
+ *
+ * ROUTE: /dashboard/profile
+ * ==========================================================================
+ */
 "use client";
 
 import { useState, useEffect } from "react";

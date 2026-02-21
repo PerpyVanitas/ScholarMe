@@ -1,3 +1,29 @@
+/**
+ * ==========================================================================
+ * AVAILABILITY PAGE - Tutor Schedule Management
+ * ==========================================================================
+ *
+ * PURPOSE: Allows tutors to manage their weekly availability and bio.
+ * Only accessible to users with the "tutor" role.
+ *
+ * SECTIONS:
+ * 1. BIO EDITOR: Edit the tutor's self-description (saved to tutors.bio)
+ * 2. ADD SLOT: Form to add a new availability slot (day + start/end time)
+ * 3. WEEKLY SCHEDULE: Shows all current slots grouped by day, with delete buttons
+ *
+ * DATA OPERATIONS:
+ * - Slots are stored in the tutor_availability table
+ * - Adding a slot: INSERT into tutor_availability (real-time, no page reload)
+ * - Removing a slot: DELETE from tutor_availability
+ * - Saving bio: UPDATE tutors.bio
+ *
+ * IMPORTANT: If a user with tutor role doesn't have a tutors record,
+ * a "Tutor Profile Not Found" error state is shown. The admin needs to
+ * create the tutor record (happens automatically when admin creates a tutor user).
+ *
+ * ROUTE: /dashboard/availability
+ * ==========================================================================
+ */
 "use client";
 
 import { useState, useEffect } from "react";

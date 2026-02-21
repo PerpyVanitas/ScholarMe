@@ -1,3 +1,30 @@
+/**
+ * ==========================================================================
+ * DASHBOARD PAGE - Role-Based Home Screen
+ * ==========================================================================
+ *
+ * PURPOSE: The main /dashboard page. Shows a DIFFERENT dashboard component
+ * depending on the user's role:
+ * - "administrator" -> AdminDashboard (stats, recent sessions, admin tools)
+ * - "tutor" -> TutorDashboard (upcoming sessions, stats, quick actions)
+ * - "learner" -> LearnerDashboard (sessions, stats, find tutor shortcut)
+ *
+ * HOW IT WORKS:
+ * 1. Determines the user's role (same logic as layout.tsx)
+ * 2. Fetches role-specific data from Supabase (stats, sessions, etc.)
+ * 3. Renders the appropriate dashboard component with that data
+ *
+ * IMPORTANT: This page duplicates the role-detection logic from layout.tsx
+ * because Next.js layouts can't pass data to page children. Each server
+ * component independently determines the role.
+ *
+ * This is a SERVER Component -- all data fetching happens on the server.
+ * The dashboard components themselves are Server Components too (no "use client"),
+ * which means they render on the server and send HTML to the browser.
+ *
+ * ROUTE: /dashboard
+ * ==========================================================================
+ */
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import type { UserRole } from "@/lib/types";

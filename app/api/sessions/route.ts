@@ -1,3 +1,18 @@
+/**
+ * ==========================================================================
+ * API: CREATE SESSION - POST /api/sessions
+ * ==========================================================================
+ *
+ * PURPOSE: Creates a new tutoring session (booking). Called when a learner
+ * books a session from the tutor detail page.
+ *
+ * Body: { tutor_id, scheduled_date, start_time, end_time, specialization_id?, notes? }
+ * Returns: The created session record with status "pending"
+ *
+ * AUTH: Requires an authenticated user (the learner). The learner_id is
+ * automatically set to the current user's ID.
+ * ==========================================================================
+ */
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 

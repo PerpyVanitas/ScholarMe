@@ -1,3 +1,9 @@
+/**
+ * AUTH ERROR PAGE - Shown when authentication fails.
+ * Common causes: expired confirmation link, invalid OAuth callback, etc.
+ * Supabase redirects here automatically on auth errors.
+ * ROUTE: /auth/error
+ */
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { GraduationCap, AlertTriangle } from "lucide-react";

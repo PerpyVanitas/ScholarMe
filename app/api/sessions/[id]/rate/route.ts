@@ -1,3 +1,22 @@
+/**
+ * ==========================================================================
+ * API: RATE SESSION - POST /api/sessions/[id]/rate
+ * ==========================================================================
+ *
+ * PURPOSE: Allows a learner to rate a completed session (1-5 stars + optional feedback).
+ *
+ * Body: { rating: 1-5, feedback?: string }
+ * Returns: { success: true }
+ *
+ * SIDE EFFECT: After inserting the rating, it recalculates the tutor's
+ * average rating using the formula:
+ *   newAvg = (oldAvg * oldCount + newRating) / (oldCount + 1)
+ * This updates both `rating` and `total_ratings` on the tutors table.
+ *
+ * A learner can only rate a session ONCE (enforced by the UI, but should
+ * also add a unique constraint in the database for production).
+ * ==========================================================================
+ */
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 

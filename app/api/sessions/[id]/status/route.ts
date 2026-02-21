@@ -1,3 +1,18 @@
+/**
+ * ==========================================================================
+ * API: UPDATE SESSION STATUS - PUT /api/sessions/[id]/status
+ * ==========================================================================
+ *
+ * PURPOSE: Changes a session's status. Used by:
+ * - Tutors: "confirmed" (accept booking), "completed" (mark done), "cancelled" (decline)
+ * - Learners: "cancelled" (cancel their booking)
+ *
+ * Body: { status: "confirmed" | "completed" | "cancelled" }
+ * Returns: The updated session record
+ *
+ * IMPORTANT: The `params` object is a Promise in Next.js 16 and must be awaited.
+ * ==========================================================================
+ */
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 

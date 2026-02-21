@@ -1,3 +1,26 @@
+/**
+ * ==========================================================================
+ * SIGN-UP PAGE - New Account Registration
+ * ==========================================================================
+ *
+ * PURPOSE: Allows new users to create a ScholarMe account.
+ * Collects full name, email, and password, then calls the signUp server action.
+ *
+ * FLOW:
+ * 1. User fills in the form and clicks "Create Account"
+ * 2. The signUp server action (app/auth/actions.ts) is called
+ * 3. Supabase creates the user and sends a confirmation email
+ * 4. User is redirected to /auth/sign-up-success page
+ * 5. User clicks the link in their email to verify their account
+ * 6. After verification, a database trigger creates their profile
+ *
+ * NOTE: New users are assigned the "learner" role by default via the
+ * database trigger. Only admins can create tutor or admin accounts
+ * (via /dashboard/admin/users).
+ *
+ * ROUTE: /auth/sign-up
+ * ==========================================================================
+ */
 "use client";
 
 import { useState } from "react";

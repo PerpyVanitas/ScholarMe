@@ -1,3 +1,30 @@
+/**
+ * ==========================================================================
+ * SESSIONS PAGE - View and Manage Tutoring Sessions
+ * ==========================================================================
+ *
+ * PURPOSE: Shared page used by BOTH learners and tutors (role detected at runtime).
+ * Shows sessions in two tabs: "Upcoming" (pending/confirmed) and "Past" (completed/cancelled).
+ *
+ * ROLE-SPECIFIC BEHAVIOR:
+ * - LEARNER: Sees their booked sessions with tutor names. Can cancel pending sessions
+ *   and rate completed sessions.
+ * - TUTOR: Sees sessions assigned to them. Can confirm/decline pending sessions
+ *   and mark confirmed sessions as completed.
+ *
+ * SESSION LIFECYCLE (managed via PUT /api/sessions/[id]/status):
+ *   pending -> confirmed (tutor accepts) -> completed (tutor marks done)
+ *   pending -> cancelled (either party cancels)
+ *   confirmed -> cancelled (either party cancels)
+ *
+ * RATING FLOW (via POST /api/sessions/[id]/rate):
+ *   After a session is "completed", the learner sees a "Rate" button.
+ *   Opens a dialog with 1-5 stars and optional feedback.
+ *   The API updates the tutor's average rating.
+ *
+ * ROUTE: /dashboard/sessions
+ * ==========================================================================
+ */
 "use client";
 
 import { useState, useEffect } from "react";

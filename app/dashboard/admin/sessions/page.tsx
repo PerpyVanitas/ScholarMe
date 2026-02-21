@@ -1,3 +1,23 @@
+/**
+ * ==========================================================================
+ * ADMIN: ALL SESSIONS PAGE
+ * ==========================================================================
+ *
+ * PURPOSE: Gives administrators a bird's-eye view of ALL tutoring sessions
+ * across the entire organization. Unlike the regular sessions page which
+ * shows only sessions for the logged-in user, this shows everything.
+ *
+ * FEATURES:
+ * - Table of all sessions with tutor name, date, time, subject, status, rating
+ * - Filter by status (pending/confirmed/completed/cancelled)
+ * - Read-only view (admins observe but don't modify sessions here)
+ *
+ * NOTE: Limited to the most recent 100 sessions for performance.
+ * For production, add pagination.
+ *
+ * ROUTE: /dashboard/admin/sessions
+ * ==========================================================================
+ */
 "use client";
 
 import { useState, useEffect } from "react";
