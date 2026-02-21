@@ -34,18 +34,27 @@ import { AdminDashboard } from "@/components/dashboard/admin-dashboard";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch (e) {
+    console.log("[v0] Dashboard page auth.getUser error:", e);
+  }
   const cookieStore = await cookies();
   const devRole = cookieStore.get("dev_role")?.value as UserRole | undefined;
 
   let profile: any = null;
 
   if (user) {
-    const { data: p } = await supabase
+    const { data: p, error: profileError } = await supabase
       .from("profiles")
       .select("*, roles(*)")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
+    if (profileError) {
+      console.log("[v0] Dashboard page profile query error:", profileError.message);
+    }
     profile = p;
   }
 
