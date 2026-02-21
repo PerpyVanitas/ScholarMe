@@ -1,10 +1,29 @@
+/**
+ * ==========================================================================
+ * API: ADD RESOURCE TO REPOSITORY - POST /api/repositories/[id]/resources
+ * ==========================================================================
+ *
+ * PURPOSE: Adds a new resource (study material link) to a specific repository.
+ * Called from the Resources page when a tutor/admin adds a resource.
+ *
+ * Body: { title, description?, url, file_type?: "pdf"|"doc"|"video"|"link"|"other" }
+ * Returns: The created resource record
+ *
+ * The [id] param is the repository's UUID. The resource is linked to this repo
+ * via the repository_id foreign key.
+ *
+ * AUTH: Requires authenticated user. uploaded_by is set to current user's ID.
+ * ==========================================================================
+ */
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
+/** Add a resource to a specific repository */
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Next.js 16: params is a Promise and must be awaited
   const { id } = await params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

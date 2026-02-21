@@ -1,3 +1,27 @@
+/**
+ * ==========================================================================
+ * LEARNER DASHBOARD COMPONENT
+ * ==========================================================================
+ *
+ * PURPOSE: The main dashboard view shown to users with the "learner" role.
+ * Rendered by /app/dashboard/page.tsx when role === "learner".
+ *
+ * SECTIONS:
+ * 1. GREETING: Personalized welcome message with the learner's name
+ * 2. STAT CARDS (3): Total Sessions, Completed, Upcoming
+ * 3. UPCOMING SESSIONS: List of next 5 pending/confirmed sessions with
+ *    tutor name, date, time, subject badge, and status badge
+ * 4. QUICK ACTIONS: Shortcut buttons to Find a Tutor, My Sessions, Resources
+ *
+ * This is a SERVER Component (no "use client") -- it receives all data as
+ * props from the parent page.tsx, which fetches from Supabase on the server.
+ *
+ * PROPS (passed from dashboard/page.tsx):
+ * - profile: The learner's profile (name, email, etc.)
+ * - upcomingSessions: Array of upcoming Session objects (with tutor + subject JOINs)
+ * - stats: { totalSessions, completedSessions, upcomingSessions } counts
+ * ==========================================================================
+ */
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +39,10 @@ interface LearnerDashboardProps {
   };
 }
 
+/**
+ * Color mapping for session status badges.
+ * Each status gets a distinct background + text color using design tokens.
+ */
 const statusColors: Record<string, string> = {
   pending: "bg-warning/10 text-warning-foreground border-warning/30",
   confirmed: "bg-primary/10 text-primary border-primary/30",
@@ -159,6 +187,10 @@ export function LearnerDashboard({ profile, upcomingSessions, stats }: LearnerDa
   );
 }
 
+/**
+ * StatCard - Reusable metric card with icon, label, and number.
+ * Used by the learner dashboard to show session counts.
+ */
 function StatCard({
   icon,
   label,

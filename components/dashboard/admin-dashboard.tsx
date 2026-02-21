@@ -1,3 +1,27 @@
+/**
+ * ==========================================================================
+ * ADMIN DASHBOARD COMPONENT
+ * ==========================================================================
+ *
+ * PURPOSE: The main dashboard view shown to users with the "administrator" role.
+ * Rendered by /app/dashboard/page.tsx when role === "administrator".
+ *
+ * SECTIONS:
+ * 1. HEADER: "Admin Dashboard" title with org overview subtitle
+ * 2. STAT CARDS (4): Total Users, Active Tutors, Total Sessions, Pending Sessions
+ * 3. RECENT SESSIONS: Last 5 sessions across the entire organization
+ *    (unlike learner/tutor dashboards which show only their own sessions)
+ * 4. ADMIN TOOLS: Quick links to User Management, Card Management, Analytics
+ *
+ * The stats are calculated in the parent page.tsx using Supabase count queries.
+ * This component just receives and renders the data.
+ *
+ * PROPS:
+ * - profile: Admin's user profile
+ * - stats: { totalUsers, totalSessions, activeTutors, pendingSessions }
+ * - recentSessions: Last 5 sessions system-wide (with tutor name JOINs)
+ * ==========================================================================
+ */
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,14 +32,15 @@ import type { Profile, Session } from "@/lib/types";
 interface AdminDashboardProps {
   profile: Profile;
   stats: {
-    totalUsers: number;
-    totalSessions: number;
-    activeTutors: number;
-    pendingSessions: number;
+    totalUsers: number;      // Count of all profiles
+    totalSessions: number;   // Count of all sessions
+    activeTutors: number;    // Count of tutors table records
+    pendingSessions: number; // Count of sessions with status "pending"
   };
-  recentSessions: Session[];
+  recentSessions: Session[]; // Last 5 sessions across the whole org
 }
 
+/** Color mapping for session status badges */
 const statusColors: Record<string, string> = {
   pending: "bg-warning/10 text-warning-foreground border-warning/30",
   confirmed: "bg-primary/10 text-primary border-primary/30",

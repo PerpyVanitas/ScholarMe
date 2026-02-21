@@ -1,6 +1,26 @@
+/**
+ * ==========================================================================
+ * API: REPOSITORIES - GET & POST /api/repositories
+ * ==========================================================================
+ *
+ * GET /api/repositories
+ *   Returns all repositories with owner name and resource count.
+ *   Used by the Resources page to display the repo list.
+ *
+ * POST /api/repositories
+ *   Creates a new repository. Requires authenticated user.
+ *   Body: { title, description?, access_role: "all" | "tutor" | "admin" }
+ *   Returns: The created repository record
+ *
+ * NOTE: GET does not filter by access_role -- all repos are returned.
+ *   The Resources page filters client-side based on the user's role.
+ *   For production, add RLS policies to enforce server-side filtering.
+ * ==========================================================================
+ */
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
+/** Fetch all repositories with owner name and resource count */
 export async function GET() {
   const supabase = await createClient();
   const { data: repos, error } = await supabase

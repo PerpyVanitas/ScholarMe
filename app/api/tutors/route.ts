@@ -1,3 +1,26 @@
+/**
+ * ==========================================================================
+ * API: LIST TUTORS - GET /api/tutors
+ * ==========================================================================
+ *
+ * PURPOSE: Returns all tutors with their profiles and specializations.
+ * Used by the Tutors browse page (/dashboard/tutors).
+ *
+ * QUERY PARAMS (optional):
+ * - search: Filter by tutor name or bio text (case-insensitive)
+ * - specialization: Filter by specialization name (exact match)
+ *
+ * RESPONSE: Array of tutor objects, each including:
+ * - profiles: { full_name, email, avatar_url }
+ * - tutor_specializations: [{ specializations: { name } }]
+ *
+ * Sorted by rating (highest first) so top-rated tutors appear first.
+ *
+ * NOTE: Filtering is done server-side in JavaScript (not SQL) because
+ * Supabase doesn't support .ilike() on joined tables easily. For large
+ * datasets, consider using Supabase full-text search or PostgreSQL functions.
+ * ==========================================================================
+ */
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -7,7 +30,10 @@ export async function GET(request: Request) {
   const search = searchParams.get("search") || "";
   const specialization = searchParams.get("specialization") || "";
 
-  let query = supabase
+  // Fetch all tutors with their profile info and specializations (nested JOIN)
+  // tutors -> profiles (user info)
+  // tutors -> tutor_specializations -> specializations (subjects they teach)
+  const query = supabase
     .from("tutors")
     .select("*, profiles(*), tutor_specializations(specializations(*))")
     .order("rating", { ascending: false });
@@ -20,6 +46,7 @@ export async function GET(request: Request) {
 
   let filtered = tutors || [];
 
+  // Client-side search filter: match against tutor name or bio
   if (search) {
     const lower = search.toLowerCase();
     filtered = filtered.filter(
@@ -29,6 +56,7 @@ export async function GET(request: Request) {
     );
   }
 
+  // Client-side specialization filter: check if tutor teaches this subject
   if (specialization) {
     filtered = filtered.filter((t) =>
       t.tutor_specializations?.some(

@@ -1,3 +1,26 @@
+/**
+ * ==========================================================================
+ * LANDING PAGE - Public Home Page (/)
+ * ==========================================================================
+ *
+ * PURPOSE: The public-facing landing page shown to unauthenticated visitors.
+ * If the user is already logged in, they're immediately redirected to /dashboard.
+ *
+ * SECTIONS:
+ * 1. HEADER: Logo + "Sign In" button
+ * 2. HERO: Large heading, description, and CTA buttons (Get Started / Sign In)
+ * 3. FEATURE CARDS: Three cards highlighting key features:
+ *    - Expert Tutors (browse profiles)
+ *    - Easy Scheduling (book sessions)
+ *    - Resource Library (access study materials)
+ * 4. FOOTER: Simple copyright text
+ *
+ * This is a SERVER Component that checks auth status on the server.
+ * No "use client" needed since there's no interactivity.
+ *
+ * ROUTE: / (root)
+ * ==========================================================================
+ */
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -5,9 +28,11 @@ import { Button } from "@/components/ui/button";
 import { GraduationCap, BookOpen, Users, Calendar } from "lucide-react";
 
 export default async function HomePage() {
+  // Check if user is already logged in
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
+  // If logged in, skip the landing page and go straight to dashboard
   if (user) {
     redirect("/dashboard");
   }
@@ -73,6 +98,7 @@ export default async function HomePage() {
   );
 }
 
+/** Reusable feature card for the landing page's feature grid */
 function FeatureCard({
   icon,
   title,

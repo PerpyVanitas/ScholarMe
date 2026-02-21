@@ -1,3 +1,28 @@
+/**
+ * ==========================================================================
+ * TUTOR DASHBOARD COMPONENT
+ * ==========================================================================
+ *
+ * PURPOSE: The main dashboard view shown to users with the "tutor" role.
+ * Rendered by /app/dashboard/page.tsx when role === "tutor".
+ *
+ * SECTIONS:
+ * 1. GREETING: Personalized welcome with tutor's name
+ * 2. STAT CARDS (4): Upcoming, Completed, Avg Rating, Total Reviews
+ * 3. UPCOMING SESSIONS: Next 5 sessions that need attention (pending/confirmed)
+ * 4. QUICK ACTIONS: Manage Availability, View Sessions, My Repositories
+ *
+ * SPECIAL CASE: If tutor is null (no tutors table record exists for this user),
+ * shows an error state asking them to contact their admin. This can happen if
+ * a user's role was changed to "tutor" but no tutors record was created.
+ *
+ * PROPS:
+ * - profile: Tutor's user profile
+ * - tutor: Tutor-specific data (bio, rating) -- can be null
+ * - upcomingSessions: Next 5 pending/confirmed sessions
+ * - stats: { completedSessions, upcomingSessions, rating, totalRatings }
+ * ==========================================================================
+ */
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,16 +32,17 @@ import type { Profile, Session, Tutor } from "@/lib/types";
 
 interface TutorDashboardProps {
   profile: Profile;
-  tutor: Tutor | null;
+  tutor: Tutor | null;      // null if tutors record hasn't been created yet
   upcomingSessions: Session[];
   stats: {
     completedSessions: number;
     upcomingSessions: number;
-    rating: number;
-    totalRatings: number;
+    rating: number;          // 0-5 average rating from learner reviews
+    totalRatings: number;    // Number of reviews received
   };
 }
 
+/** Color mapping for session status badges (same pattern used across all dashboards) */
 const statusColors: Record<string, string> = {
   pending: "bg-warning/10 text-warning-foreground border-warning/30",
   confirmed: "bg-primary/10 text-primary border-primary/30",
