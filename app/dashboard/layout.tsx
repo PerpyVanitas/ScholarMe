@@ -1,4 +1,4 @@
-// cache-bust-v2
+// cache-bust-v3
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/create-client";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
