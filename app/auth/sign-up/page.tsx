@@ -9,13 +9,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, Loader2 } from "lucide-react";
+import { GraduationCap, Loader2, BookOpen, Users } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export default function SignUpPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selectedRole, setSelectedRole] = useState<"learner" | "tutor">("learner");
 
   async function handleSignUp(formData: FormData) {
     setLoading(true);
@@ -59,6 +61,42 @@ export default function SignUpPage() {
           </CardHeader>
           <CardContent>
             <form action={handleSignUp} className="flex flex-col gap-4">
+              <input type="hidden" name="role" value={selectedRole} />
+
+              <div className="flex flex-col gap-2">
+                <Label>I want to join as</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedRole("learner")}
+                    className={cn(
+                      "flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all",
+                      selectedRole === "learner"
+                        ? "border-primary bg-primary/5 shadow-sm"
+                        : "border-border hover:border-primary/40"
+                    )}
+                  >
+                    <BookOpen className={cn("h-6 w-6", selectedRole === "learner" ? "text-primary" : "text-muted-foreground")} />
+                    <span className={cn("text-sm font-medium", selectedRole === "learner" ? "text-primary" : "text-foreground")}>Learner</span>
+                    <span className="text-[11px] leading-tight text-muted-foreground text-center">Browse tutors and book sessions</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedRole("tutor")}
+                    className={cn(
+                      "flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all",
+                      selectedRole === "tutor"
+                        ? "border-primary bg-primary/5 shadow-sm"
+                        : "border-border hover:border-primary/40"
+                    )}
+                  >
+                    <Users className={cn("h-6 w-6", selectedRole === "tutor" ? "text-primary" : "text-muted-foreground")} />
+                    <span className={cn("text-sm font-medium", selectedRole === "tutor" ? "text-primary" : "text-foreground")}>Tutor</span>
+                    <span className="text-[11px] leading-tight text-muted-foreground text-center">Teach others and share resources</span>
+                  </button>
+                </div>
+              </div>
+
               <div className="flex flex-col gap-2">
                 <Label htmlFor="full_name">Full Name</Label>
                 <Input

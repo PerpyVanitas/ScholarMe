@@ -16,6 +16,15 @@ export async function loginWithEmail(formData: FormData) {
 
 export async function signUp(formData: FormData) {
   const supabase = await createClient()
+  const selectedRole = (formData.get("role") as string) || "learner"
+
+  // Look up the role_id for the chosen role
+  const { data: roleRow } = await supabase
+    .from("roles")
+    .select("id")
+    .eq("name", selectedRole)
+    .single()
+
   const { error } = await supabase.auth.signUp({
     email: formData.get("email") as string,
     password: formData.get("password") as string,
@@ -23,7 +32,11 @@ export async function signUp(formData: FormData) {
       emailRedirectTo:
         process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
         `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/dashboard`,
-      data: { full_name: formData.get("full_name") as string },
+      data: {
+        full_name: formData.get("full_name") as string,
+        role_id: roleRow?.id,
+        role_name: selectedRole,
+      },
     },
   })
   if (error) return { error: error.message }

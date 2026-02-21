@@ -63,6 +63,7 @@ function getNavItems(role: UserRole) {
   ];
 
   const tutorItems = [
+    { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
     { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
     { title: "Availability", href: "/dashboard/availability", icon: Clock },
     { title: "My Repositories", href: "/dashboard/resources", icon: FolderOpen },
