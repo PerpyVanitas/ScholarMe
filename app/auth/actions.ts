@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+// redirect is used in signOut only
 
 export async function loginWithEmail(formData: FormData) {
   const supabase = await createClient();
@@ -17,7 +18,7 @@ export async function loginWithEmail(formData: FormData) {
     return { error: error.message };
   }
 
-  redirect("/dashboard");
+  return { success: true };
 }
 
 export async function signUp(formData: FormData) {
@@ -43,7 +44,7 @@ export async function signUp(formData: FormData) {
     return { error: error.message };
   }
 
-  redirect("/auth/sign-up-success");
+  return { success: true };
 }
 
 export async function signOut() {

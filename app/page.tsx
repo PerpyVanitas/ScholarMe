@@ -37,9 +37,14 @@ export default async function HomePage() {
           <p className="max-w-lg text-lg leading-relaxed text-muted-foreground text-pretty">
             ScholarMe connects struggling students with dedicated tutors. Book sessions, access resources, and track your learning journey.
           </p>
-          <Button asChild size="lg" className="mt-4">
-            <Link href="/auth/login">Get Started</Link>
-          </Button>
+          <div className="flex flex-col gap-3 mt-4 sm:flex-row">
+            <Button asChild size="lg">
+              <Link href="/auth/sign-up">Get Started</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link href="/auth/login">Sign In</Link>
+            </Button>
+          </div>
         </div>
 
         <div className="grid w-full max-w-4xl grid-cols-1 gap-6 sm:grid-cols-3">

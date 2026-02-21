@@ -212,8 +212,8 @@ export default function AvailabilityPage() {
               {groupedSlots
                 .filter((g) => g.slots.length > 0)
                 .map(({ day, slots: daySlots }) => (
-                  <div key={day} className="flex items-start gap-4 rounded-lg border border-border/60 p-3">
-                    <span className="w-24 pt-1 text-sm font-medium text-foreground">{day}</span>
+                  <div key={day} className="flex flex-col gap-2 rounded-lg border border-border/60 p-3 sm:flex-row sm:items-start sm:gap-4">
+                    <span className="text-sm font-medium text-foreground sm:w-24 sm:pt-1">{day}</span>
                     <div className="flex flex-wrap gap-2">
                       {daySlots.map((slot) => (
                         <Badge

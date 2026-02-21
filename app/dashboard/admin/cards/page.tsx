@@ -115,7 +115,7 @@ export default function AdminCardsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Card Management</h1>
           <p className="text-muted-foreground">Issue and manage authentication cards.</p>
@@ -181,80 +181,122 @@ export default function AdminCardsPage() {
         </Dialog>
       </div>
 
-      <Card className="border-border/60">
-        <CardContent className="p-0">
-          {cards.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 py-12">
-              <div className="rounded-full bg-muted p-4">
-                <CreditCard className="h-6 w-6 text-muted-foreground" />
-              </div>
-              <p className="text-sm text-muted-foreground">No cards issued yet</p>
+      {cards.length === 0 ? (
+        <Card className="border-border/60">
+          <CardContent className="flex flex-col items-center gap-3 py-12">
+            <div className="rounded-full bg-muted p-4">
+              <CreditCard className="h-6 w-6 text-muted-foreground" />
             </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Card ID</TableHead>
-                  <TableHead>User</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Issued</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {cards.map((card) => (
-                  <TableRow key={card.id}>
-                    <TableCell className="font-mono font-medium text-foreground">
-                      {card.card_id}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {card.profiles?.full_name || card.profiles?.email || "Unknown"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={
-                          card.status === "active"
-                            ? "bg-success/10 text-success border-success/30"
-                            : "bg-destructive/10 text-destructive border-destructive/30"
-                        }
-                      >
-                        {card.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
-                      {new Date(card.issued_at).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
+            <p className="text-sm text-muted-foreground">No cards issued yet</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {/* Mobile card view */}
+          <div className="flex flex-col gap-3 md:hidden">
+            {cards.map((card) => (
+              <Card key={card.id} className="border-border/60">
+                <CardContent className="flex flex-col gap-3 p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-medium text-foreground">{card.card_id}</span>
+                    <Badge
+                      variant="outline"
+                      className={
+                        card.status === "active"
+                          ? "bg-success/10 text-success border-success/30"
+                          : "bg-destructive/10 text-destructive border-destructive/30"
+                      }
+                    >
+                      {card.status}
+                    </Badge>
+                  </div>
+                  <div className="flex flex-col gap-0.5 text-sm text-muted-foreground">
+                    <span>{card.profiles?.full_name || card.profiles?.email || "Unknown"}</span>
+                    <span className="text-xs">
+                      Issued {new Date(card.issued_at).toLocaleDateString("en-US", {
+                        month: "short", day: "numeric", year: "numeric",
                       })}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => toggleCardStatus(card)}
-                      >
-                        {card.status === "active" ? (
-                          <>
-                            <ShieldOff className="mr-1 h-3.5 w-3.5" />
-                            Revoke
-                          </>
-                        ) : (
-                          <>
-                            <Shield className="mr-1 h-3.5 w-3.5" />
-                            Activate
-                          </>
-                        )}
-                      </Button>
-                    </TableCell>
+                    </span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => toggleCardStatus(card)}
+                  >
+                    {card.status === "active" ? (
+                      <><ShieldOff className="mr-1 h-3.5 w-3.5" />Revoke</>
+                    ) : (
+                      <><Shield className="mr-1 h-3.5 w-3.5" />Activate</>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop table view */}
+          <Card className="border-border/60 hidden md:block">
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Card ID</TableHead>
+                    <TableHead>User</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Issued</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                  {cards.map((card) => (
+                    <TableRow key={card.id}>
+                      <TableCell className="font-mono font-medium text-foreground">
+                        {card.card_id}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {card.profiles?.full_name || card.profiles?.email || "Unknown"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={
+                            card.status === "active"
+                              ? "bg-success/10 text-success border-success/30"
+                              : "bg-destructive/10 text-destructive border-destructive/30"
+                          }
+                        >
+                          {card.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {new Date(card.issued_at).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => toggleCardStatus(card)}
+                        >
+                          {card.status === "active" ? (
+                            <><ShieldOff className="mr-1 h-3.5 w-3.5" />Revoke</>
+                          ) : (
+                            <><Shield className="mr-1 h-3.5 w-3.5" />Activate</>
+                          )}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   );
 }

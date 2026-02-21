@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { loginWithEmail } from "@/app/auth/actions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,12 +22,22 @@ export default function LoginPage() {
   async function handleEmailLogin(formData: FormData) {
     setEmailLoading(true);
     setEmailError("");
-    const result = await loginWithEmail(formData);
-    if (result?.error) {
-      setEmailError(result.error);
-      toast.error(result.error);
+    try {
+      const result = await loginWithEmail(formData);
+      if (result?.error) {
+        setEmailError(result.error);
+        toast.error(result.error);
+        setEmailLoading(false);
+        return;
+      }
+      toast.success("Welcome back!");
+      router.push("/dashboard");
+      router.refresh();
+    } catch {
+      // redirect() from server actions throws - this is normal
+      router.push("/dashboard");
+      router.refresh();
     }
-    setEmailLoading(false);
   }
 
   async function handleCardLogin(e: React.FormEvent<HTMLFormElement>) {
@@ -180,9 +191,20 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground">
-          Contact your administrator if you need an account or card issued.
-        </p>
+        <div className="flex flex-col items-center gap-2 text-center">
+          <p className="text-sm text-muted-foreground">
+            {"Don't have an account?"}{" "}
+            <Link
+              href="/auth/sign-up"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Sign up
+            </Link>
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Or contact your administrator for card-based credentials.
+          </p>
+        </div>
       </div>
     </div>
   );
