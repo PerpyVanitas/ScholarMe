@@ -27,7 +27,7 @@ export default function LoginPage() {
     const password = formData.get("password") as string;
     const supabase = createClient();
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error, data } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -39,9 +39,10 @@ export default function LoginPage() {
       return;
     }
 
+    console.log("[v0] Login successful, session:", !!data.session);
     toast.success("Welcome back!");
-    router.push("/dashboard");
-    router.refresh();
+    // Use hard redirect to ensure middleware sees fresh cookies
+    window.location.href = "/dashboard";
   }
 
   async function handleCardLogin(e: React.FormEvent<HTMLFormElement>) {
@@ -67,8 +68,8 @@ export default function LoginPage() {
         toast.error(data.error || "Login failed");
       } else {
         toast.success("Welcome back!");
-        router.push("/dashboard");
-        router.refresh();
+        window.location.href = "/dashboard";
+        return;
       }
     } catch {
       setCardError("An unexpected error occurred");
