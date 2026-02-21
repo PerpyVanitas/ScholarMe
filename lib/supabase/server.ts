@@ -10,7 +10,7 @@ export async function createClient() {
       cookies: {
         getAll() { return cookieStore.getAll() },
         setAll(cookiesToSet) {
-          try { cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options)) } catch { /* RSC */ }
+          try { for (const { name, value, options } of cookiesToSet) { cookieStore.set(name, value, options) } } catch {}
         },
       },
     }
@@ -26,7 +26,7 @@ export async function createAdminClient() {
       cookies: {
         getAll() { return cookieStore.getAll() },
         setAll(cookiesToSet) {
-          try { cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options)) } catch { /* RSC */ }
+          try { for (const { name, value, options } of cookiesToSet) { cookieStore.set(name, value, options) } } catch {}
         },
       },
     }
