@@ -28,13 +28,19 @@ import { Button } from "@/components/ui/button";
 import { GraduationCap, BookOpen, Users, Calendar } from "lucide-react";
 
 export default async function HomePage() {
-  // Check if user is already logged in
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  // Check if user is already logged in -- wrapped in try/catch because
+  // Supabase auth can fail if env vars are misconfigured or service is down
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-  // If logged in, skip the landing page and go straight to dashboard
-  if (user) {
-    redirect("/dashboard");
+    // If logged in, skip the landing page and go straight to dashboard
+    if (user) {
+      redirect("/dashboard");
+    }
+  } catch (error) {
+    // If auth check fails, just show the landing page (don't crash)
+    console.log("[v0] Auth check failed on home page:", error);
   }
 
   return (

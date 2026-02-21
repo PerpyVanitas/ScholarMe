@@ -49,19 +49,23 @@ export default async function DashboardLayout({
   let notificationCount = 0;
 
   if (user) {
-    const { data: p } = await supabase
-      .from("profiles")
-      .select("*, roles(*)")
-      .eq("id", user.id)
-      .single();
-    profile = p;
+    try {
+      const { data: p } = await supabase
+        .from("profiles")
+        .select("*, roles(*)")
+        .eq("id", user.id)
+        .maybeSingle();
+      profile = p;
 
-    const { count } = await supabase
-      .from("notifications")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .eq("is_read", false);
-    notificationCount = count || 0;
+      const { count } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("is_read", false);
+      notificationCount = count || 0;
+    } catch (error) {
+      console.log("[v0] Layout DB query error:", error);
+    }
   }
 
   // Demo profile for bypassing auth during development

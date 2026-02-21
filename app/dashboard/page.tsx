@@ -71,52 +71,90 @@ export default async function DashboardPage() {
 
   const role = (isDemoMode && devRole ? devRole : (profile.roles?.name || "learner")) as UserRole;
 
-  if (role === "administrator") {
-    // Admin stats
-    const [
-      { count: totalUsers },
-      { count: totalSessions },
-      { count: activeTutors },
-      { count: pendingSessions },
-    ] = await Promise.all([
-      supabase.from("profiles").select("*", { count: "exact", head: true }),
-      supabase.from("sessions").select("*", { count: "exact", head: true }),
-      supabase.from("tutors").select("*", { count: "exact", head: true }),
-      supabase.from("sessions").select("*", { count: "exact", head: true }).eq("status", "pending"),
-    ]);
+  try {
+    if (role === "administrator") {
+      // Admin stats - use Promise.all for parallel queries, but handle errors gracefully
+      const results = await Promise.allSettled([
+        supabase.from("profiles").select("*", { count: "exact", head: true }),
+        supabase.from("sessions").select("*", { count: "exact", head: true }),
+        supabase.from("tutors").select("*", { count: "exact", head: true }),
+        supabase.from("sessions").select("*", { count: "exact", head: true }).eq("status", "pending"),
+      ]);
 
-    const { data: recentSessions } = await supabase
-      .from("sessions")
-      .select("*, tutors(*, profiles(*)), specializations(*)")
-      .order("created_at", { ascending: false })
-      .limit(5);
+      const totalUsers = results[0].status === "fulfilled" ? results[0].value.count || 0 : 0;
+      const totalSessions = results[1].status === "fulfilled" ? results[1].value.count || 0 : 0;
+      const activeTutors = results[2].status === "fulfilled" ? results[2].value.count || 0 : 0;
+      const pendingSessions = results[3].status === "fulfilled" ? results[3].value.count || 0 : 0;
 
-    return (
-      <AdminDashboard
-        profile={profile}
-        stats={{
-          totalUsers: totalUsers || 0,
-          totalSessions: totalSessions || 0,
-          activeTutors: activeTutors || 0,
-          pendingSessions: pendingSessions || 0,
-        }}
-        recentSessions={recentSessions || []}
-      />
-    );
-  }
+      const { data: recentSessions } = await supabase
+        .from("sessions")
+        .select("*, tutors(*, profiles(*)), specializations(*)")
+        .order("created_at", { ascending: false })
+        .limit(5);
 
-  if (role === "tutor") {
-    const userId = user?.id || "demo";
-    const { data: tutor } = await supabase
-      .from("tutors")
-      .select("*")
-      .eq("user_id", userId)
-      .single();
+      return (
+        <AdminDashboard
+          profile={profile}
+          stats={{
+            totalUsers,
+            totalSessions,
+            activeTutors,
+            pendingSessions,
+          }}
+          recentSessions={recentSessions || []}
+        />
+      );
+    }
 
+    if (role === "tutor") {
+      const userId = user?.id || "demo";
+      const { data: tutor } = await supabase
+        .from("tutors")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      const { data: sessions } = await supabase
+        .from("sessions")
+        .select("*, specializations(*)")
+        .eq("tutor_id", tutor?.id || "none")
+        .in("status", ["pending", "confirmed"])
+        .order("scheduled_date", { ascending: true })
+        .limit(5);
+
+      const { count: completedCount } = await supabase
+        .from("sessions")
+        .select("*", { count: "exact", head: true })
+        .eq("tutor_id", tutor?.id || "none")
+        .eq("status", "completed");
+
+      const { count: upcomingCount } = await supabase
+        .from("sessions")
+        .select("*", { count: "exact", head: true })
+        .eq("tutor_id", tutor?.id || "none")
+        .in("status", ["pending", "confirmed"]);
+
+      return (
+        <TutorDashboard
+          profile={profile}
+          tutor={tutor}
+          upcomingSessions={sessions || []}
+          stats={{
+            completedSessions: completedCount || 0,
+            upcomingSessions: upcomingCount || 0,
+            rating: tutor?.rating || 0,
+            totalRatings: tutor?.total_ratings || 0,
+          }}
+        />
+      );
+    }
+
+    // Learner
+    const learnerId = user?.id || "demo";
     const { data: sessions } = await supabase
       .from("sessions")
-      .select("*, specializations(*)")
-      .eq("tutor_id", tutor?.id || "none")
+      .select("*, tutors(*, profiles(*)), specializations(*)")
+      .eq("learner_id", learnerId)
       .in("status", ["pending", "confirmed"])
       .order("scheduled_date", { ascending: true })
       .limit(5);
@@ -124,60 +162,53 @@ export default async function DashboardPage() {
     const { count: completedCount } = await supabase
       .from("sessions")
       .select("*", { count: "exact", head: true })
-      .eq("tutor_id", tutor?.id || "none")
+      .eq("learner_id", learnerId)
       .eq("status", "completed");
 
-    const { count: upcomingCount } = await supabase
+    const { count: totalSessionCount } = await supabase
       .from("sessions")
       .select("*", { count: "exact", head: true })
-      .eq("tutor_id", tutor?.id || "none")
-      .in("status", ["pending", "confirmed"]);
+      .eq("learner_id", learnerId);
 
     return (
-      <TutorDashboard
+      <LearnerDashboard
         profile={profile}
-        tutor={tutor}
         upcomingSessions={sessions || []}
         stats={{
+          totalSessions: totalSessionCount || 0,
           completedSessions: completedCount || 0,
-          upcomingSessions: upcomingCount || 0,
-          rating: tutor?.rating || 0,
-          totalRatings: tutor?.total_ratings || 0,
+          upcomingSessions: sessions?.length || 0,
         }}
       />
     );
+  } catch (error) {
+    console.log("[v0] Dashboard page error:", error);
+    // If queries fail (e.g., tables don't exist yet), render with zero data
+    if (role === "administrator") {
+      return (
+        <AdminDashboard
+          profile={profile}
+          stats={{ totalUsers: 0, totalSessions: 0, activeTutors: 0, pendingSessions: 0 }}
+          recentSessions={[]}
+        />
+      );
+    }
+    if (role === "tutor") {
+      return (
+        <TutorDashboard
+          profile={profile}
+          tutor={null}
+          upcomingSessions={[]}
+          stats={{ completedSessions: 0, upcomingSessions: 0, rating: 0, totalRatings: 0 }}
+        />
+      );
+    }
+    return (
+      <LearnerDashboard
+        profile={profile}
+        upcomingSessions={[]}
+        stats={{ totalSessions: 0, completedSessions: 0, upcomingSessions: 0 }}
+      />
+    );
   }
-
-  // Learner
-  const learnerId = user?.id || "demo";
-  const { data: sessions } = await supabase
-    .from("sessions")
-    .select("*, tutors(*, profiles(*)), specializations(*)")
-    .eq("learner_id", learnerId)
-    .in("status", ["pending", "confirmed"])
-    .order("scheduled_date", { ascending: true })
-    .limit(5);
-
-  const { count: completedCount } = await supabase
-    .from("sessions")
-    .select("*", { count: "exact", head: true })
-    .eq("learner_id", learnerId)
-    .eq("status", "completed");
-
-  const { count: totalSessionCount } = await supabase
-    .from("sessions")
-    .select("*", { count: "exact", head: true })
-    .eq("learner_id", learnerId);
-
-  return (
-    <LearnerDashboard
-      profile={profile}
-      upcomingSessions={sessions || []}
-      stats={{
-        totalSessions: totalSessionCount || 0,
-        completedSessions: completedCount || 0,
-        upcomingSessions: sessions?.length || 0,
-      }}
-    />
-  );
 }
