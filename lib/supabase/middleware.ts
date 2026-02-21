@@ -76,9 +76,8 @@ export async function updateSession(request: NextRequest) {
   // The side-effect of refreshing writes new cookies via setAll above.
   try {
     await supabase.auth.getUser();
-  } catch (e) {
+  } catch {
     // If Supabase is unreachable, don't block the request -- just skip auth
-    console.log("[v0] Middleware auth.getUser error:", e);
   }
 
   // ── AUTH GUARDS (currently disabled for demo/dev mode) ──────────────

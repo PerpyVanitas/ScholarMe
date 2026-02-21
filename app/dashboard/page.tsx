@@ -38,8 +38,8 @@ export default async function DashboardPage() {
   try {
     const { data } = await supabase.auth.getUser();
     user = data.user;
-  } catch (e) {
-    console.log("[v0] Dashboard page auth.getUser error:", e);
+  } catch {
+    // Auth check failed -- continue in demo mode
   }
   const cookieStore = await cookies();
   const devRole = cookieStore.get("dev_role")?.value as UserRole | undefined;
@@ -52,9 +52,7 @@ export default async function DashboardPage() {
       .select("*, roles(*)")
       .eq("id", user.id)
       .maybeSingle();
-    if (profileError) {
-      console.log("[v0] Dashboard page profile query error:", profileError.message);
-    }
+    // profileError is non-fatal -- fallback to demo profile below
     profile = p;
   }
 
@@ -190,8 +188,7 @@ export default async function DashboardPage() {
         }}
       />
     );
-  } catch (error) {
-    console.log("[v0] Dashboard page error:", error);
+  } catch {
     // If queries fail (e.g., tables don't exist yet), render with zero data
     if (role === "administrator") {
       return (

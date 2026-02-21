@@ -34,9 +34,8 @@ export default async function HomePage() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     isLoggedIn = !!user;
-  } catch (error) {
+  } catch {
     // If auth check fails, just show the landing page (don't crash)
-    console.log("[v0] Auth check failed on home page:", error);
   }
 
   // IMPORTANT: redirect() must be called OUTSIDE try/catch because it throws
