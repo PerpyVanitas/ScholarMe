@@ -1,6 +1,6 @@
 /** Server-side Supabase clients for RSC, Server Actions, and API routes. */
-import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 /** Normal client -- respects Row Level Security. */
 export async function createClient() {
