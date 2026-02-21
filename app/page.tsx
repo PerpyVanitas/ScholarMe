@@ -1,127 +1,82 @@
-/**
- * ==========================================================================
- * LANDING PAGE - Public Home Page (/)
- * ==========================================================================
- *
- * PURPOSE: The public-facing landing page shown to unauthenticated visitors.
- * If the user is already logged in, they're immediately redirected to /dashboard.
- *
- * SECTIONS:
- * 1. HEADER: Logo + "Sign In" button
- * 2. HERO: Large heading, description, and CTA buttons (Get Started / Sign In)
- * 3. FEATURE CARDS: Three cards highlighting key features:
- *    - Expert Tutors (browse profiles)
- *    - Easy Scheduling (book sessions)
- *    - Resource Library (access study materials)
- * 4. FOOTER: Simple copyright text
- *
- * This is a SERVER Component that checks auth status on the server.
- * No "use client" needed since there's no interactivity.
- *
- * ROUTE: / (root)
- * ==========================================================================
- */
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { GraduationCap, BookOpen, Users, Calendar } from "lucide-react";
+import { createClient } from "@/lib/supabase/server"
+import { redirect } from "next/navigation"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { GraduationCap } from "lucide-react"
+import { HeroSection } from "@/components/landing/hero-section"
+import { FeaturesSection } from "@/components/landing/features-section"
+import { StatsSection } from "@/components/landing/stats-section"
+import { RolesSection } from "@/components/landing/roles-section"
+import { CTASection } from "@/components/landing/cta-section"
 
 export default async function HomePage() {
-  // Check if user is already logged in
-  let isLoggedIn = false;
+  let isLoggedIn = false
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    isLoggedIn = !!user;
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    isLoggedIn = !!user
   } catch {
-    // If auth check fails, just show the landing page (don't crash)
+    // If auth check fails, show the landing page
   }
 
-  // IMPORTANT: redirect() must be called OUTSIDE try/catch because it throws
-  // a special NEXT_REDIRECT error. If caught, the redirect gets swallowed.
   if (isLoggedIn) {
-    redirect("/dashboard");
+    redirect("/dashboard")
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="flex items-center justify-between border-b border-border/60 px-6 py-4">
-        <div className="flex items-center gap-2">
+    <div className="flex min-h-screen flex-col bg-background">
+      {/* Header */}
+      <header className="sticky top-0 z-50 flex items-center justify-between border-b border-border/60 bg-background/80 px-6 py-4 backdrop-blur-md">
+        <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
             <GraduationCap className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-foreground">ScholarMe</span>
+          <span className="text-xl font-bold tracking-tight text-foreground">
+            ScholarMe
+          </span>
         </div>
+        <nav className="hidden items-center gap-6 md:flex">
+          <a href="#features" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+            Features
+          </a>
+          <a href="#roles" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+            Roles
+          </a>
+        </nav>
         <Button asChild>
           <Link href="/auth/login">Sign In</Link>
         </Button>
       </header>
 
-      <main className="flex flex-1 flex-col items-center justify-center gap-12 px-6 py-16">
-        <div className="flex max-w-2xl flex-col items-center gap-4 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-            <GraduationCap className="h-8 w-8 text-primary" />
-          </div>
-          <h1 className="text-4xl font-bold tracking-tight text-foreground text-balance sm:text-5xl">
-            Your path to academic success starts here
-          </h1>
-          <p className="max-w-lg text-lg leading-relaxed text-muted-foreground text-pretty">
-            ScholarMe connects struggling students with dedicated tutors. Book sessions, access resources, and track your learning journey.
-          </p>
-          <div className="flex flex-col gap-3 mt-4 sm:flex-row">
-            <Button asChild size="lg">
-              <Link href="/auth/sign-up">Get Started</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link href="/auth/login">Sign In</Link>
-            </Button>
-          </div>
+      {/* Main Content */}
+      <main className="flex flex-1 flex-col">
+        <HeroSection />
+        <StatsSection />
+        <div id="features">
+          <FeaturesSection />
         </div>
-
-        <div className="grid w-full max-w-4xl grid-cols-1 gap-6 sm:grid-cols-3">
-          <FeatureCard
-            icon={<Users className="h-5 w-5 text-primary" />}
-            title="Expert Tutors"
-            description="Browse tutor profiles, view specializations, and find the perfect match for your needs."
-          />
-          <FeatureCard
-            icon={<Calendar className="h-5 w-5 text-primary" />}
-            title="Easy Scheduling"
-            description="Book sessions based on tutor availability. Manage your schedule with ease."
-          />
-          <FeatureCard
-            icon={<BookOpen className="h-5 w-5 text-primary" />}
-            title="Resource Library"
-            description="Access study materials, guides, and resources shared by tutors."
-          />
+        <div id="roles">
+          <RolesSection />
         </div>
+        <CTASection />
       </main>
 
-      <footer className="border-t border-border/60 px-6 py-6 text-center text-sm text-muted-foreground">
-        ScholarMe - Empowering academic excellence
+      {/* Footer */}
+      <footer className="border-t border-border/60 px-6 py-8">
+        <div className="mx-auto flex max-w-5xl flex-col items-center gap-4 text-center sm:flex-row sm:justify-between sm:text-left">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary">
+              <GraduationCap className="h-4 w-4 text-primary-foreground" />
+            </div>
+            <span className="font-semibold text-foreground">ScholarMe</span>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Empowering academic excellence through personalized tutoring.
+          </p>
+        </div>
       </footer>
     </div>
-  );
-}
-
-/** Reusable feature card for the landing page's feature grid */
-function FeatureCard({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card p-6 shadow-sm">
-      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-        {icon}
-      </div>
-      <h3 className="font-semibold text-card-foreground">{title}</h3>
-      <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
-    </div>
-  );
+  )
 }
