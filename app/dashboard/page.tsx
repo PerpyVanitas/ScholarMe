@@ -1,3 +1,4 @@
+// cache-bust-v2
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/create-client";
 import type { UserRole } from "@/lib/types";
