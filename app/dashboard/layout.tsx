@@ -13,27 +13,36 @@ export default async function DashboardLayout({
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/auth/login");
+  let profile: any = null;
+  let notificationCount = 0;
+
+  if (user) {
+    const { data: p } = await supabase
+      .from("profiles")
+      .select("*, roles(*)")
+      .eq("id", user.id)
+      .single();
+    profile = p;
+
+    const { count } = await supabase
+      .from("notifications")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("is_read", false);
+    notificationCount = count || 0;
   }
 
-  // Get profile with role
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*, roles(*)")
-    .eq("id", user.id)
-    .single();
-
+  // Demo profile for bypassing auth during development
   if (!profile) {
-    redirect("/auth/login");
+    profile = {
+      id: "demo",
+      full_name: "Admin Demo",
+      email: "admin@scholarme.org",
+      avatar_url: null,
+      created_at: new Date().toISOString(),
+      roles: { id: "demo-role", name: "administrator" },
+    };
   }
-
-  // Get unread notification count
-  const { count: notificationCount } = await supabase
-    .from("notifications")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", user.id)
-    .eq("is_read", false);
 
   const role = (profile.roles?.name || "learner") as UserRole;
 
