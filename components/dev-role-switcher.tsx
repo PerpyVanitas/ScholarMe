@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import type { UserRole } from "@/lib/types";
 import { GraduationCap, BookOpen, Shield } from "lucide-react";
@@ -12,11 +11,10 @@ const roles: { value: UserRole; label: string; icon: typeof GraduationCap }[] = 
 ];
 
 export function DevRoleSwitcher({ currentRole }: { currentRole: UserRole }) {
-  const router = useRouter();
-
   function switchRole(role: UserRole) {
     document.cookie = `dev_role=${role};path=/;max-age=86400`;
-    router.refresh();
+    // Hard reload so the server layout re-reads the cookie
+    window.location.href = "/dashboard";
   }
 
   return (
