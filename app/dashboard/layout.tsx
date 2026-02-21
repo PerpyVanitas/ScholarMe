@@ -4,7 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator";
-import { DevRoleSwitcher } from "@/components/dev-role-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import type { UserRole } from "@/lib/types";
 import { DEMO_USERS, getDemoProfileId } from "@/lib/demo";
@@ -100,7 +99,6 @@ export default async function DashboardLayout({
           </div>
         </header>
         <div className="flex flex-col gap-4 flex-1 overflow-auto p-4 md:p-6">
-          {isDemoMode && <DevRoleSwitcher currentRole={role} />}
           {children}
         </div>
       </SidebarInset>
