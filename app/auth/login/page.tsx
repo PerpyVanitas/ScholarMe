@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { loginWithEmail } from "@/app/auth/actions";
+import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,22 +22,26 @@ export default function LoginPage() {
   async function handleEmailLogin(formData: FormData) {
     setEmailLoading(true);
     setEmailError("");
-    try {
-      const result = await loginWithEmail(formData);
-      if (result?.error) {
-        setEmailError(result.error);
-        toast.error(result.error);
-        setEmailLoading(false);
-        return;
-      }
-      toast.success("Welcome back!");
-      router.push("/dashboard");
-      router.refresh();
-    } catch {
-      // redirect() from server actions throws - this is normal
-      router.push("/dashboard");
-      router.refresh();
+
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const supabase = createClient();
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setEmailError(error.message);
+      toast.error(error.message);
+      setEmailLoading(false);
+      return;
     }
+
+    toast.success("Welcome back!");
+    router.push("/dashboard");
+    router.refresh();
   }
 
   async function handleCardLogin(e: React.FormEvent<HTMLFormElement>) {
@@ -109,7 +113,13 @@ export default function LoginPage() {
               </TabsList>
 
               <TabsContent value="email">
-                <form action={handleEmailLogin} className="flex flex-col gap-4">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleEmailLogin(new FormData(e.currentTarget));
+                  }}
+                  className="flex flex-col gap-4"
+                >
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="email">Email</Label>
                     <Input
