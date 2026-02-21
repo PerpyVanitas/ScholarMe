@@ -5,6 +5,7 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import { DevRoleSwitcher } from "@/components/dev-role-switcher";
+import { ThemeToggle } from "@/components/theme-toggle";
 import type { UserRole } from "@/lib/types";
 import { DEMO_USERS, getDemoProfileId } from "@/lib/demo";
 
@@ -94,6 +95,9 @@ export default async function DashboardLayout({
         <header className="flex h-14 items-center gap-2 border-b border-border/60 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
+          <div className="ml-auto">
+            <ThemeToggle />
+          </div>
         </header>
         <div className="flex flex-col gap-4 flex-1 overflow-auto p-4 md:p-6">
           {isDemoMode && <DevRoleSwitcher currentRole={role} />}
