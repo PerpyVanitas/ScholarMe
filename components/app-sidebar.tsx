@@ -98,7 +98,7 @@ const roleLabels: Record<UserRole, string> = {
 export function AppSidebar({ profile, role, notificationCount }: AppSidebarProps) {
   const pathname = usePathname();
   const { shared, roleSpecific } = getNavItems(role);
-  const initials = profile.full_name
+  const initials = profile?.full_name
     ? profile.full_name
         .split(" ")
         .map((n) => n[0])
@@ -185,10 +185,10 @@ export function AppSidebar({ profile, role, notificationCount }: AppSidebarProps
                   </Avatar>
                   <div className="flex flex-col gap-0.5 leading-none">
                     <span className="text-sm font-medium truncate">
-                      {profile.full_name || "User"}
+                      {profile?.full_name || "User"}
                     </span>
                     <span className="text-xs text-muted-foreground truncate">
-                      {profile.email}
+                      {profile?.email || ""}
                     </span>
                   </div>
                   <ChevronsUpDown className="ml-auto h-4 w-4 text-muted-foreground" />

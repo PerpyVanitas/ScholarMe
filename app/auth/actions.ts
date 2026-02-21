@@ -27,7 +27,7 @@ export async function signUp(formData: FormData) {
     .eq("name", selectedRole)
     .single()
 
-  const { error: createError } = await adminClient.auth.admin.createUser({
+  const { data: created, error: createError } = await adminClient.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
@@ -38,6 +38,17 @@ export async function signUp(formData: FormData) {
     },
   })
   if (createError) return { error: createError.message }
+
+  if (created?.user) {
+    await adminClient
+      .from("profiles")
+      .upsert({
+        id: created.user.id,
+        full_name: fullName,
+        email,
+        role_id: roleRow?.id || null,
+      }, { onConflict: "id" })
+  }
 
   const { error: signInError } = await supabase.auth.signInWithPassword({
     email,

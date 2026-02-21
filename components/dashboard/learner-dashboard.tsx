@@ -22,7 +22,7 @@ export function LearnerDashboard({ profile, upcomingSessions, stats }: LearnerDa
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Welcome back, {profile.full_name || "Learner"}
+          Welcome back, {profile?.full_name || "Learner"}
         </h1>
         <p className="text-muted-foreground">
           Here is an overview of your tutoring journey.

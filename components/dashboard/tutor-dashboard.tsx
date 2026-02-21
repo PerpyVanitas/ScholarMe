@@ -80,7 +80,7 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Welcome back, {profile.full_name || "Tutor"}
+          Welcome back, {profile?.full_name || "Tutor"}
         </h1>
         <p className="text-muted-foreground">
           Manage your sessions and availability.
