@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/create-client"
-import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { GraduationCap } from "lucide-react"
@@ -19,10 +18,6 @@ export default async function HomePage() {
     isLoggedIn = !!user
   } catch {
     // If auth check fails, show the landing page
-  }
-
-  if (isLoggedIn) {
-    redirect("/dashboard")
   }
 
   return (
@@ -46,7 +41,9 @@ export default async function HomePage() {
           </a>
         </nav>
         <Button asChild>
-          <Link href="/auth/login">Sign In</Link>
+          <Link href={isLoggedIn ? "/dashboard" : "/auth/login"}>
+            {isLoggedIn ? "Dashboard" : "Sign In"}
+          </Link>
         </Button>
       </header>
 
