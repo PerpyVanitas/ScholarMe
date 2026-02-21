@@ -6,7 +6,7 @@
  * PURPOSE: Creates Supabase clients for use in SERVER-SIDE code:
  * - Server Components (app/dashboard/page.tsx, etc.)
  * - Server Actions ("use server" functions)
- * - API Route Handlers (app/api/*/route.ts)
+ * - API Route Handlers (app/api/.../route.ts)
  *
  * PROVIDES TWO CLIENTS:
  *
