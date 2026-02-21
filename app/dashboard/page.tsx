@@ -19,6 +19,8 @@ export default async function DashboardPage() {
   const cookieStore = await cookies();
   const devRole = cookieStore.get("dev_role")?.value as UserRole | undefined;
 
+  console.log("[v0] Dashboard: user =", user?.id || "null", "| devRole =", devRole || "none");
+
   let profile: any = null;
 
   if (user) {
@@ -28,6 +30,8 @@ export default async function DashboardPage() {
       .eq("id", user.id)
       .maybeSingle();
     profile = p;
+    console.log("[v0] Dashboard: profile =", profile ? profile.full_name : "null", "| profileError =", profileError?.message || "none");
+    console.log("[v0] Dashboard: role from profile =", profile?.roles?.name || "null");
   }
 
   const isDemoMode = !user;
@@ -58,6 +62,7 @@ export default async function DashboardPage() {
   }
 
   const role = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "learner")) as UserRole;
+  console.log("[v0] Dashboard: resolved role =", role, "| isDemoMode =", isDemoMode);
 
   try {
     if (role === "administrator") {
@@ -172,7 +177,8 @@ export default async function DashboardPage() {
         }}
       />
     );
-  } catch {
+  } catch (err) {
+    console.log("[v0] Dashboard: catch block hit, error =", err);
     // If queries fail (e.g., tables don't exist yet), render with zero data
     if (role === "administrator") {
       return (

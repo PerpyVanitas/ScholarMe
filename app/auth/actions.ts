@@ -1,7 +1,7 @@
-/** Server Actions for authentication: email login, sign-up, and sign-out. */
+// Server Actions for authentication: email login, sign-up, and sign-out.
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 
 export async function loginWithEmail(formData: FormData) {
@@ -16,6 +16,10 @@ export async function loginWithEmail(formData: FormData) {
 
 export async function signUp(formData: FormData) {
   const supabase = await createClient()
+  const adminClient = await createAdminClient()
+  const email = formData.get("email") as string
+  const password = formData.get("password") as string
+  const fullName = formData.get("full_name") as string
   const selectedRole = (formData.get("role") as string) || "learner"
 
   // Look up the role_id for the chosen role
@@ -25,21 +29,26 @@ export async function signUp(formData: FormData) {
     .eq("name", selectedRole)
     .single()
 
-  const { error } = await supabase.auth.signUp({
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
-    options: {
-      emailRedirectTo:
-        process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-        `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/dashboard`,
-      data: {
-        full_name: formData.get("full_name") as string,
-        role_id: roleRow?.id,
-        role_name: selectedRole,
-      },
+  // Use admin API to create user (auto-confirms, avoids email rate limits)
+  const { error: createError } = await adminClient.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: {
+      full_name: fullName,
+      role_id: roleRow?.id,
+      role_name: selectedRole,
     },
   })
-  if (error) return { error: error.message }
+  if (createError) return { error: createError.message }
+
+  // Sign the user in immediately
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
+  if (signInError) return { error: signInError.message }
+
   return { success: true }
 }
 
