@@ -1,4 +1,4 @@
-/** Admin dashboard -- org-wide stats, recent sessions, and quick-link admin tools. */
+// Admin dashboard -- org-wide stats, recent sessions, and quick-link admin tools.
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

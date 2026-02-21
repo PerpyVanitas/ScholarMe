@@ -1,10 +1,9 @@
-/** Dashboard layout -- sidebar, header, and role-aware shell for /dashboard/*. */
+// cache-bust-v3
 import { cookies } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/create-client";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator";
-import { DevRoleSwitcher } from "@/components/dev-role-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import type { UserRole } from "@/lib/types";
 import { DEMO_USERS, getDemoProfileId } from "@/lib/demo";
@@ -52,6 +51,17 @@ export default async function DashboardLayout({
   const isDemoMode = !user;
   const selectedRole = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "administrator")) as UserRole;
 
+  if (user && !profile) {
+    profile = {
+      id: user.id,
+      full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
+      email: user.email || "",
+      avatar_url: null,
+      created_at: user.created_at || new Date().toISOString(),
+      roles: { id: "fallback", name: "learner" },
+    };
+  }
+
   if (!profile && isDemoMode) {
     const demoProfileId = getDemoProfileId(selectedRole);
     const { data: demoProfile } = await supabase
@@ -84,6 +94,18 @@ export default async function DashboardLayout({
 
   const role = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "learner")) as UserRole;
 
+  // Guarantee profile is never null for downstream components
+  if (!profile) {
+    profile = {
+      id: user?.id || "unknown",
+      full_name: user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User",
+      email: user?.email || "",
+      avatar_url: null,
+      created_at: new Date().toISOString(),
+      roles: { id: "fallback", name: role },
+    };
+  }
+
   return (
     <SidebarProvider>
       <AppSidebar
@@ -99,8 +121,7 @@ export default async function DashboardLayout({
             <ThemeToggle />
           </div>
         </header>
-        <div className="flex flex-col gap-4 flex-1 overflow-auto p-4 md:p-6">
-          {isDemoMode && <DevRoleSwitcher currentRole={role} />}
+        <div className="flex flex-col gap-6 flex-1 overflow-auto p-4 md:p-6">
           {children}
         </div>
       </SidebarInset>

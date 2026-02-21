@@ -1,5 +1,5 @@
 /** POST/PUT /api/admin/cards -- admin-only: issue or revoke auth cards. */
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/create-client";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 

@@ -22,19 +22,15 @@ export default function SignUpPage() {
   async function handleSignUp(formData: FormData) {
     setLoading(true);
     setError("");
-    try {
-      const result = await signUp(formData);
-      if (result?.error) {
-        setError(result.error);
-        toast.error(result.error);
-        setLoading(false);
-        return;
-      }
-      // redirect happens from server action
-    } catch {
-      // redirect() throws - this is expected
-      router.push("/auth/sign-up-success");
+    const result = await signUp(formData);
+    if (result?.error) {
+      setError(result.error);
+      toast.error(result.error);
+      setLoading(false);
+      return;
     }
+    toast.success("Account created successfully!");
+    window.location.href = "/dashboard";
   }
 
   return (

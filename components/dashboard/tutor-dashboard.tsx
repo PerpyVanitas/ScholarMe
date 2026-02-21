@@ -1,10 +1,13 @@
-/** Tutor dashboard -- upcoming sessions, stats, and quick actions. Falls back to an error state if no tutor record exists. */
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Star, Clock, CheckCircle2, FolderOpen, ArrowRight, AlertCircle } from "lucide-react";
+import { Calendar, Star, Clock, CheckCircle2, FolderOpen, ArrowRight, AlertCircle, LogIn, LogOut, Timer } from "lucide-react";
 import { SESSION_STATUS_COLORS } from "@/lib/constants";
+import { toast } from "sonner";
 import type { Profile, Session, Tutor } from "@/lib/types";
 
 interface TutorDashboardProps {
@@ -20,6 +23,45 @@ interface TutorDashboardProps {
 }
 
 export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: TutorDashboardProps) {
+  const [clockedIn, setClockedIn] = useState(false);
+  const [clockLoading, setClockLoading] = useState(false);
+  const [clockCheckDone, setClockCheckDone] = useState(false);
+
+  const checkClockStatus = useCallback(async () => {
+    try {
+      const res = await fetch("/api/timesheets");
+      if (res.ok) {
+        const data = await res.json();
+        const open = Array.isArray(data) ? data.find((e: { clock_out: string | null }) => !e.clock_out) : null;
+        setClockedIn(!!open);
+      }
+    } finally {
+      setClockCheckDone(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (tutor) checkClockStatus();
+    else setClockCheckDone(true);
+  }, [tutor, checkClockStatus]);
+
+  async function handleClock(action: "clock_in" | "clock_out") {
+    setClockLoading(true);
+    try {
+      const res = await fetch("/api/timesheets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      const data = await res.json();
+      if (!res.ok) { toast.error(data.error); return; }
+      toast.success(action === "clock_in" ? "Clocked in!" : "Clocked out!");
+      setClockedIn(action === "clock_in");
+    } finally {
+      setClockLoading(false);
+    }
+  }
+
   if (!tutor) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-16">
@@ -38,12 +80,44 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Welcome back, {profile.full_name || "Tutor"}
+          Welcome back, {profile?.full_name || "Tutor"}
         </h1>
         <p className="text-muted-foreground">
           Manage your sessions and availability.
         </p>
       </div>
+
+      {/* Clock In / Out */}
+      {clockCheckDone && (
+        <Card className="border-border/60">
+          <CardContent className="flex items-center justify-between p-4">
+            <div className="flex items-center gap-3">
+              <div className={`flex h-10 w-10 items-center justify-center rounded-full ${clockedIn ? "bg-green-500/10" : "bg-muted"}`}>
+                <Timer className={`h-5 w-5 ${clockedIn ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`} />
+              </div>
+              <div className="flex flex-col">
+                <span className={`text-sm font-medium ${clockedIn ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
+                  {clockedIn ? "Currently Clocked In" : "Not Clocked In"}
+                </span>
+                <Link href="/dashboard/timesheet" className="text-xs text-primary hover:underline">
+                  View timesheet
+                </Link>
+              </div>
+            </div>
+            {clockedIn ? (
+              <Button onClick={() => handleClock("clock_out")} disabled={clockLoading} variant="destructive" size="sm" className="gap-2">
+                <LogOut className="h-3.5 w-3.5" />
+                {clockLoading ? "..." : "Clock Out"}
+              </Button>
+            ) : (
+              <Button onClick={() => handleClock("clock_in")} disabled={clockLoading} size="sm" className="gap-2">
+                <LogIn className="h-3.5 w-3.5" />
+                {clockLoading ? "..." : "Clock In"}
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         <Card className="border-border/60">
@@ -157,6 +231,17 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
             <CardDescription>Manage your tutoring</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
+            <Button asChild variant="outline" className="justify-start h-auto py-3">
+              <Link href="/dashboard/timesheet" className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                  <Timer className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex flex-col items-start gap-0.5">
+                  <span className="text-sm font-medium">Timesheet</span>
+                  <span className="text-xs text-muted-foreground">View clock-in history</span>
+                </div>
+              </Link>
+            </Button>
             <Button asChild variant="outline" className="justify-start h-auto py-3">
               <Link href="/dashboard/availability" className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">

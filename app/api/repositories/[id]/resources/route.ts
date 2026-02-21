@@ -1,5 +1,5 @@
 /** POST /api/repositories/[id]/resources -- add a study-material link to a repository. */
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
 
 /** Add a resource to a specific repository */

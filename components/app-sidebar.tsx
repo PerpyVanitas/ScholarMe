@@ -40,6 +40,7 @@ import {
   BarChart3,
   UserCircle,
   Clock,
+  Timer,
 } from "lucide-react";
 import { signOut } from "@/app/auth/actions";
 
@@ -65,6 +66,7 @@ function getNavItems(role: UserRole) {
   const tutorItems = [
     { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
     { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
+    { title: "Timesheet", href: "/dashboard/timesheet", icon: Timer },
     { title: "Availability", href: "/dashboard/availability", icon: Clock },
     { title: "My Repositories", href: "/dashboard/resources", icon: FolderOpen },
   ];
@@ -73,6 +75,7 @@ function getNavItems(role: UserRole) {
     { title: "Users", href: "/dashboard/admin/users", icon: Users },
     { title: "Cards", href: "/dashboard/admin/cards", icon: CreditCard },
     { title: "All Sessions", href: "/dashboard/admin/sessions", icon: Calendar },
+    { title: "Timesheets", href: "/dashboard/admin/timesheets", icon: Timer },
     { title: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
     { title: "Resources", href: "/dashboard/resources", icon: FolderOpen },
   ];
@@ -95,7 +98,7 @@ const roleLabels: Record<UserRole, string> = {
 export function AppSidebar({ profile, role, notificationCount }: AppSidebarProps) {
   const pathname = usePathname();
   const { shared, roleSpecific } = getNavItems(role);
-  const initials = profile.full_name
+  const initials = profile?.full_name
     ? profile.full_name
         .split(" ")
         .map((n) => n[0])
@@ -182,10 +185,10 @@ export function AppSidebar({ profile, role, notificationCount }: AppSidebarProps
                   </Avatar>
                   <div className="flex flex-col gap-0.5 leading-none">
                     <span className="text-sm font-medium truncate">
-                      {profile.full_name || "User"}
+                      {profile?.full_name || "User"}
                     </span>
                     <span className="text-xs text-muted-foreground truncate">
-                      {profile.email}
+                      {profile?.email || ""}
                     </span>
                   </div>
                   <ChevronsUpDown className="ml-auto h-4 w-4 text-muted-foreground" />

@@ -1,5 +1,5 @@
 /** GET/POST /api/repositories -- list or create resource repositories. */
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
 
 /** Fetch all repositories with owner name and resource count */

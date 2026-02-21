@@ -113,6 +113,17 @@ export interface Notification {
   created_at: string
 }
 
+export interface Timesheet {
+  id: string
+  tutor_id: string
+  user_id: string
+  clock_in: string
+  clock_out: string | null
+  notes: string | null
+  created_at: string
+  tutors?: Tutor & { profiles?: Profile }
+}
+
 export interface AnalyticsLog {
   id: string
   user_id: string | null

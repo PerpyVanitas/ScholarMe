@@ -19,6 +19,7 @@
       }
     ],
     "paths": {
+      "@/lib/supabase/server": ["./lib/supabase/create-client.ts"],
       "@/*": ["./*"]
     }
   },

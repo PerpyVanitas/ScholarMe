@@ -1,7 +1,7 @@
-/** Profile page -- view and edit name; email and role are read-only. */
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,21 +9,38 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Loader2, Save, UserCircle } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Loader2, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { DEMO_USERS, getDemoUserFromCookie } from "@/lib/demo";
-import type { Profile, UserRole } from "@/lib/types";
+import type { Profile } from "@/lib/types";
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [fullName, setFullName] = useState("");
+  const [confirmText, setConfirmText] = useState("");
 
   useEffect(() => {
     async function loadProfile() {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       if (user) {
         const { data } = await supabase
@@ -40,11 +57,12 @@ export default function ProfilePage() {
         }
       }
 
-      // Demo mode: fetch real seeded profile
-      const { role: devRole, userId: demoUserId } = getDemoUserFromCookie("administrator");
+      // Demo mode fallback
+      const { role: devRole } = getDemoUserFromCookie("administrator");
       const demoInfo = DEMO_USERS[devRole as keyof typeof DEMO_USERS] || DEMO_USERS.administrator;
 
-      const { data: demoProfile } = await supabase
+      const supabase2 = createClient();
+      const { data: demoProfile } = await supabase2
         .from("profiles")
         .select("*, roles(*)")
         .eq("id", demoInfo.profileId)
@@ -73,7 +91,6 @@ export default function ProfilePage() {
   async function handleSave() {
     if (!profile) return;
     setSaving(true);
-
     const supabase = createClient();
     const { error } = await supabase
       .from("profiles")
@@ -89,6 +106,19 @@ export default function ProfilePage() {
     setSaving(false);
   }
 
+  async function handleDeleteAccount() {
+    setDeleting(true);
+    const res = await fetch("/api/account", { method: "DELETE" });
+    if (res.ok) {
+      toast.success("Account deleted successfully");
+      router.push("/");
+    } else {
+      const data = await res.json();
+      toast.error(data.error || "Failed to delete account");
+      setDeleting(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -100,14 +130,20 @@ export default function ProfilePage() {
   if (!profile) return null;
 
   const initials = profile.full_name
-    ? profile.full_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    ? profile.full_name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
     : "?";
 
-  const roleLabel = profile.roles?.name === "administrator"
-    ? "Administrator"
-    : profile.roles?.name === "tutor"
-    ? "Tutor"
-    : "Learner";
+  const roleLabel =
+    profile.roles?.name === "administrator"
+      ? "Administrator"
+      : profile.roles?.name === "tutor"
+        ? "Tutor"
+        : "Learner";
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
@@ -120,9 +156,7 @@ export default function ProfilePage() {
         <CardHeader>
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16">
-              <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                {initials}
-              </AvatarFallback>
+              <AvatarFallback className="bg-primary/10 text-primary text-lg">{initials}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col gap-1">
               <CardTitle>{profile.full_name || "User"}</CardTitle>
@@ -136,24 +170,12 @@ export default function ProfilePage() {
         <CardContent className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="full_name">Full Name</Label>
-            <Input
-              id="full_name"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="Enter your full name"
-            />
+            <Input id="full_name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Enter your full name" />
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              value={profile.email}
-              disabled
-              className="bg-muted"
-            />
-            <p className="text-xs text-muted-foreground">
-              Contact your administrator to change your email.
-            </p>
+            <Input id="email" value={profile.email} disabled className="bg-muted" />
+            <p className="text-xs text-muted-foreground">Contact your administrator to change your email.</p>
           </div>
           <div className="flex flex-col gap-2">
             <Label>Member Since</Label>
@@ -178,6 +200,61 @@ export default function ProfilePage() {
               </>
             )}
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Danger Zone */}
+      <Card className="border-destructive/30">
+        <CardHeader>
+          <CardTitle className="text-destructive">Danger Zone</CardTitle>
+          <CardDescription>Permanently delete your account and all associated data. This action cannot be undone.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Account
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete your account, profile, and all associated data including sessions and resources. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="flex flex-col gap-2 py-2">
+                <Label htmlFor="confirm-delete" className="text-sm text-muted-foreground">
+                  {"Type \"DELETE\" to confirm"}
+                </Label>
+                <Input
+                  id="confirm-delete"
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  placeholder="DELETE"
+                  className="font-mono"
+                />
+              </div>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setConfirmText("")}>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDeleteAccount}
+                  disabled={confirmText !== "DELETE" || deleting}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {deleting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    "Delete Account Permanently"
+                  )}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardContent>
       </Card>
     </div>
