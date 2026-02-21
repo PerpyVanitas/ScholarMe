@@ -94,6 +94,18 @@ export default async function DashboardLayout({
 
   const role = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "learner")) as UserRole;
 
+  // Guarantee profile is never null for downstream components
+  if (!profile) {
+    profile = {
+      id: user?.id || "unknown",
+      full_name: user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User",
+      email: user?.email || "",
+      avatar_url: null,
+      created_at: new Date().toISOString(),
+      roles: { id: "fallback", name: role },
+    };
+  }
+
   return (
     <SidebarProvider>
       <AppSidebar
