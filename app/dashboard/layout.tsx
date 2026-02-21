@@ -1,32 +1,4 @@
-/**
- * ==========================================================================
- * DASHBOARD LAYOUT - Shared Shell for All Dashboard Pages
- * ==========================================================================
- *
- * PURPOSE: This is a Server Component layout that wraps EVERY page under
- * /dashboard/*. It provides:
- * 1. The sidebar navigation (AppSidebar component)
- * 2. A top header bar with the sidebar toggle button
- * 3. The DevRoleSwitcher (only shown in demo/dev mode)
- * 4. A scrollable content area where child pages render
- *
- * HOW IT DETERMINES THE USER'S ROLE:
- * 1. Try to get the authenticated user from Supabase Auth
- * 2. If user exists: query their profile from the database (includes role)
- * 3. If NO user (demo mode): create a fake profile and read the role from
- *    the "dev_role" cookie (set by the DevRoleSwitcher buttons)
- *
- * IMPORTANT ARCHITECTURE NOTE:
- * - This is a SERVER Component -- it runs on the server for every request
- * - It can read cookies (for dev_role) and query the database directly
- * - Child pages (like /dashboard/page.tsx) also need to determine the role
- *   independently since layouts don't pass props to children in Next.js
- * - The "isDemoMode" flag shows the DevRoleSwitcher only when there's no
- *   real authenticated user
- *
- * ROUTE: /dashboard/* (wraps all dashboard pages)
- * ==========================================================================
- */
+/** Dashboard layout -- sidebar, header, and role-aware shell for /dashboard/*. */
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
@@ -48,7 +20,7 @@ export default async function DashboardLayout({
     const { data } = await supabase.auth.getUser();
     user = data.user;
   } catch {
-    // Auth check failed -- continue in demo mode
+    // Auth unavailable -- continue in demo mode
   }
   const cookieStore = await cookies();
   const devRole = cookieStore.get("dev_role")?.value as UserRole | undefined;
@@ -72,15 +44,13 @@ export default async function DashboardLayout({
         .eq("is_read", false);
       notificationCount = count || 0;
     } catch {
-      // DB query failed -- continue with demo profile
+      // DB query failed -- fall through to demo profile
     }
   }
 
-  // Allow dev role override via cookie (demo mode)
   const isDemoMode = !user;
   const selectedRole = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "administrator")) as UserRole;
 
-  // In demo mode, fetch the real seeded profile from the database
   if (!profile && isDemoMode) {
     const demoProfileId = getDemoProfileId(selectedRole);
     const { data: demoProfile } = await supabase
@@ -92,7 +62,6 @@ export default async function DashboardLayout({
     if (demoProfile) {
       profile = demoProfile;
     } else {
-      // Fallback if seed data doesn't exist yet
       const demoInfo = DEMO_USERS[selectedRole as keyof typeof DEMO_USERS] || DEMO_USERS.administrator;
       profile = {
         id: demoInfo.profileId,
@@ -104,7 +73,6 @@ export default async function DashboardLayout({
       };
     }
 
-    // Fetch notification count for the demo user
     const { count } = await supabase
       .from("notifications")
       .select("*", { count: "exact", head: true })

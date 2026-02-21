@@ -1,20 +1,4 @@
-/**
- * ==========================================================================
- * API: ADMIN CARD MANAGEMENT
- * ==========================================================================
- *
- * POST /api/admin/cards - Issue a new authentication card to a user
- *   Body: { user_id, card_id, pin }
- *   Returns: The created auth_card record
- *
- * PUT /api/admin/cards - Activate or revoke a card
- *   Body: { id, status: "active" | "revoked" }
- *   Returns: The updated auth_card record
- *
- * Both endpoints require the caller to be an administrator.
- * Uses admin client to bypass RLS on the auth_cards table.
- * ==========================================================================
- */
+/** POST/PUT /api/admin/cards -- admin-only: issue or revoke auth cards. */
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";

@@ -1,23 +1,4 @@
-/**
- * ==========================================================================
- * TUTORS LIST PAGE - Browse and Search Tutors (Learner View)
- * ==========================================================================
- *
- * PURPOSE: Displays a grid of tutor cards that learners can browse, search
- * by name, and filter by specialization. Clicking "View Profile" navigates
- * to the tutor detail page (/dashboard/tutors/[id]) where they can book.
- *
- * DATA FLOW:
- * 1. On mount, fetches ALL tutors with their profiles and specializations
- * 2. Also fetches the specializations list for the filter dropdown
- * 3. Client-side filtering by search text and selected specialization
- *
- * WHY CLIENT COMPONENT: Needs interactive search/filter inputs with useState.
- * The Supabase client-side client is used for the initial data fetch in useEffect.
- *
- * ROUTE: /dashboard/tutors
- * ==========================================================================
- */
+/** Tutors list -- browse, search, and filter tutors by name or specialization. */
 "use client";
 
 import { useState, useEffect } from "react";

@@ -1,30 +1,4 @@
-/**
- * ==========================================================================
- * SESSIONS PAGE - View and Manage Tutoring Sessions
- * ==========================================================================
- *
- * PURPOSE: Shared page used by BOTH learners and tutors (role detected at runtime).
- * Shows sessions in two tabs: "Upcoming" (pending/confirmed) and "Past" (completed/cancelled).
- *
- * ROLE-SPECIFIC BEHAVIOR:
- * - LEARNER: Sees their booked sessions with tutor names. Can cancel pending sessions
- *   and rate completed sessions.
- * - TUTOR: Sees sessions assigned to them. Can confirm/decline pending sessions
- *   and mark confirmed sessions as completed.
- *
- * SESSION LIFECYCLE (managed via PUT /api/sessions/[id]/status):
- *   pending -> confirmed (tutor accepts) -> completed (tutor marks done)
- *   pending -> cancelled (either party cancels)
- *   confirmed -> cancelled (either party cancels)
- *
- * RATING FLOW (via POST /api/sessions/[id]/rate):
- *   After a session is "completed", the learner sees a "Rate" button.
- *   Opens a dialog with 1-5 stars and optional feedback.
- *   The API updates the tutor's average rating.
- *
- * ROUTE: /dashboard/sessions
- * ==========================================================================
- */
+/** Sessions page -- shared by learners (cancel / rate) and tutors (confirm / complete). */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -43,24 +17,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Calendar,
-  Star,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  Loader2,
-} from "lucide-react";
+import { Calendar, Star, CheckCircle2, XCircle, Clock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { SESSION_STATUS_COLORS } from "@/lib/constants";
+import { DEMO_USERS, getDemoUserFromCookie } from "@/lib/demo";
 import type { Session, UserRole } from "@/lib/types";
-import { DEMO_USERS } from "@/lib/demo";
-
-const statusColors: Record<string, string> = {
-  pending: "bg-warning/10 text-warning-foreground border-warning/30",
-  confirmed: "bg-primary/10 text-primary border-primary/30",
-  completed: "bg-success/10 text-success border-success/30",
-  cancelled: "bg-destructive/10 text-destructive border-destructive/30",
-};
 
 export default function SessionsPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -88,13 +49,9 @@ export default function SessionsPage() {
           .single();
         userRole = (profile?.roles?.name || "learner") as UserRole;
       } else {
-        // Demo mode: read role from cookie and use seeded user IDs
-        const devRoleCookie = document.cookie
-          .split("; ")
-          .find((c) => c.startsWith("dev_role="))
-          ?.split("=")[1];
-        userRole = (devRoleCookie as UserRole) || "learner";
-        userId = DEMO_USERS[userRole as keyof typeof DEMO_USERS]?.profileId || DEMO_USERS.learner.profileId;
+        const demo = getDemoUserFromCookie("learner");
+        userRole = demo.role;
+        userId = demo.userId;
       }
 
       setRole(userRole);
@@ -335,7 +292,7 @@ function SessionList({
                       ? `Session on ${new Date(session.scheduled_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
                       : session.tutors?.profiles?.full_name || "Tutor"}
                   </span>
-                  <Badge className={statusColors[session.status] || ""} variant="outline">
+                  <Badge className={SESSION_STATUS_COLORS[session.status] || ""} variant="outline">
                     {session.status}
                   </Badge>
                 </div>

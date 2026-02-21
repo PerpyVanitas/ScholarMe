@@ -1,30 +1,4 @@
-/**
- * ==========================================================================
- * DASHBOARD PAGE - Role-Based Home Screen
- * ==========================================================================
- *
- * PURPOSE: The main /dashboard page. Shows a DIFFERENT dashboard component
- * depending on the user's role:
- * - "administrator" -> AdminDashboard (stats, recent sessions, admin tools)
- * - "tutor" -> TutorDashboard (upcoming sessions, stats, quick actions)
- * - "learner" -> LearnerDashboard (sessions, stats, find tutor shortcut)
- *
- * HOW IT WORKS:
- * 1. Determines the user's role (same logic as layout.tsx)
- * 2. Fetches role-specific data from Supabase (stats, sessions, etc.)
- * 3. Renders the appropriate dashboard component with that data
- *
- * IMPORTANT: This page duplicates the role-detection logic from layout.tsx
- * because Next.js layouts can't pass data to page children. Each server
- * component independently determines the role.
- *
- * This is a SERVER Component -- all data fetching happens on the server.
- * The dashboard components themselves are Server Components too (no "use client"),
- * which means they render on the server and send HTML to the browser.
- *
- * ROUTE: /dashboard
- * ==========================================================================
- */
+/** Dashboard home -- renders role-specific overview (admin, tutor, or learner). */
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import type { UserRole } from "@/lib/types";
@@ -40,7 +14,7 @@ export default async function DashboardPage() {
     const { data } = await supabase.auth.getUser();
     user = data.user;
   } catch {
-    // Auth check failed -- continue in demo mode
+    // Auth unavailable -- continue in demo mode
   }
   const cookieStore = await cookies();
   const devRole = cookieStore.get("dev_role")?.value as UserRole | undefined;
@@ -53,7 +27,6 @@ export default async function DashboardPage() {
       .select("*, roles(*)")
       .eq("id", user.id)
       .maybeSingle();
-    // profileError is non-fatal -- fallback to demo profile below
     profile = p;
   }
 

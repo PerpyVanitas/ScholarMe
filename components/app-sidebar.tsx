@@ -1,28 +1,4 @@
-/**
- * ==========================================================================
- * APP SIDEBAR - Main Navigation Component
- * ==========================================================================
- *
- * PURPOSE: The collapsible sidebar navigation shown on all dashboard pages.
- * It adapts its menu items based on the user's role.
- *
- * SECTIONS:
- * 1. Header: ScholarMe logo + current role label
- * 2. General nav: Dashboard, Notifications, Profile (shared by all roles)
- * 3. Role-specific nav: Different links per role:
- *    - Learner: Find Tutors, My Sessions, Resources
- *    - Tutor: My Sessions, Availability, My Repositories
- *    - Admin: Users, Cards, All Sessions, Analytics, Resources
- * 4. Footer: User avatar + name + sign-out dropdown
- *
- * PROPS (passed from dashboard/layout.tsx):
- * - profile: The user's profile data (name, email)
- * - role: Current UserRole ("learner" | "tutor" | "administrator")
- * - notificationCount: Number of unread notifications (shown as badge)
- *
- * Uses shadcn/ui Sidebar components for the collapsible layout.
- * ==========================================================================
- */
+/** App sidebar -- role-aware navigation with user menu and notification badge. */
 "use client";
 
 import Link from "next/link";

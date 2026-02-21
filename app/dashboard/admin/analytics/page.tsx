@@ -1,27 +1,4 @@
-/**
- * ==========================================================================
- * ADMIN: ANALYTICS PAGE
- * ==========================================================================
- *
- * PURPOSE: Shows organization-wide metrics and charts for administrators.
- *
- * STATS CARDS (8 total):
- * - Total Users, Active Tutors, Total Sessions, Avg Rating
- * - Repositories, Cards Issued, Completed Sessions, Pending Sessions
- *
- * CHARTS (using Recharts):
- * 1. DONUT CHART: Users by Role (learner/tutor/admin distribution)
- * 2. BAR CHART: Sessions by Status (completed/pending/confirmed/cancelled)
- *
- * HOW STATS ARE CALCULATED:
- * - Uses Supabase's { count: "exact", head: true } for efficient counting
- *   (returns only the count, no actual row data)
- * - Average rating is calculated client-side from tutors with >0 ratings
- * - Role breakdown queries profiles joined with roles
- *
- * ROUTE: /dashboard/admin/analytics
- * ==========================================================================
- */
+/** Admin analytics page -- org-wide stat cards and role/session charts. */
 "use client";
 
 import { useState, useEffect } from "react";

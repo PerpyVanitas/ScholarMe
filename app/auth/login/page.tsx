@@ -1,27 +1,4 @@
-/**
- * ==========================================================================
- * LOGIN PAGE - Two Authentication Methods
- * ==========================================================================
- *
- * PURPOSE: The sign-in page for ScholarMe. Provides TWO ways to log in:
- *
- * TAB 1 - EMAIL LOGIN:
- * - Standard email + password authentication via Supabase Auth
- * - Uses the client-side Supabase client (createBrowserClient)
- * - On success, redirects to /dashboard via window.location.href
- *   (hard redirect needed so the server re-reads the new auth cookies)
- *
- * TAB 2 - CARD LOGIN:
- * - Alternative login for environments without email access (e.g., schools)
- * - User enters a Card ID + PIN (issued by an admin)
- * - Calls POST /api/auth/card-login which validates the card and creates a session
- *
- * WHY "use client": This page uses useState for form state, loading indicators,
- * and error messages. Server Components can't use React state or event handlers.
- *
- * ROUTE: /auth/login
- * ==========================================================================
- */
+/** Login page -- supports email/password and card-based authentication. */
 "use client";
 
 import { useState } from "react";
@@ -50,10 +27,8 @@ export default function LoginPage() {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    // Create a Supabase browser client and attempt login
     const supabase = createClient();
-
-    const { error, data } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -65,9 +40,7 @@ export default function LoginPage() {
       return;
     }
 
-    // IMPORTANT: Use window.location.href instead of router.push() for a HARD redirect.
-    // This forces a full page load so the server-side layout reads the new auth cookies.
-    // router.push() only does client-side navigation and wouldn't trigger a fresh cookie read.
+    // Hard redirect so server re-reads fresh auth cookies
     window.location.href = "/dashboard";
   }
 

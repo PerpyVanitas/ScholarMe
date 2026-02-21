@@ -1,29 +1,4 @@
-/**
- * ==========================================================================
- * ADMIN: USER MANAGEMENT PAGE
- * ==========================================================================
- *
- * PURPOSE: Allows administrators to view all users and create new accounts.
- * Accessible only from the Admin sidebar section.
- *
- * FEATURES:
- * - Table/card list of all users with name, email, role, and join date
- * - Search by name or email
- * - Filter by role (learner/tutor/administrator)
- * - "Create User" dialog to add new accounts with a specific role
- *
- * CREATE USER FLOW:
- * 1. Admin fills in name, email, password, and role
- * 2. POST /api/admin/users is called
- * 3. The API uses Supabase Admin API to create the auth user
- * 4. A database trigger auto-creates the profile
- * 5. If role is "tutor", a tutors record is also created
- *
- * RESPONSIVE: Shows card layout on mobile, table layout on desktop (md:).
- *
- * ROUTE: /dashboard/admin/users
- * ==========================================================================
- */
+/** Admin users page -- list, search, filter, and create user accounts. */
 "use client";
 
 import { useState, useEffect } from "react";

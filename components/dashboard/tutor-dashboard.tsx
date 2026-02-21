@@ -1,54 +1,23 @@
-/**
- * ==========================================================================
- * TUTOR DASHBOARD COMPONENT
- * ==========================================================================
- *
- * PURPOSE: The main dashboard view shown to users with the "tutor" role.
- * Rendered by /app/dashboard/page.tsx when role === "tutor".
- *
- * SECTIONS:
- * 1. GREETING: Personalized welcome with tutor's name
- * 2. STAT CARDS (4): Upcoming, Completed, Avg Rating, Total Reviews
- * 3. UPCOMING SESSIONS: Next 5 sessions that need attention (pending/confirmed)
- * 4. QUICK ACTIONS: Manage Availability, View Sessions, My Repositories
- *
- * SPECIAL CASE: If tutor is null (no tutors table record exists for this user),
- * shows an error state asking them to contact their admin. This can happen if
- * a user's role was changed to "tutor" but no tutors record was created.
- *
- * PROPS:
- * - profile: Tutor's user profile
- * - tutor: Tutor-specific data (bio, rating) -- can be null
- * - upcomingSessions: Next 5 pending/confirmed sessions
- * - stats: { completedSessions, upcomingSessions, rating, totalRatings }
- * ==========================================================================
- */
+/** Tutor dashboard -- upcoming sessions, stats, and quick actions. Falls back to an error state if no tutor record exists. */
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Star, Clock, CheckCircle2, FolderOpen, ArrowRight, AlertCircle } from "lucide-react";
+import { SESSION_STATUS_COLORS } from "@/lib/constants";
 import type { Profile, Session, Tutor } from "@/lib/types";
 
 interface TutorDashboardProps {
   profile: Profile;
-  tutor: Tutor | null;      // null if tutors record hasn't been created yet
+  tutor: Tutor | null;
   upcomingSessions: Session[];
   stats: {
     completedSessions: number;
     upcomingSessions: number;
-    rating: number;          // 0-5 average rating from learner reviews
-    totalRatings: number;    // Number of reviews received
+    rating: number;
+    totalRatings: number;
   };
 }
-
-/** Color mapping for session status badges (same pattern used across all dashboards) */
-const statusColors: Record<string, string> = {
-  pending: "bg-warning/10 text-warning-foreground border-warning/30",
-  confirmed: "bg-primary/10 text-primary border-primary/30",
-  completed: "bg-success/10 text-success border-success/30",
-  cancelled: "bg-destructive/10 text-destructive border-destructive/30",
-};
 
 export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: TutorDashboardProps) {
   if (!tutor) {
@@ -171,7 +140,7 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
                           {session.specializations.name}
                         </Badge>
                       )}
-                      <Badge className={statusColors[session.status] || ""} variant="outline">
+                      <Badge className={SESSION_STATUS_COLORS[session.status] || ""} variant="outline">
                         {session.status}
                       </Badge>
                     </div>

@@ -1,21 +1,4 @@
-/**
- * ==========================================================================
- * PROFILE PAGE - View and Edit User Profile
- * ==========================================================================
- *
- * PURPOSE: Shows the current user's profile with their avatar, name, email,
- * role badge, and member-since date. The user can edit their full name.
- *
- * DEMO MODE: If no authenticated user is found, it creates a fake demo profile
- * based on the "dev_role" cookie. This allows the profile page to render
- * properly when using the DevRoleSwitcher.
- *
- * NOTE: Email and role cannot be changed by the user -- email changes require
- * admin action, and roles are set by administrators.
- *
- * ROUTE: /dashboard/profile
- * ==========================================================================
- */
+/** Profile page -- view and edit name; email and role are read-only. */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -28,8 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Loader2, Save, UserCircle } from "lucide-react";
 import { toast } from "sonner";
+import { DEMO_USERS, getDemoUserFromCookie } from "@/lib/demo";
 import type { Profile, UserRole } from "@/lib/types";
-import { DEMO_USERS } from "@/lib/demo";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -58,10 +41,7 @@ export default function ProfilePage() {
       }
 
       // Demo mode: fetch real seeded profile
-      const devRole = (document.cookie
-        .split("; ")
-        .find((c) => c.startsWith("dev_role="))
-        ?.split("=")[1] || "administrator") as UserRole;
+      const { role: devRole, userId: demoUserId } = getDemoUserFromCookie("administrator");
       const demoInfo = DEMO_USERS[devRole as keyof typeof DEMO_USERS] || DEMO_USERS.administrator;
 
       const { data: demoProfile } = await supabase

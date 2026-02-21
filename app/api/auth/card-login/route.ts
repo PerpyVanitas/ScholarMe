@@ -1,28 +1,4 @@
-/**
- * ==========================================================================
- * CARD LOGIN API - POST /api/auth/card-login
- * ==========================================================================
- *
- * PURPOSE: Authenticates users via Card ID + PIN instead of email/password.
- * This is ScholarMe's alternative auth method for environments where email
- * access isn't practical (school labs, kiosks, etc.).
- *
- * FLOW:
- * 1. Receive { cardId, pin } from the login form's "Card" tab
- * 2. Use ADMIN client to look up the card in auth_cards table (bypasses RLS)
- * 3. Verify the PIN matches
- * 4. Look up the user's email from Supabase Auth
- * 5. Generate a magic link for that email (admin API)
- * 6. Verify the magic link token to create a real auth session
- * 7. Return success with the user's role
- *
- * WHY ADMIN CLIENT: Cards are looked up by card_id, not by user session.
- * The normal client would be blocked by RLS since the user isn't logged in yet.
- *
- * SECURITY NOTE: PINs are stored as plaintext in this MVP. In production,
- * hash them with bcrypt and compare using bcrypt.compare().
- * ==========================================================================
- */
+/** POST /api/auth/card-login -- authenticate via Card ID + PIN (uses admin client to bypass RLS). */
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 

@@ -1,52 +1,22 @@
-/**
- * ==========================================================================
- * ADMIN DASHBOARD COMPONENT
- * ==========================================================================
- *
- * PURPOSE: The main dashboard view shown to users with the "administrator" role.
- * Rendered by /app/dashboard/page.tsx when role === "administrator".
- *
- * SECTIONS:
- * 1. HEADER: "Admin Dashboard" title with org overview subtitle
- * 2. STAT CARDS (4): Total Users, Active Tutors, Total Sessions, Pending Sessions
- * 3. RECENT SESSIONS: Last 5 sessions across the entire organization
- *    (unlike learner/tutor dashboards which show only their own sessions)
- * 4. ADMIN TOOLS: Quick links to User Management, Card Management, Analytics
- *
- * The stats are calculated in the parent page.tsx using Supabase count queries.
- * This component just receives and renders the data.
- *
- * PROPS:
- * - profile: Admin's user profile
- * - stats: { totalUsers, totalSessions, activeTutors, pendingSessions }
- * - recentSessions: Last 5 sessions system-wide (with tutor name JOINs)
- * ==========================================================================
- */
+/** Admin dashboard -- org-wide stats, recent sessions, and quick-link admin tools. */
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users, Calendar, GraduationCap, Clock, ArrowRight, BarChart3, CreditCard } from "lucide-react";
+import { SESSION_STATUS_COLORS } from "@/lib/constants";
 import type { Profile, Session } from "@/lib/types";
 
 interface AdminDashboardProps {
   profile: Profile;
   stats: {
-    totalUsers: number;      // Count of all profiles
-    totalSessions: number;   // Count of all sessions
-    activeTutors: number;    // Count of tutors table records
-    pendingSessions: number; // Count of sessions with status "pending"
+    totalUsers: number;
+    totalSessions: number;
+    activeTutors: number;
+    pendingSessions: number;
   };
-  recentSessions: Session[]; // Last 5 sessions across the whole org
+  recentSessions: Session[];
 }
-
-/** Color mapping for session status badges */
-const statusColors: Record<string, string> = {
-  pending: "bg-warning/10 text-warning-foreground border-warning/30",
-  confirmed: "bg-primary/10 text-primary border-primary/30",
-  completed: "bg-success/10 text-success border-success/30",
-  cancelled: "bg-destructive/10 text-destructive border-destructive/30",
-};
 
 export function AdminDashboard({ profile, stats, recentSessions }: AdminDashboardProps) {
   return (
@@ -147,7 +117,7 @@ export function AdminDashboard({ profile, stats, recentSessions }: AdminDashboar
                         at {session.start_time?.slice(0, 5)}
                       </span>
                     </div>
-                    <Badge className={statusColors[session.status] || ""} variant="outline">
+                    <Badge className={SESSION_STATUS_COLORS[session.status] || ""} variant="outline">
                       {session.status}
                     </Badge>
                   </div>

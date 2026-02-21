@@ -1,20 +1,4 @@
-/**
- * ==========================================================================
- * API: ADD RESOURCE TO REPOSITORY - POST /api/repositories/[id]/resources
- * ==========================================================================
- *
- * PURPOSE: Adds a new resource (study material link) to a specific repository.
- * Called from the Resources page when a tutor/admin adds a resource.
- *
- * Body: { title, description?, url, file_type?: "pdf"|"doc"|"video"|"link"|"other" }
- * Returns: The created resource record
- *
- * The [id] param is the repository's UUID. The resource is linked to this repo
- * via the repository_id foreign key.
- *
- * AUTH: Requires authenticated user. uploaded_by is set to current user's ID.
- * ==========================================================================
- */
+/** POST /api/repositories/[id]/resources -- add a study-material link to a repository. */
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 

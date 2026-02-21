@@ -1,23 +1,4 @@
-/**
- * ==========================================================================
- * ADMIN: ALL SESSIONS PAGE
- * ==========================================================================
- *
- * PURPOSE: Gives administrators a bird's-eye view of ALL tutoring sessions
- * across the entire organization. Unlike the regular sessions page which
- * shows only sessions for the logged-in user, this shows everything.
- *
- * FEATURES:
- * - Table of all sessions with tutor name, date, time, subject, status, rating
- * - Filter by status (pending/confirmed/completed/cancelled)
- * - Read-only view (admins observe but don't modify sessions here)
- *
- * NOTE: Limited to the most recent 100 sessions for performance.
- * For production, add pagination.
- *
- * ROUTE: /dashboard/admin/sessions
- * ==========================================================================
- */
+/** Admin sessions page -- read-only table of all sessions with status filter. */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -34,14 +15,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Calendar, Loader2 } from "lucide-react";
+import { SESSION_STATUS_COLORS } from "@/lib/constants";
 import type { Session } from "@/lib/types";
-
-const statusColors: Record<string, string> = {
-  pending: "bg-warning/10 text-warning-foreground border-warning/30",
-  confirmed: "bg-primary/10 text-primary border-primary/30",
-  completed: "bg-success/10 text-success border-success/30",
-  cancelled: "bg-destructive/10 text-destructive border-destructive/30",
-};
 
 export default function AdminSessionsPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -142,7 +117,7 @@ export default function AdminSessionsPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={statusColors[session.status]}>
+                      <Badge variant="outline" className={SESSION_STATUS_COLORS[session.status]}>
                         {session.status}
                       </Badge>
                     </TableCell>

@@ -1,26 +1,4 @@
-/**
- * ==========================================================================
- * API: LIST TUTORS - GET /api/tutors
- * ==========================================================================
- *
- * PURPOSE: Returns all tutors with their profiles and specializations.
- * Used by the Tutors browse page (/dashboard/tutors).
- *
- * QUERY PARAMS (optional):
- * - search: Filter by tutor name or bio text (case-insensitive)
- * - specialization: Filter by specialization name (exact match)
- *
- * RESPONSE: Array of tutor objects, each including:
- * - profiles: { full_name, email, avatar_url }
- * - tutor_specializations: [{ specializations: { name } }]
- *
- * Sorted by rating (highest first) so top-rated tutors appear first.
- *
- * NOTE: Filtering is done server-side in JavaScript (not SQL) because
- * Supabase doesn't support .ilike() on joined tables easily. For large
- * datasets, consider using Supabase full-text search or PostgreSQL functions.
- * ==========================================================================
- */
+/** GET /api/tutors -- list all tutors with profiles and specializations (highest-rated first). */
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 

@@ -1,28 +1,4 @@
-/**
- * ==========================================================================
- * RESOURCES PAGE - Study Material Repository Browser
- * ==========================================================================
- *
- * PURPOSE: Shows a list of resource repositories (like folders). Each repository
- * contains links to study materials (PDFs, videos, web links, etc.).
- *
- * FEATURES:
- * - Browse repositories with access level badges (Everyone/Tutors/Admins)
- * - Click a repository to expand and see its resources
- * - Tutors and admins can create new repositories
- * - Repository owners and admins can add resources to repositories
- *
- * ACCESS CONTROL:
- * - Learners: Can view "all" repositories and their resources
- * - Tutors: Can view "all" + "tutor" repos, can create repos and add resources
- * - Admins: Can view everything, create repos, add resources to any repo
- *
- * NOTE: Access control is currently UI-level only. For production, add
- * Supabase RLS policies to enforce at the database level.
- *
- * ROUTE: /dashboard/resources
- * ==========================================================================
- */
+/** Resources page -- browse and manage study-material repositories. Access-controlled by role. */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -43,18 +19,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  FolderOpen,
-  Plus,
-  ExternalLink,
-  FileText,
-  Loader2,
-  BookOpen,
-  Link as LinkIcon,
-} from "lucide-react";
+import { FolderOpen, Plus, ExternalLink, FileText, Loader2, BookOpen, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
+import { getDemoUserFromCookie } from "@/lib/demo";
 import type { Repository, Resource, UserRole } from "@/lib/types";
-import { DEMO_USERS } from "@/lib/demo";
 
 const accessLabels: Record<string, string> = {
   all: "Everyone",
@@ -110,13 +78,9 @@ export default function ResourcesPage() {
           .single();
         userRole = (profile?.roles?.name || "learner") as UserRole;
       } else {
-        // Demo mode
-        const devRoleCookie = document.cookie
-          .split("; ")
-          .find((c) => c.startsWith("dev_role="))
-          ?.split("=")[1];
-        userRole = (devRoleCookie as UserRole) || "learner";
-        effectiveUserId = DEMO_USERS[userRole as keyof typeof DEMO_USERS]?.profileId || DEMO_USERS.learner.profileId;
+        const demo = getDemoUserFromCookie("learner");
+        userRole = demo.role;
+        effectiveUserId = demo.userId;
       }
 
       setUserId(effectiveUserId);
