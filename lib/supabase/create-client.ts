@@ -1,11 +1,9 @@
-// Server-side Supabase clients (RSC, Server Actions, API routes)
+"use strict";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-// Normal client -- respects Row Level Security
 export async function createClient() {
   const cookieStore = await cookies();
-
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -18,7 +16,7 @@ export async function createClient() {
               cookieStore.set(name, value, options)
             );
           } catch {
-            // Silent in read-only Server Component context
+            // read-only context
           }
         },
       },
@@ -26,10 +24,8 @@ export async function createClient() {
   );
 }
 
-// Admin client -- bypasses RLS (admin ops and card-login lookups only)
 export async function createAdminClient() {
   const cookieStore = await cookies();
-
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -42,7 +38,7 @@ export async function createAdminClient() {
               cookieStore.set(name, value, options)
             );
           } catch {
-            // Silent in read-only context
+            // read-only context
           }
         },
       },

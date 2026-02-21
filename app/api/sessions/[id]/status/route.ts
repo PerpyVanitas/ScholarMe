@@ -1,5 +1,5 @@
 /** PUT /api/sessions/[id]/status -- update session status (confirm, complete, cancel). */
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
 
 export async function PUT(

@@ -1,6 +1,6 @@
 /** Dashboard layout -- sidebar, header, and role-aware shell for /dashboard/*. */
 import { cookies } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/create-client";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator";
