@@ -1,5 +1,5 @@
 /** POST /api/auth/card-login -- authenticate via Card ID + PIN (uses admin client to bypass RLS). */
-import { createClient } from "@/lib/supabase/create-client";
+import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {

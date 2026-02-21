@@ -1,6 +1,6 @@
 /** Dashboard layout -- sidebar, header, and role-aware shell for /dashboard/*. */
 import { cookies } from "next/headers";
-import { createClient } from "@/lib/supabase/create-client";
+import { createClient } from "@/lib/supabase/server";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator";
@@ -50,6 +50,18 @@ export default async function DashboardLayout({
 
   const isDemoMode = !user;
   const selectedRole = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "administrator")) as UserRole;
+
+  // If a real user is logged in but has no profile row, create a fallback
+  if (user && !profile) {
+    profile = {
+      id: user.id,
+      full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
+      email: user.email || "",
+      avatar_url: null,
+      created_at: user.created_at || new Date().toISOString(),
+      roles: { id: "fallback", name: "learner" },
+    };
+  }
 
   if (!profile && isDemoMode) {
     const demoProfileId = getDemoProfileId(selectedRole);

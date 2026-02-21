@@ -1,6 +1,6 @@
 /** Dashboard home -- renders role-specific overview (admin, tutor, or learner). */
 import { cookies } from "next/headers";
-import { createClient } from "@/lib/supabase/create-client";
+import { createClient } from "@/lib/supabase/server";
 import type { UserRole } from "@/lib/types";
 import { DEMO_USERS, getDemoProfileId, getDemoTutorId } from "@/lib/demo";
 import { LearnerDashboard } from "@/components/dashboard/learner-dashboard";
@@ -19,23 +19,31 @@ export default async function DashboardPage() {
   const cookieStore = await cookies();
   const devRole = cookieStore.get("dev_role")?.value as UserRole | undefined;
 
-  console.log("[v0] Dashboard: user =", user?.id || "null", "| devRole =", devRole || "none");
-
   let profile: any = null;
 
   if (user) {
-    const { data: p, error: profileError } = await supabase
+    const { data: p } = await supabase
       .from("profiles")
       .select("*, roles(*)")
       .eq("id", user.id)
       .maybeSingle();
     profile = p;
-    console.log("[v0] Dashboard: profile =", profile ? profile.full_name : "null", "| profileError =", profileError?.message || "none");
-    console.log("[v0] Dashboard: role from profile =", profile?.roles?.name || "null");
   }
 
   const isDemoMode = !user;
   const selectedRole = (isDemoMode && devRole ? devRole : "administrator") as UserRole;
+
+  // If a real user is logged in but has no profile row, create a fallback
+  if (user && !profile) {
+    profile = {
+      id: user.id,
+      full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
+      email: user.email || "",
+      avatar_url: null,
+      created_at: user.created_at || new Date().toISOString(),
+      roles: { id: "fallback", name: "learner" },
+    };
+  }
 
   // In demo mode, fetch the real seeded profile
   if (!profile && isDemoMode) {
@@ -62,7 +70,6 @@ export default async function DashboardPage() {
   }
 
   const role = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "learner")) as UserRole;
-  console.log("[v0] Dashboard: resolved role =", role, "| isDemoMode =", isDemoMode);
 
   try {
     if (role === "administrator") {
@@ -177,8 +184,7 @@ export default async function DashboardPage() {
         }}
       />
     );
-  } catch (err) {
-    console.log("[v0] Dashboard: catch block hit, error =", err);
+  } catch {
     // If queries fail (e.g., tables don't exist yet), render with zero data
     if (role === "administrator") {
       return (

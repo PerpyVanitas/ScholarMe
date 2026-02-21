@@ -1,7 +1,7 @@
 // Server Actions for authentication: email login, sign-up, and sign-out.
 "use server"
 
-import { createClient, createAdminClient } from "@/lib/supabase/create-client"
+import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 
 export async function loginWithEmail(formData: FormData) {

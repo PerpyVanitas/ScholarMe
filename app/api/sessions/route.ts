@@ -1,5 +1,5 @@
 /** POST /api/sessions -- book a new tutoring session (learner_id = current user). */
-import { createClient } from "@/lib/supabase/create-client";
+import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {

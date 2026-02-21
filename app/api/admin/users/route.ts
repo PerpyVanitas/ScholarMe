@@ -1,5 +1,5 @@
 /** POST /api/admin/users -- admin-only: create a new user via Supabase admin API. */
-import { createClient } from "@/lib/supabase/create-client";
+import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 

@@ -1,5 +1,5 @@
 /** GET /api/tutors -- list all tutors with profiles and specializations (highest-rated first). */
-import { createClient } from "@/lib/supabase/create-client";
+import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {

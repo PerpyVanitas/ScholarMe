@@ -1,5 +1,5 @@
 /** POST /api/sessions/[id]/rate -- submit a 1-5 star rating and recalculate the tutor's average. */
-import { createClient } from "@/lib/supabase/create-client";
+import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function POST(
