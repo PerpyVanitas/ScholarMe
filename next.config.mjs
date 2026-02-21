@@ -12,19 +12,24 @@ const nextConfig = {
     unoptimized: true,
   },
   webpack: (config) => {
+    const serverPath = path.resolve(__dirname, "lib/supabase/server")
+    const serverTsPath = path.resolve(__dirname, "lib/supabase/server.ts")
+    const createClientPath = path.resolve(__dirname, "lib/supabase/create-client.ts")
     config.resolve.alias = {
       ...config.resolve.alias,
-      [path.resolve(__dirname, "lib/supabase/server")]: path.resolve(
-        __dirname,
-        "lib/supabase/create-client.ts"
-      ),
+      [serverPath]: createClientPath,
+      [serverTsPath]: createClientPath,
     }
     return config
   },
   turbopack: {
     resolveAlias: {
+      "@/lib/supabase/server": "./lib/supabase/create-client.ts",
+      "@/lib/supabase/server.ts": "./lib/supabase/create-client.ts",
       "./lib/supabase/server": "./lib/supabase/create-client.ts",
       "./lib/supabase/server.ts": "./lib/supabase/create-client.ts",
+      "lib/supabase/server": "./lib/supabase/create-client.ts",
+      "lib/supabase/server.ts": "./lib/supabase/create-client.ts",
     },
   },
 }
