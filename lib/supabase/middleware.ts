@@ -33,15 +33,20 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const pathname = request.nextUrl.pathname;
+  console.log("[v0] Middleware - path:", pathname, "user:", user?.id ?? "none", "cookies:", request.cookies.getAll().map(c => c.name).join(", "));
+
   // Redirect unauthenticated users trying to access dashboard
-  if (request.nextUrl.pathname.startsWith("/dashboard") && !user) {
+  if (pathname.startsWith("/dashboard") && !user) {
+    console.log("[v0] Middleware - no user, redirecting to /auth/login");
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
     return NextResponse.redirect(url);
   }
 
   // Redirect authenticated users away from auth pages
-  if (request.nextUrl.pathname.startsWith("/auth") && user) {
+  if (pathname.startsWith("/auth") && user) {
+    console.log("[v0] Middleware - user found on auth page, redirecting to /dashboard");
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);

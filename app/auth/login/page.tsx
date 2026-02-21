@@ -25,12 +25,19 @@ export default function LoginPage() {
 
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
+
+    console.log("[v0] Attempting login with email:", email);
+    console.log("[v0] SUPABASE_URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+    console.log("[v0] ANON_KEY exists:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+
     const supabase = createClient();
 
     const { error, data } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+
+    console.log("[v0] signInWithPassword response - error:", error, "session:", !!data?.session, "user:", data?.user?.id);
 
     if (error) {
       setEmailError(error.message);
@@ -39,9 +46,11 @@ export default function LoginPage() {
       return;
     }
 
-    console.log("[v0] Login successful, session:", !!data.session);
-    toast.success("Welcome back!");
-    // Use hard redirect to ensure middleware sees fresh cookies
+    // Verify the session is actually set
+    const { data: sessionCheck } = await supabase.auth.getSession();
+    console.log("[v0] Session check after login:", !!sessionCheck.session, "access_token length:", sessionCheck.session?.access_token?.length);
+
+    console.log("[v0] About to redirect to /dashboard via window.location.href");
     window.location.href = "/dashboard";
   }
 
