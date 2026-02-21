@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/create-client";
+import { createClient, createAdminClient } from "@/lib/supabase/create-client";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { DEMO_USERS, getDemoProfileId, getDemoTutorId } from "@/lib/demo";
@@ -82,15 +82,16 @@ export async function GET() {
 
   const role = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "learner")) as UserRole;
 
-  console.log("[v0] Dashboard API - user:", user?.id, "profile.roles:", profile?.roles, "computed role:", role, "isDemoMode:", isDemoMode);
-
   try {
     if (role === "administrator") {
+      // Use admin client to bypass RLS for org-wide stats
+      const adminClient = await createAdminClient();
+
       const results = await Promise.allSettled([
-        supabase.from("profiles").select("*", { count: "exact", head: true }),
-        supabase.from("sessions").select("*", { count: "exact", head: true }),
-        supabase.from("tutors").select("*", { count: "exact", head: true }),
-        supabase.from("sessions").select("*", { count: "exact", head: true }).eq("status", "pending"),
+        adminClient.from("profiles").select("*", { count: "exact", head: true }),
+        adminClient.from("sessions").select("*", { count: "exact", head: true }),
+        adminClient.from("tutors").select("*", { count: "exact", head: true }),
+        adminClient.from("sessions").select("*", { count: "exact", head: true }).eq("status", "pending"),
       ]);
 
       const totalUsers = results[0].status === "fulfilled" ? results[0].value.count || 0 : 0;
@@ -98,7 +99,7 @@ export async function GET() {
       const activeTutors = results[2].status === "fulfilled" ? results[2].value.count || 0 : 0;
       const pendingSessions = results[3].status === "fulfilled" ? results[3].value.count || 0 : 0;
 
-      const { data: recentSessions } = await supabase
+      const { data: recentSessions } = await adminClient
         .from("sessions")
         .select("*, tutors(*, profiles(*)), specializations(*)")
         .order("created_at", { ascending: false })

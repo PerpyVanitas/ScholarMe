@@ -4,7 +4,6 @@ import useSWR from "swr"
 import { Loader2 } from "lucide-react"
 import type { Profile, UserRole } from "@/lib/types"
 
-// Lazy load dashboard components - NO SSR
 import dynamic from "next/dynamic"
 const AdminDashboard = dynamic(() => import("@/components/dashboard/admin-dashboard").then(m => ({ default: m.AdminDashboard })), { ssr: false })
 const TutorDashboard = dynamic(() => import("@/components/dashboard/tutor-dashboard").then(m => ({ default: m.TutorDashboard })), { ssr: false })
@@ -17,14 +16,15 @@ const fetcher = async (url: string) => {
 }
 
 function makeSafeProfile(data: any): Profile {
-  if (data?.profile?.full_name) return data.profile
+  const p = data?.profile
   return {
-    id: data?.profile?.id || "unknown",
-    full_name: data?.profile?.full_name || data?.profile?.email?.split("@")[0] || "User",
-    email: data?.profile?.email || "",
-    avatar_url: data?.profile?.avatar_url || null,
-    created_at: data?.profile?.created_at || new Date().toISOString(),
-    roles: data?.profile?.roles || { id: "fallback", name: data?.role || "learner" },
+    id: p?.id || "unknown",
+    full_name: p?.full_name || p?.email?.split("@")[0] || "User",
+    email: p?.email || "",
+    avatar_url: p?.avatar_url || null,
+    created_at: p?.created_at || new Date().toISOString(),
+    role_id: p?.role_id || "",
+    roles: p?.roles || { id: "fallback", name: data?.role || "learner" },
   } as Profile
 }
 
@@ -52,10 +52,31 @@ export default function DashboardView() {
   const profile = makeSafeProfile(data)
 
   if (role === "administrator") {
-    return <AdminDashboard profile={profile} stats={data.adminStats || { totalUsers: 0, totalSessions: 0, activeTutors: 0, pendingSessions: 0 }} recentSessions={data.recentSessions || []} />
+    return (
+      <AdminDashboard
+        profile={profile}
+        stats={data.adminStats || { totalUsers: 0, totalSessions: 0, activeTutors: 0, pendingSessions: 0 }}
+        recentSessions={data.recentSessions || []}
+      />
+    )
   }
+
   if (role === "tutor") {
-    return <TutorDashboard profile={profile} stats={data.tutorStats || { totalSessions: 0, completedSessions: 0, upcomingSessions: 0, averageRating: 0 }} />
+    return (
+      <TutorDashboard
+        profile={profile}
+        tutor={data.tutor || null}
+        upcomingSessions={data.upcomingSessions || []}
+        stats={data.tutorStats || { completedSessions: 0, upcomingSessions: 0, rating: 0, totalRatings: 0 }}
+      />
+    )
   }
-  return <LearnerDashboard profile={profile} stats={data.learnerStats || { totalSessions: 0, completedSessions: 0, upcomingSessions: 0, averageRating: null }} />
+
+  return (
+    <LearnerDashboard
+      profile={profile}
+      upcomingSessions={data.upcomingSessions || []}
+      stats={data.learnerStats || { totalSessions: 0, completedSessions: 0, upcomingSessions: 0 }}
+    />
+  )
 }
