@@ -30,7 +30,7 @@ export default function SignUpPage() {
       return;
     }
     toast.success("Account created successfully!");
-    router.push("/dashboard");
+    window.location.href = "/dashboard";
   }
 
   return (

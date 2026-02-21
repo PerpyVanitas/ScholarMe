@@ -94,8 +94,6 @@ export default async function DashboardLayout({
 
   const role = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "learner")) as UserRole;
 
-  console.log("[v0] Layout - user:", user?.id, "profile:", profile?.id, "full_name:", profile?.full_name, "role:", role, "isDemoMode:", isDemoMode);
-
   // Guarantee profile is never null for downstream components
   if (!profile) {
     profile = {
