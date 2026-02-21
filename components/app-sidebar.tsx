@@ -40,6 +40,7 @@ import {
   BarChart3,
   UserCircle,
   Clock,
+  Timer,
 } from "lucide-react";
 import { signOut } from "@/app/auth/actions";
 
@@ -65,6 +66,7 @@ function getNavItems(role: UserRole) {
   const tutorItems = [
     { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
     { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
+    { title: "Timesheet", href: "/dashboard/timesheet", icon: Timer },
     { title: "Availability", href: "/dashboard/availability", icon: Clock },
     { title: "My Repositories", href: "/dashboard/resources", icon: FolderOpen },
   ];
@@ -73,6 +75,7 @@ function getNavItems(role: UserRole) {
     { title: "Users", href: "/dashboard/admin/users", icon: Users },
     { title: "Cards", href: "/dashboard/admin/cards", icon: CreditCard },
     { title: "All Sessions", href: "/dashboard/admin/sessions", icon: Calendar },
+    { title: "Timesheets", href: "/dashboard/admin/timesheets", icon: Timer },
     { title: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
     { title: "Resources", href: "/dashboard/resources", icon: FolderOpen },
   ];
