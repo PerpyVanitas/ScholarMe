@@ -1,4 +1,3 @@
-// Server Actions for authentication: email login, sign-up, and sign-out.
 "use server"
 
 import { createClient, createAdminClient } from "@/lib/supabase/create-client"
@@ -22,14 +21,12 @@ export async function signUp(formData: FormData) {
   const fullName = formData.get("full_name") as string
   const selectedRole = (formData.get("role") as string) || "learner"
 
-  // Look up the role_id for the chosen role
   const { data: roleRow } = await supabase
     .from("roles")
     .select("id")
     .eq("name", selectedRole)
     .single()
 
-  // Use admin API to create user (auto-confirms, avoids email rate limits)
   const { error: createError } = await adminClient.auth.admin.createUser({
     email,
     password,
@@ -42,7 +39,6 @@ export async function signUp(formData: FormData) {
   })
   if (createError) return { error: createError.message }
 
-  // Sign the user in immediately
   const { error: signInError } = await supabase.auth.signInWithPassword({
     email,
     password,

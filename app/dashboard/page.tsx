@@ -1,4 +1,3 @@
-/** Dashboard home -- renders role-specific overview (admin, tutor, or learner). */
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/create-client";
 import type { UserRole } from "@/lib/types";
@@ -33,7 +32,6 @@ export default async function DashboardPage() {
   const isDemoMode = !user;
   const selectedRole = (isDemoMode && devRole ? devRole : "administrator") as UserRole;
 
-  // If a real user is logged in but has no profile row, create a fallback
   if (user && !profile) {
     profile = {
       id: user.id,
@@ -45,7 +43,6 @@ export default async function DashboardPage() {
     };
   }
 
-  // In demo mode, fetch the real seeded profile
   if (!profile && isDemoMode) {
     const demoProfileId = getDemoProfileId(selectedRole);
     const { data: demoProfile } = await supabase
@@ -73,7 +70,6 @@ export default async function DashboardPage() {
 
   try {
     if (role === "administrator") {
-      // Admin stats - use Promise.all for parallel queries, but handle errors gracefully
       const results = await Promise.allSettled([
         supabase.from("profiles").select("*", { count: "exact", head: true }),
         supabase.from("sessions").select("*", { count: "exact", head: true }),
@@ -95,12 +91,7 @@ export default async function DashboardPage() {
       return (
         <AdminDashboard
           profile={profile}
-          stats={{
-            totalUsers,
-            totalSessions,
-            activeTutors,
-            pendingSessions,
-          }}
+          stats={{ totalUsers, totalSessions, activeTutors, pendingSessions }}
           recentSessions={recentSessions || []}
         />
       );
@@ -152,7 +143,6 @@ export default async function DashboardPage() {
       );
     }
 
-    // Learner
     const learnerId = user?.id || getDemoProfileId("learner");
     const { data: sessions } = await supabase
       .from("sessions")
@@ -185,7 +175,6 @@ export default async function DashboardPage() {
       />
     );
   } catch {
-    // If queries fail (e.g., tables don't exist yet), render with zero data
     if (role === "administrator") {
       return (
         <AdminDashboard
