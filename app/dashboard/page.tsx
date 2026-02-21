@@ -1,6 +1,6 @@
 /** Dashboard home -- renders role-specific overview (admin, tutor, or learner). */
 import { cookies } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/create-client";
 import type { UserRole } from "@/lib/types";
 import { DEMO_USERS, getDemoProfileId, getDemoTutorId } from "@/lib/demo";
 import { LearnerDashboard } from "@/components/dashboard/learner-dashboard";
