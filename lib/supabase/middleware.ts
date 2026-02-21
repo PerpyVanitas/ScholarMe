@@ -74,9 +74,12 @@ export async function updateSession(request: NextRequest) {
   // 1. Validates the current session (checks if user is logged in)
   // 2. Triggers token refresh if the access_token is expired
   // The side-effect of refreshing writes new cookies via setAll above.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    await supabase.auth.getUser();
+  } catch (e) {
+    // If Supabase is unreachable, don't block the request -- just skip auth
+    console.log("[v0] Middleware auth.getUser error:", e);
+  }
 
   // ── AUTH GUARDS (currently disabled for demo/dev mode) ──────────────
   // TODO: Re-enable these redirects when moving to production.

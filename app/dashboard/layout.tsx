@@ -40,16 +40,22 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  console.log("[v0] Dashboard layout: starting render");
+  
   const supabase = await createClient();
+  console.log("[v0] Dashboard layout: supabase client created");
+  
   let user = null;
   try {
     const { data } = await supabase.auth.getUser();
     user = data.user;
+    console.log("[v0] Dashboard layout: auth.getUser completed, user:", user ? user.id : "null");
   } catch (e) {
     console.log("[v0] Layout auth.getUser error:", e);
   }
   const cookieStore = await cookies();
   const devRole = cookieStore.get("dev_role")?.value as UserRole | undefined;
+  console.log("[v0] Dashboard layout: devRole cookie:", devRole);
 
   let profile: any = null;
   let notificationCount = 0;
@@ -62,6 +68,7 @@ export default async function DashboardLayout({
         .eq("id", user.id)
         .maybeSingle();
       profile = p;
+      console.log("[v0] Dashboard layout: profile fetched:", profile?.id);
 
       const { count } = await supabase
         .from("notifications")
@@ -76,6 +83,7 @@ export default async function DashboardLayout({
 
   // Demo profile for bypassing auth during development
   if (!profile) {
+    console.log("[v0] Dashboard layout: using demo profile");
     profile = {
       id: "demo",
       full_name: "Demo User",
@@ -89,6 +97,7 @@ export default async function DashboardLayout({
   // Allow dev role override via cookie (demo mode)
   const isDemoMode = !user;
   const role = (isDemoMode && devRole ? devRole : (profile.roles?.name || "learner")) as UserRole;
+  console.log("[v0] Dashboard layout: role:", role, "isDemoMode:", isDemoMode);
 
   // Override demo profile name based on role
   if (isDemoMode) {
@@ -101,6 +110,7 @@ export default async function DashboardLayout({
     profile.roles = { id: "demo-role", name: role };
   }
 
+  console.log("[v0] Dashboard layout: rendering JSX");
   return (
     <SidebarProvider>
       <AppSidebar
