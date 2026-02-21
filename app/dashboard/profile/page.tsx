@@ -22,18 +22,42 @@ export default function ProfilePage() {
     async function loadProfile() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
 
-      const { data } = await supabase
-        .from("profiles")
-        .select("*, roles(*)")
-        .eq("id", user.id)
-        .single();
+      if (user) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("*, roles(*)")
+          .eq("id", user.id)
+          .single();
 
-      if (data) {
-        setProfile(data);
-        setFullName(data.full_name || "");
+        if (data) {
+          setProfile(data);
+          setFullName(data.full_name || "");
+          setLoading(false);
+          return;
+        }
       }
+
+      // Demo mode fallback
+      const devRole = document.cookie
+        .split("; ")
+        .find((c) => c.startsWith("dev_role="))
+        ?.split("=")[1] || "administrator";
+      const demoNames: Record<string, string> = {
+        learner: "Learner Demo",
+        tutor: "Tutor Demo",
+        administrator: "Admin Demo",
+      };
+      setProfile({
+        id: "demo",
+        full_name: demoNames[devRole],
+        email: "demo@scholarme.org",
+        avatar_url: null,
+        created_at: new Date().toISOString(),
+        role_id: "demo-role",
+        roles: { id: "demo-role", name: devRole },
+      } as Profile);
+      setFullName(demoNames[devRole]);
       setLoading(false);
     }
     loadProfile();
