@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 
 /** Normal client -- respects Row Level Security. */
 export async function createClient() {
-  const cookieStore = await cookies()
+  const cookieStore = await cookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,19 +16,19 @@ export async function createClient() {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)
-            )
+            );
           } catch {
             // Silent in read-only Server Component context; middleware handles refresh.
           }
         },
       },
     }
-  )
+  );
 }
 
 /** Admin client -- bypasses RLS. Only use for admin ops and card-login lookups. */
 export async function createAdminClient() {
-  const cookieStore = await cookies()
+  const cookieStore = await cookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -40,12 +40,12 @@ export async function createAdminClient() {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)
-            )
+            );
           } catch {
             // Silent in read-only context.
           }
         },
       },
     }
-  )
+  );
 }
