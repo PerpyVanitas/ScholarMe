@@ -55,9 +55,24 @@ export default function ProfilePage() {
           setLoading(false);
           return;
         }
+
+        // Logged-in user but no profile row - create fallback from auth data
+        const fallbackProfile = {
+          id: user.id,
+          full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
+          email: user.email || "",
+          avatar_url: null,
+          created_at: user.created_at || new Date().toISOString(),
+          role_id: null,
+          roles: { id: "fallback", name: "learner" },
+        } as Profile;
+        setProfile(fallbackProfile);
+        setFullName(fallbackProfile.full_name || "");
+        setLoading(false);
+        return;
       }
 
-      // Demo mode fallback
+      // Demo mode fallback (no logged-in user)
       const { role: devRole } = getDemoUserFromCookie("administrator");
       const demoInfo = DEMO_USERS[devRole as keyof typeof DEMO_USERS] || DEMO_USERS.administrator;
 

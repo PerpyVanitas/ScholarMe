@@ -82,6 +82,8 @@ export async function GET() {
 
   const role = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "learner")) as UserRole;
 
+  console.log("[v0] Dashboard API - user:", user?.id, "profile.roles:", profile?.roles, "computed role:", role, "isDemoMode:", isDemoMode);
+
   try {
     if (role === "administrator") {
       const results = await Promise.allSettled([
