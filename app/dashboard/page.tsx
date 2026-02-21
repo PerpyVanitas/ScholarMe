@@ -1,11 +1,8 @@
-// cache-bust-v3
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/create-client";
 import type { UserRole } from "@/lib/types";
 import { DEMO_USERS, getDemoProfileId, getDemoTutorId } from "@/lib/demo";
-import { LearnerDashboard } from "@/components/dashboard/learner-dashboard";
-import { TutorDashboard } from "@/components/dashboard/tutor-dashboard";
-import { AdminDashboard } from "@/components/dashboard/admin-dashboard";
+import { DashboardClient } from "@/components/dashboard/dashboard-client";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -14,7 +11,7 @@ export default async function DashboardPage() {
     const { data } = await supabase.auth.getUser();
     user = data.user;
   } catch {
-    // Auth unavailable -- continue in demo mode
+    // Auth unavailable
   }
   const cookieStore = await cookies();
   const devRole = cookieStore.get("dev_role")?.value as UserRole | undefined;
@@ -31,8 +28,8 @@ export default async function DashboardPage() {
   }
 
   const isDemoMode = !user;
-  const selectedRole = (isDemoMode && devRole ? devRole : "administrator") as UserRole;
 
+  // Fallback profile for logged-in users missing a profile row
   if (user && !profile) {
     profile = {
       id: user.id,
@@ -44,7 +41,9 @@ export default async function DashboardPage() {
     };
   }
 
+  // Demo mode fallback
   if (!profile && isDemoMode) {
+    const selectedRole = (devRole || "administrator") as UserRole;
     const demoProfileId = getDemoProfileId(selectedRole);
     const { data: demoProfile } = await supabase
       .from("profiles")
@@ -67,20 +66,21 @@ export default async function DashboardPage() {
     }
   }
 
-  const role = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "learner")) as UserRole;
-
-  // Guarantee profile is never null for downstream components
+  // Final guarantee: profile is NEVER null
   if (!profile) {
     profile = {
       id: user?.id || "unknown",
-      full_name: user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User",
+      full_name: user?.user_metadata?.full_name || "User",
       email: user?.email || "",
       avatar_url: null,
       created_at: new Date().toISOString(),
-      roles: { id: "fallback", name: role },
+      roles: { id: "fallback", name: "learner" },
     };
   }
 
+  const role = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "learner")) as UserRole;
+
+  // Fetch role-specific data
   try {
     if (role === "administrator") {
       const results = await Promise.allSettled([
@@ -102,9 +102,10 @@ export default async function DashboardPage() {
         .limit(5);
 
       return (
-        <AdminDashboard
+        <DashboardClient
+          role={role}
           profile={profile}
-          stats={{ totalUsers, totalSessions, activeTutors, pendingSessions }}
+          adminStats={{ totalUsers, totalSessions, activeTutors, pendingSessions }}
           recentSessions={recentSessions || []}
         />
       );
@@ -142,11 +143,12 @@ export default async function DashboardPage() {
         .in("status", ["pending", "confirmed"]);
 
       return (
-        <TutorDashboard
+        <DashboardClient
+          role={role}
           profile={profile}
           tutor={tutor}
           upcomingSessions={sessions || []}
-          stats={{
+          tutorStats={{
             completedSessions: completedCount || 0,
             upcomingSessions: upcomingCount || 0,
             rating: tutor?.rating || 0,
@@ -156,6 +158,7 @@ export default async function DashboardPage() {
       );
     }
 
+    // Learner
     const learnerId = user?.id || getDemoProfileId("learner");
     const { data: sessions } = await supabase
       .from("sessions")
@@ -177,10 +180,11 @@ export default async function DashboardPage() {
       .eq("learner_id", learnerId);
 
     return (
-      <LearnerDashboard
+      <DashboardClient
+        role={role}
         profile={profile}
         upcomingSessions={sessions || []}
-        stats={{
+        learnerStats={{
           totalSessions: totalSessionCount || 0,
           completedSessions: completedCount || 0,
           upcomingSessions: sessions?.length || 0,
@@ -188,30 +192,10 @@ export default async function DashboardPage() {
       />
     );
   } catch {
-    if (role === "administrator") {
-      return (
-        <AdminDashboard
-          profile={profile}
-          stats={{ totalUsers: 0, totalSessions: 0, activeTutors: 0, pendingSessions: 0 }}
-          recentSessions={[]}
-        />
-      );
-    }
-    if (role === "tutor") {
-      return (
-        <TutorDashboard
-          profile={profile}
-          tutor={null}
-          upcomingSessions={[]}
-          stats={{ completedSessions: 0, upcomingSessions: 0, rating: 0, totalRatings: 0 }}
-        />
-      );
-    }
     return (
-      <LearnerDashboard
+      <DashboardClient
+        role={role}
         profile={profile}
-        upcomingSessions={[]}
-        stats={{ totalSessions: 0, completedSessions: 0, upcomingSessions: 0 }}
       />
     );
   }
