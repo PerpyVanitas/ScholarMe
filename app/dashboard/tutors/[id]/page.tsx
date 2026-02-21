@@ -285,8 +285,8 @@ export default function TutorDetailPage({ params }: { params: Promise<{ id: stri
               {availByDay
                 .filter((d) => d.slots.length > 0)
                 .map(({ day, slots }) => (
-                  <div key={day} className="flex items-center gap-4 rounded-lg border border-border/60 p-3">
-                    <span className="w-24 text-sm font-medium text-foreground">{day}</span>
+                  <div key={day} className="flex flex-col gap-2 rounded-lg border border-border/60 p-3 sm:flex-row sm:items-center sm:gap-4">
+                    <span className="text-sm font-medium text-foreground sm:w-24">{day}</span>
                     <div className="flex flex-wrap gap-2">
                       {slots.map((slot) => (
                         <Badge key={slot.id} variant="secondary" className="text-xs">

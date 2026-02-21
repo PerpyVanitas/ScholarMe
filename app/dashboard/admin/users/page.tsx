@@ -118,7 +118,7 @@ export default function AdminUsersPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">User Management</h1>
           <p className="text-muted-foreground">Create and manage user accounts.</p>
@@ -198,65 +198,108 @@ export default function AdminUsersPage() {
         </Select>
       </div>
 
-      <Card className="border-border/60">
-        <CardContent className="p-0">
-          {filtered.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 py-12">
-              <div className="rounded-full bg-muted p-4">
-                <Users className="h-6 w-6 text-muted-foreground" />
-              </div>
-              <p className="text-sm text-muted-foreground">No users found</p>
+      {filtered.length === 0 ? (
+        <Card className="border-border/60">
+          <CardContent className="flex flex-col items-center gap-3 py-12">
+            <div className="rounded-full bg-muted p-4">
+              <Users className="h-6 w-6 text-muted-foreground" />
             </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Joined</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((p) => {
-                  const initials = p.full_name
-                    ? p.full_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
-                    : "?";
-                  return (
-                    <TableRow key={p.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                              {initials}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="font-medium text-foreground">
-                            {p.full_name || "Unnamed"}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{p.email}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={roleColors[p.roles?.name || "learner"]}>
+            <p className="text-sm text-muted-foreground">No users found</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {/* Mobile card view */}
+          <div className="flex flex-col gap-3 md:hidden">
+            {filtered.map((p) => {
+              const initials = p.full_name
+                ? p.full_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+                : "?";
+              return (
+                <Card key={p.id} className="border-border/60">
+                  <CardContent className="flex items-center gap-3 p-4">
+                    <Avatar className="h-10 w-10 shrink-0">
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                      <span className="font-medium text-foreground truncate">
+                        {p.full_name || "Unnamed"}
+                      </span>
+                      <span className="text-xs text-muted-foreground truncate">{p.email}</span>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline" className={`text-[10px] ${roleColors[p.roles?.name || "learner"]}`}>
                           {p.roles?.name || "learner"}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {new Date(p.created_at).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                        <span className="text-[10px] text-muted-foreground">
+                          {new Date(p.created_at).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Desktop table view */}
+          <Card className="border-border/60 hidden md:block">
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Joined</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((p) => {
+                    const initials = p.full_name
+                      ? p.full_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+                      : "?";
+                    return (
+                      <TableRow key={p.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                {initials}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="font-medium text-foreground">
+                              {p.full_name || "Unnamed"}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{p.email}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={roleColors[p.roles?.name || "learner"]}>
+                            {p.roles?.name || "learner"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">
+                          {new Date(p.created_at).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   );
 }
