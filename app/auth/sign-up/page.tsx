@@ -30,7 +30,7 @@ export default function SignUpPage() {
       return;
     }
     toast.success("Account created successfully!");
-    window.location.href = "/dashboard";
+    window.location.href = "/auth/setup-profile";
   }
 
   return (

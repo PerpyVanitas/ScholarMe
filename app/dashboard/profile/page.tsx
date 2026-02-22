@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,8 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,26 +20,43 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Loader2, Save, Trash2 } from "lucide-react";
+import { Loader2, Save, Trash2, Camera, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { DEMO_USERS, getDemoUserFromCookie } from "@/lib/demo";
 import type { Profile } from "@/lib/types";
 
+interface Specialization {
+  id: string;
+  name: string;
+}
+
 export default function ProfilePage() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const supabase = createClient();
+
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [fullName, setFullName] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [confirmText, setConfirmText] = useState("");
+
+  // Editable fields
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [birthdate, setBirthdate] = useState("");
+  const [membershipNumber, setMembershipNumber] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [selectedSpecs, setSelectedSpecs] = useState<string[]>([]);
+  const [specializations, setSpecializations] = useState<Specialization[]>([]);
+  const [roleName, setRoleName] = useState("learner");
+
+  const isTutor = roleName === "tutor";
 
   useEffect(() => {
     async function loadProfile() {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
         const { data } = await supabase
@@ -51,33 +67,59 @@ export default function ProfilePage() {
 
         if (data) {
           setProfile(data);
-          setFullName(data.full_name || "");
-          setLoading(false);
-          return;
+          setFirstName(data.first_name || "");
+          setLastName(data.last_name || "");
+          setBirthdate(data.birthdate || "");
+          setMembershipNumber(data.membership_number || "");
+          setAvatarUrl(data.avatar_url || null);
+          if (data.roles?.name) setRoleName(data.roles.name);
+        } else {
+          const fallbackProfile = {
+            id: user.id,
+            full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
+            email: user.email || "",
+            avatar_url: null,
+            created_at: user.created_at || new Date().toISOString(),
+            role_id: null,
+            roles: { id: "fallback", name: "learner" },
+          } as Profile;
+          setProfile(fallbackProfile);
         }
 
-        // Logged-in user but no profile row - create fallback from auth data
-        const fallbackProfile = {
-          id: user.id,
-          full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
-          email: user.email || "",
-          avatar_url: null,
-          created_at: user.created_at || new Date().toISOString(),
-          role_id: null,
-          roles: { id: "fallback", name: "learner" },
-        } as Profile;
-        setProfile(fallbackProfile);
-        setFullName(fallbackProfile.full_name || "");
+        // Load specializations
+        const { data: specs } = await supabase
+          .from("specializations")
+          .select("id, name")
+          .order("name");
+        if (specs) setSpecializations(specs);
+
+        // Load tutor specializations if tutor
+        if (data?.roles?.name === "tutor") {
+          const { data: tutorRow } = await supabase
+            .from("tutors")
+            .select("id")
+            .eq("profile_id", user.id)
+            .single();
+
+          if (tutorRow) {
+            const { data: tutorSpecs } = await supabase
+              .from("tutor_specializations")
+              .select("specialization_id")
+              .eq("tutor_id", tutorRow.id);
+            if (tutorSpecs) {
+              setSelectedSpecs(tutorSpecs.map(s => s.specialization_id));
+            }
+          }
+        }
+
         setLoading(false);
         return;
       }
 
-      // Demo mode fallback (no logged-in user)
+      // Demo mode fallback
       const { role: devRole } = getDemoUserFromCookie("administrator");
       const demoInfo = DEMO_USERS[devRole as keyof typeof DEMO_USERS] || DEMO_USERS.administrator;
-
-      const supabase2 = createClient();
-      const { data: demoProfile } = await supabase2
+      const { data: demoProfile } = await supabase
         .from("profiles")
         .select("*, roles(*)")
         .eq("id", demoInfo.profileId)
@@ -85,7 +127,12 @@ export default function ProfilePage() {
 
       if (demoProfile) {
         setProfile(demoProfile);
-        setFullName(demoProfile.full_name || "");
+        setFirstName(demoProfile.first_name || "");
+        setLastName(demoProfile.last_name || "");
+        setBirthdate(demoProfile.birthdate || "");
+        setMembershipNumber(demoProfile.membership_number || "");
+        setAvatarUrl(demoProfile.avatar_url || null);
+        if (demoProfile.roles?.name) setRoleName(demoProfile.roles.name);
       } else {
         setProfile({
           id: demoInfo.profileId,
@@ -96,29 +143,111 @@ export default function ProfilePage() {
           role_id: "demo-role",
           roles: { id: "demo-role", name: devRole },
         } as Profile);
-        setFullName(demoInfo.fullName);
       }
       setLoading(false);
     }
     loadProfile();
   }, []);
 
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !profile) return;
+
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const filePath = `${profile.id}/avatar.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
+      setAvatarUrl(publicUrl);
+      await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", profile.id);
+      toast.success("Photo updated!");
+    } catch (err: any) {
+      toast.error(err.message || "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function toggleSpec(specId: string) {
+    setSelectedSpecs(prev =>
+      prev.includes(specId) ? prev.filter(id => id !== specId) : [...prev, specId]
+    );
+  }
+
   async function handleSave() {
     if (!profile) return;
-    setSaving(true);
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("profiles")
-      .update({ full_name: fullName })
-      .eq("id", profile.id);
-
-    if (error) {
-      toast.error("Failed to update profile");
-    } else {
-      toast.success("Profile updated successfully");
-      setProfile({ ...profile, full_name: fullName });
+    if (!firstName.trim() || !lastName.trim()) {
+      toast.error("First name and last name are required");
+      return;
     }
-    setSaving(false);
+    setSaving(true);
+
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          full_name: `${firstName.trim()} ${lastName.trim()}`,
+          birthdate: birthdate || null,
+          membership_number: isTutor ? membershipNumber.trim() || null : null,
+        })
+        .eq("id", profile.id);
+
+      if (error) throw error;
+
+      // Update tutor specializations
+      if (isTutor) {
+        let { data: tutorRow } = await supabase
+          .from("tutors")
+          .select("id")
+          .eq("profile_id", profile.id)
+          .single();
+
+        if (!tutorRow) {
+          const { data: newTutor } = await supabase
+            .from("tutors")
+            .insert({ profile_id: profile.id })
+            .select("id")
+            .single();
+          tutorRow = newTutor;
+        }
+
+        if (tutorRow) {
+          await supabase.from("tutor_specializations").delete().eq("tutor_id", tutorRow.id);
+          if (selectedSpecs.length > 0) {
+            await supabase
+              .from("tutor_specializations")
+              .insert(selectedSpecs.map(specId => ({
+                tutor_id: tutorRow!.id,
+                specialization_id: specId,
+              })));
+          }
+        }
+      }
+
+      setProfile({
+        ...profile,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        full_name: `${firstName.trim()} ${lastName.trim()}`,
+      });
+      toast.success("Profile updated successfully");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update profile");
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function handleDeleteAccount() {
@@ -144,54 +273,133 @@ export default function ProfilePage() {
 
   if (!profile) return null;
 
-  const initials = profile.full_name
-    ? profile.full_name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : "?";
+  const initials = `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase() || (profile.full_name?.[0]?.toUpperCase() || "?");
 
   const roleLabel =
-    profile.roles?.name === "administrator"
-      ? "Administrator"
-      : profile.roles?.name === "tutor"
-        ? "Tutor"
+    roleName === "administrator" ? "Administrator"
+      : roleName === "tutor" ? "Tutor"
         : "Learner";
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Profile</h1>
-        <p className="text-muted-foreground">Manage your account settings.</p>
+        <p className="text-muted-foreground">Manage your account settings and profile details.</p>
       </div>
 
       <Card className="border-border/60">
         <CardHeader>
           <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
-              <AvatarFallback className="bg-primary/10 text-primary text-lg">{initials}</AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="h-20 w-20">
+                <AvatarImage src={avatarUrl || undefined} alt="Profile photo" />
+                <AvatarFallback className="bg-primary/10 text-primary text-xl">{initials}</AvatarFallback>
+              </Avatar>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md transition-colors hover:bg-primary/90 disabled:opacity-50"
+              >
+                {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                className="hidden"
+              />
+            </div>
             <div className="flex flex-col gap-1">
               <CardTitle>{profile.full_name || "User"}</CardTitle>
               <CardDescription>{profile.email}</CardDescription>
-              <Badge variant="secondary" className="w-fit">
-                {roleLabel}
-              </Badge>
+              <Badge variant="secondary" className="w-fit">{roleLabel}</Badge>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="full_name">Full Name</Label>
-            <Input id="full_name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Enter your full name" />
+        <CardContent className="flex flex-col gap-5">
+          {/* Name fields */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="firstName">First Name *</Label>
+              <Input
+                id="firstName"
+                value={firstName}
+                onChange={e => setFirstName(e.target.value)}
+                placeholder="Juan"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="lastName">Last Name *</Label>
+              <Input
+                id="lastName"
+                value={lastName}
+                onChange={e => setLastName(e.target.value)}
+                placeholder="Dela Cruz"
+              />
+            </div>
           </div>
+
+          {/* Email (read-only) */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="email">Email</Label>
             <Input id="email" value={profile.email} disabled className="bg-muted" />
             <p className="text-xs text-muted-foreground">Contact your administrator to change your email.</p>
           </div>
+
+          {/* Birthdate */}
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="birthdate">Birthdate</Label>
+            <Input
+              id="birthdate"
+              type="date"
+              value={birthdate}
+              onChange={e => setBirthdate(e.target.value)}
+            />
+          </div>
+
+          {/* Tutor-specific fields */}
+          {isTutor && (
+            <>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="membershipNumber">Membership Number</Label>
+                <Input
+                  id="membershipNumber"
+                  value={membershipNumber}
+                  onChange={e => setMembershipNumber(e.target.value)}
+                  placeholder="e.g. TM-2025-001"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label>Specializations</Label>
+                <p className="text-xs text-muted-foreground">Select the subjects you can tutor</p>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {specializations.map(spec => {
+                    const isSelected = selectedSpecs.includes(spec.id);
+                    return (
+                      <button
+                        key={spec.id}
+                        type="button"
+                        onClick={() => toggleSpec(spec.id)}
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                          isSelected
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border bg-background text-muted-foreground hover:bg-muted"
+                        }`}
+                      >
+                        {isSelected && <CheckCircle2 className="h-3.5 w-3.5" />}
+                        {spec.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Member since */}
           <div className="flex flex-col gap-2">
             <Label>Member Since</Label>
             <p className="text-sm text-muted-foreground">
@@ -202,7 +410,8 @@ export default function ProfilePage() {
               })}
             </p>
           </div>
-          <Button onClick={handleSave} disabled={saving} className="w-fit">
+
+          <Button onClick={handleSave} disabled={saving || !firstName.trim() || !lastName.trim()} className="w-fit">
             {saving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
