@@ -1,21 +1,7 @@
 "use client"
 
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
+import DashboardView from "@/components/dashboard/dashboard-view"
 
-export default function DashboardError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string }
-  reset: () => void
-}) {
-  const router = useRouter()
-
-  useEffect(() => {
-    // If the stale SSR chunk crashes, redirect to the real dashboard page
-    router.replace("/dashboard/home")
-  }, [router])
-
-  return null
+export default function DashboardError() {
+  return <DashboardView />
 }
