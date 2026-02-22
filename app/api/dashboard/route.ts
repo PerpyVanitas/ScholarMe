@@ -82,6 +82,8 @@ export async function GET() {
 
   const role = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "learner")) as UserRole;
 
+  console.log("[v0] Dashboard API - userId:", user?.id, "email:", user?.email, "isDemoMode:", isDemoMode, "profileRoleName:", profile?.roles?.name, "computedRole:", role);
+
   try {
     if (role === "administrator") {
       // Use admin client to bypass RLS for org-wide stats
