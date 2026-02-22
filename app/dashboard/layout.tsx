@@ -26,11 +26,9 @@ export default function DashboardLayout({
   useEffect(() => {
     async function loadUserData() {
       const supabase = createClient();
-
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
-        // Logged-in user -- load their profile from DB
         const { data: p } = await supabase
           .from("profiles")
           .select("*, roles(*)")
@@ -41,7 +39,6 @@ export default function DashboardLayout({
           setProfile(p);
           setRole((p.roles?.name || "learner") as UserRole);
         } else {
-          // Profile row missing -- create fallback from auth metadata
           setProfile({
             id: user.id,
             full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
@@ -53,7 +50,6 @@ export default function DashboardLayout({
           setRole("learner");
         }
 
-        // Notification count
         const { count } = await supabase
           .from("notifications")
           .select("*", { count: "exact", head: true })
@@ -61,9 +57,7 @@ export default function DashboardLayout({
           .eq("is_read", false);
         setNotificationCount(count || 0);
       } else {
-        // Demo mode -- no auth session
         const { role: demoRole, userId: demoUserId } = getDemoUserFromCookie("learner");
-
         const { data: demoProfile } = await supabase
           .from("profiles")
           .select("*, roles(*)")
