@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,7 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Loader2, Save, Trash2, Camera, CheckCircle2 } from "lucide-react";
+import { Loader2, Save, Trash2, Camera, CheckCircle2, User } from "lucide-react";
 import { toast } from "sonner";
 import { DEMO_USERS, getDemoUserFromCookie } from "@/lib/demo";
 import type { Profile } from "@/lib/types";
@@ -30,10 +29,22 @@ interface Specialization {
   name: string;
 }
 
+function getInitials(firstName: string, lastName: string, fullName?: string | null): string {
+  if (firstName && lastName) {
+    return `${firstName[0]}${lastName[0]}`.toUpperCase();
+  }
+  if (fullName) {
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length >= 2) return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+    if (parts.length === 1 && parts[0]) return parts[0][0].toUpperCase();
+  }
+  return "?";
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const supabase = createClient();
+  const loadedRef = useRef(false);
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -42,7 +53,6 @@ export default function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   const [confirmText, setConfirmText] = useState("");
 
-  // Editable fields
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [birthdate, setBirthdate] = useState("");
@@ -55,7 +65,11 @@ export default function ProfilePage() {
   const isTutor = roleName === "tutor";
 
   useEffect(() => {
+    if (loadedRef.current) return;
+    loadedRef.current = true;
+
     async function loadProfile() {
+      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
@@ -63,7 +77,7 @@ export default function ProfilePage() {
           .from("profiles")
           .select("*, roles(*)")
           .eq("id", user.id)
-          .single();
+          .maybeSingle();
 
         if (data) {
           setProfile(data);
@@ -73,8 +87,34 @@ export default function ProfilePage() {
           setMembershipNumber(data.membership_number || "");
           setAvatarUrl(data.avatar_url || null);
           if (data.roles?.name) setRoleName(data.roles.name);
+
+          // Load specializations for tutors
+          if (data.roles?.name === "tutor") {
+            const { data: specs } = await supabase
+              .from("specializations")
+              .select("id, name")
+              .order("name");
+            if (specs) setSpecializations(specs);
+
+            const { data: tutorRow } = await supabase
+              .from("tutors")
+              .select("id")
+              .eq("profile_id", user.id)
+              .maybeSingle();
+
+            if (tutorRow) {
+              const { data: tutorSpecs } = await supabase
+                .from("tutor_specializations")
+                .select("specialization_id")
+                .eq("tutor_id", tutorRow.id);
+              if (tutorSpecs) {
+                setSelectedSpecs(tutorSpecs.map(s => s.specialization_id));
+              }
+            }
+          }
         } else {
-          const fallbackProfile = {
+          // User exists but no profile row
+          setProfile({
             id: user.id,
             full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
             email: user.email || "",
@@ -82,34 +122,7 @@ export default function ProfilePage() {
             created_at: user.created_at || new Date().toISOString(),
             role_id: null,
             roles: { id: "fallback", name: "learner" },
-          } as Profile;
-          setProfile(fallbackProfile);
-        }
-
-        // Load specializations
-        const { data: specs } = await supabase
-          .from("specializations")
-          .select("id, name")
-          .order("name");
-        if (specs) setSpecializations(specs);
-
-        // Load tutor specializations if tutor
-        if (data?.roles?.name === "tutor") {
-          const { data: tutorRow } = await supabase
-            .from("tutors")
-            .select("id")
-            .eq("profile_id", user.id)
-            .single();
-
-          if (tutorRow) {
-            const { data: tutorSpecs } = await supabase
-              .from("tutor_specializations")
-              .select("specialization_id")
-              .eq("tutor_id", tutorRow.id);
-            if (tutorSpecs) {
-              setSelectedSpecs(tutorSpecs.map(s => s.specialization_id));
-            }
-          }
+          } as Profile);
         }
 
         setLoading(false);
@@ -119,42 +132,29 @@ export default function ProfilePage() {
       // Demo mode fallback
       const { role: devRole } = getDemoUserFromCookie("learner");
       const demoInfo = DEMO_USERS[devRole as keyof typeof DEMO_USERS] || DEMO_USERS.learner;
-      const { data: demoProfile } = await supabase
-        .from("profiles")
-        .select("*, roles(*)")
-        .eq("id", demoInfo.profileId)
-        .maybeSingle();
-
-      if (demoProfile) {
-        setProfile(demoProfile);
-        setFirstName(demoProfile.first_name || "");
-        setLastName(demoProfile.last_name || "");
-        setBirthdate(demoProfile.birthdate || "");
-        setMembershipNumber(demoProfile.membership_number || "");
-        setAvatarUrl(demoProfile.avatar_url || null);
-        if (demoProfile.roles?.name) setRoleName(demoProfile.roles.name);
-      } else {
-        setProfile({
-          id: demoInfo.profileId,
-          full_name: demoInfo.fullName,
-          email: demoInfo.email,
-          avatar_url: null,
-          created_at: new Date().toISOString(),
-          role_id: "demo-role",
-          roles: { id: "demo-role", name: devRole },
-        } as Profile);
-      }
+      setProfile({
+        id: demoInfo.profileId,
+        full_name: demoInfo.fullName,
+        email: demoInfo.email,
+        avatar_url: null,
+        created_at: new Date().toISOString(),
+        role_id: "demo-role",
+        roles: { id: "demo-role", name: devRole },
+      } as Profile);
+      setRoleName(devRole);
       setLoading(false);
     }
+
     loadProfile();
   }, []);
 
-  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  const handleAvatarUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !profile) return;
 
     setUploading(true);
     try {
+      const supabase = createClient();
       const ext = file.name.split(".").pop();
       const filePath = `${profile.id}/avatar.${ext}`;
 
@@ -168,15 +168,18 @@ export default function ProfilePage() {
         .from("avatars")
         .getPublicUrl(filePath);
 
-      setAvatarUrl(publicUrl);
-      await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", profile.id);
+      // Append cache-busting param so browser reloads image
+      const freshUrl = `${publicUrl}?t=${Date.now()}`;
+      setAvatarUrl(freshUrl);
+      await supabase.from("profiles").update({ avatar_url: freshUrl }).eq("id", profile.id);
       toast.success("Photo updated!");
     } catch (err: any) {
       toast.error(err.message || "Upload failed");
     } finally {
       setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
-  }
+  }, [profile]);
 
   function toggleSpec(specId: string) {
     setSelectedSpecs(prev =>
@@ -184,7 +187,7 @@ export default function ProfilePage() {
     );
   }
 
-  async function handleSave() {
+  const handleSave = useCallback(async () => {
     if (!profile) return;
     if (!firstName.trim() || !lastName.trim()) {
       toast.error("First name and last name are required");
@@ -193,6 +196,7 @@ export default function ProfilePage() {
     setSaving(true);
 
     try {
+      const supabase = createClient();
       const { error } = await supabase
         .from("profiles")
         .update({
@@ -206,13 +210,12 @@ export default function ProfilePage() {
 
       if (error) throw error;
 
-      // Update tutor specializations
       if (isTutor) {
         let { data: tutorRow } = await supabase
           .from("tutors")
           .select("id")
           .eq("profile_id", profile.id)
-          .single();
+          .maybeSingle();
 
         if (!tutorRow) {
           const { data: newTutor } = await supabase
@@ -236,19 +239,19 @@ export default function ProfilePage() {
         }
       }
 
-      setProfile({
-        ...profile,
+      setProfile(prev => prev ? {
+        ...prev,
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         full_name: `${firstName.trim()} ${lastName.trim()}`,
-      });
+      } : null);
       toast.success("Profile updated successfully");
     } catch (err: any) {
       toast.error(err.message || "Failed to update profile");
     } finally {
       setSaving(false);
     }
-  }
+  }, [profile, firstName, lastName, birthdate, membershipNumber, isTutor, selectedSpecs]);
 
   async function handleDeleteAccount() {
     setDeleting(true);
@@ -273,8 +276,7 @@ export default function ProfilePage() {
 
   if (!profile) return null;
 
-  const initials = `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase() || (profile.full_name?.[0]?.toUpperCase() || "?");
-
+  const initials = getInitials(firstName, lastName, profile.full_name);
   const roleLabel =
     roleName === "administrator" ? "Administrator"
       : roleName === "tutor" ? "Tutor"
@@ -283,23 +285,35 @@ export default function ProfilePage() {
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Profile</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground text-balance">Profile</h1>
         <p className="text-muted-foreground">Manage your account settings and profile details.</p>
       </div>
 
+      {/* Profile Card */}
       <Card className="border-border/60">
         <CardHeader>
           <div className="flex items-center gap-4">
             <div className="relative">
-              <Avatar className="h-20 w-20">
-                <AvatarImage src={avatarUrl || undefined} alt="Profile photo" />
-                <AvatarFallback className="bg-primary/10 text-primary text-xl">{initials}</AvatarFallback>
-              </Avatar>
+              <div className="relative h-20 w-20 rounded-full overflow-hidden bg-muted">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt="Profile photo"
+                    className="h-full w-full object-cover"
+                    crossOrigin="anonymous"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary text-xl font-semibold">
+                    {initials}
+                  </div>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
                 className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md transition-colors hover:bg-primary/90 disabled:opacity-50"
+                aria-label="Upload photo"
               >
                 {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
               </button>
@@ -309,6 +323,7 @@ export default function ProfilePage() {
                 accept="image/*"
                 onChange={handleAvatarUpload}
                 className="hidden"
+                aria-label="Choose profile photo"
               />
             </div>
             <div className="flex flex-col gap-1">
@@ -319,7 +334,6 @@ export default function ProfilePage() {
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-5">
-          {/* Name fields */}
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="firstName">First Name *</Label>
@@ -341,14 +355,12 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Email (read-only) */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="email">Email</Label>
             <Input id="email" value={profile.email} disabled className="bg-muted" />
             <p className="text-xs text-muted-foreground">Contact your administrator to change your email.</p>
           </div>
 
-          {/* Birthdate */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="birthdate">Birthdate</Label>
             <Input
@@ -359,7 +371,6 @@ export default function ProfilePage() {
             />
           </div>
 
-          {/* Tutor-specific fields */}
           {isTutor && (
             <>
               <div className="flex flex-col gap-2">
@@ -399,7 +410,6 @@ export default function ProfilePage() {
             </>
           )}
 
-          {/* Member since */}
           <div className="flex flex-col gap-2">
             <Label>Member Since</Label>
             <p className="text-sm text-muted-foreground">
