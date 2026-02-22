@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useInactivityTimeout } from "@/hooks/use-inactivity-timeout";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator";
@@ -20,12 +21,13 @@ export default function DashboardLayout({
   const [notificationCount, setNotificationCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  useInactivityTimeout();
+
   useEffect(() => {
     async function loadUserData() {
       const supabase = createClient();
 
       const { data: { user } } = await supabase.auth.getUser();
-      console.log("[v0] Layout client - user detected:", !!user, "email:", user?.email);
 
       if (user) {
         // Logged-in user -- load their profile from DB

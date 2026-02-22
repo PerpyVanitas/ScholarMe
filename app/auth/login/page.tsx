@@ -1,8 +1,8 @@
 /** Login page -- supports email/password and card-based authentication. */
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,10 +15,17 @@ import { toast } from "sonner";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [emailLoading, setEmailLoading] = useState(false);
   const [cardLoading, setCardLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [cardError, setCardError] = useState("");
+
+  useEffect(() => {
+    if (searchParams.get("reason") === "inactive") {
+      toast.info("You were signed out due to inactivity.");
+    }
+  }, [searchParams]);
 
   async function handleEmailLogin(formData: FormData) {
     setEmailLoading(true);
