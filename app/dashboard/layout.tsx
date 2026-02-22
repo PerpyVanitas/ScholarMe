@@ -21,6 +21,7 @@ export default async function DashboardLayout({
   } catch {
     // Auth unavailable -- continue in demo mode
   }
+  console.log("[v0] Layout - user detected:", !!user, "userId:", user?.id, "email:", user?.email);
   const cookieStore = await cookies();
   const devRole = cookieStore.get("dev_role")?.value as UserRole | undefined;
 
@@ -48,6 +49,7 @@ export default async function DashboardLayout({
   }
 
   const isDemoMode = !user;
+  console.log("[v0] Layout - isDemoMode:", isDemoMode, "profile:", !!profile, "profileRole:", profile?.roles?.name);
   const selectedRole = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "learner")) as UserRole;
 
   if (user && !profile) {
