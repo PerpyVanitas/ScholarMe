@@ -27,6 +27,7 @@ export default function DashboardLayout({
     async function loadUserData() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
+      console.log("[v0] Panel layout - user:", user?.id, "email:", user?.email);
 
       if (user) {
         const { data: p } = await supabase
@@ -36,6 +37,7 @@ export default function DashboardLayout({
           .maybeSingle();
 
         if (p) {
+          console.log("[v0] Panel layout - profile found, role:", p.roles?.name);
           setProfile(p);
           setRole((p.roles?.name || "learner") as UserRole);
         } else {
