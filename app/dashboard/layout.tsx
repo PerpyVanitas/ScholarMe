@@ -1,4 +1,3 @@
-// cache-bust-v3
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/create-client";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
@@ -49,7 +48,7 @@ export default async function DashboardLayout({
   }
 
   const isDemoMode = !user;
-  const selectedRole = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "administrator")) as UserRole;
+  const selectedRole = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "learner")) as UserRole;
 
   if (user && !profile) {
     profile = {

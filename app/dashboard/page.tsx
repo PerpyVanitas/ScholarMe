@@ -1,9 +1,6 @@
-import dynamic from "next/dynamic"
+"use client"
 
-const DashboardView = dynamic(
-  () => import("@/components/dashboard/dashboard-view"),
-  { ssr: false }
-)
+import DashboardView from "@/components/dashboard/dashboard-view"
 
 export default function DashboardPage() {
   return <DashboardView />

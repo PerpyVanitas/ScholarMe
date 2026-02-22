@@ -3,11 +3,9 @@
 import useSWR from "swr"
 import { Loader2 } from "lucide-react"
 import type { Profile, UserRole } from "@/lib/types"
-
-import dynamic from "next/dynamic"
-const AdminDashboard = dynamic(() => import("@/components/dashboard/admin-dashboard").then(m => ({ default: m.AdminDashboard })), { ssr: false })
-const TutorDashboard = dynamic(() => import("@/components/dashboard/tutor-dashboard").then(m => ({ default: m.TutorDashboard })), { ssr: false })
-const LearnerDashboard = dynamic(() => import("@/components/dashboard/learner-dashboard").then(m => ({ default: m.LearnerDashboard })), { ssr: false })
+import { AdminDashboard } from "@/components/dashboard/admin-dashboard"
+import { TutorDashboard } from "@/components/dashboard/tutor-dashboard"
+import { LearnerDashboard } from "@/components/dashboard/learner-dashboard"
 
 const fetcher = async (url: string) => {
   const res = await fetch(url)
