@@ -57,7 +57,6 @@ export default function ProfilePage() {
   useEffect(() => {
     async function loadProfile() {
       const { data: { user } } = await supabase.auth.getUser();
-      console.log("[v0] Profile page - user:", user?.id, "email:", user?.email);
 
       if (user) {
         const { data } = await supabase
