@@ -118,8 +118,8 @@ export default function ProfilePage() {
       }
 
       // Demo mode fallback
-      const { role: devRole } = getDemoUserFromCookie("administrator");
-      const demoInfo = DEMO_USERS[devRole as keyof typeof DEMO_USERS] || DEMO_USERS.administrator;
+      const { role: devRole } = getDemoUserFromCookie("learner");
+      const demoInfo = DEMO_USERS[devRole as keyof typeof DEMO_USERS] || DEMO_USERS.learner;
       const { data: demoProfile } = await supabase
         .from("profiles")
         .select("*, roles(*)")

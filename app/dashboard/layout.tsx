@@ -1,118 +1,110 @@
-import { cookies } from "next/headers";
-import { createClient } from "@/lib/supabase/create-client";
+"use client";
+
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
-import type { UserRole } from "@/lib/types";
-import { DEMO_USERS, getDemoProfileId } from "@/lib/demo";
+import type { UserRole, Profile } from "@/lib/types";
+import { DEMO_USERS, getDemoUserFromCookie } from "@/lib/demo";
+import { Loader2 } from "lucide-react";
 
-export default async function DashboardLayout({
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [role, setRole] = useState<UserRole>("learner");
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  let user = null;
-  try {
-    const { data } = await supabase.auth.getUser();
-    user = data.user;
-  } catch {
-    // Auth unavailable -- continue in demo mode
-  }
-  console.log("[v0] Layout - user detected:", !!user, "userId:", user?.id, "email:", user?.email);
-  const cookieStore = await cookies();
-  const devRole = cookieStore.get("dev_role")?.value as UserRole | undefined;
+  useEffect(() => {
+    async function loadUserData() {
+      const supabase = createClient();
 
-  let profile: any = null;
-  let notificationCount = 0;
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log("[v0] Layout client - user detected:", !!user, "email:", user?.email);
 
-  if (user) {
-    try {
-      const { data: p } = await supabase
-        .from("profiles")
-        .select("*, roles(*)")
-        .eq("id", user.id)
-        .maybeSingle();
-      profile = p;
+      if (user) {
+        // Logged-in user -- load their profile from DB
+        const { data: p } = await supabase
+          .from("profiles")
+          .select("*, roles(*)")
+          .eq("id", user.id)
+          .maybeSingle();
 
-      const { count } = await supabase
-        .from("notifications")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .eq("is_read", false);
-      notificationCount = count || 0;
-    } catch {
-      // DB query failed -- fall through to demo profile
+        if (p) {
+          setProfile(p);
+          setRole((p.roles?.name || "learner") as UserRole);
+        } else {
+          // Profile row missing -- create fallback from auth metadata
+          setProfile({
+            id: user.id,
+            full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
+            email: user.email || "",
+            avatar_url: null,
+            created_at: user.created_at || new Date().toISOString(),
+            roles: { id: "fallback", name: "learner" },
+          } as Profile);
+          setRole("learner");
+        }
+
+        // Notification count
+        const { count } = await supabase
+          .from("notifications")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("is_read", false);
+        setNotificationCount(count || 0);
+      } else {
+        // Demo mode -- no auth session
+        const { role: demoRole, userId: demoUserId } = getDemoUserFromCookie("learner");
+
+        const { data: demoProfile } = await supabase
+          .from("profiles")
+          .select("*, roles(*)")
+          .eq("id", demoUserId)
+          .maybeSingle();
+
+        if (demoProfile) {
+          setProfile(demoProfile);
+          setRole((demoProfile.roles?.name || demoRole) as UserRole);
+        } else {
+          const demoInfo = DEMO_USERS[demoRole as keyof typeof DEMO_USERS] || DEMO_USERS.learner;
+          setProfile({
+            id: demoInfo.profileId,
+            full_name: demoInfo.fullName,
+            email: demoInfo.email,
+            avatar_url: null,
+            created_at: new Date().toISOString(),
+            roles: { id: "demo-role", name: demoRole },
+          } as Profile);
+          setRole(demoRole);
+        }
+      }
+
+      setLoading(false);
     }
-  }
 
-  const isDemoMode = !user;
-  console.log("[v0] Layout - isDemoMode:", isDemoMode, "profile:", !!profile, "profileRole:", profile?.roles?.name);
-  const selectedRole = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "learner")) as UserRole;
+    loadUserData();
+  }, []);
 
-  if (user && !profile) {
-    profile = {
-      id: user.id,
-      full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
-      email: user.email || "",
-      avatar_url: null,
-      created_at: user.created_at || new Date().toISOString(),
-      roles: { id: "fallback", name: "learner" },
-    };
-  }
-
-  if (!profile && isDemoMode) {
-    const demoProfileId = getDemoProfileId(selectedRole);
-    const { data: demoProfile } = await supabase
-      .from("profiles")
-      .select("*, roles(*)")
-      .eq("id", demoProfileId)
-      .maybeSingle();
-
-    if (demoProfile) {
-      profile = demoProfile;
-    } else {
-      const demoInfo = DEMO_USERS[selectedRole as keyof typeof DEMO_USERS] || DEMO_USERS.administrator;
-      profile = {
-        id: demoInfo.profileId,
-        full_name: demoInfo.fullName,
-        email: demoInfo.email,
-        avatar_url: null,
-        created_at: new Date().toISOString(),
-        roles: { id: "demo-role", name: selectedRole },
-      };
-    }
-
-    const { count } = await supabase
-      .from("notifications")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", profile.id)
-      .eq("is_read", false);
-    notificationCount = count || 0;
-  }
-
-  const role = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "learner")) as UserRole;
-
-  // Guarantee profile is never null for downstream components
-  if (!profile) {
-    profile = {
-      id: user?.id || "unknown",
-      full_name: user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User",
-      email: user?.email || "",
-      avatar_url: null,
-      created_at: new Date().toISOString(),
-      roles: { id: "fallback", name: role },
-    };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
   return (
     <SidebarProvider>
       <AppSidebar
-        profile={profile}
+        profile={profile!}
         role={role}
-        notificationCount={notificationCount || 0}
+        notificationCount={notificationCount}
       />
       <SidebarInset>
         <header className="flex h-14 items-center gap-2 border-b border-border/60 px-4">
