@@ -1,7 +1,5 @@
-"use client"
+import { redirect } from "next/navigation"
 
-import DashboardView from "@/components/dashboard/dashboard-view"
-
-export default function DashboardPage() {
-  return <DashboardView />
+export default function DashboardRedirect() {
+  redirect("/d")
 }

@@ -48,7 +48,7 @@ export default function LoginPage() {
     }
 
     // Hard redirect so server re-reads fresh auth cookies
-    window.location.href = "/dashboard";
+    window.location.href = "/d";
   }
 
   async function handleCardLogin(e: React.FormEvent<HTMLFormElement>) {
@@ -74,7 +74,7 @@ export default function LoginPage() {
         toast.error(data.error || "Login failed");
       } else {
         toast.success("Welcome back!");
-        window.location.href = "/dashboard";
+        window.location.href = "/d";
         return;
       }
     } catch {

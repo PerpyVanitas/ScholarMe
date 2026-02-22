@@ -99,7 +99,7 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
                 <span className={`text-sm font-medium ${clockedIn ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
                   {clockedIn ? "Currently Clocked In" : "Not Clocked In"}
                 </span>
-                <Link href="/dashboard/timesheet" className="text-xs text-primary hover:underline">
+                <Link href="/d/timesheet" className="text-xs text-primary hover:underline">
                   View timesheet
                 </Link>
               </div>
@@ -176,7 +176,7 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
               <CardDescription>Sessions that need your attention</CardDescription>
             </div>
             <Button asChild variant="ghost" size="sm">
-              <Link href="/dashboard/sessions" className="flex items-center gap-1">
+              <Link href="/d/sessions" className="flex items-center gap-1">
                 View all <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </Button>
@@ -232,7 +232,7 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href="/dashboard/timesheet" className="flex items-center gap-3">
+              <Link href="/d/timesheet" className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
                   <Timer className="h-4 w-4 text-primary" />
                 </div>
@@ -243,7 +243,7 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
               </Link>
             </Button>
             <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href="/dashboard/availability" className="flex items-center gap-3">
+              <Link href="/d/availability" className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
                   <Clock className="h-4 w-4 text-primary" />
                 </div>
@@ -254,7 +254,7 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
               </Link>
             </Button>
             <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href="/dashboard/sessions" className="flex items-center gap-3">
+              <Link href="/d/sessions" className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-success/10">
                   <Calendar className="h-4 w-4 text-success" />
                 </div>
@@ -265,7 +265,7 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
               </Link>
             </Button>
             <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href="/dashboard/resources" className="flex items-center gap-3">
+              <Link href="/d/resources" className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/30">
                   <FolderOpen className="h-4 w-4 text-accent-foreground" />
                 </div>

@@ -55,7 +55,7 @@ export function LearnerDashboard({ profile, upcomingSessions, stats }: LearnerDa
               <CardDescription>Your next scheduled sessions</CardDescription>
             </div>
             <Button asChild variant="ghost" size="sm">
-              <Link href="/dashboard/sessions" className="flex items-center gap-1">
+              <Link href="/d/sessions" className="flex items-center gap-1">
                 View all <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </Button>
@@ -68,7 +68,7 @@ export function LearnerDashboard({ profile, upcomingSessions, stats }: LearnerDa
                 </div>
                 <p className="text-sm text-muted-foreground">No upcoming sessions</p>
                 <Button asChild size="sm">
-                  <Link href="/dashboard/tutors">Find a Tutor</Link>
+                  <Link href="/d/tutors">Find a Tutor</Link>
                 </Button>
               </div>
             ) : (
@@ -115,7 +115,7 @@ export function LearnerDashboard({ profile, upcomingSessions, stats }: LearnerDa
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href="/dashboard/tutors" className="flex items-center gap-3">
+              <Link href="/d/tutors" className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
                   <Users className="h-4 w-4 text-primary" />
                 </div>
@@ -126,7 +126,7 @@ export function LearnerDashboard({ profile, upcomingSessions, stats }: LearnerDa
               </Link>
             </Button>
             <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href="/dashboard/sessions" className="flex items-center gap-3">
+              <Link href="/d/sessions" className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-success/10">
                   <Calendar className="h-4 w-4 text-success" />
                 </div>
@@ -137,7 +137,7 @@ export function LearnerDashboard({ profile, upcomingSessions, stats }: LearnerDa
               </Link>
             </Button>
             <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href="/dashboard/resources" className="flex items-center gap-3">
+              <Link href="/d/resources" className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/30">
                   <BookOpen className="h-4 w-4 text-accent-foreground" />
                 </div>
