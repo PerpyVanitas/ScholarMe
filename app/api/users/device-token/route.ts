@@ -1,7 +1,7 @@
 /** POST /api/users/device-token -- Register device token for push notifications */
 import { createClient } from "@/lib/supabase/client";
 import { NextResponse } from "next/server";
-import { createErrorResponse, createSuccessResponse } from "@/lib/error-codes";
+import { createErrorResponse, createSuccessResponse } from "@/lib/api-errors";
 
 export async function POST(request: Request) {
   try {

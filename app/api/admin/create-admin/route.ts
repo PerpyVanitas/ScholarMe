@@ -1,7 +1,7 @@
 /** POST /api/admin/create-admin — creates a new administrator account. Only callable by administrators. */
 import { createClient, createAdminClient } from "@/lib/supabase/create-client";
 import { NextRequest, NextResponse } from "next/server";
-import { createSuccessResponse, createErrorResponse } from "@/lib/error-codes";
+import { createSuccessResponse, createErrorResponse } from "@/lib/api-errors";
 
 export async function POST(request: NextRequest) {
   try {

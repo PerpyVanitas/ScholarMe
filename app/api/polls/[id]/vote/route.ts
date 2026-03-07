@@ -1,7 +1,7 @@
 /** POST /api/polls/[id]/vote - Cast a vote on a poll */
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
-import { createSuccessResponse, createErrorResponse } from "@/lib/error-codes";
+import { createSuccessResponse, createErrorResponse } from "@/lib/api-errors";
 
 export async function POST(
   request: NextRequest,

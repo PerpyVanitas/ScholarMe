@@ -1,7 +1,7 @@
 /** GET /api/polls/[id]/results - Get poll results with vote counts */
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
-import { createSuccessResponse, createErrorResponse } from "@/lib/error-codes";
+import { createSuccessResponse, createErrorResponse } from "@/lib/api-errors";
 
 export async function GET(
   request: NextRequest,

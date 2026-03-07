@@ -1,7 +1,7 @@
 /** POST /api/auth/register-card -- Admin endpoint to create and register new auth cards */
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-import { createErrorResponse, createSuccessResponse } from "@/lib/error-codes";
+import { createErrorResponse, createSuccessResponse } from "@/lib/api-errors";
 
 export async function POST(request: Request) {
   try {

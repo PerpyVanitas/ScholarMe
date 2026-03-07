@@ -1,7 +1,7 @@
 /** GET /api/polls?page=1&limit=20 -- List active polls with pagination */
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
-import { createSuccessResponse, createErrorResponse } from "@/lib/error-codes";
+import { createSuccessResponse, createErrorResponse } from "@/lib/api-errors";
 import { parsePaginationParams, createPaginatedResponse } from "@/lib/api/pagination";
 
 export async function GET(request: NextRequest) {
