@@ -7,6 +7,7 @@ import { FeaturesSection } from "@/components/landing/features-section"
 import { StatsSection } from "@/components/landing/stats-section"
 import { RolesSection } from "@/components/landing/roles-section"
 import { CTASection } from "@/components/landing/cta-section"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export default async function HomePage() {
   let isLoggedIn = false
@@ -24,14 +25,17 @@ export default async function HomePage() {
     <div id="top" className="flex min-h-screen flex-col bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 flex items-center justify-between border-b border-border/60 bg-background/80 px-6 py-4 backdrop-blur-md">
-        <a href="#top" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <GraduationCap className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-foreground">
-            ScholarMe
-          </span>
-        </a>
+        <div className="flex items-center gap-4">
+          <a href="#top" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+              <GraduationCap className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <span className="text-xl font-bold tracking-tight text-foreground">
+              ScholarMe
+            </span>
+          </a>
+          <ThemeToggle />
+        </div>
         <nav className="hidden items-center gap-6 md:flex">
           <a href="#features" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
             Features
