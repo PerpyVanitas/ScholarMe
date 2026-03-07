@@ -1,8 +1,9 @@
 /** Login page -- supports email/password and card-based authentication. */
 "use client";
 
-import { Suspense, useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,12 @@ import { GraduationCap, Mail, CreditCard, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { mapSupabaseErrorToCode, formatErrorForDisplay } from "@/lib/api-errors";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { LoginInactivityCheck } from "@/components/auth/login-inactivity-check";
+
+// Dynamically import with ssr: false to avoid useSearchParams during static prerendering
+const LoginInactivityCheck = dynamic(
+  () => import("@/components/auth/login-inactivity-check").then(mod => ({ default: mod.LoginInactivityCheck })),
+  { ssr: false }
+);
 
 export default function LoginPage() {
   const [emailLoading, setEmailLoading] = useState(false);
@@ -87,9 +93,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Suspense fallback={null}>
-        <LoginInactivityCheck />
-      </Suspense>
+      <LoginInactivityCheck />
       <div className="flex w-full max-w-md flex-col gap-6">
         <div className="flex flex-col items-center gap-2 text-center">
           <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
