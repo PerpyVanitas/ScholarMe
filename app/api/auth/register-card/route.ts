@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       .eq("id", user.id)
       .single();
 
-    if (profileError || !profile || profile.roles?.name !== "admin") {
+    if (profileError || !profile || profile.roles?.name !== "administrator") {
       return NextResponse.json(
         createErrorResponse("AUTH_003", "Admin access required"),
         { status: 403 }
