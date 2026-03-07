@@ -173,8 +173,8 @@ export default function ProfilePage() {
       setAvatarUrl(freshUrl);
       await supabase.from("profiles").update({ avatar_url: freshUrl }).eq("id", profile.id);
       toast.success("Photo updated!");
-    } catch (err: any) {
-      toast.error(err.message || "Upload failed");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -246,8 +246,8 @@ export default function ProfilePage() {
         full_name: `${firstName.trim()} ${lastName.trim()}`,
       } : null);
       toast.success("Profile updated successfully");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update profile");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update profile");
     } finally {
       setSaving(false);
     }

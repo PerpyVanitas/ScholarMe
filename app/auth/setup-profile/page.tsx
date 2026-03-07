@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { createBrowserClient } from "@supabase/ssr"
+import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,10 +19,7 @@ interface Specialization {
 export default function SetupProfilePage() {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const supabase = createClient()
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -127,8 +124,8 @@ export default function SetupProfilePage() {
       setAvatarUrl(publicUrl)
       await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", userId)
       toast.success("Photo uploaded!")
-    } catch (err: any) {
-      toast.error(err.message || "Upload failed")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed")
     } finally {
       setUploading(false)
     }
@@ -206,8 +203,8 @@ export default function SetupProfilePage() {
 
       toast.success("Profile setup complete!")
       window.location.href = "/panel"
-    } catch (err: any) {
-      toast.error(err.message || "Failed to save profile")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save profile")
     } finally {
       setSaving(false)
     }

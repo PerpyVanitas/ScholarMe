@@ -3,86 +3,53 @@
 import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Loader2 } from "lucide-react"
-import { DEMO_USERS, getDemoUserFromCookie, getDemoProfileId, getDemoTutorId } from "@/lib/demo"
+import { useUser } from "@/lib/user-context"
+import { getDemoProfileId, getDemoTutorId } from "@/lib/demo"
 import { AdminDashboard } from "@/components/dashboard/admin-dashboard"
 import { TutorDashboard } from "@/components/dashboard/tutor-dashboard"
 import { LearnerDashboard } from "@/components/dashboard/learner-dashboard"
-import type { Profile, UserRole } from "@/lib/types"
+import type { Session, Tutor } from "@/lib/types"
+
+interface DashboardData {
+  adminStats?: {
+    totalUsers: number
+    totalSessions: number
+    activeTutors: number
+    pendingSessions: number
+  }
+  recentSessions?: Session[]
+  tutor?: Tutor | null
+  upcomingSessions?: Session[]
+  tutorStats?: {
+    completedSessions: number
+    upcomingSessions: number
+    rating: number
+    totalRatings: number
+  }
+  learnerStats?: {
+    totalSessions: number
+    completedSessions: number
+    upcomingSessions: number
+  }
+}
 
 export default function DashboardView() {
-  const [role, setRole] = useState<UserRole>("learner")
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [dashboardData, setDashboardData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const { profile, role, loading: userLoading, isAuthenticated } = useUser()
+  const [dashboardData, setDashboardData] = useState<DashboardData>({})
+  const [dataLoading, setDataLoading] = useState(true)
   const [error, setError] = useState(false)
 
   useEffect(() => {
-    async function load() {
+    // Don't load dashboard data until user context is ready
+    if (userLoading || !profile) return
+
+    async function loadDashboardData() {
       try {
         const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
+        const extra: DashboardData = {}
 
-        let currentProfile: Profile | null = null
-        let currentRole: UserRole = "learner"
-
-        if (user) {
-          // Logged-in user
-          const { data: p } = await supabase
-            .from("profiles")
-            .select("*, roles(*)")
-            .eq("id", user.id)
-            .maybeSingle()
-
-          if (p) {
-            currentProfile = p as Profile
-            currentRole = (p.roles?.name || "learner") as UserRole
-          } else {
-            currentProfile = {
-              id: user.id,
-              full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
-              email: user.email || "",
-              avatar_url: null,
-              created_at: user.created_at || new Date().toISOString(),
-              role_id: "",
-              roles: { id: "fallback", name: "learner" },
-            } as Profile
-            currentRole = "learner"
-          }
-        } else {
-          // Demo mode
-          const { role: demoRole } = getDemoUserFromCookie("learner")
-          currentRole = demoRole as UserRole
-          const demoProfileId = getDemoProfileId(currentRole)
-          const { data: demoProfile } = await supabase
-            .from("profiles")
-            .select("*, roles(*)")
-            .eq("id", demoProfileId)
-            .maybeSingle()
-
-          if (demoProfile) {
-            currentProfile = demoProfile as Profile
-          } else {
-            const info = DEMO_USERS[currentRole as keyof typeof DEMO_USERS] || DEMO_USERS.learner
-            currentProfile = {
-              id: info.profileId,
-              full_name: info.fullName,
-              email: info.email,
-              avatar_url: null,
-              created_at: new Date().toISOString(),
-              role_id: "",
-              roles: { id: "demo", name: currentRole },
-            } as Profile
-          }
-        }
-
-        setProfile(currentProfile)
-        setRole(currentRole)
-
-        // Load role-specific dashboard data
-        const extra: any = {}
-
-        if (currentRole === "administrator") {
-          // Admin stats -- use the server API for admin since it needs admin client
+        if (role === "administrator") {
+          // Admin stats via server API (needs admin client)
           try {
             const res = await fetch("/api/admin/dashboard-stats")
             if (res.ok) {
@@ -91,14 +58,14 @@ export default function DashboardView() {
               extra.recentSessions = stats.recentSessions
             }
           } catch {
-            // fallback
+            // Fallback to empty stats
           }
           if (!extra.adminStats) {
             extra.adminStats = { totalUsers: 0, totalSessions: 0, activeTutors: 0, pendingSessions: 0 }
             extra.recentSessions = []
           }
-        } else if (currentRole === "tutor") {
-          const userId = user?.id || getDemoProfileId("tutor")
+        } else if (role === "tutor") {
+          const userId = isAuthenticated ? profile.id : getDemoProfileId("tutor")
           const { data: tutor } = await supabase
             .from("tutors")
             .select("*")
@@ -136,7 +103,7 @@ export default function DashboardView() {
           }
         } else {
           // Learner
-          const learnerId = user?.id || getDemoProfileId("learner")
+          const learnerId = isAuthenticated ? profile.id : getDemoProfileId("learner")
           const { data: sessions } = await supabase
             .from("sessions")
             .select("*, tutors(*, profiles(*)), specializations(*)")
@@ -169,14 +136,15 @@ export default function DashboardView() {
         console.error("Dashboard load error:", err)
         setError(true)
       } finally {
-        setLoading(false)
+        setDataLoading(false)
       }
     }
 
-    load()
-  }, [])
+    loadDashboardData()
+  }, [profile, role, userLoading, isAuthenticated])
 
-  if (loading) {
+  // Show loading while user context or dashboard data loads
+  if (userLoading || dataLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -197,8 +165,8 @@ export default function DashboardView() {
     return (
       <AdminDashboard
         profile={profile}
-        stats={dashboardData?.adminStats || { totalUsers: 0, totalSessions: 0, activeTutors: 0, pendingSessions: 0 }}
-        recentSessions={dashboardData?.recentSessions || []}
+        stats={dashboardData.adminStats || { totalUsers: 0, totalSessions: 0, activeTutors: 0, pendingSessions: 0 }}
+        recentSessions={dashboardData.recentSessions || []}
       />
     )
   }
@@ -207,9 +175,9 @@ export default function DashboardView() {
     return (
       <TutorDashboard
         profile={profile}
-        tutor={dashboardData?.tutor || null}
-        upcomingSessions={dashboardData?.upcomingSessions || []}
-        stats={dashboardData?.tutorStats || { completedSessions: 0, upcomingSessions: 0, rating: 0, totalRatings: 0 }}
+        tutor={dashboardData.tutor || null}
+        upcomingSessions={dashboardData.upcomingSessions || []}
+        stats={dashboardData.tutorStats || { completedSessions: 0, upcomingSessions: 0, rating: 0, totalRatings: 0 }}
       />
     )
   }
@@ -217,8 +185,8 @@ export default function DashboardView() {
   return (
     <LearnerDashboard
       profile={profile}
-      upcomingSessions={dashboardData?.upcomingSessions || []}
-      stats={dashboardData?.learnerStats || { totalSessions: 0, completedSessions: 0, upcomingSessions: 0 }}
+      upcomingSessions={dashboardData.upcomingSessions || []}
+      stats={dashboardData.learnerStats || { totalSessions: 0, completedSessions: 0, upcomingSessions: 0 }}
     />
   )
 }

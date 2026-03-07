@@ -2,7 +2,7 @@ import { createClient, createAdminClient } from "@/lib/supabase/create-client";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { DEMO_USERS, getDemoProfileId, getDemoTutorId } from "@/lib/demo";
-import type { UserRole } from "@/lib/types";
+import type { UserRole, Profile } from "@/lib/types";
 
 export async function GET() {
   const supabase = await createClient();
@@ -18,7 +18,7 @@ export async function GET() {
   const cookieStore = await cookies();
   const devRole = cookieStore.get("dev_role")?.value as UserRole | undefined;
 
-  let profile: any = null;
+  let profile: Profile | null = null;
   const isDemoMode = !user;
 
   // Fetch profile for logged-in users
