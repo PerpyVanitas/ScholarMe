@@ -1,8 +1,7 @@
 "use client"
 
-import { useEffect, useCallback, useRef } from "react"
+import { useEffect, useRef } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { useRouter } from "next/navigation"
 
 const INACTIVITY_TIMEOUT = 10 * 60 * 1000 // 10 minutes
 const ACTIVITY_EVENTS = [
@@ -16,26 +15,29 @@ const ACTIVITY_EVENTS = [
 ] as const
 
 export function useInactivityTimeout() {
-  const router = useRouter()
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isLoggedOutRef = useRef(false)
 
-  const handleLogout = useCallback(async () => {
-    if (isLoggedOutRef.current) return
-    isLoggedOutRef.current = true
-
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.replace("/auth/login?reason=inactive")
-  }, [router])
-
-  const resetTimer = useCallback(() => {
-    if (isLoggedOutRef.current) return
-    if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(handleLogout, INACTIVITY_TIMEOUT)
-  }, [handleLogout])
-
   useEffect(() => {
+    // Only run on client after mount
+    if (typeof window === "undefined") return
+
+    const handleLogout = async () => {
+      if (isLoggedOutRef.current) return
+      isLoggedOutRef.current = true
+
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      // Use window.location instead of router to avoid initialization issues
+      window.location.href = "/auth/login?reason=inactive"
+    }
+
+    const resetTimer = () => {
+      if (isLoggedOutRef.current) return
+      if (timerRef.current) clearTimeout(timerRef.current)
+      timerRef.current = setTimeout(handleLogout, INACTIVITY_TIMEOUT)
+    }
+
     // Only start tracking if user is authenticated
     const supabase = createClient()
     let mounted = true
@@ -59,5 +61,5 @@ export function useInactivityTimeout() {
         window.removeEventListener(event, resetTimer)
       }
     }
-  }, [resetTimer])
+  }, [])
 }
