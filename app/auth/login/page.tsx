@@ -72,21 +72,31 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        // API returns standardized error format
-        const errorDisplay = data.error?.code 
-          ? formatErrorForDisplay(data.error)
-          : `[AUTH-001] ${data.error || "Login failed"}`;
-        setCardError(errorDisplay);
-        toast.error(errorDisplay);
+        // Map card errors to the same human-friendly messages as email login
+        let friendlyMessage = "Invalid Card ID or PIN. Please check your credentials and try again.";
+        const rawCode: string = (data.error?.code ?? "").replace(/_/g, "-");
+        if (rawCode.startsWith("VALID") || res.status === 400) {
+          friendlyMessage = "Card ID and PIN are required.";
+        } else if (rawCode.startsWith("AUTH") || res.status === 401) {
+          friendlyMessage = "Invalid Card ID or PIN. Please check your credentials and try again.";
+        } else if (rawCode.startsWith("DB") || res.status === 404) {
+          friendlyMessage = "Account not found. Please contact your administrator.";
+        } else if (res.status === 429) {
+          friendlyMessage = "Too many attempts. Please wait a moment before trying again.";
+        } else if (res.status >= 500) {
+          friendlyMessage = "A server error occurred. Please try again later or contact support.";
+        }
+        setCardError(friendlyMessage);
+        toast.error(friendlyMessage);
       } else {
         toast.success("Welcome back!");
         window.location.href = "/dashboard";
         return;
       }
     } catch {
-      const errorDisplay = "[SYSTEM-001] Internal server error: An unexpected error occurred. Please try again later.";
-      setCardError(errorDisplay);
-      toast.error(errorDisplay);
+      const friendlyMessage = "An unexpected error occurred. Please try again later.";
+      setCardError(friendlyMessage);
+      toast.error(friendlyMessage);
     }
     setCardLoading(false);
   }
