@@ -153,7 +153,8 @@ export default function SignUpPage() {
   })();
 
   const strengthLabel = ["", "Weak", "Fair", "Good", "Strong"][passwordStrength];
-  const strengthColor = ["", "bg-destructive", "bg-warning", "bg-primary", "bg-success"][passwordStrength];
+  const strengthColor = ["", "bg-red-500", "bg-amber-400", "bg-blue-500", "bg-emerald-500"][passwordStrength];
+  const strengthTextColor = ["", "text-red-500", "text-amber-400", "text-blue-500", "text-emerald-500"][passwordStrength];
 
   return (
     <div className="flex min-h-screen">
@@ -324,20 +325,25 @@ export default function SignUpPage() {
                 </button>
               </div>
               {fieldErrors.password && <p className="text-xs text-destructive mt-1">{fieldErrors.password}</p>}
-              {/* Password strength bar */}
-              {formData.password && (
-                <div className="flex items-center gap-2 mt-1">
+              {/* Password strength bar — always visible while typing */}
+              <div className={cn("mt-1 transition-all", formData.password ? "opacity-100" : "opacity-0 pointer-events-none")}>
+                <div className="flex items-center gap-2">
                   <div className="flex flex-1 gap-1">
                     {[1, 2, 3, 4].map((i) => (
                       <div key={i} className={cn(
-                        "h-1 flex-1 rounded-full transition-all",
-                        i <= passwordStrength ? strengthColor : "bg-border"
+                        "h-1.5 flex-1 rounded-full transition-all duration-300",
+                        formData.password && i <= passwordStrength ? strengthColor : "bg-border"
                       )} />
                     ))}
                   </div>
-                  <span className="text-xs text-muted-foreground w-10 text-right">{strengthLabel}</span>
+                  <span className={cn("text-xs font-medium w-10 text-right transition-colors", strengthTextColor)}>
+                    {formData.password ? strengthLabel : ""}
+                  </span>
                 </div>
-              )}
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Use 8+ characters with uppercase, numbers, and symbols for a strong password.
+                </p>
+              </div>
             </div>
 
             {/* Confirm Password */}
