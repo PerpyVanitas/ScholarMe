@@ -45,7 +45,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
           roles: p.roles || undefined,
         } as Profile);
         const roleName = p.roles?.name || "learner";
-        console.log("[v0] Setting role to:", roleName, "from roles data");
         setRole(roleName as UserRole);
       } else {
         // Profile not found, create a fallback
