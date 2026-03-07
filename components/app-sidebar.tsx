@@ -41,6 +41,7 @@ import {
   UserCircle,
   Clock,
   Timer,
+  Vote,
 } from "lucide-react";
 import { signOut } from "@/app/auth/actions";
 
@@ -52,7 +53,8 @@ interface AppSidebarProps {
 
 function getNavItems(role: UserRole) {
   const shared = [
-    { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { title: "Dashboard", href: "/dashboard/home", icon: LayoutDashboard },
+    { title: "Voting", href: "/dashboard/voting", icon: Vote },
     { title: "Notifications", href: "/dashboard/notifications", icon: Bell },
     { title: "Profile", href: "/dashboard/profile", icon: UserCircle },
   ];
@@ -113,7 +115,7 @@ export function AppSidebar({ profile, role, notificationCount }: AppSidebarProps
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/dashboard">
+              <Link href="/dashboard/home">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
                   <GraduationCap className="h-4 w-4 text-primary-foreground" />
                 </div>

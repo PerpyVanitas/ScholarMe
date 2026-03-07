@@ -1,6 +1,7 @@
 /** POST /api/auth/card-login -- authenticate via Card ID + PIN (uses admin client to bypass RLS). */
 import { createClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
+import { createErrorResponse, createSuccessResponse } from "@/lib/api-errors";
 
 export async function POST(request: Request) {
   try {
@@ -8,7 +9,10 @@ export async function POST(request: Request) {
 
     if (!cardId || !pin) {
       return NextResponse.json(
-        { error: "Card ID and PIN are required" },
+        createErrorResponse("VALID_001", {
+          cardId: !cardId ? "Card ID is required" : "",
+          pin: !pin ? "PIN is required" : "",
+        }),
         { status: 400 }
       );
     }
@@ -30,7 +34,7 @@ export async function POST(request: Request) {
 
     if (cardError || !card) {
       return NextResponse.json(
-        { error: "Invalid card ID or card is inactive" },
+        createErrorResponse("AUTH_001", "Card ID is invalid or card is inactive"),
         { status: 401 }
       );
     }
@@ -38,7 +42,7 @@ export async function POST(request: Request) {
     // Compare PIN (stored as plain text for simplicity in this MVP; in production use bcrypt)
     if (card.pin !== pin) {
       return NextResponse.json(
-        { error: "Incorrect PIN" },
+        createErrorResponse("AUTH_001", "Incorrect PIN"),
         { status: 401 }
       );
     }
@@ -48,7 +52,7 @@ export async function POST(request: Request) {
 
     if (authError || !authUser?.user?.email) {
       return NextResponse.json(
-        { error: "User account not found" },
+        createErrorResponse("DB_001", "User account not found"),
         { status: 404 }
       );
     }
@@ -62,7 +66,7 @@ export async function POST(request: Request) {
 
     if (linkError || !linkData) {
       return NextResponse.json(
-        { error: "Failed to authenticate" },
+        createErrorResponse("SYSTEM_001", "Failed to generate authentication token"),
         { status: 500 }
       );
     }
@@ -79,19 +83,20 @@ export async function POST(request: Request) {
 
       if (verifyError) {
         return NextResponse.json(
-          { error: "Failed to complete authentication" },
+          createErrorResponse("SYSTEM_001", "Failed to complete authentication"),
           { status: 500 }
         );
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      role: card.profiles?.roles?.name || "learner",
-    });
+    return NextResponse.json(
+      createSuccessResponse({
+        role: card.profiles?.roles?.name || "learner",
+      })
+    );
   } catch {
     return NextResponse.json(
-      { error: "An unexpected error occurred" },
+      createErrorResponse("SYSTEM_001", "An unexpected error occurred"),
       { status: 500 }
     );
   }

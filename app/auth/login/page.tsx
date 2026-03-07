@@ -1,8 +1,8 @@
 /** Login page -- supports email/password and card-based authentication. */
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,13 +12,21 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GraduationCap, Mail, CreditCard, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { mapSupabaseErrorToCode, formatErrorForDisplay } from "@/lib/api-errors";
+import { ErrorAlert } from "@/components/ui/error-alert";
 
 export default function LoginPage() {
-  const router = useRouter();
+  const searchParams = useSearchParams();
   const [emailLoading, setEmailLoading] = useState(false);
   const [cardLoading, setCardLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [cardError, setCardError] = useState("");
+
+  useEffect(() => {
+    if (searchParams.get("reason") === "inactive") {
+      toast.info("You were signed out due to inactivity.");
+    }
+  }, [searchParams]);
 
   async function handleEmailLogin(formData: FormData) {
     setEmailLoading(true);
@@ -34,13 +42,15 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setEmailError(error.message);
-      toast.error(error.message);
+      const mappedError = mapSupabaseErrorToCode(error.message);
+      const displayError = formatErrorForDisplay(mappedError);
+      setEmailError(displayError);
+      toast.error(displayError);
       setEmailLoading(false);
       return;
     }
 
-    // Hard redirect so server re-reads fresh auth cookies
+    // Hard redirect to /dashboard (bypasses stale Turbopack cache in v0 preview)
     window.location.href = "/dashboard";
   }
 
@@ -63,16 +73,21 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setCardError(data.error || "Login failed");
-        toast.error(data.error || "Login failed");
+        // API returns standardized error format
+        const errorDisplay = data.error?.code 
+          ? formatErrorForDisplay(data.error)
+          : `[AUTH-001] ${data.error || "Login failed"}`;
+        setCardError(errorDisplay);
+        toast.error(errorDisplay);
       } else {
         toast.success("Welcome back!");
         window.location.href = "/dashboard";
         return;
       }
     } catch {
-      setCardError("An unexpected error occurred");
-      toast.error("An unexpected error occurred");
+      const errorDisplay = "[SYSTEM-001] Internal server error: An unexpected error occurred. Please try again later.";
+      setCardError(errorDisplay);
+      toast.error(errorDisplay);
     }
     setCardLoading(false);
   }
@@ -142,9 +157,7 @@ export default function LoginPage() {
                       autoComplete="current-password"
                     />
                   </div>
-                  {emailError && (
-                    <p className="text-sm text-destructive" role="alert">{emailError}</p>
-                  )}
+                  <ErrorAlert error={emailError} />
                   <Button type="submit" className="w-full" disabled={emailLoading}>
                     {emailLoading ? (
                       <>
@@ -182,9 +195,7 @@ export default function LoginPage() {
                       inputMode="numeric"
                     />
                   </div>
-                  {cardError && (
-                    <p className="text-sm text-destructive" role="alert">{cardError}</p>
-                  )}
+                  <ErrorAlert error={cardError} />
                   <Button type="submit" className="w-full" disabled={cardLoading}>
                     {cardLoading ? (
                       <>

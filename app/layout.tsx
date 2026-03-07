@@ -1,4 +1,4 @@
-/** Root layout -- fonts, theme provider, analytics, and global styles. */
+/** Root layout -- fonts, theme provider, analytics, and global styles. Build v2. */
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'

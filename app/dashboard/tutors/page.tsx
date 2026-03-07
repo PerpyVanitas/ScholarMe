@@ -146,7 +146,7 @@ export default function TutorsPage() {
                     </div>
                   )}
                   <Button asChild size="sm" className="mt-auto">
-                    <Link href={`/dashboard/tutors/${tutor.id}`}>View Profile</Link>
+                    <Link href={`/d/tutors/${tutor.id}`}>View Profile</Link>
                   </Button>
                 </CardContent>
               </Card>
