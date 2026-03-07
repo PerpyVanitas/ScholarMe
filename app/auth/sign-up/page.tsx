@@ -20,6 +20,47 @@ function mapAuthError(msg: string): string {
   return msg || "An unexpected error occurred. Please try again.";
 }
 
+// Validation rules
+const VALIDATORS = {
+  full_name: (v: string) => {
+    if (!v.trim()) return "Full name is required.";
+    if (/\d/.test(v)) return "Full name must not contain numbers.";
+    if (v.trim().length < 2) return "Full name must be at least 2 characters.";
+    return "";
+  },
+  email: (v: string) => {
+    if (!v.trim()) return "Email address is required.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return "Please enter a valid email address (e.g. you@example.com).";
+    return "";
+  },
+  phone_number: (v: string) => {
+    if (!v) return ""; // optional
+    const digits = v.replace(/[\s\-().+]/g, "");
+    // Philippine mobile: starts with 09 (11 digits) or +639 (12 digits with country code)
+    const isLocal = /^09\d{9}$/.test(digits);
+    const isIntl = /^639\d{9}$/.test(digits);
+    if (!isLocal && !isIntl) return "Enter a valid Philippine mobile number (e.g. +63 917 123 4567 or 0917 123 4567).";
+    return "";
+  },
+  date_of_birth: (v: string) => {
+    if (!v) return "Date of birth is required.";
+    const dob = new Date(v);
+    if (isNaN(dob.getTime())) return "Please enter a valid date.";
+    if (dob > new Date()) return "Date of birth cannot be in the future.";
+    const now = new Date();
+    let age = now.getFullYear() - dob.getFullYear();
+    if (now.getMonth() < dob.getMonth() || (now.getMonth() === dob.getMonth() && now.getDate() < dob.getDate())) age--;
+    if (age < 13) return "You must be at least 13 years old to register.";
+    if (age > 120) return "Please enter a valid date of birth.";
+    return "";
+  },
+  password: (v: string) => {
+    if (!v) return "Password is required.";
+    if (v.length < 8) return "Password must be at least 8 characters.";
+    return "";
+  },
+};
+
 const FEATURES = [
   "Connect with verified expert tutors",
   "Book and manage sessions with ease",
@@ -42,15 +83,34 @@ export default function SignUpPage() {
     terms_accepted: false,
   });
   const [passwordMatch, setPasswordMatch] = useState(true);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  function validateField(name: keyof typeof VALIDATORS, value: string) {
+    const err = VALIDATORS[name]?.(value) ?? "";
+    setFieldErrors((prev) => ({ ...prev, [name]: err }));
+    return err;
+  }
+
+  function validateAll(): boolean {
+    const errors: Record<string, string> = {};
+    (Object.keys(VALIDATORS) as Array<keyof typeof VALIDATORS>).forEach((k) => {
+      const val = formData[k as keyof typeof formData] as string;
+      errors[k] = VALIDATORS[k](val);
+    });
+    if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = "Passwords do not match.";
+    }
+    setFieldErrors(errors);
+    return Object.values(errors).every((e) => !e);
+  }
 
   async function handleSignUp(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
 
-    if (formData.password !== formData.confirmPassword) {
-      setPasswordMatch(false);
-      setError("Passwords do not match.");
-      toast.error("Passwords do not match.");
+    if (!validateAll()) {
+      setError("Please fix the errors above before continuing.");
+      toast.error("Please fix the highlighted fields.");
       return;
     }
 
@@ -58,18 +118,6 @@ export default function SignUpPage() {
       setError("You must accept the Terms of Service and Privacy Policy.");
       toast.error("Please accept the terms to continue.");
       return;
-    }
-
-    if (formData.date_of_birth) {
-      const dob = new Date(formData.date_of_birth);
-      const now = new Date();
-      let age = now.getFullYear() - dob.getFullYear();
-      if (now.getMonth() < dob.getMonth() || (now.getMonth() === dob.getMonth() && now.getDate() < dob.getDate())) age--;
-      if (age < 13) {
-        setError("You must be at least 13 years old to create an account.");
-        toast.error("You must be at least 13 years old.");
-        return;
-      }
     }
 
     setLoading(true);
@@ -211,17 +259,23 @@ export default function SignUpPage() {
                 id="full_name" type="text" placeholder="Maria Santos" required autoComplete="name"
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                onBlur={(e) => validateField("full_name", e.target.value)}
+                className={cn(fieldErrors.full_name && "border-destructive focus-visible:ring-destructive")}
               />
+              {fieldErrors.full_name && <p className="text-xs text-destructive">{fieldErrors.full_name}</p>}
             </div>
 
             {/* Email */}
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="email">Email Address <span className="text-destructive">*</span></Label>
               <Input
-                id="email" type="email" placeholder="you@example.com" required autoComplete="email"
+                id="email" type="text" placeholder="you@example.com" required autoComplete="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onBlur={(e) => validateField("email", e.target.value)}
+                className={cn(fieldErrors.email && "border-destructive focus-visible:ring-destructive")}
               />
+              {fieldErrors.email && <p className="text-xs text-destructive">{fieldErrors.email}</p>}
             </div>
 
             {/* Phone + DOB side by side */}
@@ -232,7 +286,10 @@ export default function SignUpPage() {
                   id="phone_number" type="tel" placeholder="+63 917 123 4567" autoComplete="tel"
                   value={formData.phone_number}
                   onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                  onBlur={(e) => validateField("phone_number", e.target.value)}
+                  className={cn(fieldErrors.phone_number && "border-destructive focus-visible:ring-destructive")}
                 />
+                {fieldErrors.phone_number && <p className="text-xs text-destructive">{fieldErrors.phone_number}</p>}
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="date_of_birth">Date of Birth <span className="text-destructive">*</span></Label>
@@ -240,7 +297,10 @@ export default function SignUpPage() {
                   id="date_of_birth" type="date" required
                   value={formData.date_of_birth}
                   onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}
+                  onBlur={(e) => validateField("date_of_birth", e.target.value)}
+                  className={cn(fieldErrors.date_of_birth && "border-destructive focus-visible:ring-destructive")}
                 />
+                {fieldErrors.date_of_birth && <p className="text-xs text-destructive">{fieldErrors.date_of_birth}</p>}
               </div>
             </div>
 
@@ -255,13 +315,15 @@ export default function SignUpPage() {
                   required minLength={8} autoComplete="new-password"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="pr-10"
+                  onBlur={(e) => validateField("password", e.target.value)}
+                  className={cn("pr-10", fieldErrors.password && "border-destructive focus-visible:ring-destructive")}
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              {fieldErrors.password && <p className="text-xs text-destructive mt-1">{fieldErrors.password}</p>}
               {/* Password strength bar */}
               {formData.password && (
                 <div className="flex items-center gap-2 mt-1">
@@ -291,17 +353,20 @@ export default function SignUpPage() {
                   onChange={(e) => {
                     const val = e.target.value;
                     setFormData({ ...formData, confirmPassword: val });
-                    setPasswordMatch(val === formData.password || val === "");
+                    const match = val === formData.password || val === "";
+                    setPasswordMatch(match);
+                    if (!match) setFieldErrors((prev) => ({ ...prev, confirmPassword: "Passwords do not match." }));
+                    else setFieldErrors((prev) => ({ ...prev, confirmPassword: "" }));
                   }}
-                  className={cn("pr-10", formData.confirmPassword && !passwordMatch && "border-destructive focus-visible:ring-destructive")}
+                  className={cn("pr-10", (formData.confirmPassword && !passwordMatch) || fieldErrors.confirmPassword ? "border-destructive focus-visible:ring-destructive" : "")}
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              {formData.confirmPassword && !passwordMatch && (
-                <p className="text-xs text-destructive">Passwords do not match</p>
+              {(fieldErrors.confirmPassword || (formData.confirmPassword && !passwordMatch)) && (
+                <p className="text-xs text-destructive">{fieldErrors.confirmPassword || "Passwords do not match."}</p>
               )}
             </div>
 
