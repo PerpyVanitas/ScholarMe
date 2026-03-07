@@ -2,7 +2,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signUp } from "@/app/auth/actions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,9 +11,10 @@ import { Button } from "@/components/ui/button";
 import { GraduationCap, Loader2, BookOpen, Users } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { mapSupabaseErrorToCode, formatErrorForDisplay } from "@/lib/error-codes";
+import { ErrorAlert } from "@/components/ui/error-alert";
 
 export default function SignUpPage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedRole, setSelectedRole] = useState<"learner" | "tutor">("learner");
@@ -24,8 +24,10 @@ export default function SignUpPage() {
     setError("");
     const result = await signUp(formData);
     if (result?.error) {
-      setError(result.error);
-      toast.error(result.error);
+      const mappedError = mapSupabaseErrorToCode(result.error);
+      const displayError = formatErrorForDisplay(mappedError);
+      setError(displayError);
+      toast.error(displayError);
       setLoading(false);
       return;
     }
@@ -127,9 +129,7 @@ export default function SignUpPage() {
                   autoComplete="new-password"
                 />
               </div>
-              {error && (
-                <p className="text-sm text-destructive" role="alert">{error}</p>
-              )}
+              <ErrorAlert error={error} />
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? (
                   <>
