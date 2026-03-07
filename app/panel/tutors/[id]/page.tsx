@@ -13,9 +13,9 @@
  * 1. Learner clicks "Book Session"
  * 2. Dialog opens with date, time, subject, and notes fields
  * 3. On submit, POST /api/sessions creates the session with status "pending"
- * 4. Redirects to /dashboard/sessions where the new booking appears
+ * 4. Redirects to /panel/sessions where the new booking appears
  *
- * DYNAMIC ROUTE: /dashboard/tutors/[id]
+ * DYNAMIC ROUTE: /panel/tutors/[id]
  * The `[id]` is the tutor's UUID (from the tutors table, NOT profiles.id).
  * Next.js 16: params is a Promise, so we use React's `use()` to unwrap it.
  * ==========================================================================
@@ -109,7 +109,7 @@ export default function TutorDetailPage({ params }: { params: Promise<{ id: stri
     if (res.ok) {
       toast.success("Session booked successfully!");
       setBookingOpen(false);
-      router.push("/dashboard/sessions");
+      router.push("/panel/sessions");
     } else {
       const data = await res.json();
       toast.error(data.error || "Failed to book session");
@@ -130,7 +130,7 @@ export default function TutorDetailPage({ params }: { params: Promise<{ id: stri
       <div className="flex flex-col items-center gap-4 py-16">
         <p className="text-muted-foreground">Tutor not found</p>
         <Button asChild variant="outline">
-          <Link href="/dashboard/tutors">Back to Tutors</Link>
+          <Link href="/panel/tutors">Back to Tutors</Link>
         </Button>
       </div>
     );
@@ -152,7 +152,7 @@ export default function TutorDetailPage({ params }: { params: Promise<{ id: stri
   return (
     <div className="flex flex-col gap-6 max-w-3xl">
       <Button asChild variant="ghost" className="w-fit -ml-2">
-        <Link href="/dashboard/tutors" className="flex items-center gap-1">
+        <Link href="/panel/tutors" className="flex items-center gap-1">
           <ArrowLeft className="h-4 w-4" />
           Back to Tutors
         </Link>

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Users, Calendar, GraduationCap, Clock, ArrowRight, BarChart3, CreditCard } from "lucide-react"
 import { SESSION_STATUS_COLORS } from "@/lib/constants"
-import { AdminStatModal } from "@/components/dashboard/admin-stat-modal"
+import { AdminStatModal } from "@/components/panel/admin-stat-modal"
 import type { Profile, Session } from "@/lib/types"
 
 type StatType = "users" | "tutors" | "sessions" | "pending"
@@ -102,7 +102,7 @@ export function AdminDashboard({ profile, stats, recentSessions }: AdminDashboar
               <CardDescription>Latest session activity</CardDescription>
             </div>
             <Button asChild variant="ghost" size="sm">
-              <Link href="/dashboard/admin/sessions" className="flex items-center gap-1">
+              <Link href="/panel/admin/sessions" className="flex items-center gap-1">
                 View all <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </Button>
@@ -151,7 +151,7 @@ export function AdminDashboard({ profile, stats, recentSessions }: AdminDashboar
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href="/dashboard/admin/users" className="flex items-center gap-3">
+              <Link href="/panel/admin/users" className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
                   <Users className="h-4 w-4 text-primary" />
                 </div>
@@ -162,7 +162,7 @@ export function AdminDashboard({ profile, stats, recentSessions }: AdminDashboar
               </Link>
             </Button>
             <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href="/dashboard/admin/cards" className="flex items-center gap-3">
+              <Link href="/panel/admin/cards" className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-success/10">
                   <CreditCard className="h-4 w-4 text-success" />
                 </div>
@@ -173,7 +173,7 @@ export function AdminDashboard({ profile, stats, recentSessions }: AdminDashboar
               </Link>
             </Button>
             <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href="/dashboard/admin/analytics" className="flex items-center gap-3">
+              <Link href="/panel/admin/analytics" className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/30">
                   <BarChart3 className="h-4 w-4 text-accent-foreground" />
                 </div>
