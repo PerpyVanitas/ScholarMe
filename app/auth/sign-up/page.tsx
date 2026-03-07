@@ -34,12 +34,16 @@ const VALIDATORS = {
     return "";
   },
   phone_number: (v: string) => {
-    if (!v) return ""; // optional
+    if (!v.trim()) return "Mobile number is required.";
     const digits = v.replace(/[\s\-().+]/g, "");
     // Philippine mobile: starts with 09 (11 digits) or +639 (12 digits with country code)
     const isLocal = /^09\d{9}$/.test(digits);
     const isIntl = /^639\d{9}$/.test(digits);
     if (!isLocal && !isIntl) return "Enter a valid Philippine mobile number (e.g. +63 917 123 4567 or 0917 123 4567).";
+    return "";
+  },
+  confirmPassword: (v: string) => {
+    if (!v.trim()) return "Please confirm your password.";
     return "";
   },
   date_of_birth: (v: string) => {
@@ -282,7 +286,7 @@ export default function SignUpPage() {
             {/* Phone + DOB side by side */}
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="phone_number">Mobile Number</Label>
+                <Label htmlFor="phone_number">Mobile Number <span className="text-destructive">*</span></Label>
                 <Input
                   id="phone_number" type="tel" placeholder="+63 917 123 4567" autoComplete="tel"
                   value={formData.phone_number}
