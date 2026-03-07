@@ -32,13 +32,21 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setIsAuthenticated(true);
       const { data: p } = await supabase
         .from("profiles")
-        .select("*, roles(*)")
+        .select("id, email, full_name, avatar_url, role_id, created_at, roles(id, name)")
         .eq("id", user.id)
         .maybeSingle();
 
+      console.log("[v0] Profile data loaded:", p);
+      console.log("[v0] Roles data:", p?.roles);
+
       if (p) {
-        setProfile(p);
-        setRole((p.roles?.name || "learner") as UserRole);
+        setProfile({
+          ...p,
+          roles: p.roles || undefined,
+        } as Profile);
+        const roleName = p.roles?.name || "learner";
+        console.log("[v0] Setting role to:", roleName, "from roles data");
+        setRole(roleName as UserRole);
       } else {
         // Profile not found, create a fallback
         setProfile({
@@ -47,7 +55,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           email: user.email || "",
           avatar_url: null,
           created_at: user.created_at || new Date().toISOString(),
-          role_id: "",
+          role_id: null,
           roles: { id: "fallback", name: "learner" },
         } as Profile);
         setRole("learner");
@@ -66,13 +74,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const { role: demoRole, userId: demoUserId } = getDemoUserFromCookie("learner");
       const { data: demoProfile } = await supabase
         .from("profiles")
-        .select("*, roles(*)")
+        .select("id, email, full_name, avatar_url, role_id, created_at, roles(id, name)")
         .eq("id", demoUserId)
         .maybeSingle();
 
       if (demoProfile) {
-        setProfile(demoProfile);
-        setRole((demoProfile.roles?.name || demoRole) as UserRole);
+        setProfile({
+          ...demoProfile,
+          roles: demoProfile.roles || undefined,
+        } as Profile);
+        const roleName = demoProfile.roles?.name || demoRole;
+        setRole(roleName as UserRole);
       } else {
         const demoInfo = DEMO_USERS[demoRole as keyof typeof DEMO_USERS] || DEMO_USERS.learner;
         setProfile({
@@ -81,7 +93,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           email: demoInfo.email,
           avatar_url: null,
           created_at: new Date().toISOString(),
-          role_id: "",
+          role_id: null,
           roles: { id: "demo-role", name: demoRole },
         } as Profile);
         setRole(demoRole);
