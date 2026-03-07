@@ -50,8 +50,8 @@ export default function LoginPage() {
       return;
     }
 
-    // Hard redirect to /panel (bypasses stale Turbopack cache in v0 preview)
-    window.location.href = "/panel";
+    // Hard redirect to /dashboard (bypasses stale Turbopack cache in v0 preview)
+    window.location.href = "/dashboard";
   }
 
   async function handleCardLogin(e: React.FormEvent<HTMLFormElement>) {
@@ -81,7 +81,7 @@ export default function LoginPage() {
         toast.error(errorDisplay);
       } else {
         toast.success("Welcome back!");
-        window.location.href = "/panel";
+        window.location.href = "/dashboard";
         return;
       }
     } catch {

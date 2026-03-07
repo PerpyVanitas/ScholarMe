@@ -66,7 +66,7 @@ export default function SetupProfilePage() {
 
         // If profile already completed, go to dashboard
         if (profile.profile_completed) {
-          router.push("/panel")
+          router.push("/dashboard")
           return
         }
       }
@@ -202,7 +202,7 @@ export default function SetupProfilePage() {
       }
 
       toast.success("Profile setup complete!")
-      window.location.href = "/panel"
+      window.location.href = "/dashboard"
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save profile")
     } finally {
@@ -361,7 +361,7 @@ export default function SetupProfilePage() {
           <button
             type="button"
             onClick={() => {
-      window.location.href = "/panel"
+      window.location.href = "/dashboard"
             }}
             className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
           >

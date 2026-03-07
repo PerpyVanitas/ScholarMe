@@ -53,33 +53,33 @@ interface AppSidebarProps {
 
 function getNavItems(role: UserRole) {
   const shared = [
-    { title: "Dashboard", href: "/panel/home", icon: LayoutDashboard },
-    { title: "Voting", href: "/panel/voting", icon: Vote },
-    { title: "Notifications", href: "/panel/notifications", icon: Bell },
-    { title: "Profile", href: "/panel/profile", icon: UserCircle },
+    { title: "Dashboard", href: "/dashboard/home", icon: LayoutDashboard },
+    { title: "Voting", href: "/dashboard/voting", icon: Vote },
+    { title: "Notifications", href: "/dashboard/notifications", icon: Bell },
+    { title: "Profile", href: "/dashboard/profile", icon: UserCircle },
   ];
 
   const learnerItems = [
-    { title: "Find Tutors", href: "/panel/tutors", icon: Users },
-    { title: "My Sessions", href: "/panel/sessions", icon: Calendar },
-    { title: "Resources", href: "/panel/resources", icon: BookOpen },
+    { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
+    { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
+    { title: "Resources", href: "/dashboard/resources", icon: BookOpen },
   ];
 
   const tutorItems = [
-    { title: "Find Tutors", href: "/panel/tutors", icon: Users },
-    { title: "My Sessions", href: "/panel/sessions", icon: Calendar },
-    { title: "Timesheet", href: "/panel/timesheet", icon: Timer },
-    { title: "Availability", href: "/panel/availability", icon: Clock },
-    { title: "My Repositories", href: "/panel/resources", icon: FolderOpen },
+    { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
+    { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
+    { title: "Timesheet", href: "/dashboard/timesheet", icon: Timer },
+    { title: "Availability", href: "/dashboard/availability", icon: Clock },
+    { title: "My Repositories", href: "/dashboard/resources", icon: FolderOpen },
   ];
 
   const adminItems = [
-    { title: "Users", href: "/panel/admin/users", icon: Users },
-    { title: "Cards", href: "/panel/admin/cards", icon: CreditCard },
-    { title: "All Sessions", href: "/panel/admin/sessions", icon: Calendar },
-    { title: "Timesheets", href: "/panel/admin/timesheets", icon: Timer },
-    { title: "Analytics", href: "/panel/admin/analytics", icon: BarChart3 },
-    { title: "Resources", href: "/panel/resources", icon: FolderOpen },
+    { title: "Users", href: "/dashboard/admin/users", icon: Users },
+    { title: "Cards", href: "/dashboard/admin/cards", icon: CreditCard },
+    { title: "All Sessions", href: "/dashboard/admin/sessions", icon: Calendar },
+    { title: "Timesheets", href: "/dashboard/admin/timesheets", icon: Timer },
+    { title: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
+    { title: "Resources", href: "/dashboard/resources", icon: FolderOpen },
   ];
 
   const roleItems = {
@@ -115,7 +115,7 @@ export function AppSidebar({ profile, role, notificationCount }: AppSidebarProps
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/panel/home">
+              <Link href="/dashboard/home">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
                   <GraduationCap className="h-4 w-4 text-primary-foreground" />
                 </div>
@@ -198,7 +198,7 @@ export function AppSidebar({ profile, role, notificationCount }: AppSidebarProps
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" side="top" className="w-56">
                 <DropdownMenuItem asChild>
-                  <Link href="/panel/profile">
+                  <Link href="/dashboard/profile">
                     <Settings className="mr-2 h-4 w-4" />
                     Profile Settings
                   </Link>
