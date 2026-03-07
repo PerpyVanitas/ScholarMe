@@ -1,6 +1,7 @@
 /**
  * ScholarMe Error Codes - Based on SDD Section 5.3
  * Comprehensive error handling covering industry-standard scenarios
+ * Renamed from error-codes.ts to api-errors.ts to resolve module caching issues
  * 
  * Response Structure:
  * {
