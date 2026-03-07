@@ -18,11 +18,62 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedRole, setSelectedRole] = useState<"learner" | "tutor">("learner");
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    full_name: "",
+    email: "",
+    phone_number: "",
+    date_of_birth: "",
+    password: "",
+    confirmPassword: "",
+    terms_accepted: false,
+  });
+  const [passwordMatch, setPasswordMatch] = useState(true);
 
-  async function handleSignUp(formData: FormData) {
-    setLoading(true);
+  async function handleSignUp(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setError("");
-    const result = await signUp(formData);
+
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setPasswordMatch(false);
+      setError("Passwords do not match");
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    // Validate terms accepted
+    if (!formData.terms_accepted) {
+      setError("You must accept the terms and conditions");
+      toast.error("You must accept the terms and conditions");
+      return;
+    }
+
+    // Validate minimum age (13)
+    if (formData.date_of_birth) {
+      const birthDate = new Date(formData.date_of_birth);
+      const today = new Date();
+      const age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        if (age < 13) {
+          setError("You must be at least 13 years old to create an account");
+          toast.error("You must be at least 13 years old");
+          return;
+        }
+      }
+    }
+
+    setLoading(true);
+    const submitFormData = new FormData();
+    submitFormData.set("email", formData.email);
+    submitFormData.set("password", formData.password);
+    submitFormData.set("full_name", formData.full_name);
+    submitFormData.set("phone_number", formData.phone_number);
+    submitFormData.set("date_of_birth", formData.date_of_birth);
+    submitFormData.set("role", selectedRole);
+
+    const result = await signUp(submitFormData);
     if (result?.error) {
       const mappedError = mapSupabaseErrorToCode(result.error);
       const displayError = formatErrorForDisplay(mappedError);
@@ -58,7 +109,7 @@ export default function SignUpPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form action={handleSignUp} className="flex flex-col gap-4">
+            <form onSubmit={handleSignUp} className="flex flex-col gap-4">
               <input type="hidden" name="role" value={selectedRole} />
 
               <div className="flex flex-col gap-2">
@@ -96,41 +147,124 @@ export default function SignUpPage() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <Label htmlFor="full_name">Full Name</Label>
+                <Label htmlFor="full_name">Full Name *</Label>
                 <Input
                   id="full_name"
-                  name="full_name"
                   type="text"
                   placeholder="John Doe"
                   required
                   autoComplete="name"
+                  value={formData.full_name}
+                  onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                 />
               </div>
+
               <div className="flex flex-col gap-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email *</Label>
                 <Input
                   id="email"
-                  name="email"
                   type="email"
                   placeholder="you@example.com"
                   required
                   autoComplete="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
+
               <div className="flex flex-col gap-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="phone_number">Phone Number</Label>
+                <Input
+                  id="phone_number"
+                  type="tel"
+                  placeholder="+1 (555) 000-0000"
+                  autoComplete="tel"
+                  value={formData.phone_number}
+                  onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="date_of_birth">Date of Birth</Label>
+                <Input
+                  id="date_of_birth"
+                  type="date"
+                  required
+                  value={formData.date_of_birth}
+                  onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">Must be at least 13 years old</p>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="password">Password *</Label>
                 <Input
                   id="password"
-                  name="password"
-                  type="password"
-                  placeholder="Create a password (min 6 characters)"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Create a password (min 8 characters)"
                   required
-                  minLength={6}
+                  minLength={8}
                   autoComplete="new-password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className={!passwordMatch ? "border-destructive" : ""}
                 />
               </div>
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                <Input
+                  id="confirmPassword"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Confirm your password"
+                  required
+                  minLength={8}
+                  autoComplete="new-password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => {
+                    setFormData({ ...formData, confirmPassword: e.target.value });
+                    setPasswordMatch(e.target.value === formData.password);
+                  }}
+                  className={!passwordMatch ? "border-destructive" : ""}
+                />
+                {!passwordMatch && (
+                  <p className="text-xs text-destructive">Passwords do not match</p>
+                )}
+              </div>
+
+              <Button
+                type="button"
+                variant="ghost"
+                className="justify-start text-xs"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? "Hide" : "Show"} passwords
+              </Button>
+
+              <div className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  required
+                  checked={formData.terms_accepted}
+                  onChange={(e) => setFormData({ ...formData, terms_accepted: e.target.checked })}
+                  className="mt-1 rounded border-border"
+                />
+                <Label htmlFor="terms" className="text-xs leading-relaxed font-normal cursor-pointer">
+                  I agree to the{" "}
+                  <Link href="/terms" className="text-primary underline hover:no-underline">
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link href="/privacy" className="text-primary underline hover:no-underline">
+                    Privacy Policy
+                  </Link>
+                  *
+                </Label>
+              </div>
+
               <ErrorAlert error={error} />
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full" disabled={loading || !formData.terms_accepted}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -13,6 +13,9 @@ export interface Profile {
   full_name: string
   email: string
   avatar_url: string | null
+  phone_number?: string | null
+  date_of_birth?: string | null
+  terms_accepted_at?: string | null
   created_at: string
   roles?: Role
 }

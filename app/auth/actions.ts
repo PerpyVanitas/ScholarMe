@@ -19,6 +19,8 @@ export async function signUp(formData: FormData) {
   const email = formData.get("email") as string
   const password = formData.get("password") as string
   const fullName = formData.get("full_name") as string
+  const phoneNumber = formData.get("phone_number") as string
+  const dateOfBirth = formData.get("date_of_birth") as string
   const selectedRole = (formData.get("role") as string) || "learner"
 
   const { data: roleRow } = await supabase
@@ -33,6 +35,8 @@ export async function signUp(formData: FormData) {
     email_confirm: true,
     user_metadata: {
       full_name: fullName,
+      phone_number: phoneNumber,
+      date_of_birth: dateOfBirth,
       role_id: roleRow?.id,
       role_name: selectedRole,
     },
@@ -46,7 +50,10 @@ export async function signUp(formData: FormData) {
         id: created.user.id,
         full_name: fullName,
         email,
+        phone_number: phoneNumber,
+        date_of_birth: dateOfBirth ? new Date(dateOfBirth).toISOString().split('T')[0] : null,
         role_id: roleRow?.id || null,
+        terms_accepted_at: new Date().toISOString(),
       }, { onConflict: "id" })
   }
 
