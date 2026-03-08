@@ -531,6 +531,127 @@ Navy blue base (NOT pitch black) for comfortable late-night use.
 
 ---
 
+## 8. MOBILE DESIGN SPECIFICATIONS (< 768px)
+
+### Login Page – Mobile
+
+**Layout & Spacing:**
+- Full viewport width, no side padding on <360px (squeeze padding to 16px for 360-480px, then 24px for 480px+)
+- Container: 100% width, centered vertically in viewport
+- Min height: 100vh (full screen, vertical scroll allowed)
+
+**Visual Hierarchy:**
+1. **Header Section (32px from top)**
+   - ScholarMe logo: 36px
+   - Logo icon + text stacked vertically, center-aligned
+   - Spacing between icon and text: 8px
+   - Title: "Welcome Back" – 24px bold, centered
+   - Subtitle: "Sign in to continue learning" – 14px muted, centered, margin top 8px
+
+2. **Tab Navigation (Margin top: 24px)**
+   - Two tabs: "Email" and "Card"
+   - Tab width: 50% each, full width bar
+   - Active tab: blue underline (3px)
+   - Tab height: 44px (touch-friendly)
+   - Text: 14px, bold when active
+
+3. **Form Content (Padding: 24px top)**
+   - Email/Password inputs: Full width, 44px height minimum (touch target)
+   - Input margin bottom: 16px
+   - Button: Full width, 48px height, 14px bold text
+
+4. **Footer Links**
+   - "Don't have an account? Sign up" – 12px, centered
+   - Margin top: 16px, bottom: safe area (32px on notched devices)
+
+**Dark Mode Mobile:**
+- Navy blue background (full bleed)
+- Text: Off-white, high contrast
+- Input backgrounds: Slightly lighter navy
+- Borders: Subtle navy tint, not gray
+
+---
+
+### Sign-Up Page – Mobile
+
+**Layout & Spacing:**
+- Full width, single column
+- Padding: 24px horizontal (16px for very small screens <360px)
+- Top padding: 32px (safe area on notched)
+- Bottom padding: 48px (footer clearance + safe area)
+
+**Visual Hierarchy:**
+1. **Header (No left panel on mobile)**
+   - ScholarMe logo: 32px, left-aligned
+   - Logo icon + text horizontal (icon: 24px, text: 14px bold)
+   - Spacing: 8px between icon and text
+   - "Start your learning journey" heading below: 20px bold, margin top 16px
+
+2. **Sign In Link**
+   - "Already have an account? Sign in" – 12px, center-aligned
+   - Margin: 16px top, 24px bottom
+   - Link color: Primary blue
+
+3. **Form Fields (Full width, single column)**
+   - **Full Name:** 44px height minimum, margin bottom 16px
+   - **Email:** 44px height, margin bottom 16px
+   - **Phone:** 44px height, margin bottom 12px (no grid, stacked)
+   - **Date of Birth:** 44px height, margin bottom 16px
+   - **Password:** 44px height
+     - Show/hide icon: 20px, right-aligned, padding 12px
+     - Strength bar margin: 8px top, 12px bottom
+     - Strength label text: 12px, aligned right
+   - **Confirm Password:** 44px height, margin bottom 20px
+
+4. **Role Selection**
+   - Label: "I am a..." – 14px bold, margin bottom 12px
+   - Two role cards: Stack vertically (not side-by-side)
+   - Card height: 64px (icon + text, horizontal layout within card)
+   - Card width: 100%, border radius 8px
+   - Icon: 24px, left padding 12px
+   - Text: 12px bold title, 10px muted subtitle, left margin 8px
+   - Margin between cards: 12px
+
+5. **Terms Checkbox**
+   - Full width, flex layout
+   - Checkbox: 20px × 20px, left margin 0
+   - Text: 12px, left margin 8px, line-height 1.4 (wraps)
+   - Margin bottom: 20px
+
+6. **Error Alert**
+   - Full width, padding 12px
+   - Border radius: 8px
+   - Icon + text: horizontal, icon 20px
+
+7. **Sign Up Button**
+   - Full width: 100% - 48px (16px padding each side)
+   - Height: 48px
+   - Text: 14px bold
+   - Border radius: 10px
+   - Margin: 24px auto
+
+8. **Footer**
+   - Optional: ScholarMe copyright – 10px muted, centered, margin top 16px
+
+**Keyboard Interaction:**
+- On mobile, inputs trigger mobile keyboard (not full-screen overlays)
+- Input type="tel" on phone number field (triggers numeric keypad on iOS/Android)
+- Input type="date" (native date picker on mobile)
+- Input type="password" (native password field, respects show/hide toggle)
+
+**Touch Targets:**
+- All interactive elements: ≥44×44px (buttons, inputs, checkboxes, radio cards)
+- Padding around links: 8px minimum
+
+**Dark Mode Mobile (Sign-Up):**
+- Left panel completely hidden (no sidebar)
+- Background: Navy blue (#1A2744 equivalent)
+- Card backgrounds: Slightly lighter navy
+- Form inputs: Navy with subtle border, light text
+- Text: Off-white, high contrast for readability
+
+---
+
 ## 12. FINAL NOTES FOR DESIGNER
 
 1. **Typography**: Use Geist from Google Fonts or system fallback
