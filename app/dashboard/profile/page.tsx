@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,15 +19,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Loader2, Save, Trash2, Camera, CheckCircle2, User, Key, Eye, EyeOff } from "lucide-react";
+import { Loader2, Trash2, Key, Eye, EyeOff, Pencil, Calendar, Mail, Phone, Award, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { DEMO_USERS, getDemoUserFromCookie } from "@/lib/demo";
+import { EditProfileModal } from "@/components/profile/edit-profile-modal";
 import type { Profile } from "@/lib/types";
-
-interface Specialization {
-  id: string;
-  name: string;
-}
 
 function getInitials(firstName: string, lastName: string, fullName?: string | null): string {
   if (firstName && lastName) {
@@ -41,26 +37,32 @@ function getInitials(firstName: string, lastName: string, fullName?: string | nu
   return "?";
 }
 
+function formatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return "Not set";
+  try {
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return "Not set";
+  }
+}
+
 export default function ProfilePage() {
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const loadedRef = useRef(false);
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [confirmText, setConfirmText] = useState("");
-
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [birthdate, setBirthdate] = useState("");
-  const [membershipNumber, setMembershipNumber] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [selectedSpecs, setSelectedSpecs] = useState<string[]>([]);
-  const [specializations, setSpecializations] = useState<Specialization[]>([]);
   const [roleName, setRoleName] = useState("learner");
+
+  // Edit modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   // Password change state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -68,8 +70,6 @@ export default function ProfilePage() {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
   const [showPasswords, setShowPasswords] = useState(false);
-
-  const isTutor = roleName === "tutor";
 
   useEffect(() => {
     if (loadedRef.current) return;
@@ -88,63 +88,17 @@ export default function ProfilePage() {
 
         if (data) {
           setProfile(data);
+          if (data.roles?.name) setRoleName(data.roles.name);
           
-          // Parse first/last name from full_name if separate fields are empty
-          let fn = data.first_name || "";
-          let ln = data.last_name || "";
-          if ((!fn || !ln) && data.full_name) {
-            const parts = data.full_name.trim().split(/\s+/);
-            if (parts.length >= 2) {
-              fn = fn || parts[0];
-              ln = ln || parts.slice(1).join(" ");
-            } else if (parts.length === 1) {
-              fn = fn || parts[0];
-            }
-          }
-          setFirstName(fn);
-          setLastName(ln);
-          
-          // Use date_of_birth as fallback for birthdate
-          const bd = data.birthdate || data.date_of_birth || "";
-          setBirthdate(bd);
-          setMembershipNumber(data.membership_number || "");
           // Handle private blob pathnames vs full URLs
           if (data.avatar_url) {
             if (data.avatar_url.startsWith("avatars/")) {
-              // Private blob - use the API route to serve it
               setAvatarUrl(`/api/upload/avatar?pathname=${encodeURIComponent(data.avatar_url)}`);
             } else {
-              // Full URL (Supabase storage or other)
               setAvatarUrl(data.avatar_url);
             }
           } else {
             setAvatarUrl(null);
-          }
-          if (data.roles?.name) setRoleName(data.roles.name);
-
-          // Load specializations for tutors
-          if (data.roles?.name === "tutor") {
-            const { data: specs } = await supabase
-              .from("specializations")
-              .select("id, name")
-              .order("name");
-            if (specs) setSpecializations(specs);
-
-            const { data: tutorRow } = await supabase
-              .from("tutors")
-              .select("id")
-              .eq("profile_id", user.id)
-              .maybeSingle();
-
-            if (tutorRow) {
-              const { data: tutorSpecs } = await supabase
-                .from("tutor_specializations")
-                .select("specialization_id")
-                .eq("tutor_id", tutorRow.id);
-              if (tutorSpecs) {
-                setSelectedSpecs(tutorSpecs.map(s => s.specialization_id));
-              }
-            }
           }
         } else {
           // User exists but no profile row
@@ -182,121 +136,12 @@ export default function ProfilePage() {
     loadProfile();
   }, []);
 
-  const handleAvatarUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !profile) return;
-
-    // Client-side validation
-    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-    if (!allowedTypes.includes(file.type)) {
-      toast.error("Please upload a JPEG, PNG, GIF, or WebP image.");
-      return;
+  function handleProfileUpdated(updatedProfile: Partial<Profile>, newAvatarUrl?: string) {
+    setProfile(prev => prev ? { ...prev, ...updatedProfile } : null);
+    if (newAvatarUrl !== undefined) {
+      setAvatarUrl(newAvatarUrl);
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be smaller than 5MB.");
-      return;
-    }
-
-    setUploading(true);
-    try {
-      // Use Vercel Blob API for upload
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await fetch("/api/upload/avatar", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Upload failed");
-      }
-
-      setAvatarUrl(data.url);
-      toast.success("Photo updated!");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Upload failed");
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  }, [profile]);
-
-  function toggleSpec(specId: string) {
-    setSelectedSpecs(prev =>
-      prev.includes(specId) ? prev.filter(id => id !== specId) : [...prev, specId]
-    );
   }
-
-  const handleSave = useCallback(async () => {
-    if (!profile) return;
-    if (!firstName.trim() || !lastName.trim()) {
-      toast.error("First name and last name are required");
-      return;
-    }
-    setSaving(true);
-
-    try {
-      const supabase = createClient();
-
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
-          full_name: `${firstName.trim()} ${lastName.trim()}`,
-          birthdate: birthdate || null,
-          date_of_birth: birthdate || null,
-          membership_number: isTutor ? membershipNumber.trim() || null : null,
-        })
-        .eq("id", profile.id);
-
-      if (error) throw error;
-
-      if (isTutor) {
-        let { data: tutorRow } = await supabase
-          .from("tutors")
-          .select("id")
-          .eq("profile_id", profile.id)
-          .maybeSingle();
-
-        if (!tutorRow) {
-          const { data: newTutor } = await supabase
-            .from("tutors")
-            .insert({ profile_id: profile.id })
-            .select("id")
-            .single();
-          tutorRow = newTutor;
-        }
-
-        if (tutorRow) {
-          await supabase.from("tutor_specializations").delete().eq("tutor_id", tutorRow.id);
-          if (selectedSpecs.length > 0) {
-            await supabase
-              .from("tutor_specializations")
-              .insert(selectedSpecs.map(specId => ({
-                tutor_id: tutorRow!.id,
-                specialization_id: specId,
-              })));
-          }
-        }
-      }
-
-      setProfile(prev => prev ? {
-        ...prev,
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        full_name: `${firstName.trim()} ${lastName.trim()}`,
-      } : null);
-      toast.success("Profile updated successfully");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update profile");
-    } finally {
-      setSaving(false);
-    }
-  }, [profile, firstName, lastName, birthdate, membershipNumber, isTutor, selectedSpecs]);
 
   async function handleChangePassword() {
     if (!newPassword || !currentPassword) {
@@ -359,24 +204,32 @@ export default function ProfilePage() {
 
   if (!profile) return null;
 
-  const initials = getInitials(firstName, lastName, profile.full_name);
+  // Get display values
+  const firstName = profile.first_name || "";
+  const lastName = profile.last_name || "";
+  const fullName = profile.full_name || `${firstName} ${lastName}`.trim() || "User";
+  const birthdate = profile.birthdate || profile.date_of_birth || null;
+  const membershipNumber = profile.membership_number || null;
+
+  const initials = getInitials(firstName, lastName, fullName);
   const roleLabel =
     roleName === "administrator" ? "Administrator"
       : roleName === "tutor" ? "Tutor"
         : "Learner";
+  const isTutor = roleName === "tutor";
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground text-balance">Profile</h1>
-        <p className="text-muted-foreground">Manage your account settings and profile details.</p>
+        <p className="text-muted-foreground">View and manage your account settings.</p>
       </div>
 
-      {/* Profile Card */}
+      {/* Profile Card - View Only */}
       <Card className="border-border/60">
         <CardHeader>
-          <div className="flex items-center gap-4">
-            <div className="relative">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-4">
               <div className="relative h-20 w-20 rounded-full overflow-hidden bg-muted">
                 {avatarUrl ? (
                   <img
@@ -391,132 +244,59 @@ export default function ProfilePage() {
                   </div>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md transition-colors hover:bg-primary/90 disabled:opacity-50"
-                aria-label="Upload photo"
-              >
-                {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarUpload}
-                className="hidden"
-                aria-label="Choose profile photo"
-              />
+              <div className="flex flex-col gap-1">
+                <CardTitle className="text-xl">{fullName}</CardTitle>
+                <CardDescription className="flex items-center gap-1.5">
+                  <Mail className="h-3.5 w-3.5" />
+                  {profile.email}
+                </CardDescription>
+                <Badge variant="secondary" className="w-fit mt-1">{roleLabel}</Badge>
+              </div>
             </div>
-            <div className="flex flex-col gap-1">
-              <CardTitle>{profile.full_name || "User"}</CardTitle>
-              <CardDescription>{profile.email}</CardDescription>
-              <Badge variant="secondary" className="w-fit">{roleLabel}</Badge>
-            </div>
+            <Button variant="outline" size="sm" onClick={() => setEditModalOpen(true)}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit Profile
+            </Button>
           </div>
         </CardHeader>
-        <CardContent className="flex flex-col gap-5">
-            <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="firstName">First Name *</Label>
-              <Input
-                id="firstName"
-                value={firstName}
-                onChange={e => setFirstName(e.target.value)}
-                placeholder="Enter your first name"
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="lastName">Last Name *</Label>
-              <Input
-                id="lastName"
-                value={lastName}
-                onChange={e => setLastName(e.target.value)}
-                placeholder="Enter your last name"
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" value={profile.email} disabled className="bg-muted" />
-            <p className="text-xs text-muted-foreground">Contact your administrator to change your email.</p>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="birthdate">Birthdate</Label>
-            <Input
-              id="birthdate"
-              type="date"
-              value={birthdate}
-              onChange={e => setBirthdate(e.target.value)}
-            />
-          </div>
-
-          {isTutor && (
-            <>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="membershipNumber">Membership Number</Label>
-                <Input
-                  id="membershipNumber"
-                  value={membershipNumber}
-                  onChange={e => setMembershipNumber(e.target.value)}
-                  placeholder="Enter your membership number"
-                />
+        <CardContent>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+              <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">Birthday</p>
+                <p className="text-sm text-muted-foreground">{formatDate(birthdate)}</p>
               </div>
+            </div>
 
-              <div className="flex flex-col gap-2">
-                <Label>Specializations</Label>
-                <p className="text-xs text-muted-foreground">Select the subjects you can tutor</p>
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {specializations.map(spec => {
-                    const isSelected = selectedSpecs.includes(spec.id);
-                    return (
-                      <button
-                        key={spec.id}
-                        type="button"
-                        onClick={() => toggleSpec(spec.id)}
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${
-                          isSelected
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-border bg-background text-muted-foreground hover:bg-muted"
-                        }`}
-                      >
-                        {isSelected && <CheckCircle2 className="h-3.5 w-3.5" />}
-                        {spec.name}
-                      </button>
-                    );
-                  })}
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+              <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">Member Since</p>
+                <p className="text-sm text-muted-foreground">{formatDate(profile.created_at)}</p>
+              </div>
+            </div>
+
+            {profile.phone_number && (
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">Phone</p>
+                  <p className="text-sm text-muted-foreground">{profile.phone_number}</p>
                 </div>
               </div>
-            </>
-          )}
-
-          <div className="flex flex-col gap-2">
-            <Label>Member Since</Label>
-            <p className="text-sm text-muted-foreground">
-              {new Date(profile.created_at).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
-          </div>
-
-          <Button onClick={handleSave} disabled={saving || !firstName.trim() || !lastName.trim()} className="w-fit">
-            {saving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Save Changes
-              </>
             )}
-          </Button>
+
+            {isTutor && membershipNumber && (
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                <Award className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">Membership Number</p>
+                  <p className="text-sm text-muted-foreground">{membershipNumber}</p>
+                </div>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -649,6 +429,16 @@ export default function ProfilePage() {
           </AlertDialog>
         </CardContent>
       </Card>
+
+      {/* Edit Profile Modal */}
+      <EditProfileModal
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        profile={profile}
+        roleName={roleName}
+        avatarUrl={avatarUrl}
+        onProfileUpdated={handleProfileUpdated}
+      />
     </div>
   );
 }
