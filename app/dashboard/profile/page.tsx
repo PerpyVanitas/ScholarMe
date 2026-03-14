@@ -65,7 +65,12 @@ export default function ProfilePage() {
         .eq("id", user.id)
         .single();
 
+      console.log("[v0] Profile load - user.id:", user.id);
+      console.log("[v0] Profile load - data:", data);
+      console.log("[v0] Profile load - error:", error);
+
       if (error) {
+        console.error("[v0] Profile load error details:", error);
         toast.error("Failed to load profile");
         setLoading(false);
         return;
