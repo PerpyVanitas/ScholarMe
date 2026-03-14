@@ -15,6 +15,8 @@ import { toast } from "sonner";
 import { mapSupabaseErrorToCode, formatErrorForDisplay } from "@/lib/api-errors";
 import { ErrorAlert } from "@/components/ui/error-alert";
 
+export const dynamic = "force-dynamic";
+
 // Dynamically import with ssr: false to avoid useSearchParams during static prerendering
 const LoginInactivityCheck = dynamic(
   () => import("@/components/auth/login-inactivity-check").then(mod => ({ default: mod.LoginInactivityCheck })),
