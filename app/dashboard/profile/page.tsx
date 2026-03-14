@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { 
   User, Mail, Phone, Calendar, Clock, Award, Edit2, Loader2, 
-  Key, Eye, EyeOff, Trash2, AlertTriangle
+  Key, Eye, EyeOff, Trash2, AlertTriangle, Camera, X
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { updateProfile, UpdateProfileData } from "./actions";
@@ -37,6 +37,8 @@ export default function ProfilePage() {
   const [editPhone, setEditPhone] = useState("");
   const [editBirthdate, setEditBirthdate] = useState("");
   const [editMembershipNumber, setEditMembershipNumber] = useState("");
+  const [editAvatarUrl, setEditAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   // Password change state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -115,8 +117,88 @@ export default function ProfilePage() {
     setEditPhone(profile.phone_number || "");
     setEditBirthdate(profile.birthdate || profile.date_of_birth || "");
     setEditMembershipNumber(profile.membership_number || "");
+    // Set avatar URL - convert pathname to API route if needed
+    if (profile.avatar_url?.startsWith("avatars/")) {
+      setEditAvatarUrl(`/api/avatar?pathname=${encodeURIComponent(profile.avatar_url)}`);
+    } else {
+      setEditAvatarUrl(profile.avatar_url || null);
+    }
     setEditOpen(true);
   }, [profile]);
+
+  // Handle avatar upload
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Please upload a JPEG, PNG, GIF, or WebP image");
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be less than 5MB");
+      return;
+    }
+
+    setUploadingAvatar(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/avatar", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Upload failed");
+      }
+
+      // Update the avatar URL in the edit modal
+      const newAvatarUrl = `/api/avatar?pathname=${encodeURIComponent(data.pathname)}`;
+      setEditAvatarUrl(newAvatarUrl);
+      
+      // Update the profile state immediately
+      setProfile(prev => prev ? { ...prev, avatar_url: data.pathname } : null);
+      
+      toast.success("Photo uploaded successfully");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to upload photo");
+    } finally {
+      setUploadingAvatar(false);
+      // Reset the input
+      e.target.value = "";
+    }
+  };
+
+  // Handle avatar removal
+  const handleRemoveAvatar = async () => {
+    setUploadingAvatar(true);
+
+    try {
+      const res = await fetch("/api/avatar", { method: "DELETE" });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to remove photo");
+      }
+
+      setEditAvatarUrl(null);
+      setProfile(prev => prev ? { ...prev, avatar_url: null } : null);
+      toast.success("Photo removed");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to remove photo");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   // Save profile changes using server action
   const handleSaveProfile = async () => {
@@ -223,6 +305,15 @@ export default function ProfilePage() {
     return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   };
 
+  // Get display URL for avatar (handles private blob pathnames)
+  const getAvatarDisplayUrl = (avatarUrl: string | null | undefined) => {
+    if (!avatarUrl) return undefined;
+    if (avatarUrl.startsWith("avatars/")) {
+      return `/api/avatar?pathname=${encodeURIComponent(avatarUrl)}`;
+    }
+    return avatarUrl;
+  };
+
   if (loading) {
     return (
       <div className="container max-w-4xl py-8 space-y-6">
@@ -253,7 +344,7 @@ export default function ProfilePage() {
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
             <Avatar className="h-24 w-24 border-4 border-background shadow-lg">
-              <AvatarImage src={profile.avatar_url || undefined} alt={displayName} />
+              <AvatarImage src={getAvatarDisplayUrl(profile.avatar_url)} alt={displayName} />
               <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
                 {getInitials(displayName)}
               </AvatarFallback>
@@ -460,6 +551,57 @@ export default function ProfilePage() {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
+            {/* Avatar Upload */}
+            <div className="flex flex-col items-center gap-3">
+              <div className="relative">
+                <Avatar className="h-20 w-20 border-2 border-muted">
+                  <AvatarImage src={editAvatarUrl || undefined} alt="Profile" />
+                  <AvatarFallback className="text-xl bg-primary text-primary-foreground">
+                    {getInitials(displayName)}
+                  </AvatarFallback>
+                </Avatar>
+                {uploadingAvatar && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-full">
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1"
+                  disabled={uploadingAvatar}
+                  onClick={() => document.getElementById("avatar-upload")?.click()}
+                >
+                  <Camera className="h-4 w-4" />
+                  {editAvatarUrl ? "Change" : "Upload"}
+                </Button>
+                {editAvatarUrl && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1"
+                    disabled={uploadingAvatar}
+                    onClick={handleRemoveAvatar}
+                  >
+                    <X className="h-4 w-4" />
+                    Remove
+                  </Button>
+                )}
+                <input
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  className="hidden"
+                  onChange={handleAvatarUpload}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">JPEG, PNG, GIF or WebP. Max 5MB.</p>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="editFirstName">First Name *</Label>
