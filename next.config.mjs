@@ -1,10 +1,7 @@
-import { dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   turbopack: {
-    root: dirname(fileURLToPath(import.meta.url)),
+    root: "/vercel/share/v0-next-shadcn",
   },
   typescript: {
     ignoreBuildErrors: true,
@@ -13,7 +10,7 @@ const nextConfig = {
     unoptimized: true,
   },
   env: {
-    CACHE_BUST: "v9",
+    CACHE_BUST: "v11",
   },
 };
 
