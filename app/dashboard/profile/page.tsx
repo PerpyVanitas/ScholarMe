@@ -17,7 +17,7 @@ import {
   Key, Eye, EyeOff, Trash2, AlertTriangle, Camera, X
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { updateProfile, UpdateProfileData } from "./actions";
+import { updateProfile, UpdateProfileData, updateTutorInfo } from "./actions";
 import { useUser } from "@/lib/user-context";
 
 export default function ProfilePage() {
@@ -52,6 +52,16 @@ export default function ProfilePage() {
   // Delete account state
   const [deleting, setDeleting] = useState(false);
 
+  // Tutor settings state
+  const [tutorSettingsOpen, setTutorSettingsOpen] = useState(false);
+  const [tutorBio, setTutorBio] = useState("");
+  const [hourlyRate, setHourlyRate] = useState<number | null>(null);
+  const [yearsExperience, setYearsExperience] = useState<number | null>(null);
+  const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>([]);
+  const [allSpecializations, setAllSpecializations] = useState<Specialization[]>([]);
+  const [tutorData, setTutorData] = useState<any>(null);
+  const [savingTutor, setSavingTutor] = useState(false);
+
   const isTutor = roleName === "tutor";
 
   // Load profile data
@@ -79,19 +89,37 @@ export default function ProfilePage() {
         setProfile(data);
         if (data.roles?.name) setRoleName(data.roles.name);
 
-        // Load tutor specializations if tutor
+        // Load tutor data and specializations if tutor
         if (data.roles?.name === "tutor") {
-          const { data: tutorData } = await supabase
+          // Load all available specializations
+          const { data: allSpecs } = await supabase
+            .from("specializations")
+            .select("id, name");
+          
+          if (allSpecs) {
+            setAllSpecializations(allSpecs);
+          }
+
+          // Load tutor-specific data
+          const { data: tutorInfo } = await supabase
             .from("tutors")
-            .select("tutor_specializations(specializations(id, name))")
-            .eq("user_id", user.id)
+            .select("id, bio, hourly_rate, years_experience, tutor_specializations(specializations(id, name))")
+            .eq("profile_id", user.id)
             .single();
 
-          if (tutorData?.tutor_specializations) {
-            const specs = tutorData.tutor_specializations
-              .map((ts: { specializations: Specialization }) => ts.specializations)
-              .filter(Boolean);
-            setSpecializations(specs);
+          if (tutorInfo) {
+            setTutorData(tutorInfo);
+            setTutorBio(tutorInfo.bio || "");
+            setHourlyRate(tutorInfo.hourly_rate);
+            setYearsExperience(tutorInfo.years_experience);
+            
+            if (tutorInfo.tutor_specializations) {
+              const specs = tutorInfo.tutor_specializations
+                .map((ts: { specializations: Specialization }) => ts.specializations)
+                .filter(Boolean);
+              setSpecializations(specs);
+              setSelectedSpecializations(specs.map(s => s.id));
+            }
           }
         }
       }
@@ -180,6 +208,32 @@ export default function ProfilePage() {
       setUploadingAvatar(false);
       // Reset the input
       e.target.value = "";
+    }
+  };
+
+  // Handle tutor settings save
+  const handleSaveTutorSettings = async () => {
+    setSavingTutor(true);
+
+    try {
+      const result = await updateTutorInfo({
+        bio: tutorBio.trim() || null,
+        hourly_rate: hourlyRate,
+        years_experience: yearsExperience,
+        specialization_ids: selectedSpecializations,
+      });
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      toast.success("Tutor settings updated successfully");
+      setTutorSettingsOpen(false);
+      await refreshProfile();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to update tutor settings");
+    } finally {
+      setSavingTutor(false);
     }
   };
 
@@ -448,6 +502,60 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
+      {/* Tutor Settings */}
+      {isTutor && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Award className="h-5 w-5" />
+                Tutor Settings
+              </CardTitle>
+              <CardDescription>Manage your tutoring profile and specializations</CardDescription>
+            </div>
+            <Button
+              onClick={() => setTutorSettingsOpen(true)}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+            >
+              <Edit2 className="h-4 w-4" />
+              Edit
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Bio</p>
+              <p className="text-sm text-muted-foreground">{tutorBio || "Not set"}</p>
+            </div>
+            {hourlyRate && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Hourly Rate</p>
+                <p className="text-sm text-muted-foreground">${hourlyRate}/hour</p>
+              </div>
+            )}
+            {yearsExperience && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Years of Experience</p>
+                <p className="text-sm text-muted-foreground">{yearsExperience} years</p>
+              </div>
+            )}
+            {specializations.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Specializations</p>
+                <div className="flex flex-wrap gap-2">
+                  {specializations.map(spec => (
+                    <Badge key={spec.id} variant="secondary">
+                      {spec.name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Password Change */}
       <Card>
         <CardHeader>
@@ -678,6 +786,98 @@ export default function ProfilePage() {
                 </>
               ) : (
                 "Save Changes"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Tutor Settings Dialog */}
+      <Dialog open={tutorSettingsOpen} onOpenChange={setTutorSettingsOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Tutor Settings</DialogTitle>
+            <DialogDescription>Update your tutoring profile information</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="tutorBio">Bio</Label>
+              <textarea
+                id="tutorBio"
+                value={tutorBio}
+                onChange={e => setTutorBio(e.target.value)}
+                placeholder="Tell students about your teaching experience and approach..."
+                className="w-full min-h-[100px] p-2 border rounded-md border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              />
+              <p className="text-xs text-muted-foreground">Max 500 characters</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
+                <Input
+                  id="hourlyRate"
+                  type="number"
+                  value={hourlyRate || ""}
+                  onChange={e => setHourlyRate(e.target.value ? parseFloat(e.target.value) : null)}
+                  placeholder="25"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="yearsExperience">Years of Experience</Label>
+                <Input
+                  id="yearsExperience"
+                  type="number"
+                  value={yearsExperience || ""}
+                  onChange={e => setYearsExperience(e.target.value ? parseInt(e.target.value) : null)}
+                  placeholder="5"
+                  min="0"
+                  step="1"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Label>Specializations</Label>
+              <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
+                {allSpecializations.map(spec => (
+                  <label key={spec.id} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedSpecializations.includes(spec.id)}
+                      onChange={e => {
+                        if (e.target.checked) {
+                          setSelectedSpecializations([...selectedSpecializations, spec.id]);
+                        } else {
+                          setSelectedSpecializations(
+                            selectedSpecializations.filter(id => id !== spec.id)
+                          );
+                        }
+                      }}
+                      className="rounded border-input"
+                    />
+                    <span className="text-sm">{spec.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTutorSettingsOpen(false)} disabled={savingTutor}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveTutorSettings} disabled={savingTutor}>
+              {savingTutor ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Settings"
               )}
             </Button>
           </DialogFooter>

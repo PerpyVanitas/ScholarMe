@@ -64,3 +64,94 @@ export async function updateAvatar(avatarUrl: string) {
   revalidatePath("/dashboard/profile");
   return { success: true };
 }
+
+export interface UpdateTutorData {
+  bio: string | null;
+  hourly_rate: number | null;
+  years_experience: number | null;
+  specialization_ids: string[];
+}
+
+export async function updateTutorInfo(data: UpdateTutorData) {
+  const supabase = await createClient();
+  
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  
+  if (authError || !user) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  // Get or create tutor record
+  const { data: existingTutor } = await supabase
+    .from("tutors")
+    .select("id")
+    .eq("profile_id", user.id)
+    .maybeSingle();
+
+  let tutorId = existingTutor?.id;
+
+  if (!tutorId) {
+    // Create tutor record
+    const { data: newTutor, error: createError } = await supabase
+      .from("tutors")
+      .insert({
+        profile_id: user.id,
+        bio: data.bio,
+        hourly_rate: data.hourly_rate,
+        years_experience: data.years_experience,
+      })
+      .select("id")
+      .single();
+
+    if (createError) {
+      console.error("Tutor creation error:", createError);
+      return { success: false, error: createError.message };
+    }
+
+    tutorId = newTutor.id;
+  } else {
+    // Update existing tutor record
+    const { error: updateError } = await supabase
+      .from("tutors")
+      .update({
+        bio: data.bio,
+        hourly_rate: data.hourly_rate,
+        years_experience: data.years_experience,
+      })
+      .eq("id", tutorId);
+
+    if (updateError) {
+      console.error("Tutor update error:", updateError);
+      return { success: false, error: updateError.message };
+    }
+  }
+
+  // Update specializations
+  if (tutorId) {
+    // Delete existing specializations
+    await supabase
+      .from("tutor_specializations")
+      .delete()
+      .eq("tutor_id", tutorId);
+
+    // Insert new specializations
+    if (data.specialization_ids.length > 0) {
+      const { error: specError } = await supabase
+        .from("tutor_specializations")
+        .insert(
+          data.specialization_ids.map(spec_id => ({
+            tutor_id: tutorId,
+            specialization_id: spec_id,
+          }))
+        );
+
+      if (specError) {
+        console.error("Specialization update error:", specError);
+        return { success: false, error: specError.message };
+      }
+    }
+  }
+
+  revalidatePath("/dashboard/profile");
+  return { success: true };
+}
