@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Loader2, Save, Trash2, Camera, CheckCircle2, User } from "lucide-react";
+import { Loader2, Save, Trash2, Camera, CheckCircle2, User, Key, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { DEMO_USERS, getDemoUserFromCookie } from "@/lib/demo";
 import type { Profile } from "@/lib/types";
@@ -61,6 +61,13 @@ export default function ProfilePage() {
   const [selectedSpecs, setSelectedSpecs] = useState<string[]>([]);
   const [specializations, setSpecializations] = useState<Specialization[]>([]);
   const [roleName, setRoleName] = useState("learner");
+
+  // Password change state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [showPasswords, setShowPasswords] = useState(false);
 
   const isTutor = roleName === "tutor";
 
@@ -152,26 +159,35 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file || !profile) return;
 
+    // Client-side validation
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Please upload a JPEG, PNG, GIF, or WebP image.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be smaller than 5MB.");
+      return;
+    }
+
     setUploading(true);
     try {
-      const supabase = createClient();
-      const ext = file.name.split(".").pop();
-      const filePath = `${profile.id}/avatar.${ext}`;
+      // Use Vercel Blob API for upload
+      const formData = new FormData();
+      formData.append("file", file);
 
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, file, { upsert: true });
+      const res = await fetch("/api/account/avatar", {
+        method: "POST",
+        body: formData,
+      });
 
-      if (uploadError) throw uploadError;
+      const data = await res.json();
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(filePath);
+      if (!res.ok) {
+        throw new Error(data.error || "Upload failed");
+      }
 
-      // Append cache-busting param so browser reloads image
-      const freshUrl = `${publicUrl}?t=${Date.now()}`;
-      setAvatarUrl(freshUrl);
-      await supabase.from("profiles").update({ avatar_url: freshUrl }).eq("id", profile.id);
+      setAvatarUrl(data.url);
       toast.success("Photo updated!");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed");
@@ -252,6 +268,44 @@ export default function ProfilePage() {
       setSaving(false);
     }
   }, [profile, firstName, lastName, birthdate, membershipNumber, isTutor, selectedSpecs]);
+
+  async function handleChangePassword() {
+    if (!newPassword || !currentPassword) {
+      toast.error("Please fill in all password fields");
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast.error("New password must be at least 8 characters");
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      toast.error("New passwords do not match");
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      const res = await fetch("/api/account/password", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || "Failed to change password");
+      } else {
+        toast.success("Password changed successfully");
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmNewPassword("");
+      }
+    } catch {
+      toast.error("An unexpected error occurred");
+    } finally {
+      setChangingPassword(false);
+    }
+  }
 
   async function handleDeleteAccount() {
     setDeleting(true);
@@ -431,6 +485,81 @@ export default function ProfilePage() {
               <>
                 <Save className="mr-2 h-4 w-4" />
                 Save Changes
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Password Change */}
+      <Card className="border-border/60">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Key className="h-5 w-5" />
+            Change Password
+          </CardTitle>
+          <CardDescription>Update your account password. You will need to enter your current password to confirm.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="currentPassword">Current Password</Label>
+            <div className="relative">
+              <Input
+                id="currentPassword"
+                type={showPasswords ? "text" : "password"}
+                value={currentPassword}
+                onChange={e => setCurrentPassword(e.target.value)}
+                placeholder="Enter current password"
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPasswords(!showPasswords)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showPasswords ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="newPassword">New Password</Label>
+              <Input
+                id="newPassword"
+                type={showPasswords ? "text" : "password"}
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                placeholder="Min. 8 characters"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="confirmNewPassword">Confirm New Password</Label>
+              <Input
+                id="confirmNewPassword"
+                type={showPasswords ? "text" : "password"}
+                value={confirmNewPassword}
+                onChange={e => setConfirmNewPassword(e.target.value)}
+                placeholder="Repeat new password"
+              />
+            </div>
+          </div>
+          {newPassword && confirmNewPassword && newPassword !== confirmNewPassword && (
+            <p className="text-xs text-destructive">Passwords do not match</p>
+          )}
+          <Button
+            onClick={handleChangePassword}
+            disabled={changingPassword || !currentPassword || !newPassword || newPassword !== confirmNewPassword}
+            className="w-fit"
+          >
+            {changingPassword ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Updating...
+              </>
+            ) : (
+              <>
+                <Key className="mr-2 h-4 w-4" />
+                Update Password
               </>
             )}
           </Button>

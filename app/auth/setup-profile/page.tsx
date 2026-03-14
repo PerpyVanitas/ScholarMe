@@ -106,23 +106,34 @@ export default function SetupProfilePage() {
     const file = e.target.files?.[0]
     if (!file || !userId) return
 
+    // Client-side validation
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Please upload a JPEG, PNG, GIF, or WebP image.")
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be smaller than 5MB.")
+      return
+    }
+
     setUploading(true)
     try {
-      const ext = file.name.split(".").pop()
-      const filePath = `${userId}/avatar.${ext}`
+      const formData = new FormData()
+      formData.append("file", file)
 
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, file, { upsert: true })
+      const res = await fetch("/api/account/avatar", {
+        method: "POST",
+        body: formData,
+      })
 
-      if (uploadError) throw uploadError
+      const data = await res.json()
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(filePath)
+      if (!res.ok) {
+        throw new Error(data.error || "Upload failed")
+      }
 
-      setAvatarUrl(publicUrl)
-      await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", userId)
+      setAvatarUrl(data.url)
       toast.success("Photo uploaded!")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed")
