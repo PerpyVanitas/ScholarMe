@@ -18,10 +18,12 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { updateProfile, UpdateProfileData } from "./actions";
+import { useUser } from "@/lib/user-context";
 
 export default function ProfilePage() {
   const router = useRouter();
   const supabase = createClient();
+  const { refreshProfile } = useUser();
 
   // Profile state
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -168,6 +170,9 @@ export default function ProfilePage() {
       // Update the profile state immediately
       setProfile(prev => prev ? { ...prev, avatar_url: data.pathname } : null);
       
+      // Refresh the user context so sidebar updates
+      await refreshProfile();
+      
       toast.success("Photo uploaded successfully");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to upload photo");
@@ -192,6 +197,10 @@ export default function ProfilePage() {
 
       setEditAvatarUrl(null);
       setProfile(prev => prev ? { ...prev, avatar_url: null } : null);
+      
+      // Refresh the user context so sidebar updates
+      await refreshProfile();
+      
       toast.success("Photo removed");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to remove photo");
