@@ -87,9 +87,6 @@ export default function ProfilePage() {
           .maybeSingle();
 
         if (data) {
-          console.log("[v0] Profile data loaded:", data);
-          console.log("[v0] full_name:", data.full_name);
-          console.log("[v0] date_of_birth:", data.date_of_birth);
           setProfile(data);
           
           // Parse first/last name from full_name if separate fields are empty
@@ -97,7 +94,6 @@ export default function ProfilePage() {
           let ln = data.last_name || "";
           if ((!fn || !ln) && data.full_name) {
             const parts = data.full_name.trim().split(/\s+/);
-            console.log("[v0] Parsing full_name into parts:", parts);
             if (parts.length >= 2) {
               fn = fn || parts[0];
               ln = ln || parts.slice(1).join(" ");
@@ -105,13 +101,11 @@ export default function ProfilePage() {
               fn = fn || parts[0];
             }
           }
-          console.log("[v0] Setting firstName:", fn, "lastName:", ln);
           setFirstName(fn);
           setLastName(ln);
           
           // Use date_of_birth as fallback for birthdate
           const bd = data.birthdate || data.date_of_birth || "";
-          console.log("[v0] Setting birthdate:", bd);
           setBirthdate(bd);
           setMembershipNumber(data.membership_number || "");
           setAvatarUrl(data.avatar_url || null);

@@ -44,14 +44,22 @@ export async function signUp(formData: FormData) {
   if (createError) return { error: createError.message }
 
   if (created?.user) {
+    // Parse full_name into first_name and last_name
+    const nameParts = fullName.trim().split(/\s+/);
+    const firstName = nameParts[0] || "";
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
+
     await adminClient
       .from("profiles")
       .upsert({
         id: created.user.id,
         full_name: fullName,
+        first_name: firstName,
+        last_name: lastName,
         email,
         phone_number: phoneNumber,
         date_of_birth: dateOfBirth ? new Date(dateOfBirth).toISOString().split('T')[0] : null,
+        birthdate: dateOfBirth ? new Date(dateOfBirth).toISOString().split('T')[0] : null,
         role_id: roleRow?.id || null,
         terms_accepted_at: new Date().toISOString(),
       }, { onConflict: "id" })

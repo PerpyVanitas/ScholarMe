@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  turbopack: {
+    root: process.cwd(),
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -7,7 +10,7 @@ const nextConfig = {
     unoptimized: true,
   },
   env: {
-    CACHE_BUST: "v5",
+    CACHE_BUST: "v6",
   },
 };
 
