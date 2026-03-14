@@ -44,6 +44,7 @@ export function EditProfileModal({
   // Form state - initialize from profile
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [birthdate, setBirthdate] = useState("");
   const [membershipNumber, setMembershipNumber] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -72,6 +73,7 @@ export function EditProfileModal({
       }
       setFirstName(fn);
       setLastName(ln);
+      setPhoneNumber(profile.phone_number || "");
       setBirthdate(profile.birthdate || profile.date_of_birth || "");
       setMembershipNumber(profile.membership_number || "");
       setAvatarUrl(initialAvatarUrl);
@@ -165,30 +167,18 @@ export function EditProfileModal({
     try {
       const supabase = createClient();
 
-      // Debug: Check auth status and profile ID
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log("[v0] Auth user ID:", user?.id);
-      console.log("[v0] Profile ID to update:", profile.id);
-      console.log("[v0] IDs match:", user?.id === profile.id);
-
-      const updatePayload = {
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        full_name: `${firstName.trim()} ${lastName.trim()}`,
-        birthdate: birthdate || null,
-        date_of_birth: birthdate || null,
-        membership_number: isTutor ? membershipNumber.trim() || null : null,
-      };
-      console.log("[v0] Update payload:", updatePayload);
-
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("profiles")
-        .update(updatePayload)
-        .eq("id", profile.id)
-        .select();
-
-      console.log("[v0] Update result - data:", data);
-      console.log("[v0] Update result - error:", error);
+        .update({
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          full_name: `${firstName.trim()} ${lastName.trim()}`,
+          phone_number: phoneNumber.trim() || null,
+          birthdate: birthdate || null,
+          date_of_birth: birthdate || null,
+          membership_number: isTutor ? membershipNumber.trim() || null : null,
+        })
+        .eq("id", profile.id);
 
       if (error) throw error;
 
@@ -226,6 +216,7 @@ export function EditProfileModal({
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         full_name: `${firstName.trim()} ${lastName.trim()}`,
+        phone_number: phoneNumber.trim() || null,
         birthdate: birthdate || null,
         date_of_birth: birthdate || null,
         membership_number: isTutor ? membershipNumber.trim() || null : null,
@@ -238,7 +229,7 @@ export function EditProfileModal({
     } finally {
       setSaving(false);
     }
-  }, [profile, firstName, lastName, birthdate, membershipNumber, isTutor, selectedSpecs, avatarUrl, onProfileUpdated, onOpenChange]);
+  }, [profile, firstName, lastName, phoneNumber, birthdate, membershipNumber, isTutor, selectedSpecs, avatarUrl, onProfileUpdated, onOpenChange]);
 
   function handleCancel() {
     onOpenChange(false);
@@ -331,6 +322,18 @@ export function EditProfileModal({
             <Label htmlFor="edit-email">Email</Label>
             <Input id="edit-email" value={profile?.email || ""} disabled className="bg-muted" />
             <p className="text-xs text-muted-foreground">Contact your administrator to change your email.</p>
+          </div>
+
+          {/* Phone Number */}
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="edit-phone">Phone Number</Label>
+            <Input
+              id="edit-phone"
+              type="tel"
+              value={phoneNumber}
+              onChange={e => setPhoneNumber(e.target.value)}
+              placeholder="Enter your phone number"
+            />
           </div>
 
           {/* Birthdate */}

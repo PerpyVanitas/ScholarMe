@@ -277,15 +277,13 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {profile.phone_number && (
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium">Phone</p>
-                  <p className="text-sm text-muted-foreground">{profile.phone_number}</p>
-                </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+              <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">Phone</p>
+                <p className="text-sm text-muted-foreground">{profile.phone_number || "Not set"}</p>
               </div>
-            )}
+            </div>
 
             {isTutor && membershipNumber && (
               <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
