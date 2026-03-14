@@ -388,14 +388,14 @@ export default function ProfilePage() {
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-5">
-          <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="firstName">First Name *</Label>
               <Input
                 id="firstName"
                 value={firstName}
                 onChange={e => setFirstName(e.target.value)}
-                placeholder="Juan"
+                placeholder="Enter your first name"
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -404,7 +404,7 @@ export default function ProfilePage() {
                 id="lastName"
                 value={lastName}
                 onChange={e => setLastName(e.target.value)}
-                placeholder="Dela Cruz"
+                placeholder="Enter your last name"
               />
             </div>
           </div>
@@ -433,7 +433,7 @@ export default function ProfilePage() {
                   id="membershipNumber"
                   value={membershipNumber}
                   onChange={e => setMembershipNumber(e.target.value)}
-                  placeholder="e.g. TM-2025-001"
+                  placeholder="Enter your membership number"
                 />
               </div>
 
