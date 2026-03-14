@@ -1,150 +1,167 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { Profile, Specialization } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Loader2, Trash2, Key, Eye, EyeOff, Pencil, Calendar, Mail, Phone, Award, Clock } from "lucide-react";
 import { toast } from "sonner";
-import { DEMO_USERS, getDemoUserFromCookie } from "@/lib/demo";
-import { EditProfileModal } from "@/components/profile/edit-profile-modal";
-import type { Profile } from "@/lib/types";
-
-function getInitials(firstName: string, lastName: string, fullName?: string | null): string {
-  if (firstName && lastName) {
-    return `${firstName[0]}${lastName[0]}`.toUpperCase();
-  }
-  if (fullName) {
-    const parts = fullName.trim().split(/\s+/);
-    if (parts.length >= 2) return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-    if (parts.length === 1 && parts[0]) return parts[0][0].toUpperCase();
-  }
-  return "?";
-}
-
-function formatDate(dateStr: string | null | undefined): string {
-  if (!dateStr) return "Not set";
-  try {
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  } catch {
-    return "Not set";
-  }
-}
+import { 
+  User, Mail, Phone, Calendar, Clock, Award, Edit2, Loader2, 
+  Key, Eye, EyeOff, Trash2, AlertTriangle
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { updateProfile, UpdateProfileData } from "./actions";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const loadedRef = useRef(false);
+  const supabase = createClient();
 
+  // Profile state
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState(false);
-  const [confirmText, setConfirmText] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [roleName, setRoleName] = useState("learner");
+  const [loading, setLoading] = useState(true);
+  const [specializations, setSpecializations] = useState<Specialization[]>([]);
 
   // Edit modal state
-  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editFirstName, setEditFirstName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editBirthdate, setEditBirthdate] = useState("");
+  const [editMembershipNumber, setEditMembershipNumber] = useState("");
 
   // Password change state
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
   const [showPasswords, setShowPasswords] = useState(false);
 
+  // Delete account state
+  const [deleting, setDeleting] = useState(false);
+
+  const isTutor = roleName === "tutor";
+
+  // Load profile data
   useEffect(() => {
-    if (loadedRef.current) return;
-    loadedRef.current = true;
-
     async function loadProfile() {
-      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push("/auth/login");
+        return;
+      }
 
-      if (user) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("*, roles(*)")
-          .eq("id", user.id)
-          .maybeSingle();
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*, roles(name)")
+        .eq("id", user.id)
+        .single();
 
-        if (data) {
-          setProfile(data);
-          if (data.roles?.name) setRoleName(data.roles.name);
-          
-          // Handle private blob pathnames vs full URLs
-          if (data.avatar_url) {
-            if (data.avatar_url.startsWith("avatars/")) {
-              setAvatarUrl(`/api/upload/avatar?pathname=${encodeURIComponent(data.avatar_url)}`);
-            } else {
-              setAvatarUrl(data.avatar_url);
-            }
-          } else {
-            setAvatarUrl(null);
-          }
-        } else {
-          // User exists but no profile row
-          setProfile({
-            id: user.id,
-            full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
-            email: user.email || "",
-            avatar_url: null,
-            created_at: user.created_at || new Date().toISOString(),
-            role_id: null,
-            roles: { id: "fallback", name: "learner" },
-          } as Profile);
-        }
-
+      if (error) {
+        toast.error("Failed to load profile");
         setLoading(false);
         return;
       }
 
-      // Demo mode fallback
-      const { role: devRole } = getDemoUserFromCookie("learner");
-      const demoInfo = DEMO_USERS[devRole as keyof typeof DEMO_USERS] || DEMO_USERS.learner;
-      setProfile({
-        id: demoInfo.profileId,
-        full_name: demoInfo.fullName,
-        email: demoInfo.email,
-        avatar_url: null,
-        created_at: new Date().toISOString(),
-        role_id: "demo-role",
-        roles: { id: "demo-role", name: devRole },
-      } as Profile);
-      setRoleName(devRole);
+      if (data) {
+        setProfile(data);
+        if (data.roles?.name) setRoleName(data.roles.name);
+
+        // Load tutor specializations if tutor
+        if (data.roles?.name === "tutor") {
+          const { data: tutorData } = await supabase
+            .from("tutors")
+            .select("tutor_specializations(specializations(id, name))")
+            .eq("user_id", user.id)
+            .single();
+
+          if (tutorData?.tutor_specializations) {
+            const specs = tutorData.tutor_specializations
+              .map((ts: { specializations: Specialization }) => ts.specializations)
+              .filter(Boolean);
+            setSpecializations(specs);
+          }
+        }
+      }
       setLoading(false);
     }
 
     loadProfile();
-  }, []);
+  }, [supabase, router]);
 
-  function handleProfileUpdated(updatedProfile: Partial<Profile>, newAvatarUrl?: string) {
-    setProfile(prev => prev ? { ...prev, ...updatedProfile } : null);
-    if (newAvatarUrl !== undefined) {
-      setAvatarUrl(newAvatarUrl);
+  // Open edit modal with current values
+  const openEditModal = useCallback(() => {
+    if (!profile) return;
+    
+    // Parse name from full_name if first/last not set
+    let fn = profile.first_name || "";
+    let ln = profile.last_name || "";
+    if ((!fn || !ln) && profile.full_name) {
+      const parts = profile.full_name.trim().split(/\s+/);
+      fn = fn || parts[0] || "";
+      ln = ln || parts.slice(1).join(" ") || "";
     }
-  }
 
-  async function handleChangePassword() {
-    if (!newPassword || !currentPassword) {
+    setEditFirstName(fn);
+    setEditLastName(ln);
+    setEditPhone(profile.phone_number || "");
+    setEditBirthdate(profile.birthdate || profile.date_of_birth || "");
+    setEditMembershipNumber(profile.membership_number || "");
+    setEditOpen(true);
+  }, [profile]);
+
+  // Save profile changes using server action
+  const handleSaveProfile = async () => {
+    if (!editFirstName.trim() || !editLastName.trim()) {
+      toast.error("First name and last name are required");
+      return;
+    }
+
+    setSaving(true);
+    
+    const updateData: UpdateProfileData = {
+      first_name: editFirstName.trim(),
+      last_name: editLastName.trim(),
+      phone_number: editPhone.trim() || null,
+      birthdate: editBirthdate || null,
+      membership_number: isTutor ? editMembershipNumber.trim() || null : null,
+    };
+
+    const result = await updateProfile(updateData);
+
+    if (result.success) {
+      // Update local state
+      setProfile(prev => prev ? {
+        ...prev,
+        first_name: updateData.first_name,
+        last_name: updateData.last_name,
+        full_name: `${updateData.first_name} ${updateData.last_name}`,
+        phone_number: updateData.phone_number,
+        birthdate: updateData.birthdate,
+        date_of_birth: updateData.birthdate,
+        membership_number: updateData.membership_number,
+      } : null);
+      
+      toast.success("Profile updated successfully");
+      setEditOpen(false);
+    } else {
+      toast.error(result.error || "Failed to update profile");
+    }
+
+    setSaving(false);
+  };
+
+  // Change password
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword) {
       toast.error("Please fill in all password fields");
       return;
     }
@@ -152,36 +169,29 @@ export default function ProfilePage() {
       toast.error("New password must be at least 8 characters");
       return;
     }
-    if (newPassword !== confirmNewPassword) {
+    if (newPassword !== confirmPassword) {
       toast.error("New passwords do not match");
       return;
     }
 
     setChangingPassword(true);
-    try {
-      const res = await fetch("/api/account/password", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentPassword, newPassword }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        toast.error(data.error || "Failed to change password");
-      } else {
-        toast.success("Password changed successfully");
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmNewPassword("");
-      }
-    } catch {
-      toast.error("An unexpected error occurred");
-    } finally {
-      setChangingPassword(false);
+    
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    
+    if (error) {
+      toast.error(error.message || "Failed to change password");
+    } else {
+      toast.success("Password changed successfully");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
     }
-  }
+    
+    setChangingPassword(false);
+  };
 
-  async function handleDeleteAccount() {
+  // Delete account
+  const handleDeleteAccount = async () => {
     setDeleting(true);
     const res = await fetch("/api/account", { method: "DELETE" });
     if (res.ok) {
@@ -192,80 +202,128 @@ export default function ProfilePage() {
       toast.error(data.error || "Failed to delete account");
       setDeleting(false);
     }
-  }
+  };
+
+  // Format date for display
+  const formatDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return "Not set";
+    try {
+      return new Date(dateStr).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  // Get initials for avatar fallback
+  const getInitials = (name: string) => {
+    return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="container max-w-4xl py-8 space-y-6">
+        <Skeleton className="h-48 w-full" />
+        <Skeleton className="h-64 w-full" />
       </div>
     );
   }
 
-  if (!profile) return null;
+  if (!profile) {
+    return (
+      <div className="container max-w-4xl py-8">
+        <Card>
+          <CardContent className="py-8 text-center text-muted-foreground">
+            Profile not found. Please try logging in again.
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-  // Get display values
-  const firstName = profile.first_name || "";
-  const lastName = profile.last_name || "";
-  const fullName = profile.full_name || `${firstName} ${lastName}`.trim() || "User";
-  const birthdate = profile.birthdate || profile.date_of_birth || null;
-  const membershipNumber = profile.membership_number || null;
-
-  const initials = getInitials(firstName, lastName, fullName);
-  const roleLabel =
-    roleName === "administrator" ? "Administrator"
-      : roleName === "tutor" ? "Tutor"
-        : "Learner";
-  const isTutor = roleName === "tutor";
+  const displayName = profile.full_name || `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || "User";
 
   return (
-    <div className="flex flex-col gap-6 max-w-2xl">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground text-balance">Profile</h1>
-        <p className="text-muted-foreground">View and manage your account settings.</p>
-      </div>
+    <div className="container max-w-4xl py-8 space-y-6">
+      {/* Profile Header */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+            <Avatar className="h-24 w-24 border-4 border-background shadow-lg">
+              <AvatarImage src={profile.avatar_url || undefined} alt={displayName} />
+              <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+                {getInitials(displayName)}
+              </AvatarFallback>
+            </Avatar>
 
-      {/* Profile Card - View Only */}
-      <Card className="border-border/60">
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-4">
-              <div className="relative h-20 w-20 rounded-full overflow-hidden bg-muted">
-                {avatarUrl ? (
-                  <img
-                    src={avatarUrl}
-                    alt="Profile photo"
-                    className="h-full w-full object-cover"
-                    crossOrigin="anonymous"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary text-xl font-semibold">
-                    {initials}
-                  </div>
-                )}
+            <div className="flex-1 text-center sm:text-left space-y-2">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <h1 className="text-2xl font-bold">{displayName}</h1>
+                <Badge variant="secondary" className="w-fit mx-auto sm:mx-0 capitalize">
+                  {roleName}
+                </Badge>
               </div>
-              <div className="flex flex-col gap-1">
-                <CardTitle className="text-xl">{fullName}</CardTitle>
-                <CardDescription className="flex items-center gap-1.5">
-                  <Mail className="h-3.5 w-3.5" />
-                  {profile.email}
-                </CardDescription>
-                <Badge variant="secondary" className="w-fit mt-1">{roleLabel}</Badge>
-              </div>
+              <p className="text-muted-foreground">{profile.email}</p>
+              
+              {specializations.length > 0 && (
+                <div className="flex flex-wrap gap-2 justify-center sm:justify-start pt-2">
+                  {specializations.map(spec => (
+                    <Badge key={spec.id} variant="outline">{spec.name}</Badge>
+                  ))}
+                </div>
+              )}
             </div>
-            <Button variant="outline" size="sm" onClick={() => setEditModalOpen(true)}>
-              <Pencil className="mr-2 h-4 w-4" />
+
+            <Button onClick={openEditModal} variant="outline" className="gap-2">
+              <Edit2 className="h-4 w-4" />
               Edit Profile
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Profile Details */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Profile Information</CardTitle>
+          <CardDescription>Your personal details and account information</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+              <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">Full Name</p>
+                <p className="text-sm text-muted-foreground">{displayName}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+              <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">Email</p>
+                <p className="text-sm text-muted-foreground">{profile.email}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+              <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">Phone Number</p>
+                <p className="text-sm text-muted-foreground">{profile.phone_number || "Not set"}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
               <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
               <div>
                 <p className="text-sm font-medium">Birthday</p>
-                <p className="text-sm text-muted-foreground">{formatDate(birthdate)}</p>
+                <p className="text-sm text-muted-foreground">
+                  {formatDate(profile.birthdate || profile.date_of_birth)}
+                </p>
               </div>
             </div>
 
@@ -277,20 +335,12 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-              <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="text-sm font-medium">Phone</p>
-                <p className="text-sm text-muted-foreground">{profile.phone_number || "Not set"}</p>
-              </div>
-            </div>
-
-            {isTutor && membershipNumber && (
+            {isTutor && (
               <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                 <Award className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
                   <p className="text-sm font-medium">Membership Number</p>
-                  <p className="text-sm text-muted-foreground">{membershipNumber}</p>
+                  <p className="text-sm text-muted-foreground">{profile.membership_number || "Not set"}</p>
                 </div>
               </div>
             )}
@@ -299,16 +349,16 @@ export default function ProfilePage() {
       </Card>
 
       {/* Password Change */}
-      <Card className="border-border/60">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Key className="h-5 w-5" />
             Change Password
           </CardTitle>
-          <CardDescription>Update your account password. You will need to enter your current password to confirm.</CardDescription>
+          <CardDescription>Update your account password</CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
             <Label htmlFor="currentPassword">Current Password</Label>
             <div className="relative">
               <Input
@@ -317,7 +367,6 @@ export default function ProfilePage() {
                 value={currentPassword}
                 onChange={e => setCurrentPassword(e.target.value)}
                 placeholder="Enter current password"
-                className="pr-10"
               />
               <button
                 type="button"
@@ -328,8 +377,9 @@ export default function ProfilePage() {
               </button>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Label htmlFor="newPassword">New Password</Label>
               <Input
                 id="newPassword"
@@ -339,24 +389,25 @@ export default function ProfilePage() {
                 placeholder="Min. 8 characters"
               />
             </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="confirmNewPassword">Confirm New Password</Label>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm New Password</Label>
               <Input
-                id="confirmNewPassword"
+                id="confirmPassword"
                 type={showPasswords ? "text" : "password"}
-                value={confirmNewPassword}
-                onChange={e => setConfirmNewPassword(e.target.value)}
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
                 placeholder="Repeat new password"
               />
             </div>
           </div>
-          {newPassword && confirmNewPassword && newPassword !== confirmNewPassword && (
-            <p className="text-xs text-destructive">Passwords do not match</p>
+
+          {newPassword && confirmPassword && newPassword !== confirmPassword && (
+            <p className="text-sm text-destructive">Passwords do not match</p>
           )}
+
           <Button
             onClick={handleChangePassword}
-            disabled={changingPassword || !currentPassword || !newPassword || newPassword !== confirmNewPassword}
-            className="w-fit"
+            disabled={changingPassword || !currentPassword || !newPassword || newPassword !== confirmPassword}
           >
             {changingPassword ? (
               <>
@@ -364,10 +415,7 @@ export default function ProfilePage() {
                 Updating...
               </>
             ) : (
-              <>
-                <Key className="mr-2 h-4 w-4" />
-                Update Password
-              </>
+              "Update Password"
             )}
           </Button>
         </CardContent>
@@ -376,67 +424,114 @@ export default function ProfilePage() {
       {/* Danger Zone */}
       <Card className="border-destructive/30">
         <CardHeader>
-          <CardTitle className="text-destructive">Danger Zone</CardTitle>
-          <CardDescription>Permanently delete your account and all associated data. This action cannot be undone.</CardDescription>
+          <CardTitle className="flex items-center gap-2 text-destructive">
+            <AlertTriangle className="h-5 w-5" />
+            Danger Zone
+          </CardTitle>
+          <CardDescription>Irreversible actions for your account</CardDescription>
         </CardHeader>
         <CardContent>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive">
+          <Button
+            variant="destructive"
+            onClick={handleDeleteAccount}
+            disabled={deleting}
+          >
+            {deleting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Deleting...
+              </>
+            ) : (
+              <>
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete Account
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete your account, profile, and all associated data including sessions and resources. This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <div className="flex flex-col gap-2 py-2">
-                <Label htmlFor="confirm-delete" className="text-sm text-muted-foreground">
-                  {"Type \"DELETE\" to confirm"}
-                </Label>
-                <Input
-                  id="confirm-delete"
-                  value={confirmText}
-                  onChange={(e) => setConfirmText(e.target.value)}
-                  placeholder="DELETE"
-                  className="font-mono"
-                />
-              </div>
-              <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setConfirmText("")}>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDeleteAccount}
-                  disabled={confirmText !== "DELETE" || deleting}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  {deleting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Deleting...
-                    </>
-                  ) : (
-                    "Delete Account Permanently"
-                  )}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+              </>
+            )}
+          </Button>
         </CardContent>
       </Card>
 
       {/* Edit Profile Modal */}
-      <EditProfileModal
-        open={editModalOpen}
-        onOpenChange={setEditModalOpen}
-        profile={profile}
-        roleName={roleName}
-        avatarUrl={avatarUrl}
-        onProfileUpdated={handleProfileUpdated}
-      />
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogDescription>Update your personal information</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="editFirstName">First Name *</Label>
+                <Input
+                  id="editFirstName"
+                  value={editFirstName}
+                  onChange={e => setEditFirstName(e.target.value)}
+                  placeholder="First name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editLastName">Last Name *</Label>
+                <Input
+                  id="editLastName"
+                  value={editLastName}
+                  onChange={e => setEditLastName(e.target.value)}
+                  placeholder="Last name"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="editPhone">Phone Number</Label>
+              <Input
+                id="editPhone"
+                type="tel"
+                value={editPhone}
+                onChange={e => setEditPhone(e.target.value)}
+                placeholder="Enter phone number"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="editBirthdate">Birthday</Label>
+              <Input
+                id="editBirthdate"
+                type="date"
+                value={editBirthdate}
+                onChange={e => setEditBirthdate(e.target.value)}
+              />
+            </div>
+
+            {isTutor && (
+              <div className="space-y-2">
+                <Label htmlFor="editMembershipNumber">Membership Number</Label>
+                <Input
+                  id="editMembershipNumber"
+                  value={editMembershipNumber}
+                  onChange={e => setEditMembershipNumber(e.target.value)}
+                  placeholder="Enter membership number"
+                />
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)} disabled={saving}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveProfile} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Changes"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
