@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       return NextResponse.json(
-        createErrorResponse("DB_001", "Failed to fetch polls"),
+        createErrorResponse("DB_001_NOT_FOUND", "Failed to fetch polls"),
         { status: 500 }
       );
     }
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     );
   } catch {
     return NextResponse.json(
-      createErrorResponse("SYSTEM_001", "An unexpected error occurred"),
+      createErrorResponse("SYSTEM_001_UNKNOWN_ERROR", "An unexpected error occurred"),
       { status: 500 }
     );
   }
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
-        createErrorResponse("AUTH_002", "Session expired"),
+        createErrorResponse("AUTH_002_SESSION_EXPIRED", "Session expired"),
         { status: 401 }
       );
     }
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     if (profileError || profile?.roles?.name !== "administrator") {
       return NextResponse.json(
-        createErrorResponse("AUTH_003", "Admin access required"),
+        createErrorResponse("AUTH_003_ADMIN_ONLY", "Admin access required"),
         { status: 403 }
       );
     }
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
 
     if (!title || !end_date || !options || options.length < 2) {
       return NextResponse.json(
-        createErrorResponse("VALID_001", {
+        createErrorResponse("VALID_001_GENERAL", {
           title: !title ? "Title is required" : "",
           end_date: !end_date ? "End date is required" : "",
           options: !options || options.length < 2 ? "At least 2 options are required" : "",
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
 
     if (pollError) {
       return NextResponse.json(
-        createErrorResponse("SYSTEM_001", "Failed to create poll"),
+        createErrorResponse("SYSTEM_001_INTERNAL_ERROR", "Failed to create poll"),
         { status: 500 }
       );
     }
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
       // Rollback poll creation
       await supabase.from("polls").delete().eq("id", poll.id);
       return NextResponse.json(
-        createErrorResponse("SYSTEM_001", "Failed to create poll options"),
+        createErrorResponse("SYSTEM_001_INTERNAL_ERROR", "Failed to create poll options"),
         { status: 500 }
       );
     }
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(createSuccessResponse(poll), { status: 201 });
   } catch {
     return NextResponse.json(
-      createErrorResponse("SYSTEM_001", "An unexpected error occurred"),
+      createErrorResponse("SYSTEM_001_UNKNOWN_ERROR", "An unexpected error occurred"),
       { status: 500 }
     );
   }

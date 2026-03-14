@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     // Validate input
     if (!card_id || !pin) {
       return NextResponse.json(
-        createErrorResponse("VALID_001", {
+        createErrorResponse("VALID_001_GENERAL", {
           card_id: !card_id ? "Card ID is required" : "",
           pin: !pin ? "PIN is required" : "",
         }),
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
 
     if (pin.length < 4) {
       return NextResponse.json(
-        createErrorResponse("VALID_001", "PIN must be at least 4 digits"),
+        createErrorResponse("VALID_001_PASSWORD_SHORT", "PIN must be at least 4 digits"),
         { status: 400 }
       );
     }
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
-        createErrorResponse("AUTH_002", "Session expired"),
+        createErrorResponse("AUTH_002_SESSION_EXPIRED", "Session expired"),
         { status: 401 }
       );
     }
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
 
     if (profileError || !profile || profile.roles?.name !== "administrator") {
       return NextResponse.json(
-        createErrorResponse("AUTH_003", "Admin access required"),
+        createErrorResponse("AUTH_003_ADMIN_ONLY", "Admin access required"),
         { status: 403 }
       );
     }
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
 
     if (existingCard) {
       return NextResponse.json(
-        createErrorResponse("VALID_001", "Card ID already exists"),
+        createErrorResponse("DB_001_DUPLICATE_RECORD", "Card ID already exists"),
         { status: 409 }
       );
     }
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
 
     if (createError) {
       return NextResponse.json(
-        createErrorResponse("DB_001", "Failed to create card"),
+        createErrorResponse("DB_001_DATA_INTEGRITY_ERROR", "Failed to create card"),
         { status: 500 }
       );
     }
@@ -92,7 +92,7 @@ export async function POST(request: Request) {
     );
   } catch {
     return NextResponse.json(
-      createErrorResponse("SYSTEM_001", "An unexpected error occurred"),
+      createErrorResponse("SYSTEM_001_UNKNOWN_ERROR", "An unexpected error occurred"),
       { status: 500 }
     );
   }

@@ -9,14 +9,14 @@ export async function POST(request: Request) {
 
     if (!token || !platform) {
       return NextResponse.json(
-        createErrorResponse("VALID_001", "token and platform are required"),
+        createErrorResponse("VALID_001_MISSING_REQUIRED_FIELD", "token and platform are required"),
         { status: 400 }
       );
     }
 
     if (!["ios", "android", "web"].includes(platform)) {
       return NextResponse.json(
-        createErrorResponse("VALID_001", "platform must be ios, android, or web"),
+        createErrorResponse("VALID_001_GENERAL", "platform must be ios, android, or web"),
         { status: 400 }
       );
     }
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
     if (authError || !user) {
       return NextResponse.json(
-        createErrorResponse("AUTH_002", "Session expired"),
+        createErrorResponse("AUTH_002_SESSION_EXPIRED", "Session expired"),
         { status: 401 }
       );
     }
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
 
     if (error) {
       return NextResponse.json(
-        createErrorResponse("SYSTEM_001", "Failed to register device token"),
+        createErrorResponse("SYSTEM_001_INTERNAL_ERROR", "Failed to register device token"),
         { status: 500 }
       );
     }
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     );
   } catch {
     return NextResponse.json(
-      createErrorResponse("SYSTEM_001", "An unexpected error occurred"),
+      createErrorResponse("SYSTEM_001_UNKNOWN_ERROR", "An unexpected error occurred"),
       { status: 500 }
     );
   }
@@ -73,7 +73,7 @@ export async function DELETE(request: Request) {
 
     if (!token) {
       return NextResponse.json(
-        createErrorResponse("VALID_001", "token is required"),
+        createErrorResponse("VALID_001_MISSING_REQUIRED_FIELD", "token is required"),
         { status: 400 }
       );
     }
@@ -83,7 +83,7 @@ export async function DELETE(request: Request) {
 
     if (authError || !user) {
       return NextResponse.json(
-        createErrorResponse("AUTH_002", "Session expired"),
+        createErrorResponse("AUTH_002_SESSION_EXPIRED", "Session expired"),
         { status: 401 }
       );
     }
@@ -95,7 +95,7 @@ export async function DELETE(request: Request) {
 
     if (error) {
       return NextResponse.json(
-        createErrorResponse("SYSTEM_001", "Failed to delete device token"),
+        createErrorResponse("SYSTEM_001_INTERNAL_ERROR", "Failed to delete device token"),
         { status: 500 }
       );
     }
@@ -105,7 +105,7 @@ export async function DELETE(request: Request) {
     );
   } catch {
     return NextResponse.json(
-      createErrorResponse("SYSTEM_001", "An unexpected error occurred"),
+      createErrorResponse("SYSTEM_001_UNKNOWN_ERROR", "An unexpected error occurred"),
       { status: 500 }
     );
   }
