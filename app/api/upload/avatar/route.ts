@@ -117,7 +117,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ 
-      url: `/api/account/avatar?pathname=${encodeURIComponent(blob.pathname)}`,
+      url: `/api/upload/avatar?pathname=${encodeURIComponent(blob.pathname)}`,
       pathname: blob.pathname 
     });
   } catch (err) {

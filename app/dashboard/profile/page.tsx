@@ -112,7 +112,7 @@ export default function ProfilePage() {
           if (data.avatar_url) {
             if (data.avatar_url.startsWith("avatars/")) {
               // Private blob - use the API route to serve it
-              setAvatarUrl(`/api/account/avatar?pathname=${encodeURIComponent(data.avatar_url)}`);
+              setAvatarUrl(`/api/upload/avatar?pathname=${encodeURIComponent(data.avatar_url)}`);
             } else {
               // Full URL (Supabase storage or other)
               setAvatarUrl(data.avatar_url);
@@ -203,7 +203,7 @@ export default function ProfilePage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch("/api/account/avatar", {
+      const res = await fetch("/api/upload/avatar", {
         method: "POST",
         body: formData,
       });

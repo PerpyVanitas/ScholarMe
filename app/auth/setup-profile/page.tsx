@@ -122,7 +122,7 @@ export default function SetupProfilePage() {
       const formData = new FormData()
       formData.append("file", file)
 
-      const res = await fetch("/api/account/avatar", {
+      const res = await fetch("/api/upload/avatar", {
         method: "POST",
         body: formData,
       })
