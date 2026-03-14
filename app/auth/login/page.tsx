@@ -1,7 +1,7 @@
 /** Login page -- supports email/password and card-based authentication. */
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import nextDynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/client";
@@ -14,14 +14,7 @@ import { GraduationCap, Mail, CreditCard, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { mapSupabaseErrorToCode, formatErrorForDisplay } from "@/lib/api-errors";
 import { ErrorAlert } from "@/components/ui/error-alert";
-
-export const dynamic = "force-dynamic";
-
-// Dynamically import with ssr: false to avoid useSearchParams during static prerendering
-const LoginInactivityCheck = nextDynamic(
-  () => import("@/components/auth/login-inactivity-check").then(mod => ({ default: mod.LoginInactivityCheck })),
-  { ssr: false }
-);
+import { LoginInactivityCheck } from "@/components/auth/login-inactivity-check";
 
 export default function LoginPage() {
   const [emailLoading, setEmailLoading] = useState(false);
@@ -96,7 +89,9 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <LoginInactivityCheck />
+      <Suspense fallback={null}>
+        <LoginInactivityCheck />
+      </Suspense>
       <div className="flex w-full max-w-md flex-col gap-6">
         <div className="flex flex-col items-center gap-2 text-center">
           <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
