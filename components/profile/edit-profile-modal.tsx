@@ -167,18 +167,41 @@ export function EditProfileModal({
     try {
       const supabase = createClient();
 
-      const { error } = await supabase
+      // Debug: Check auth status
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      console.log("[v0] Auth check - user:", user?.id, "error:", authError);
+      console.log("[v0] Profile ID to update:", profile.id);
+      console.log("[v0] IDs match:", user?.id === profile.id);
+
+      if (!user) {
+        toast.error("You must be logged in to update your profile");
+        return;
+      }
+
+      if (user.id !== profile.id) {
+        console.log("[v0] ERROR: Auth user ID does not match profile ID!");
+        toast.error("Permission denied: Cannot update another user's profile");
+        return;
+      }
+
+      const updatePayload = {
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        full_name: `${firstName.trim()} ${lastName.trim()}`,
+        phone_number: phoneNumber.trim() || null,
+        birthdate: birthdate || null,
+        date_of_birth: birthdate || null,
+        membership_number: isTutor ? membershipNumber.trim() || null : null,
+      };
+      console.log("[v0] Update payload:", updatePayload);
+
+      const { data, error } = await supabase
         .from("profiles")
-        .update({
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
-          full_name: `${firstName.trim()} ${lastName.trim()}`,
-          phone_number: phoneNumber.trim() || null,
-          birthdate: birthdate || null,
-          date_of_birth: birthdate || null,
-          membership_number: isTutor ? membershipNumber.trim() || null : null,
-        })
-        .eq("id", profile.id);
+        .update(updatePayload)
+        .eq("id", profile.id)
+        .select();
+
+      console.log("[v0] Update result - data:", data, "error:", error);
 
       if (error) throw error;
 
