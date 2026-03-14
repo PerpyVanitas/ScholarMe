@@ -88,9 +88,24 @@ export default function ProfilePage() {
 
         if (data) {
           setProfile(data);
-          setFirstName(data.first_name || "");
-          setLastName(data.last_name || "");
-          setBirthdate(data.birthdate || "");
+          
+          // Parse first/last name from full_name if separate fields are empty
+          let fn = data.first_name || "";
+          let ln = data.last_name || "";
+          if ((!fn || !ln) && data.full_name) {
+            const parts = data.full_name.trim().split(/\s+/);
+            if (parts.length >= 2) {
+              fn = fn || parts[0];
+              ln = ln || parts.slice(1).join(" ");
+            } else if (parts.length === 1) {
+              fn = fn || parts[0];
+            }
+          }
+          setFirstName(fn);
+          setLastName(ln);
+          
+          // Use date_of_birth as fallback for birthdate
+          setBirthdate(data.birthdate || data.date_of_birth || "");
           setMembershipNumber(data.membership_number || "");
           setAvatarUrl(data.avatar_url || null);
           if (data.roles?.name) setRoleName(data.roles.name);
@@ -220,6 +235,7 @@ export default function ProfilePage() {
           last_name: lastName.trim(),
           full_name: `${firstName.trim()} ${lastName.trim()}`,
           birthdate: birthdate || null,
+          date_of_birth: birthdate || null,
           membership_number: isTutor ? membershipNumber.trim() || null : null,
         })
         .eq("id", profile.id);
