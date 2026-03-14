@@ -165,17 +165,30 @@ export function EditProfileModal({
     try {
       const supabase = createClient();
 
-      const { error } = await supabase
+      // Debug: Check auth status and profile ID
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log("[v0] Auth user ID:", user?.id);
+      console.log("[v0] Profile ID to update:", profile.id);
+      console.log("[v0] IDs match:", user?.id === profile.id);
+
+      const updatePayload = {
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        full_name: `${firstName.trim()} ${lastName.trim()}`,
+        birthdate: birthdate || null,
+        date_of_birth: birthdate || null,
+        membership_number: isTutor ? membershipNumber.trim() || null : null,
+      };
+      console.log("[v0] Update payload:", updatePayload);
+
+      const { data, error } = await supabase
         .from("profiles")
-        .update({
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
-          full_name: `${firstName.trim()} ${lastName.trim()}`,
-          birthdate: birthdate || null,
-          date_of_birth: birthdate || null,
-          membership_number: isTutor ? membershipNumber.trim() || null : null,
-        })
-        .eq("id", profile.id);
+        .update(updatePayload)
+        .eq("id", profile.id)
+        .select();
+
+      console.log("[v0] Update result - data:", data);
+      console.log("[v0] Update result - error:", error);
 
       if (error) throw error;
 
