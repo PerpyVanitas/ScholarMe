@@ -22,10 +22,16 @@ function mapAuthError(msg: string): string {
 
 // Validation rules
 const VALIDATORS = {
-  full_name: (v: string) => {
-    if (!v.trim()) return "Full name is required.";
-    if (/\d/.test(v)) return "Full name must not contain numbers.";
-    if (v.trim().length < 2) return "Full name must be at least 2 characters.";
+  first_name: (v: string) => {
+    if (!v.trim()) return "First name is required.";
+    if (/\d/.test(v)) return "First name must not contain numbers.";
+    if (v.trim().length < 2) return "First name must be at least 2 characters.";
+    return "";
+  },
+  last_name: (v: string) => {
+    if (!v.trim()) return "Last name is required.";
+    if (/\d/.test(v)) return "Last name must not contain numbers.";
+    if (v.trim().length < 2) return "Last name must be at least 2 characters.";
     return "";
   },
   email: (v: string) => {
@@ -78,7 +84,8 @@ export default function SignUpPage() {
   const [selectedRole, setSelectedRole] = useState<"learner" | "tutor">("learner");
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    full_name: "",
+    first_name: "",
+    last_name: "",
     email: "",
     phone_number: "",
     date_of_birth: "",
@@ -128,7 +135,8 @@ export default function SignUpPage() {
     const fd = new FormData();
     fd.set("email", formData.email);
     fd.set("password", formData.password);
-    fd.set("full_name", formData.full_name);
+    fd.set("first_name", formData.first_name);
+    fd.set("last_name", formData.last_name);
     fd.set("phone_number", formData.phone_number);
     fd.set("date_of_birth", formData.date_of_birth);
     fd.set("role", selectedRole);
@@ -257,17 +265,30 @@ export default function SignUpPage() {
               </div>
             </div>
 
-            {/* Full name */}
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="full_name">Full Name <span className="text-destructive">*</span></Label>
-              <Input
-                id="full_name" type="text" placeholder="Maria Santos" required autoComplete="name"
-                value={formData.full_name}
-                onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                onBlur={(e) => validateField("full_name", e.target.value)}
-                className={cn(fieldErrors.full_name && "border-destructive focus-visible:ring-destructive")}
-              />
-              {fieldErrors.full_name && <p className="text-xs text-destructive">{fieldErrors.full_name}</p>}
+            {/* First Name and Last Name side by side */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="first_name">First Name <span className="text-destructive">*</span></Label>
+                <Input
+                  id="first_name" type="text" placeholder="Maria" required autoComplete="given-name"
+                  value={formData.first_name}
+                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                  onBlur={(e) => validateField("first_name", e.target.value)}
+                  className={cn(fieldErrors.first_name && "border-destructive focus-visible:ring-destructive")}
+                />
+                {fieldErrors.first_name && <p className="text-xs text-destructive">{fieldErrors.first_name}</p>}
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="last_name">Last Name <span className="text-destructive">*</span></Label>
+                <Input
+                  id="last_name" type="text" placeholder="Santos" required autoComplete="family-name"
+                  value={formData.last_name}
+                  onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                  onBlur={(e) => validateField("last_name", e.target.value)}
+                  className={cn(fieldErrors.last_name && "border-destructive focus-visible:ring-destructive")}
+                />
+                {fieldErrors.last_name && <p className="text-xs text-destructive">{fieldErrors.last_name}</p>}
+              </div>
             </div>
 
             {/* Email */}

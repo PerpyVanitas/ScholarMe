@@ -18,7 +18,9 @@ export async function signUp(formData: FormData) {
   const adminClient = await createAdminClient()
   const email = formData.get("email") as string
   const password = formData.get("password") as string
-  const fullName = formData.get("full_name") as string
+  const firstName = formData.get("first_name") as string
+  const lastName = formData.get("last_name") as string
+  const fullName = `${firstName.trim()} ${lastName.trim()}`
   const phoneNumber = formData.get("phone_number") as string
   const dateOfBirth = formData.get("date_of_birth") as string
   const selectedRole = (formData.get("role") as string) || "learner"
@@ -48,6 +50,8 @@ export async function signUp(formData: FormData) {
     email_confirm: true,
     user_metadata: {
       full_name: fullName,
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
       phone_number: phoneNumber,
       date_of_birth: dateOfBirth,
       role_id: roleRow?.id,
@@ -57,18 +61,13 @@ export async function signUp(formData: FormData) {
   if (createError) return { error: createError.message }
 
   if (created?.user) {
-    // Parse full_name into first_name and last_name
-    const nameParts = fullName.trim().split(/\s+/);
-    const firstName = nameParts[0] || "";
-    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
-
     await adminClient
       .from("profiles")
       .upsert({
         id: created.user.id,
         full_name: fullName,
-        first_name: firstName,
-        last_name: lastName,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
         email,
         phone_number: phoneNumber,
         date_of_birth: dateOfBirth ? new Date(dateOfBirth).toISOString().split('T')[0] : null,
