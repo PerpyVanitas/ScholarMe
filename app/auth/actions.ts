@@ -23,6 +23,19 @@ export async function signUp(formData: FormData) {
   const dateOfBirth = formData.get("date_of_birth") as string
   const selectedRole = (formData.get("role") as string) || "learner"
 
+  // Check if phone number is already registered
+  if (phoneNumber) {
+    const { data: existingPhone } = await adminClient
+      .from("profiles")
+      .select("id")
+      .eq("phone_number", phoneNumber)
+      .maybeSingle()
+
+    if (existingPhone) {
+      return { error: "This phone number is already registered. Please use a different number or sign in to your existing account." }
+    }
+  }
+
   const { data: roleRow } = await supabase
     .from("roles")
     .select("id")
