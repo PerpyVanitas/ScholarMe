@@ -10,7 +10,7 @@ const nextConfig = {
     unoptimized: true,
   },
   env: {
-    CACHE_BUST: "v11",
+    CACHE_BUST: "v12",
   },
 };
 
