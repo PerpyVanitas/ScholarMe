@@ -1,8 +1,58 @@
 // POST /api/account/avatar -- upload profile photo using Vercel Blob
+// GET /api/account/avatar -- serve private avatar
 // DELETE /api/account/avatar -- remove profile photo
-import { put, del } from "@vercel/blob";
+import { put, del, get } from "@vercel/blob";
 import { createClient } from "@/lib/supabase/create-client";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Get pathname from query params or fetch from profile
+    const pathname = request.nextUrl.searchParams.get("pathname");
+    
+    if (!pathname) {
+      return NextResponse.json({ error: "Missing pathname" }, { status: 400 });
+    }
+
+    const result = await get(pathname, {
+      access: "private",
+      ifNoneMatch: request.headers.get("if-none-match") ?? undefined,
+    });
+
+    if (!result) {
+      return new NextResponse("Not found", { status: 404 });
+    }
+
+    // Blob hasn't changed — tell the browser to use its cached copy
+    if (result.statusCode === 304) {
+      return new NextResponse(null, {
+        status: 304,
+        headers: {
+          ETag: result.blob.etag,
+          "Cache-Control": "private, no-cache",
+        },
+      });
+    }
+
+    return new NextResponse(result.stream, {
+      headers: {
+        "Content-Type": result.blob.contentType,
+        ETag: result.blob.etag,
+        "Cache-Control": "private, no-cache",
+      },
+    });
+  } catch (err) {
+    console.error("[v0] Avatar fetch error:", err);
+    return NextResponse.json({ error: "Failed to fetch avatar" }, { status: 500 });
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -44,8 +94,8 @@ export async function POST(request: Request) {
       .eq("id", user.id)
       .single();
 
-    // Delete old blob if it's a Vercel Blob URL
-    if (profile?.avatar_url?.includes("blob.vercel-storage.com")) {
+    // Delete old blob if it's stored as a pathname (private blob)
+    if (profile?.avatar_url?.startsWith("avatars/")) {
       try {
         await del(profile.avatar_url);
       } catch {
@@ -58,23 +108,27 @@ export async function POST(request: Request) {
     const filename = `avatars/${user.id}/avatar-${Date.now()}.${ext}`;
     
     const blob = await put(filename, file, {
-      access: "public", // Public for easy display in img tags
+      access: "private",
       addRandomSuffix: false,
     });
 
-    // Update profile with new avatar URL
+    // Store the pathname (not URL) for private blobs
     const { error: updateError } = await supabase
       .from("profiles")
-      .update({ avatar_url: blob.url })
+      .update({ avatar_url: blob.pathname })
       .eq("id", user.id);
 
     if (updateError) {
       // Try to clean up the blob if profile update fails
-      await del(blob.url).catch(() => {});
+      await del(blob.pathname).catch(() => {});
       return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
     }
 
-    return NextResponse.json({ url: blob.url });
+    // Return the URL to use in img tags (via the GET route)
+    return NextResponse.json({ 
+      url: `/api/account/avatar?pathname=${encodeURIComponent(blob.pathname)}`,
+      pathname: blob.pathname 
+    });
   } catch (err) {
     console.error("[v0] Avatar upload error:", err);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });

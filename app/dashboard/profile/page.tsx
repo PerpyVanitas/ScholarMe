@@ -108,7 +108,18 @@ export default function ProfilePage() {
           const bd = data.birthdate || data.date_of_birth || "";
           setBirthdate(bd);
           setMembershipNumber(data.membership_number || "");
-          setAvatarUrl(data.avatar_url || null);
+          // Handle private blob pathnames vs full URLs
+          if (data.avatar_url) {
+            if (data.avatar_url.startsWith("avatars/")) {
+              // Private blob - use the API route to serve it
+              setAvatarUrl(`/api/account/avatar?pathname=${encodeURIComponent(data.avatar_url)}`);
+            } else {
+              // Full URL (Supabase storage or other)
+              setAvatarUrl(data.avatar_url);
+            }
+          } else {
+            setAvatarUrl(null);
+          }
           if (data.roles?.name) setRoleName(data.roles.name);
 
           // Load specializations for tutors
