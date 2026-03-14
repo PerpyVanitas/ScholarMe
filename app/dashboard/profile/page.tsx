@@ -87,6 +87,10 @@ export default function ProfilePage() {
           .maybeSingle();
 
         if (data) {
+          console.log("[v0] Profile data loaded:", data);
+          console.log("[v0] birthdate:", data.birthdate);
+          console.log("[v0] date_of_birth:", data.date_of_birth);
+          console.log("[v0] phone_number:", data.phone_number);
           setProfile(data);
           if (data.roles?.name) setRoleName(data.roles.name);
           
