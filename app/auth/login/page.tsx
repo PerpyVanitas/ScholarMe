@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import dynamic from "next/dynamic";
+import nextDynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,7 @@ import { ErrorAlert } from "@/components/ui/error-alert";
 export const dynamic = "force-dynamic";
 
 // Dynamically import with ssr: false to avoid useSearchParams during static prerendering
-const LoginInactivityCheck = dynamic(
+const LoginInactivityCheck = nextDynamic(
   () => import("@/components/auth/login-inactivity-check").then(mod => ({ default: mod.LoginInactivityCheck })),
   { ssr: false }
 );
