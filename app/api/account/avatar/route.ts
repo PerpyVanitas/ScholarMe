@@ -1,4 +1,4 @@
-// POST /api/account/avatar -- upload profile photo using Vercel Blob
+// POST /api/account/avatar -- upload profile photo using Vercel Blob (PRIVATE store)
 // GET /api/account/avatar -- serve private avatar
 // DELETE /api/account/avatar -- remove profile photo
 import { put, del, get } from "@vercel/blob";
@@ -14,7 +14,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get pathname from query params or fetch from profile
     const pathname = request.nextUrl.searchParams.get("pathname");
     
     if (!pathname) {
@@ -30,7 +29,6 @@ export async function GET(request: NextRequest) {
       return new NextResponse("Not found", { status: 404 });
     }
 
-    // Blob hasn't changed — tell the browser to use its cached copy
     if (result.statusCode === 304) {
       return new NextResponse(null, {
         status: 304,
@@ -70,7 +68,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    // Validate file type
     const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
@@ -79,7 +76,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       return NextResponse.json(
         { error: "File too large. Maximum size is 5MB." },
@@ -87,44 +83,39 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get current profile to delete old avatar if exists
     const { data: profile } = await supabase
       .from("profiles")
       .select("avatar_url")
       .eq("id", user.id)
       .single();
 
-    // Delete old blob if it's stored as a pathname (private blob)
     if (profile?.avatar_url?.startsWith("avatars/")) {
       try {
         await del(profile.avatar_url);
       } catch {
-        // Ignore deletion errors for old avatars
+        // Ignore deletion errors
       }
     }
 
-    // Upload to Vercel Blob (private store)
     const ext = file.name.split(".").pop() || "jpg";
     const filename = `avatars/${user.id}/avatar-${Date.now()}.${ext}`;
     
+    // IMPORTANT: Use private access for private blob store
     const blob = await put(filename, file, {
       access: "private",
       addRandomSuffix: false,
     });
 
-    // Store the pathname (not URL) for private blobs
     const { error: updateError } = await supabase
       .from("profiles")
       .update({ avatar_url: blob.pathname })
       .eq("id", user.id);
 
     if (updateError) {
-      // Try to clean up the blob if profile update fails
       await del(blob.pathname).catch(() => {});
       return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
     }
 
-    // Return the URL to use in img tags (via the GET route)
     return NextResponse.json({ 
       url: `/api/account/avatar?pathname=${encodeURIComponent(blob.pathname)}`,
       pathname: blob.pathname 
@@ -135,7 +126,7 @@ export async function POST(request: Request) {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(request: Request) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -144,28 +135,27 @@ export async function DELETE() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get current avatar URL
     const { data: profile } = await supabase
       .from("profiles")
       .select("avatar_url")
       .eq("id", user.id)
       .single();
 
-    if (profile?.avatar_url) {
-      // Delete from Vercel Blob if it's a blob URL
-      if (profile.avatar_url.includes("blob.vercel-storage.com")) {
-        try {
-          await del(profile.avatar_url);
-        } catch {
-          // Ignore deletion errors
-        }
+    if (profile?.avatar_url?.startsWith("avatars/")) {
+      try {
+        await del(profile.avatar_url);
+      } catch {
+        // Ignore deletion errors
       }
+    }
 
-      // Clear avatar URL in profile
-      await supabase
-        .from("profiles")
-        .update({ avatar_url: null })
-        .eq("id", user.id);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ avatar_url: null })
+      .eq("id", user.id);
+
+    if (error) {
+      return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
