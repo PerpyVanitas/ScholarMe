@@ -1,7 +1,13 @@
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   turbopack: {
-    root: process.cwd(),
+    root: __dirname,
   },
   typescript: {
     ignoreBuildErrors: true,
@@ -10,7 +16,7 @@ const nextConfig = {
     unoptimized: true,
   },
   env: {
-    CACHE_BUST: "v6",
+    CACHE_BUST: "v7",
   },
 };
 
