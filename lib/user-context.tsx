@@ -36,9 +36,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
         .eq("id", user.id)
         .maybeSingle();
 
-      console.log("[v0] Profile data loaded:", p);
-      console.log("[v0] Roles data:", p?.roles);
-
       if (p) {
         setProfile({
           ...p,
