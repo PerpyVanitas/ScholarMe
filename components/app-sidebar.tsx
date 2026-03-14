@@ -111,12 +111,9 @@ export function AppSidebar({ profile, role, notificationCount }: AppSidebarProps
 
   // Get display URL for avatar (handles private blob pathnames)
   const getAvatarUrl = (avatarUrl: string | null | undefined) => {
-    console.log("[v0] Sidebar avatar_url:", avatarUrl);
     if (!avatarUrl) return undefined;
     if (avatarUrl.startsWith("avatars/")) {
-      const url = `/api/avatar?pathname=${encodeURIComponent(avatarUrl)}`;
-      console.log("[v0] Converted to API URL:", url);
-      return url;
+      return `/api/avatar?pathname=${encodeURIComponent(avatarUrl)}`;
     }
     return avatarUrl;
   };
