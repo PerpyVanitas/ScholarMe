@@ -1,259 +1,342 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { Profile, Specialization } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Loader2, Save, Trash2, Camera, CheckCircle2, User } from "lucide-react";
 import { toast } from "sonner";
-import { DEMO_USERS, getDemoUserFromCookie } from "@/lib/demo";
-import type { Profile } from "@/lib/types";
-
-interface Specialization {
-  id: string;
-  name: string;
-}
-
-function getInitials(firstName: string, lastName: string, fullName?: string | null): string {
-  if (firstName && lastName) {
-    return `${firstName[0]}${lastName[0]}`.toUpperCase();
-  }
-  if (fullName) {
-    const parts = fullName.trim().split(/\s+/);
-    if (parts.length >= 2) return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-    if (parts.length === 1 && parts[0]) return parts[0][0].toUpperCase();
-  }
-  return "?";
-}
+import { 
+  User, Mail, Phone, Calendar, Clock, Award, Edit2, Loader2, 
+  Key, Eye, EyeOff, Trash2, AlertTriangle, Camera, X
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { updateProfile, UpdateProfileData, updateTutorInfo } from "./actions";
+import { useUser } from "@/lib/user-context";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const loadedRef = useRef(false);
+  const supabase = createClient();
+  const { refreshProfile } = useUser();
 
+  // Profile state
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [confirmText, setConfirmText] = useState("");
-
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [birthdate, setBirthdate] = useState("");
-  const [membershipNumber, setMembershipNumber] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [selectedSpecs, setSelectedSpecs] = useState<string[]>([]);
-  const [specializations, setSpecializations] = useState<Specialization[]>([]);
   const [roleName, setRoleName] = useState("learner");
+  const [loading, setLoading] = useState(true);
+  const [specializations, setSpecializations] = useState<Specialization[]>([]);
+
+  // Edit modal state
+  const [editOpen, setEditOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editFirstName, setEditFirstName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editBirthdate, setEditBirthdate] = useState("");
+  const [editMembershipNumber, setEditMembershipNumber] = useState("");
+  const [editAvatarUrl, setEditAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  // Password change state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [showPasswords, setShowPasswords] = useState(false);
+
+  // Delete account state
+  const [deleting, setDeleting] = useState(false);
+
+  // Tutor settings state
+  const [tutorSettingsOpen, setTutorSettingsOpen] = useState(false);
+  const [tutorBio, setTutorBio] = useState("");
+  const [hourlyRate, setHourlyRate] = useState<number | null>(null);
+  const [yearsExperience, setYearsExperience] = useState<number | null>(null);
+  const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>([]);
+  const [allSpecializations, setAllSpecializations] = useState<Specialization[]>([]);
+  const [tutorData, setTutorData] = useState<any>(null);
+  const [savingTutor, setSavingTutor] = useState(false);
 
   const isTutor = roleName === "tutor";
 
+  // Load profile data
   useEffect(() => {
-    if (loadedRef.current) return;
-    loadedRef.current = true;
-
     async function loadProfile() {
-      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push("/auth/login");
+        return;
+      }
 
-      if (user) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("*, roles(*)")
-          .eq("id", user.id)
-          .maybeSingle();
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*, roles(name)")
+        .eq("id", user.id)
+        .single();
 
-        if (data) {
-          setProfile(data);
-          setFirstName(data.first_name || "");
-          setLastName(data.last_name || "");
-          setBirthdate(data.birthdate || "");
-          setMembershipNumber(data.membership_number || "");
-          setAvatarUrl(data.avatar_url || null);
-          if (data.roles?.name) setRoleName(data.roles.name);
-
-          // Load specializations for tutors
-          if (data.roles?.name === "tutor") {
-            const { data: specs } = await supabase
-              .from("specializations")
-              .select("id, name")
-              .order("name");
-            if (specs) setSpecializations(specs);
-
-            const { data: tutorRow } = await supabase
-              .from("tutors")
-              .select("id")
-              .eq("profile_id", user.id)
-              .maybeSingle();
-
-            if (tutorRow) {
-              const { data: tutorSpecs } = await supabase
-                .from("tutor_specializations")
-                .select("specialization_id")
-                .eq("tutor_id", tutorRow.id);
-              if (tutorSpecs) {
-                setSelectedSpecs(tutorSpecs.map(s => s.specialization_id));
-              }
-            }
-          }
-        } else {
-          // User exists but no profile row
-          setProfile({
-            id: user.id,
-            full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
-            email: user.email || "",
-            avatar_url: null,
-            created_at: user.created_at || new Date().toISOString(),
-            role_id: null,
-            roles: { id: "fallback", name: "learner" },
-          } as Profile);
-        }
-
+      if (error) {
+        toast.error("Failed to load profile");
         setLoading(false);
         return;
       }
 
-      // Demo mode fallback
-      const { role: devRole } = getDemoUserFromCookie("learner");
-      const demoInfo = DEMO_USERS[devRole as keyof typeof DEMO_USERS] || DEMO_USERS.learner;
-      setProfile({
-        id: demoInfo.profileId,
-        full_name: demoInfo.fullName,
-        email: demoInfo.email,
-        avatar_url: null,
-        created_at: new Date().toISOString(),
-        role_id: "demo-role",
-        roles: { id: "demo-role", name: devRole },
-      } as Profile);
-      setRoleName(devRole);
+      if (data) {
+        setProfile(data);
+        if (data.roles?.name) setRoleName(data.roles.name);
+
+        // Load tutor data and specializations if tutor
+        if (data.roles?.name === "tutor") {
+          // Load all available specializations
+          const { data: allSpecs } = await supabase
+            .from("specializations")
+            .select("id, name");
+          
+          if (allSpecs) {
+            setAllSpecializations(allSpecs);
+          }
+
+          // Load tutor-specific data
+          const { data: tutorInfo } = await supabase
+            .from("tutors")
+            .select("id, bio, hourly_rate, years_experience, tutor_specializations(specializations(id, name))")
+            .eq("profile_id", user.id)
+            .single();
+
+          if (tutorInfo) {
+            setTutorData(tutorInfo);
+            setTutorBio(tutorInfo.bio || "");
+            setHourlyRate(tutorInfo.hourly_rate);
+            setYearsExperience(tutorInfo.years_experience);
+            
+            if (tutorInfo.tutor_specializations) {
+              const specs = tutorInfo.tutor_specializations
+                .map((ts: { specializations: Specialization }) => ts.specializations)
+                .filter(Boolean);
+              setSpecializations(specs);
+              setSelectedSpecializations(specs.map(s => s.id));
+            }
+          }
+        }
+      }
       setLoading(false);
     }
 
     loadProfile();
-  }, []);
+  }, [supabase, router]);
 
-  const handleAvatarUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !profile) return;
-
-    setUploading(true);
-    try {
-      const supabase = createClient();
-      const ext = file.name.split(".").pop();
-      const filePath = `${profile.id}/avatar.${ext}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(filePath);
-
-      // Append cache-busting param so browser reloads image
-      const freshUrl = `${publicUrl}?t=${Date.now()}`;
-      setAvatarUrl(freshUrl);
-      await supabase.from("profiles").update({ avatar_url: freshUrl }).eq("id", profile.id);
-      toast.success("Photo updated!");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Upload failed");
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+  // Open edit modal with current values
+  const openEditModal = useCallback(() => {
+    if (!profile) return;
+    
+    // Parse name from full_name if first/last not set
+    let fn = profile.first_name || "";
+    let ln = profile.last_name || "";
+    if ((!fn || !ln) && profile.full_name) {
+      const parts = profile.full_name.trim().split(/\s+/);
+      fn = fn || parts[0] || "";
+      ln = ln || parts.slice(1).join(" ") || "";
     }
+
+    setEditFirstName(fn);
+    setEditLastName(ln);
+    setEditPhone(profile.phone_number || "");
+    setEditBirthdate(profile.birthdate || profile.date_of_birth || "");
+    setEditMembershipNumber(profile.membership_number || "");
+    // Set avatar URL - convert pathname to API route if needed
+    if (profile.avatar_url?.startsWith("avatars/")) {
+      setEditAvatarUrl(`/api/avatar?pathname=${encodeURIComponent(profile.avatar_url)}`);
+    } else {
+      setEditAvatarUrl(profile.avatar_url || null);
+    }
+    setEditOpen(true);
   }, [profile]);
 
-  function toggleSpec(specId: string) {
-    setSelectedSpecs(prev =>
-      prev.includes(specId) ? prev.filter(id => id !== specId) : [...prev, specId]
-    );
-  }
+  // Handle avatar upload
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const handleSave = useCallback(async () => {
-    if (!profile) return;
-    if (!firstName.trim() || !lastName.trim()) {
+    // Validate file type
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Please upload a JPEG, PNG, GIF, or WebP image");
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be less than 5MB");
+      return;
+    }
+
+    setUploadingAvatar(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/avatar", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Upload failed");
+      }
+
+      // Update the avatar URL in the edit modal
+      const newAvatarUrl = `/api/avatar?pathname=${encodeURIComponent(data.pathname)}`;
+      setEditAvatarUrl(newAvatarUrl);
+      
+      // Update the profile state immediately
+      setProfile(prev => prev ? { ...prev, avatar_url: data.pathname } : null);
+      
+      // Refresh the user context so sidebar updates
+      await refreshProfile();
+      
+      toast.success("Photo uploaded successfully");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to upload photo");
+    } finally {
+      setUploadingAvatar(false);
+      // Reset the input
+      e.target.value = "";
+    }
+  };
+
+  // Handle tutor settings save
+  const handleSaveTutorSettings = async () => {
+    setSavingTutor(true);
+
+    try {
+      const result = await updateTutorInfo({
+        bio: tutorBio.trim() || null,
+        hourly_rate: hourlyRate,
+        years_experience: yearsExperience,
+        specialization_ids: selectedSpecializations,
+      });
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      toast.success("Tutor settings updated successfully");
+      setTutorSettingsOpen(false);
+      await refreshProfile();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to update tutor settings");
+    } finally {
+      setSavingTutor(false);
+    }
+  };
+
+  // Handle avatar removal
+  const handleRemoveAvatar = async () => {
+    setUploadingAvatar(true);
+
+    try {
+      const res = await fetch("/api/avatar", { method: "DELETE" });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to remove photo");
+      }
+
+      setEditAvatarUrl(null);
+      setProfile(prev => prev ? { ...prev, avatar_url: null } : null);
+      
+      // Refresh the user context so sidebar updates
+      await refreshProfile();
+      
+      toast.success("Photo removed");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to remove photo");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  // Save profile changes using server action
+  const handleSaveProfile = async () => {
+    if (!editFirstName.trim() || !editLastName.trim()) {
       toast.error("First name and last name are required");
       return;
     }
+
     setSaving(true);
+    
+    const updateData: UpdateProfileData = {
+      first_name: editFirstName.trim(),
+      last_name: editLastName.trim(),
+      phone_number: editPhone.trim() || null,
+      birthdate: editBirthdate || null,
+      membership_number: isTutor ? editMembershipNumber.trim() || null : null,
+    };
 
-    try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
-          full_name: `${firstName.trim()} ${lastName.trim()}`,
-          birthdate: birthdate || null,
-          membership_number: isTutor ? membershipNumber.trim() || null : null,
-        })
-        .eq("id", profile.id);
+    const result = await updateProfile(updateData);
 
-      if (error) throw error;
-
-      if (isTutor) {
-        let { data: tutorRow } = await supabase
-          .from("tutors")
-          .select("id")
-          .eq("profile_id", profile.id)
-          .maybeSingle();
-
-        if (!tutorRow) {
-          const { data: newTutor } = await supabase
-            .from("tutors")
-            .insert({ profile_id: profile.id })
-            .select("id")
-            .single();
-          tutorRow = newTutor;
-        }
-
-        if (tutorRow) {
-          await supabase.from("tutor_specializations").delete().eq("tutor_id", tutorRow.id);
-          if (selectedSpecs.length > 0) {
-            await supabase
-              .from("tutor_specializations")
-              .insert(selectedSpecs.map(specId => ({
-                tutor_id: tutorRow!.id,
-                specialization_id: specId,
-              })));
-          }
-        }
-      }
-
+    if (result.success) {
+      // Update local state
       setProfile(prev => prev ? {
         ...prev,
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        full_name: `${firstName.trim()} ${lastName.trim()}`,
+        first_name: updateData.first_name,
+        last_name: updateData.last_name,
+        full_name: `${updateData.first_name} ${updateData.last_name}`,
+        phone_number: updateData.phone_number,
+        birthdate: updateData.birthdate,
+        date_of_birth: updateData.birthdate,
+        membership_number: updateData.membership_number,
       } : null);
+      
       toast.success("Profile updated successfully");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update profile");
-    } finally {
-      setSaving(false);
+      setEditOpen(false);
+    } else {
+      toast.error(result.error || "Failed to update profile");
     }
-  }, [profile, firstName, lastName, birthdate, membershipNumber, isTutor, selectedSpecs]);
 
-  async function handleDeleteAccount() {
+    setSaving(false);
+  };
+
+  // Change password
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword) {
+      toast.error("Please fill in all password fields");
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast.error("New password must be at least 8 characters");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords do not match");
+      return;
+    }
+
+    setChangingPassword(true);
+    
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    
+    if (error) {
+      toast.error(error.message || "Failed to change password");
+    } else {
+      toast.success("Password changed successfully");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    }
+    
+    setChangingPassword(false);
+  };
+
+  // Delete account
+  const handleDeleteAccount = async () => {
     setDeleting(true);
     const res = await fetch("/api/account", { method: "DELETE" });
     if (res.ok) {
@@ -264,174 +347,283 @@ export default function ProfilePage() {
       toast.error(data.error || "Failed to delete account");
       setDeleting(false);
     }
-  }
+  };
+
+  // Format date for display
+  const formatDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return "Not set";
+    try {
+      return new Date(dateStr).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  // Get initials for avatar fallback
+  const getInitials = (name: string) => {
+    return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  };
+
+  // Get display URL for avatar (handles private blob pathnames)
+  const getAvatarDisplayUrl = (avatarUrl: string | null | undefined) => {
+    if (!avatarUrl) return undefined;
+    if (avatarUrl.startsWith("avatars/")) {
+      return `/api/avatar?pathname=${encodeURIComponent(avatarUrl)}`;
+    }
+    return avatarUrl;
+  };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="container max-w-4xl py-8 space-y-6">
+        <Skeleton className="h-48 w-full" />
+        <Skeleton className="h-64 w-full" />
       </div>
     );
   }
 
-  if (!profile) return null;
+  if (!profile) {
+    return (
+      <div className="container max-w-4xl py-8">
+        <Card>
+          <CardContent className="py-8 text-center text-muted-foreground">
+            Profile not found. Please try logging in again.
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-  const initials = getInitials(firstName, lastName, profile.full_name);
-  const roleLabel =
-    roleName === "administrator" ? "Administrator"
-      : roleName === "tutor" ? "Tutor"
-        : "Learner";
+  const displayName = profile.full_name || `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || "User";
 
   return (
-    <div className="flex flex-col gap-6 max-w-2xl">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground text-balance">Profile</h1>
-        <p className="text-muted-foreground">Manage your account settings and profile details.</p>
-      </div>
+    <div className="container max-w-4xl py-8 space-y-6">
+      {/* Profile Header */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+            <Avatar className="h-24 w-24 border-4 border-background shadow-lg">
+              <AvatarImage src={getAvatarDisplayUrl(profile.avatar_url)} alt={displayName} />
+              <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+                {getInitials(displayName)}
+              </AvatarFallback>
+            </Avatar>
 
-      {/* Profile Card */}
-      <Card className="border-border/60">
+            <div className="flex-1 text-center sm:text-left space-y-2">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <h1 className="text-2xl font-bold">{displayName}</h1>
+                <Badge variant="secondary" className="w-fit mx-auto sm:mx-0 capitalize">
+                  {roleName}
+                </Badge>
+              </div>
+              <p className="text-muted-foreground">{profile.email}</p>
+              
+              {specializations.length > 0 && (
+                <div className="flex flex-wrap gap-2 justify-center sm:justify-start pt-2">
+                  {specializations.map(spec => (
+                    <Badge key={spec.id} variant="outline">{spec.name}</Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <Button onClick={openEditModal} variant="outline" className="gap-2">
+              <Edit2 className="h-4 w-4" />
+              Edit Profile
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Profile Details */}
+      <Card>
         <CardHeader>
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <div className="relative h-20 w-20 rounded-full overflow-hidden bg-muted">
-                {avatarUrl ? (
-                  <img
-                    src={avatarUrl}
-                    alt="Profile photo"
-                    className="h-full w-full object-cover"
-                    crossOrigin="anonymous"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary text-xl font-semibold">
-                    {initials}
-                  </div>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md transition-colors hover:bg-primary/90 disabled:opacity-50"
-                aria-label="Upload photo"
-              >
-                {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarUpload}
-                className="hidden"
-                aria-label="Choose profile photo"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <CardTitle>{profile.full_name || "User"}</CardTitle>
-              <CardDescription>{profile.email}</CardDescription>
-              <Badge variant="secondary" className="w-fit">{roleLabel}</Badge>
-            </div>
-          </div>
+          <CardTitle>Profile Information</CardTitle>
+          <CardDescription>Your personal details and account information</CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col gap-5">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="firstName">First Name *</Label>
-              <Input
-                id="firstName"
-                value={firstName}
-                onChange={e => setFirstName(e.target.value)}
-                placeholder="Juan"
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="lastName">Last Name *</Label>
-              <Input
-                id="lastName"
-                value={lastName}
-                onChange={e => setLastName(e.target.value)}
-                placeholder="Dela Cruz"
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" value={profile.email} disabled className="bg-muted" />
-            <p className="text-xs text-muted-foreground">Contact your administrator to change your email.</p>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="birthdate">Birthdate</Label>
-            <Input
-              id="birthdate"
-              type="date"
-              value={birthdate}
-              onChange={e => setBirthdate(e.target.value)}
-            />
-          </div>
-
-          {isTutor && (
-            <>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="membershipNumber">Membership Number</Label>
-                <Input
-                  id="membershipNumber"
-                  value={membershipNumber}
-                  onChange={e => setMembershipNumber(e.target.value)}
-                  placeholder="e.g. TM-2025-001"
-                />
+        <CardContent>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+              <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">Full Name</p>
+                <p className="text-sm text-muted-foreground">{displayName}</p>
               </div>
+            </div>
 
-              <div className="flex flex-col gap-2">
-                <Label>Specializations</Label>
-                <p className="text-xs text-muted-foreground">Select the subjects you can tutor</p>
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {specializations.map(spec => {
-                    const isSelected = selectedSpecs.includes(spec.id);
-                    return (
-                      <button
-                        key={spec.id}
-                        type="button"
-                        onClick={() => toggleSpec(spec.id)}
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${
-                          isSelected
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-border bg-background text-muted-foreground hover:bg-muted"
-                        }`}
-                      >
-                        {isSelected && <CheckCircle2 className="h-3.5 w-3.5" />}
-                        {spec.name}
-                      </button>
-                    );
-                  })}
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+              <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">Email</p>
+                <p className="text-sm text-muted-foreground">{profile.email}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+              <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">Phone Number</p>
+                <p className="text-sm text-muted-foreground">{profile.phone_number || "Not set"}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+              <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">Birthday</p>
+                <p className="text-sm text-muted-foreground">
+                  {formatDate(profile.birthdate || profile.date_of_birth)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+              <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">Member Since</p>
+                <p className="text-sm text-muted-foreground">{formatDate(profile.created_at)}</p>
+              </div>
+            </div>
+
+            {isTutor && (
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                <Award className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">Membership Number</p>
+                  <p className="text-sm text-muted-foreground">{profile.membership_number || "Not set"}</p>
                 </div>
               </div>
-            </>
-          )}
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
-          <div className="flex flex-col gap-2">
-            <Label>Member Since</Label>
-            <p className="text-sm text-muted-foreground">
-              {new Date(profile.created_at).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
+      {/* Tutor Settings */}
+      {isTutor && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Award className="h-5 w-5" />
+                Tutor Settings
+              </CardTitle>
+              <CardDescription>Manage your tutoring profile and specializations</CardDescription>
+            </div>
+            <Button
+              onClick={() => setTutorSettingsOpen(true)}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+            >
+              <Edit2 className="h-4 w-4" />
+              Edit
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Bio</p>
+              <p className="text-sm text-muted-foreground">{tutorBio || "Not set"}</p>
+            </div>
+            {hourlyRate && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Hourly Rate</p>
+                <p className="text-sm text-muted-foreground">${hourlyRate}/hour</p>
+              </div>
+            )}
+            {yearsExperience && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Years of Experience</p>
+                <p className="text-sm text-muted-foreground">{yearsExperience} years</p>
+              </div>
+            )}
+            {specializations.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Specializations</p>
+                <div className="flex flex-wrap gap-2">
+                  {specializations.map(spec => (
+                    <Badge key={spec.id} variant="secondary">
+                      {spec.name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Password Change */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Key className="h-5 w-5" />
+            Change Password
+          </CardTitle>
+          <CardDescription>Update your account password</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="currentPassword">Current Password</Label>
+            <div className="relative">
+              <Input
+                id="currentPassword"
+                type={showPasswords ? "text" : "password"}
+                value={currentPassword}
+                onChange={e => setCurrentPassword(e.target.value)}
+                placeholder="Enter current password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPasswords(!showPasswords)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showPasswords ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
 
-          <Button onClick={handleSave} disabled={saving || !firstName.trim() || !lastName.trim()} className="w-fit">
-            {saving ? (
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">New Password</Label>
+              <Input
+                id="newPassword"
+                type={showPasswords ? "text" : "password"}
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                placeholder="Min. 8 characters"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <Input
+                id="confirmPassword"
+                type={showPasswords ? "text" : "password"}
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                placeholder="Repeat new password"
+              />
+            </div>
+          </div>
+
+          {newPassword && confirmPassword && newPassword !== confirmPassword && (
+            <p className="text-sm text-destructive">Passwords do not match</p>
+          )}
+
+          <Button
+            onClick={handleChangePassword}
+            disabled={changingPassword || !currentPassword || !newPassword || newPassword !== confirmPassword}
+          >
+            {changingPassword ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
+                Updating...
               </>
             ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Save Changes
-              </>
+              "Update Password"
             )}
           </Button>
         </CardContent>
@@ -440,57 +632,257 @@ export default function ProfilePage() {
       {/* Danger Zone */}
       <Card className="border-destructive/30">
         <CardHeader>
-          <CardTitle className="text-destructive">Danger Zone</CardTitle>
-          <CardDescription>Permanently delete your account and all associated data. This action cannot be undone.</CardDescription>
+          <CardTitle className="flex items-center gap-2 text-destructive">
+            <AlertTriangle className="h-5 w-5" />
+            Danger Zone
+          </CardTitle>
+          <CardDescription>Irreversible actions for your account</CardDescription>
         </CardHeader>
         <CardContent>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive">
+          <Button
+            variant="destructive"
+            onClick={handleDeleteAccount}
+            disabled={deleting}
+          >
+            {deleting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Deleting...
+              </>
+            ) : (
+              <>
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete Account
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete your account, profile, and all associated data including sessions and resources. This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <div className="flex flex-col gap-2 py-2">
-                <Label htmlFor="confirm-delete" className="text-sm text-muted-foreground">
-                  {"Type \"DELETE\" to confirm"}
-                </Label>
-                <Input
-                  id="confirm-delete"
-                  value={confirmText}
-                  onChange={(e) => setConfirmText(e.target.value)}
-                  placeholder="DELETE"
-                  className="font-mono"
-                />
-              </div>
-              <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setConfirmText("")}>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDeleteAccount}
-                  disabled={confirmText !== "DELETE" || deleting}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  {deleting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Deleting...
-                    </>
-                  ) : (
-                    "Delete Account Permanently"
-                  )}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+              </>
+            )}
+          </Button>
         </CardContent>
       </Card>
+
+      {/* Edit Profile Modal */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogDescription>Update your personal information</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Avatar Upload */}
+            <div className="flex flex-col items-center gap-3">
+              <div className="relative">
+                <Avatar className="h-20 w-20 border-2 border-muted">
+                  <AvatarImage src={editAvatarUrl || undefined} alt="Profile" />
+                  <AvatarFallback className="text-xl bg-primary text-primary-foreground">
+                    {getInitials(displayName)}
+                  </AvatarFallback>
+                </Avatar>
+                {uploadingAvatar && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-full">
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1"
+                  disabled={uploadingAvatar}
+                  onClick={() => document.getElementById("avatar-upload")?.click()}
+                >
+                  <Camera className="h-4 w-4" />
+                  {editAvatarUrl ? "Change" : "Upload"}
+                </Button>
+                {editAvatarUrl && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1"
+                    disabled={uploadingAvatar}
+                    onClick={handleRemoveAvatar}
+                  >
+                    <X className="h-4 w-4" />
+                    Remove
+                  </Button>
+                )}
+                <input
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  className="hidden"
+                  onChange={handleAvatarUpload}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">JPEG, PNG, GIF or WebP. Max 5MB.</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="editFirstName">First Name *</Label>
+                <Input
+                  id="editFirstName"
+                  value={editFirstName}
+                  onChange={e => setEditFirstName(e.target.value)}
+                  placeholder="First name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editLastName">Last Name *</Label>
+                <Input
+                  id="editLastName"
+                  value={editLastName}
+                  onChange={e => setEditLastName(e.target.value)}
+                  placeholder="Last name"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="editPhone">Phone Number</Label>
+              <Input
+                id="editPhone"
+                type="tel"
+                value={editPhone}
+                onChange={e => setEditPhone(e.target.value)}
+                placeholder="Enter phone number"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="editBirthdate">Birthday</Label>
+              <Input
+                id="editBirthdate"
+                type="date"
+                value={editBirthdate}
+                onChange={e => setEditBirthdate(e.target.value)}
+              />
+            </div>
+
+            {isTutor && (
+              <div className="space-y-2">
+                <Label htmlFor="editMembershipNumber">Membership Number</Label>
+                <Input
+                  id="editMembershipNumber"
+                  value={editMembershipNumber}
+                  onChange={e => setEditMembershipNumber(e.target.value)}
+                  placeholder="Enter membership number"
+                />
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)} disabled={saving}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveProfile} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Changes"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Tutor Settings Dialog */}
+      <Dialog open={tutorSettingsOpen} onOpenChange={setTutorSettingsOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Tutor Settings</DialogTitle>
+            <DialogDescription>Update your tutoring profile information</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="tutorBio">Bio</Label>
+              <textarea
+                id="tutorBio"
+                value={tutorBio}
+                onChange={e => setTutorBio(e.target.value)}
+                placeholder="Tell students about your teaching experience and approach..."
+                className="w-full min-h-[100px] p-2 border rounded-md border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              />
+              <p className="text-xs text-muted-foreground">Max 500 characters</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
+                <Input
+                  id="hourlyRate"
+                  type="number"
+                  value={hourlyRate || ""}
+                  onChange={e => setHourlyRate(e.target.value ? parseFloat(e.target.value) : null)}
+                  placeholder="25"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="yearsExperience">Years of Experience</Label>
+                <Input
+                  id="yearsExperience"
+                  type="number"
+                  value={yearsExperience || ""}
+                  onChange={e => setYearsExperience(e.target.value ? parseInt(e.target.value) : null)}
+                  placeholder="5"
+                  min="0"
+                  step="1"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Label>Specializations</Label>
+              <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
+                {allSpecializations.map(spec => (
+                  <label key={spec.id} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedSpecializations.includes(spec.id)}
+                      onChange={e => {
+                        if (e.target.checked) {
+                          setSelectedSpecializations([...selectedSpecializations, spec.id]);
+                        } else {
+                          setSelectedSpecializations(
+                            selectedSpecializations.filter(id => id !== spec.id)
+                          );
+                        }
+                      }}
+                      className="rounded border-input"
+                    />
+                    <span className="text-sm">{spec.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTutorSettingsOpen(false)} disabled={savingTutor}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveTutorSettings} disabled={savingTutor}>
+              {savingTutor ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Settings"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

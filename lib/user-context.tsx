@@ -32,12 +32,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setIsAuthenticated(true);
       const { data: p } = await supabase
         .from("profiles")
-        .select("id, email, full_name, avatar_url, role_id, created_at, roles(id, name)")
+        .select("id, email, full_name, first_name, last_name, avatar_url, phone_number, birthdate, date_of_birth, membership_number, role_id, created_at, roles(id, name)")
         .eq("id", user.id)
         .maybeSingle();
-
-      console.log("[v0] Profile data loaded:", p);
-      console.log("[v0] Roles data:", p?.roles);
 
       if (p) {
         setProfile({

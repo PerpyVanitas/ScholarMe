@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
 
     if (authError || !user) {
       return NextResponse.json(
-        createErrorResponse("AUTH_002", "Authentication required"),
+        createErrorResponse("AUTH_002_TOKEN_EXPIRED", "Authentication required"),
         { status: 401 }
       );
     }
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     if (callerError || callerProfile?.roles?.name !== "administrator") {
       return NextResponse.json(
-        createErrorResponse("AUTH_003", "Only administrators can create admin accounts"),
+        createErrorResponse("AUTH_003_ADMIN_ONLY", "Only administrators can create admin accounts"),
         { status: 403 }
       );
     }
@@ -34,14 +34,14 @@ export async function POST(request: NextRequest) {
 
     if (!email || !password || !full_name) {
       return NextResponse.json(
-        createErrorResponse("VALID_001", "Email, password, and full name are required"),
+        createErrorResponse("VALID_001_GENERAL", "Email, password, and full name are required"),
         { status: 400 }
       );
     }
 
     if (password.length < 8) {
       return NextResponse.json(
-        createErrorResponse("VALID_001", "Password must be at least 8 characters"),
+        createErrorResponse("VALID_001_PASSWORD_WEAK", "Password must be at least 8 characters"),
         { status: 400 }
       );
     }
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     if (roleError || !roleRow) {
       return NextResponse.json(
-        createErrorResponse("DB_001", "Could not resolve administrator role"),
+        createErrorResponse("DB_001_NOT_FOUND", "Could not resolve administrator role"),
         { status: 500 }
       );
     }
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
 
     if (existing) {
       return NextResponse.json(
-        createErrorResponse("VALID_001", "An account with this email already exists"),
+        createErrorResponse("VALID_001_EMAIL_EXISTS", "An account with this email already exists"),
         { status: 409 }
       );
     }
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
 
     if (createError || !created?.user) {
       return NextResponse.json(
-        createErrorResponse("SYSTEM_001", createError?.message || "Failed to create user"),
+        createErrorResponse("SYSTEM_001_INTERNAL_ERROR", createError?.message || "Failed to create user"),
         { status: 500 }
       );
     }
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
       // Rollback: delete the auth user
       await adminClient.auth.admin.deleteUser(created.user.id);
       return NextResponse.json(
-        createErrorResponse("DB_001", "Failed to create profile"),
+        createErrorResponse("DB_001_DATA_INTEGRITY_ERROR", "Failed to create profile"),
         { status: 500 }
       );
     }
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error("[v0] create-admin error:", err);
     return NextResponse.json(
-      createErrorResponse("SYSTEM_001", "An unexpected error occurred"),
+      createErrorResponse("SYSTEM_001_UNKNOWN_ERROR", "An unexpected error occurred"),
       { status: 500 }
     );
   }

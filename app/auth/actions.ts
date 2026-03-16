@@ -18,10 +18,25 @@ export async function signUp(formData: FormData) {
   const adminClient = await createAdminClient()
   const email = formData.get("email") as string
   const password = formData.get("password") as string
-  const fullName = formData.get("full_name") as string
+  const firstName = formData.get("first_name") as string
+  const lastName = formData.get("last_name") as string
+  const fullName = `${firstName.trim()} ${lastName.trim()}`
   const phoneNumber = formData.get("phone_number") as string
   const dateOfBirth = formData.get("date_of_birth") as string
   const selectedRole = (formData.get("role") as string) || "learner"
+
+  // Check if phone number is already registered
+  if (phoneNumber) {
+    const { data: existingPhone } = await adminClient
+      .from("profiles")
+      .select("id")
+      .eq("phone_number", phoneNumber)
+      .maybeSingle()
+
+    if (existingPhone) {
+      return { error: "This phone number is already registered. Please use a different number or sign in to your existing account." }
+    }
+  }
 
   const { data: roleRow } = await supabase
     .from("roles")
@@ -35,6 +50,8 @@ export async function signUp(formData: FormData) {
     email_confirm: true,
     user_metadata: {
       full_name: fullName,
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
       phone_number: phoneNumber,
       date_of_birth: dateOfBirth,
       role_id: roleRow?.id,
@@ -49,9 +66,12 @@ export async function signUp(formData: FormData) {
       .upsert({
         id: created.user.id,
         full_name: fullName,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
         email,
         phone_number: phoneNumber,
         date_of_birth: dateOfBirth ? new Date(dateOfBirth).toISOString().split('T')[0] : null,
+        birthdate: dateOfBirth ? new Date(dateOfBirth).toISOString().split('T')[0] : null,
         role_id: roleRow?.id || null,
         terms_accepted_at: new Date().toISOString(),
       }, { onConflict: "id" })

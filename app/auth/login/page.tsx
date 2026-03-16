@@ -1,8 +1,7 @@
 /** Login page -- supports email/password and card-based authentication. */
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,19 +13,13 @@ import { GraduationCap, Mail, CreditCard, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { mapSupabaseErrorToCode, formatErrorForDisplay } from "@/lib/api-errors";
 import { ErrorAlert } from "@/components/ui/error-alert";
+import { LoginInactivityCheck } from "@/components/auth/login-inactivity-check";
 
 export default function LoginPage() {
-  const searchParams = useSearchParams();
   const [emailLoading, setEmailLoading] = useState(false);
   const [cardLoading, setCardLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [cardError, setCardError] = useState("");
-
-  useEffect(() => {
-    if (searchParams.get("reason") === "inactive") {
-      toast.info("You were signed out due to inactivity.");
-    }
-  }, [searchParams]);
 
   async function handleEmailLogin(formData: FormData) {
     setEmailLoading(true);
@@ -73,27 +66,31 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        // API returns standardized error format
-        const errorDisplay = data.error?.code 
-          ? formatErrorForDisplay(data.error)
-          : `[AUTH-001] ${data.error || "Login failed"}`;
-        setCardError(errorDisplay);
-        toast.error(errorDisplay);
+        const msg = res.status === 429
+          ? "Too many attempts. Please wait a moment before trying again."
+          : res.status >= 500
+          ? "A server error occurred. Please try again later."
+          : "Invalid credentials. Please check your Card ID and PIN.";
+        setCardError(msg);
+        toast.error(msg);
       } else {
         toast.success("Welcome back!");
         window.location.href = "/dashboard";
         return;
       }
     } catch {
-      const errorDisplay = "[SYSTEM-001] Internal server error: An unexpected error occurred. Please try again later.";
-      setCardError(errorDisplay);
-      toast.error(errorDisplay);
+      const msg = "Invalid credentials. Please check your Card ID and PIN.";
+      setCardError(msg);
+      toast.error(msg);
     }
     setCardLoading(false);
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <Suspense fallback={null}>
+        <LoginInactivityCheck />
+      </Suspense>
       <div className="flex w-full max-w-md flex-col gap-6">
         <div className="flex flex-col items-center gap-2 text-center">
           <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">

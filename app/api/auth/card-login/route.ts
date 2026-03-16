@@ -9,7 +9,7 @@ export async function POST(request: Request) {
 
     if (!cardId || !pin) {
       return NextResponse.json(
-        createErrorResponse("VALID_001", {
+        createErrorResponse("VALID_001_GENERAL", {
           cardId: !cardId ? "Card ID is required" : "",
           pin: !pin ? "PIN is required" : "",
         }),
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
     if (cardError || !card) {
       return NextResponse.json(
-        createErrorResponse("AUTH_001", "Card ID is invalid or card is inactive"),
+        createErrorResponse("AUTH_001_INVALID_CARD", "Card ID is invalid or card is inactive"),
         { status: 401 }
       );
     }
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     // Compare PIN (stored as plain text for simplicity in this MVP; in production use bcrypt)
     if (card.pin !== pin) {
       return NextResponse.json(
-        createErrorResponse("AUTH_001", "Incorrect PIN"),
+        createErrorResponse("AUTH_001_INVALID_PIN", "Incorrect PIN"),
         { status: 401 }
       );
     }
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
 
     if (authError || !authUser?.user?.email) {
       return NextResponse.json(
-        createErrorResponse("DB_001", "User account not found"),
+        createErrorResponse("DB_001_USER_NOT_FOUND", "User account not found"),
         { status: 404 }
       );
     }
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
 
     if (linkError || !linkData) {
       return NextResponse.json(
-        createErrorResponse("SYSTEM_001", "Failed to generate authentication token"),
+        createErrorResponse("SYSTEM_001_INTERNAL_ERROR", "Failed to generate authentication token"),
         { status: 500 }
       );
     }
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
 
       if (verifyError) {
         return NextResponse.json(
-          createErrorResponse("SYSTEM_001", "Failed to complete authentication"),
+          createErrorResponse("SYSTEM_001_INTERNAL_ERROR", "Failed to complete authentication"),
           { status: 500 }
         );
       }
@@ -96,7 +96,7 @@ export async function POST(request: Request) {
     );
   } catch {
     return NextResponse.json(
-      createErrorResponse("SYSTEM_001", "An unexpected error occurred"),
+      createErrorResponse("SYSTEM_001_UNKNOWN_ERROR", "An unexpected error occurred"),
       { status: 500 }
     );
   }

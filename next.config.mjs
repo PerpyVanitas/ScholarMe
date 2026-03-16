@@ -1,15 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  turbopack: {
+    root: "/vercel/share/v0-next-shadcn",
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
   images: {
     unoptimized: true,
   },
-  // Force rebuild - clear stale turbopack cache
   env: {
-    CACHE_BUST: "v3",
+    CACHE_BUST: "v12",
   },
-}
+};
 
-export default nextConfig
+export default nextConfig;

@@ -1,14 +1,13 @@
-/** Sign-up page -- creates a new learner or tutor account via Supabase Auth. */
+/** Sign-up page -- two-column industry-standard layout with branded left panel. */
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
 import { signUp } from "@/app/auth/actions";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, Loader2, BookOpen, Users, Eye, EyeOff } from "lucide-react";
+import { GraduationCap, Loader2, BookOpen, Users, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -21,13 +20,72 @@ function mapAuthError(msg: string): string {
   return msg || "An unexpected error occurred. Please try again.";
 }
 
+// Validation rules
+const VALIDATORS = {
+  first_name: (v: string) => {
+    if (!v.trim()) return "First name is required.";
+    if (/\d/.test(v)) return "First name must not contain numbers.";
+    if (v.trim().length < 2) return "First name must be at least 2 characters.";
+    return "";
+  },
+  last_name: (v: string) => {
+    if (!v.trim()) return "Last name is required.";
+    if (/\d/.test(v)) return "Last name must not contain numbers.";
+    if (v.trim().length < 2) return "Last name must be at least 2 characters.";
+    return "";
+  },
+  email: (v: string) => {
+    if (!v.trim()) return "Email address is required.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return "Please enter a valid email address (e.g. you@example.com).";
+    return "";
+  },
+  phone_number: (v: string) => {
+    if (!v.trim()) return "Mobile number is required.";
+    const digits = v.replace(/[\s\-().+]/g, "");
+    // Philippine mobile: starts with 09 (11 digits) or +639 (12 digits with country code)
+    const isLocal = /^09\d{9}$/.test(digits);
+    const isIntl = /^639\d{9}$/.test(digits);
+    if (!isLocal && !isIntl) return "Enter a valid Philippine mobile number (e.g. +63 917 123 4567 or 0917 123 4567).";
+    return "";
+  },
+  confirmPassword: (v: string) => {
+    if (!v.trim()) return "Please confirm your password.";
+    return "";
+  },
+  date_of_birth: (v: string) => {
+    if (!v) return "Date of birth is required.";
+    const dob = new Date(v);
+    if (isNaN(dob.getTime())) return "Please enter a valid date.";
+    if (dob > new Date()) return "Date of birth cannot be in the future.";
+    const now = new Date();
+    let age = now.getFullYear() - dob.getFullYear();
+    if (now.getMonth() < dob.getMonth() || (now.getMonth() === dob.getMonth() && now.getDate() < dob.getDate())) age--;
+    if (age < 13) return "You must be at least 13 years old to register.";
+    if (age > 120) return "Please enter a valid date of birth.";
+    return "";
+  },
+  password: (v: string) => {
+    if (!v) return "Password is required.";
+    if (v.length < 8) return "Password must be at least 8 characters.";
+    return "";
+  },
+};
+
+const FEATURES = [
+  "Connect with verified expert tutors",
+  "Book and manage sessions with ease",
+  "Access shared learning resources",
+  "Track your progress over time",
+];
+
 export default function SignUpPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedRole, setSelectedRole] = useState<"learner" | "tutor">("learner");
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    full_name: "",
+    first_name: "",
+    last_name: "",
     email: "",
     phone_number: "",
     date_of_birth: "",
@@ -36,15 +94,34 @@ export default function SignUpPage() {
     terms_accepted: false,
   });
   const [passwordMatch, setPasswordMatch] = useState(true);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  function validateField(name: keyof typeof VALIDATORS, value: string) {
+    const err = VALIDATORS[name]?.(value) ?? "";
+    setFieldErrors((prev) => ({ ...prev, [name]: err }));
+    return err;
+  }
+
+  function validateAll(): boolean {
+    const errors: Record<string, string> = {};
+    (Object.keys(VALIDATORS) as Array<keyof typeof VALIDATORS>).forEach((k) => {
+      const val = formData[k as keyof typeof formData] as string;
+      errors[k] = VALIDATORS[k](val);
+    });
+    if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = "Passwords do not match.";
+    }
+    setFieldErrors(errors);
+    return Object.values(errors).every((e) => !e);
+  }
 
   async function handleSignUp(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
 
-    if (formData.password !== formData.confirmPassword) {
-      setPasswordMatch(false);
-      setError("Passwords do not match.");
-      toast.error("Passwords do not match.");
+    if (!validateAll()) {
+      setError("Please fix the errors above before continuing.");
+      toast.error("Please fix the highlighted fields.");
       return;
     }
 
@@ -54,23 +131,12 @@ export default function SignUpPage() {
       return;
     }
 
-    if (formData.date_of_birth) {
-      const dob = new Date(formData.date_of_birth);
-      const now = new Date();
-      let age = now.getFullYear() - dob.getFullYear();
-      if (now.getMonth() < dob.getMonth() || (now.getMonth() === dob.getMonth() && now.getDate() < dob.getDate())) age--;
-      if (age < 13) {
-        setError("You must be at least 13 years old to create an account.");
-        toast.error("You must be at least 13 years old.");
-        return;
-      }
-    }
-
     setLoading(true);
     const fd = new FormData();
     fd.set("email", formData.email);
     fd.set("password", formData.password);
-    fd.set("full_name", formData.full_name);
+    fd.set("first_name", formData.first_name);
+    fd.set("last_name", formData.last_name);
     fd.set("phone_number", formData.phone_number);
     fd.set("date_of_birth", formData.date_of_birth);
     fd.set("role", selectedRole);
@@ -87,152 +153,289 @@ export default function SignUpPage() {
     window.location.href = "/auth/setup-profile";
   }
 
+  const passwordStrength = (() => {
+    const p = formData.password;
+    if (!p) return 0;
+    let score = 0;
+    if (p.length >= 8) score++;
+    if (/[A-Z]/.test(p)) score++;
+    if (/[0-9]/.test(p)) score++;
+    if (/[^A-Za-z0-9]/.test(p)) score++;
+    return score;
+  })();
+
+  const strengthLabel = ["", "Weak", "Fair", "Good", "Strong"][passwordStrength];
+  const strengthColor = ["", "bg-red-500", "bg-amber-400", "bg-blue-500", "bg-emerald-500"][passwordStrength];
+  const strengthTextColor = ["", "text-red-500", "text-amber-400", "text-blue-500", "text-emerald-500"][passwordStrength];
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="flex w-full max-w-md flex-col gap-6">
-        <div className="flex flex-col items-center gap-2 text-center">
-          <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-              <GraduationCap className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">ScholarMe</h1>
-          </Link>
-          <p className="text-sm text-muted-foreground">Create your tutoring account</p>
+    <div className="flex min-h-screen">
+      {/* Left branded panel — hidden on small screens */}
+      <div className="hidden lg:flex lg:w-[42%] xl:w-[38%] flex-col justify-between bg-sidebar p-10 text-sidebar-foreground">
+        <Link href="/" className="flex items-center gap-2.5 w-fit">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-accent">
+            <GraduationCap className="h-5 w-5 text-sidebar-accent-foreground" />
+          </div>
+          <span className="text-xl font-bold tracking-tight">ScholarMe</span>
+        </Link>
+
+        <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-3">
+            <p className="text-sm font-semibold uppercase tracking-widest text-sidebar-foreground/55">Join thousands of learners</p>
+            <h2 className="text-4xl font-bold leading-tight text-balance">
+              Start your learning journey today
+            </h2>
+            <p className="text-base leading-relaxed text-sidebar-foreground/70">
+              ScholarMe connects students with expert tutors for personalized, flexible learning — on your schedule.
+            </p>
+          </div>
+
+          <ul className="flex flex-col gap-3">
+            {FEATURES.map((f) => (
+              <li key={f} className="flex items-center gap-3 text-sm text-sidebar-foreground/80">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-accent" />
+                {f}
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <Card className="border-border/60 shadow-lg">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg">Sign Up</CardTitle>
-            <CardDescription>Enter your details to create an account</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSignUp} className="flex flex-col gap-4">
-              {/* Role selector */}
-              <div className="flex flex-col gap-2">
-                <Label>I want to join as</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  {(["learner", "tutor"] as const).map((r) => (
-                    <button
-                      key={r}
-                      type="button"
-                      onClick={() => setSelectedRole(r)}
-                      className={cn(
-                        "flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all",
-                        selectedRole === r
-                          ? "border-primary bg-primary/5 shadow-sm"
-                          : "border-border hover:border-primary/40"
-                      )}
-                    >
-                      {r === "learner"
-                        ? <BookOpen className={cn("h-6 w-6", selectedRole === r ? "text-primary" : "text-muted-foreground")} />
-                        : <Users className={cn("h-6 w-6", selectedRole === r ? "text-primary" : "text-muted-foreground")} />
-                      }
-                      <span className={cn("text-sm font-medium", selectedRole === r ? "text-primary" : "text-foreground")}>
-                        {r === "learner" ? "Learner" : "Tutor"}
-                      </span>
-                      <span className="text-[11px] leading-tight text-muted-foreground text-center">
-                        {r === "learner" ? "Browse tutors and book sessions" : "Teach others and share resources"}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="full_name">Full Name <span className="text-destructive">*</span></Label>
-                <Input id="full_name" type="text" placeholder="Jane Doe" required autoComplete="name"
-                  value={formData.full_name} onChange={(e) => setFormData({ ...formData, full_name: e.target.value })} />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="email">Email <span className="text-destructive">*</span></Label>
-                <Input id="email" type="email" placeholder="you@example.com" required autoComplete="email"
-                  value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="phone_number">Phone Number</Label>
-                <Input id="phone_number" type="tel" placeholder="+1 (555) 000-0000" autoComplete="tel"
-                  value={formData.phone_number} onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })} />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="date_of_birth">Date of Birth <span className="text-destructive">*</span></Label>
-                <Input id="date_of_birth" type="date" required
-                  value={formData.date_of_birth} onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })} />
-                <p className="text-xs text-muted-foreground">Must be at least 13 years old</p>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="password">Password <span className="text-destructive">*</span></Label>
-                <div className="relative">
-                  <Input id="password" type={showPassword ? "text" : "password"}
-                    placeholder="Min. 8 characters" required minLength={8} autoComplete="new-password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className={cn("pr-10", !passwordMatch && "border-destructive")} />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="confirmPassword">Confirm Password <span className="text-destructive">*</span></Label>
-                <div className="relative">
-                  <Input id="confirmPassword" type={showPassword ? "text" : "password"}
-                    placeholder="Repeat your password" required minLength={8} autoComplete="new-password"
-                    value={formData.confirmPassword}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setFormData({ ...formData, confirmPassword: val });
-                      setPasswordMatch(val === formData.password);
-                    }}
-                    className={cn("pr-10", !passwordMatch && "border-destructive")} />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                {!passwordMatch && <p className="text-xs text-destructive">Passwords do not match</p>}
-              </div>
-
-              <div className="flex items-start gap-2">
-                <input type="checkbox" id="terms" required
-                  checked={formData.terms_accepted}
-                  onChange={(e) => setFormData({ ...formData, terms_accepted: e.target.checked })}
-                  className="mt-1 h-4 w-4 rounded border-border accent-primary" />
-                <Label htmlFor="terms" className="text-xs leading-relaxed font-normal cursor-pointer">
-                  I agree to the{" "}
-                  <Link href="/terms" className="text-primary underline hover:no-underline">Terms of Service</Link>
-                  {" "}and{" "}
-                  <Link href="/privacy" className="text-primary underline hover:no-underline">Privacy Policy</Link>
-                  {" "}<span className="text-destructive">*</span>
-                </Label>
-              </div>
-
-              {error && (
-                <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3">
-                  <p className="text-sm text-destructive">{error}</p>
-                </div>
-              )}
-
-              <Button type="submit" className="w-full" disabled={loading || !formData.terms_accepted}>
-                {loading ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating account...</>
-                ) : "Create Account"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        <p className="text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
-          <Link href="/auth/login" className="font-medium text-primary underline-offset-4 hover:underline">
-            Sign in
-          </Link>
+        <p className="text-xs text-sidebar-foreground/35">
+          &copy; {new Date().getFullYear()} ScholarMe. All rights reserved.
         </p>
+      </div>
+
+      {/* Right form panel */}
+      <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto bg-background px-6 py-10">
+        {/* Mobile logo */}
+        <div className="mb-6 flex lg:hidden items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+            <GraduationCap className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <span className="text-xl font-bold tracking-tight text-foreground">ScholarMe</span>
+        </div>
+
+        <div className="w-full max-w-md">
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Create an account</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Already have one?{" "}
+              <Link href="/auth/login" className="font-medium text-primary hover:underline underline-offset-4">
+                Sign in
+              </Link>
+            </p>
+          </div>
+
+          <form onSubmit={handleSignUp} className="flex flex-col gap-5">
+            {/* Role selector */}
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm font-medium">I want to join as</Label>
+              <div className="grid grid-cols-2 gap-3">
+                {(["learner", "tutor"] as const).map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setSelectedRole(r)}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg border-2 p-3.5 text-left transition-all",
+                      selectedRole === r
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/40 bg-card"
+                    )}
+                  >
+                    <div className={cn(
+                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-md",
+                      selectedRole === r ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                    )}>
+                      {r === "learner"
+                        ? <BookOpen className="h-4 w-4" />
+                        : <Users className="h-4 w-4" />
+                      }
+                    </div>
+                    <div>
+                      <p className={cn("text-sm font-semibold", selectedRole === r ? "text-primary" : "text-foreground")}>
+                        {r === "learner" ? "Learner" : "Tutor"}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground leading-snug">
+                        {r === "learner" ? "Find & book tutors" : "Teach & earn"}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* First Name and Last Name side by side */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="first_name">First Name <span className="text-destructive">*</span></Label>
+                <Input
+                  id="first_name" type="text" placeholder="Maria" required autoComplete="given-name"
+                  value={formData.first_name}
+                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                  onBlur={(e) => validateField("first_name", e.target.value)}
+                  className={cn(fieldErrors.first_name && "border-destructive focus-visible:ring-destructive")}
+                />
+                {fieldErrors.first_name && <p className="text-xs text-destructive">{fieldErrors.first_name}</p>}
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="last_name">Last Name <span className="text-destructive">*</span></Label>
+                <Input
+                  id="last_name" type="text" placeholder="Santos" required autoComplete="family-name"
+                  value={formData.last_name}
+                  onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                  onBlur={(e) => validateField("last_name", e.target.value)}
+                  className={cn(fieldErrors.last_name && "border-destructive focus-visible:ring-destructive")}
+                />
+                {fieldErrors.last_name && <p className="text-xs text-destructive">{fieldErrors.last_name}</p>}
+              </div>
+            </div>
+
+            {/* Email */}
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="email">Email Address <span className="text-destructive">*</span></Label>
+              <Input
+                id="email" type="text" placeholder="you@example.com" required autoComplete="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onBlur={(e) => validateField("email", e.target.value)}
+                className={cn(fieldErrors.email && "border-destructive focus-visible:ring-destructive")}
+              />
+              {fieldErrors.email && <p className="text-xs text-destructive">{fieldErrors.email}</p>}
+            </div>
+
+            {/* Phone + DOB side by side */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="phone_number">Mobile Number <span className="text-destructive">*</span></Label>
+                <Input
+                  id="phone_number" type="tel" placeholder="+63 917 123 4567" autoComplete="tel"
+                  value={formData.phone_number}
+                  onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                  onBlur={(e) => validateField("phone_number", e.target.value)}
+                  className={cn(fieldErrors.phone_number && "border-destructive focus-visible:ring-destructive")}
+                />
+                {fieldErrors.phone_number && <p className="text-xs text-destructive">{fieldErrors.phone_number}</p>}
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="date_of_birth">Date of Birth <span className="text-destructive">*</span></Label>
+                <Input
+                  id="date_of_birth" type="date" required
+                  value={formData.date_of_birth}
+                  onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}
+                  onBlur={(e) => validateField("date_of_birth", e.target.value)}
+                  className={cn(fieldErrors.date_of_birth && "border-destructive focus-visible:ring-destructive")}
+                />
+                {fieldErrors.date_of_birth && <p className="text-xs text-destructive">{fieldErrors.date_of_birth}</p>}
+              </div>
+            </div>
+
+            {/* Password */}
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="password">Password <span className="text-destructive">*</span></Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Min. 8 characters"
+                  required minLength={8} autoComplete="new-password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  onBlur={(e) => validateField("password", e.target.value)}
+                  className={cn("pr-10", fieldErrors.password && "border-destructive focus-visible:ring-destructive")}
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {fieldErrors.password && <p className="text-xs text-destructive mt-1">{fieldErrors.password}</p>}
+              {/* Password strength bar — always visible while typing */}
+              <div className={cn("mt-1 transition-all", formData.password ? "opacity-100" : "opacity-0 pointer-events-none")}>
+                <div className="flex items-center gap-2">
+                  <div className="flex flex-1 gap-1">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className={cn(
+                        "h-1.5 flex-1 rounded-full transition-all duration-300",
+                        formData.password && i <= passwordStrength ? strengthColor : "bg-border"
+                      )} />
+                    ))}
+                  </div>
+                  <span className={cn("text-xs font-medium w-10 text-right transition-colors", strengthTextColor)}>
+                    {formData.password ? strengthLabel : ""}
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Use 8+ characters with uppercase, numbers, and symbols for a strong password.
+                </p>
+              </div>
+            </div>
+
+            {/* Confirm Password */}
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="confirmPassword">Confirm Password <span className="text-destructive">*</span></Label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Repeat your password"
+                  required minLength={8} autoComplete="new-password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData({ ...formData, confirmPassword: val });
+                    const match = val === formData.password || val === "";
+                    setPasswordMatch(match);
+                    if (!match) setFieldErrors((prev) => ({ ...prev, confirmPassword: "Passwords do not match." }));
+                    else setFieldErrors((prev) => ({ ...prev, confirmPassword: "" }));
+                  }}
+                  className={cn("pr-10", (formData.confirmPassword && !passwordMatch) || fieldErrors.confirmPassword ? "border-destructive focus-visible:ring-destructive" : "")}
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {(fieldErrors.confirmPassword || (formData.confirmPassword && !passwordMatch)) && (
+                <p className="text-xs text-destructive">{fieldErrors.confirmPassword || "Passwords do not match."}</p>
+              )}
+            </div>
+
+            {/* Terms */}
+            <div className="flex items-start gap-2.5">
+              <input
+                type="checkbox" id="terms" required
+                checked={formData.terms_accepted}
+                onChange={(e) => setFormData({ ...formData, terms_accepted: e.target.checked })}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-primary"
+              />
+              <Label htmlFor="terms" className="text-xs leading-relaxed font-normal cursor-pointer text-muted-foreground">
+                I agree to the{" "}
+                <Link href="/terms" className="text-foreground underline hover:no-underline">Terms of Service</Link>
+                {" "}and{" "}
+                <Link href="/privacy" className="text-foreground underline hover:no-underline">Privacy Policy</Link>
+                <span className="text-destructive"> *</span>
+              </Label>
+            </div>
+
+            {error && (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3">
+                <p className="text-sm text-destructive">{error}</p>
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full h-11 text-sm font-semibold"
+              disabled={loading || !formData.terms_accepted}
+            >
+              {loading
+                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating account...</>
+                : "Create Account"
+              }
+            </Button>
+          </form>
+        </div>
       </div>
     </div>
   );

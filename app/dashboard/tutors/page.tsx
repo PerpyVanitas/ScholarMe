@@ -114,18 +114,19 @@ export default function TutorsPage() {
               ) || [];
 
             return (
-              <Card key={tutor.id} className="border-border/60 hover:border-primary/30 transition-colors">
-                <CardContent className="flex flex-col gap-4 p-5">
+              <Card key={tutor.id} className="border-border/60 hover:border-primary/30 transition-colors flex flex-col h-full">
+                <CardContent className="flex flex-col gap-4 p-5 flex-1">
+                  {/* Header Section - Fixed Height */}
                   <div className="flex items-center gap-3">
                     <Avatar className="h-12 w-12">
                       <AvatarFallback className="bg-primary/10 text-primary">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-foreground">{name}</span>
+                    <div className="flex flex-col flex-1">
+                      <span className="font-semibold text-foreground line-clamp-1">{name}</span>
                       <div className="flex items-center gap-1">
-                        <Star className="h-3.5 w-3.5 fill-accent text-accent" />
+                        <Star className="h-3.5 w-3.5 fill-accent text-accent flex-shrink-0" />
                         <span className="text-sm text-muted-foreground">
                           {tutor.rating > 0 ? tutor.rating.toFixed(1) : "New"}{" "}
                           {tutor.total_ratings > 0 && `(${tutor.total_ratings})`}
@@ -133,22 +134,38 @@ export default function TutorsPage() {
                       </div>
                     </div>
                   </div>
-                  {tutor.bio && (
-                    <p className="text-sm text-muted-foreground line-clamp-2">{tutor.bio}</p>
-                  )}
-                  {specs.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {specs.map((s: string) => (
-                        <Badge key={s} variant="secondary" className="text-xs">
-                          {s}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                  <Button asChild size="sm" className="mt-auto">
+
+                  {/* Bio Section - Fixed Height */}
+                  <div className="h-10 flex items-start">
+                    {tutor.bio ? (
+                      <p className="text-sm text-muted-foreground line-clamp-2">{tutor.bio}</p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground/50 italic">No bio available</p>
+                    )}
+                  </div>
+
+                  {/* Specializations Section - Flexible Height */}
+                  <div className="flex-1 flex flex-col">
+                    {specs.length > 0 ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        {specs.map((s: string) => (
+                          <Badge key={s} variant="secondary" className="text-xs">
+                            {s}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground/50">No specializations listed</p>
+                    )}
+                  </div>
+                </CardContent>
+
+                {/* Button Section - Fixed to Bottom */}
+                <div className="px-5 pb-5">
+                  <Button asChild size="sm" className="w-full">
                     <Link href={`/d/tutors/${tutor.id}`}>View Profile</Link>
                   </Button>
-                </CardContent>
+                </div>
               </Card>
             );
           })}

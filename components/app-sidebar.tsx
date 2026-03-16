@@ -17,7 +17,7 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -109,6 +109,15 @@ export function AppSidebar({ profile, role, notificationCount }: AppSidebarProps
         .slice(0, 2)
     : "?";
 
+  // Get display URL for avatar (handles private blob pathnames)
+  const getAvatarUrl = (avatarUrl: string | null | undefined) => {
+    if (!avatarUrl) return undefined;
+    if (avatarUrl.startsWith("avatars/")) {
+      return `/api/avatar?pathname=${encodeURIComponent(avatarUrl)}`;
+    }
+    return avatarUrl;
+  };
+
   return (
     <Sidebar>
       <SidebarHeader>
@@ -181,6 +190,7 @@ export function AppSidebar({ profile, role, notificationCount }: AppSidebarProps
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton size="lg">
                   <Avatar className="h-8 w-8">
+                    <AvatarImage src={getAvatarUrl(profile?.avatar_url)} alt={profile?.full_name || "User"} />
                     <AvatarFallback className="bg-primary/10 text-primary text-xs">
                       {initials}
                     </AvatarFallback>

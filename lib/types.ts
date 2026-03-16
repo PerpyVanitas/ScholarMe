@@ -9,12 +9,17 @@ export interface Role {
 
 export interface Profile {
   id: string
-  role_id: string
+  role_id: string | null
   full_name: string
+  first_name?: string | null
+  last_name?: string | null
   email: string
   avatar_url: string | null
   phone_number?: string | null
+  birthdate?: string | null
   date_of_birth?: string | null
+  membership_number?: string | null
+  profile_completed?: boolean | null
   terms_accepted_at?: string | null
   created_at: string
   roles?: Role
