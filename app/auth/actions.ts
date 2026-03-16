@@ -88,6 +88,27 @@ export async function signUp(formData: FormData) {
 
 export async function signOut() {
   const supabase = await createClient()
+  
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  // If user is clocked in, automatically clock them out
+  if (user) {
+    const { data: openEntry } = await supabase
+      .from("timesheets")
+      .select("id")
+      .eq("user_id", user.id)
+      .is("clock_out", null)
+      .maybeSingle()
+    
+    if (openEntry) {
+      await supabase
+        .from("timesheets")
+        .update({ clock_out: new Date().toISOString() })
+        .eq("id", openEntry.id)
+    }
+  }
+  
   await supabase.auth.signOut()
   redirect("/")
 }

@@ -23,9 +23,9 @@ function formatDuration(mins: number) {
   return `${h}h ${m}m`;
 }
 
-function calcMinutes(clockIn: string, clockOut: string | null) {
+function calcMinutes(clockIn: string, clockOut: string | null, nowTime: number = Date.now()) {
   const start = new Date(clockIn).getTime();
-  const end = clockOut ? new Date(clockOut).getTime() : Date.now();
+  const end = clockOut ? new Date(clockOut).getTime() : nowTime;
   return Math.max(0, (end - start) / 60000);
 }
 
@@ -44,18 +44,35 @@ function fmtTime(d: string) {
 }
 
 export default function TimesheetPage() {
-  const { data: entries, mutate, isLoading } = useSWR<Timesheet[]>("/api/timesheets", fetcher, { refreshInterval: 30000 });
+  const { data: entries, mutate, isLoading } = useSWR<Timesheet[]>("/api/timesheets", fetcher, { refreshInterval: 5000 });
   const [clockLoading, setClockLoading] = useState(false);
   const [now, setNow] = useState(Date.now());
+  const [serverTimeOffset, setServerTimeOffset] = useState(0);
 
   const safeEntries = Array.isArray(entries) ? entries : [];
   const openEntry = safeEntries.find((e) => !e.clock_out);
   const isClockedIn = !!openEntry;
 
-  // Live timer tick every second when clocked in
+  // Calculate server time offset on mount and when entries change
+  useEffect(() => {
+    if (openEntry) {
+      // Use server clock_in time to calculate offset
+      const serverTime = new Date(openEntry.clock_in).getTime();
+      const clientTime = Date.now();
+      // Don't set offset if it's too far off (more than 5 seconds)
+      const diff = Math.abs(clientTime - serverTime);
+      if (diff < 5000) {
+        setServerTimeOffset(serverTime - clientTime + 1000); // Add 1s since we just clocked in
+      }
+    }
+  }, [openEntry]);
+
+  // Live timer tick every second when clocked in (synchronized with server)
   useEffect(() => {
     if (!isClockedIn) return;
-    const t = setInterval(() => setNow(Date.now()), 1000);
+    const t = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
     return () => clearInterval(t);
   }, [isClockedIn]);
 
@@ -77,7 +94,7 @@ export default function TimesheetPage() {
   }
 
   const completedEntries = safeEntries.filter((e) => e.clock_out);
-  const totalMinutes = completedEntries.reduce((sum, e) => sum + calcMinutes(e.clock_in, e.clock_out), 0);
+  const totalMinutes = completedEntries.reduce((sum, e) => sum + calcMinutes(e.clock_in, e.clock_out, now), 0);
   const totalHours = totalMinutes / 60;
 
   return (
@@ -100,7 +117,7 @@ export default function TimesheetPage() {
               </span>
               {isClockedIn && openEntry && (
                 <span className="text-sm text-muted-foreground font-mono">
-                  Elapsed: {formatDuration(calcMinutes(openEntry.clock_in, null))}
+                  Elapsed: {formatDuration(calcMinutes(openEntry.clock_in, null, now))}
                 </span>
               )}
             </div>
@@ -184,7 +201,7 @@ export default function TimesheetPage() {
                 </thead>
                 <tbody>
                   {safeEntries.map((entry) => {
-                    const mins = calcMinutes(entry.clock_in, entry.clock_out);
+                    const mins = calcMinutes(entry.clock_in, entry.clock_out, now);
                     return (
                       <tr key={entry.id} className="border-b border-border/30">
                         <td className="py-3 pr-4 text-foreground">

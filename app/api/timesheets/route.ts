@@ -27,7 +27,7 @@ export async function POST(req: Request) {
   const { data: tutor } = await supabase
     .from("tutors")
     .select("id")
-    .eq("user_id", user.id)
+    .eq("profile_id", user.id)
     .maybeSingle();
 
   if (!tutor) return NextResponse.json({ error: "Tutor profile not found" }, { status: 404 });
@@ -43,9 +43,14 @@ export async function POST(req: Request) {
 
     if (open) return NextResponse.json({ error: "Already clocked in" }, { status: 400 });
 
+    // Use server-side NOW() for accurate timestamp
     const { data, error } = await supabase
       .from("timesheets")
-      .insert({ tutor_id: tutor.id, user_id: user.id })
+      .insert({ 
+        tutor_id: tutor.id, 
+        user_id: user.id,
+        clock_in: new Date().toISOString()
+      })
       .select()
       .single();
 
@@ -56,13 +61,14 @@ export async function POST(req: Request) {
   if (action === "clock_out") {
     const { data: open } = await supabase
       .from("timesheets")
-      .select("id")
+      .select("*")
       .eq("user_id", user.id)
       .is("clock_out", null)
       .maybeSingle();
 
     if (!open) return NextResponse.json({ error: "Not clocked in" }, { status: 400 });
 
+    // Use server-side NOW() for accurate timestamp
     const { data, error } = await supabase
       .from("timesheets")
       .update({ clock_out: new Date().toISOString() })
