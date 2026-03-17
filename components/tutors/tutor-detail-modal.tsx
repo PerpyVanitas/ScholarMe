@@ -88,6 +88,11 @@ export function TutorDetailModal({ open, onOpenChange, tutor }: TutorDetailModal
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
+          <DialogTitle className="sr-only">Tutor Profile</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Header with Avatar and Name */}
           <div className="flex items-start gap-4">
             <Avatar className="h-16 w-16">
               <AvatarImage src={getAvatarUrl(tutor.profiles.avatar_url)} alt={tutor.profiles.full_name} />
@@ -161,7 +166,7 @@ export function TutorDetailModal({ open, onOpenChange, tutor }: TutorDetailModal
           </div>
 
           {/* Actions */}
-          <div className="space-y-2 pt-2 flex flex-col gap-2">
+          <div className="space-y-2 flex flex-col gap-2">
             <Button asChild className="w-full">
               <Link href={`/dashboard/book-session?tutor=${tutor.id}`}>
                 <BookOpen className="mr-2 h-4 w-4" />
@@ -176,7 +181,7 @@ export function TutorDetailModal({ open, onOpenChange, tutor }: TutorDetailModal
               </Button>
             )}
           </div>
-        </DialogHeader>
+        </div>
       </DialogContent>
     </Dialog>
   );
