@@ -176,7 +176,7 @@ export function TutorDetailModal({ open, onOpenChange, tutor }: TutorDetailModal
               </Button>
             )}
           </div>
-        </div>
+        </DialogHeader>
       </DialogContent>
     </Dialog>
   );
