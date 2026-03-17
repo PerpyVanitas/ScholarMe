@@ -38,7 +38,6 @@ import {
   ChevronRight,
 } from "lucide-react"
 import { toast } from "sonner"
-import { getDemoUserFromCookie } from "@/lib/demo"
 import type { UserRole } from "@/lib/types"
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!

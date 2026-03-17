@@ -86,18 +86,12 @@ export function TutorDetailModal({ open, onOpenChange, tutor }: TutorDetailModal
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Tutor Profile</DialogTitle>
-          <DialogDescription>View tutor details and book a session</DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-6 py-4">
-          {/* Profile Header */}
           <div className="flex items-start gap-4">
-            <Avatar className="h-16 w-16 border-2 border-border">
+            <Avatar className="h-16 w-16">
               <AvatarImage src={getAvatarUrl(tutor.profiles.avatar_url)} alt={tutor.profiles.full_name} />
-              <AvatarFallback className="bg-primary/10 text-primary text-lg">
+              <AvatarFallback className="text-lg bg-primary/10 text-primary">
                 {initials}
               </AvatarFallback>
             </Avatar>

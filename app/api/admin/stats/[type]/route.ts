@@ -8,6 +8,23 @@ export async function GET(
   const { type } = await params
   const supabase = await createAdminClient()
 
+  // Verify user is authenticated
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  // Verify user is admin
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role_id, roles(name)")
+    .eq("id", user.id)
+    .single()
+
+  if (!profile || profile.roles?.name !== "admin") {
+    return NextResponse.json({ error: "Access denied - admin only" }, { status: 403 })
+  }
+
   try {
     if (type === "users") {
       const { data, error } = await supabase
@@ -34,7 +51,7 @@ export async function GET(
     if (type === "sessions") {
       const { data, error } = await supabase
         .from("sessions")
-        .select("id, scheduled_date, start_time, end_time, status, notes, tutors(profiles(full_name)), learner_profile:profiles!sessions_learner_id_fkey(full_name), specializations(name)")
+        .select("id, scheduled_date, start_time, end_time, status, notes, tutor_id, learner_id, specialization_id")
         .order("scheduled_date", { ascending: false })
         .limit(50)
 
@@ -45,7 +62,7 @@ export async function GET(
     if (type === "pending") {
       const { data, error } = await supabase
         .from("sessions")
-        .select("id, scheduled_date, start_time, end_time, status, notes, tutors(profiles(full_name)), learner_profile:profiles!sessions_learner_id_fkey(full_name), specializations(name)")
+        .select("id, scheduled_date, start_time, end_time, status, notes, tutor_id, learner_id, specialization_id")
         .eq("status", "pending")
         .order("scheduled_date", { ascending: false })
         .limit(50)
