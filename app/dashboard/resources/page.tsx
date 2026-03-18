@@ -36,11 +36,8 @@ import {
   Search,
   ChevronDown,
   ChevronRight,
-  Sparkles,
 } from "lucide-react"
 import { toast } from "sonner"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
 import type { UserRole } from "@/lib/types"
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -333,45 +330,6 @@ export default function ResourcesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Quick Access to Study Sets */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Link href="/dashboard/study-generator">
-          <Card className="cursor-pointer hover:border-primary/50 transition-colors h-full">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                Create Study Set
-              </CardTitle>
-              <CardDescription>Generate flashcards and quizzes from content</CardDescription>
-            </CardHeader>
-          </Card>
-        </Link>
-
-        <Link href="/dashboard/study-sets">
-          <Card className="cursor-pointer hover:border-primary/50 transition-colors h-full">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-primary" />
-                My Study Sets
-              </CardTitle>
-              <CardDescription>Create and manage flashcards, quizzes, and study materials powered by AI</CardDescription>
-            </CardHeader>
-          </Card>
-        </Link>
-
-        <Link href="/dashboard/study-sets?shared=true">
-          <Card className="cursor-pointer hover:border-primary/50 transition-colors h-full">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-primary" />
-                Shared Study Sets
-              </CardTitle>
-              <CardDescription>Study materials shared by other users</CardDescription>
-            </CardHeader>
-          </Card>
-        </Link>
-      </div>
-
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
