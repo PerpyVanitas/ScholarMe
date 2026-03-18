@@ -1,4 +1,4 @@
-/** Root middleware -- delegates to Supabase session refresh. */
+/** Root proxy -- delegates to Supabase session refresh. */
 import { updateSession } from "@/lib/supabase/middleware"
 import { type NextRequest } from "next/server"
 
