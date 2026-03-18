@@ -42,6 +42,7 @@ import {
   Clock,
   Timer,
   Vote,
+  Lightbulb,
 } from "lucide-react";
 import { signOut } from "@/app/auth/actions";
 
@@ -63,6 +64,7 @@ function getNavItems(role: UserRole) {
     { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
     { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
     { title: "Resources", href: "/dashboard/resources", icon: BookOpen },
+    { title: "Study Quizzes", href: "/dashboard/quizzes", icon: Lightbulb },
   ];
 
   const tutorItems = [
