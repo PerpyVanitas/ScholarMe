@@ -66,13 +66,14 @@ A full-stack tutoring management platform built with **Next.js 16**, **Supabase*
 
 | Layer        | Technology                                                       |
 | ------------ | ---------------------------------------------------------------- |
-| Framework    | [Next.js 16](https://nextjs.org) (App Router, React 19)         |
-| Database     | [Supabase](https://supabase.com) (PostgreSQL + Auth + RLS)      |
+| Backend API  | [Spring Boot 3.x](https://spring.io/projects/spring-boot) (Java 17, JPA, JWT) |
+| Web Frontend | [Next.js 16](https://nextjs.org) (App Router, React 19)         |
+| Database     | [PostgreSQL 14+](https://www.postgresql.org/) via Supabase      |
 | UI           | [shadcn/ui](https://ui.shadcn.com) + [Tailwind CSS v4](https://tailwindcss.com) |
 | Charts       | [Recharts](https://recharts.org)                                 |
 | Theming      | [next-themes](https://github.com/pacocoursey/next-themes)       |
 | Icons        | [Lucide React](https://lucide.dev)                              |
-| Deployment   | [Vercel](https://vercel.com)                                    |
+| Deployment   | Railway/Heroku (Backend), Vercel (Web), APK (Mobile)            |
 | Mobile (RN)  | [React Native](https://reactnative.dev) + [Expo Router](https://expo.github.io/router/) |
 | Mobile (Native) | Kotlin + MVVM + Retrofit (Android)                           |
 | Architecture | Vertical Slicing (feature-based modules)                         |
@@ -136,7 +137,7 @@ The codebase follows **vertical slicing architecture** where features are self-c
 ├── android/                            # Native Android app (Kotlin)
 │   ├── app/src/main/java/com/scholarme/
 │   │   ├── core/                       # Shared utilities
-│   │   │   ├── data/local/             # TokenManager (encrypted storage)
+│   │   ��   ├── data/local/             # TokenManager (encrypted storage)
 │   │   │   ├── data/model/             # API request/response models
 │   │   │   ├── data/remote/            # ApiService, ApiClient
 │   │   │   └── util/                   # Result wrapper
@@ -145,6 +146,16 @@ The codebase follows **vertical slicing architecture** where features are self-c
 │   │       ├── dashboard/              # Dashboard screen
 │   │       └── profile/                # Profile, UpdateProfile, ChangePassword
 │   └── app/src/main/res/               # XML layouts, drawables, themes
+│
+├── backend/                            # Spring Boot 3.x API (Java 17)
+│   ├── src/main/java/com/scholarme/
+│   │   ├── controller/                 # REST controllers (/api/v1/*)
+│   │   ├── entity/                     # JPA entities
+│   │   ├── repository/                 # Spring Data JPA repositories
+│   │   ├── service/                    # Business logic services
+│   │   ├── security/                   # JWT authentication
+│   │   └── dto/                        # Data transfer objects
+│   └── pom.xml                         # Maven configuration
 │
 ├── mobile/                             # React Native / Expo mobile app
 │
