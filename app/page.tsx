@@ -43,7 +43,7 @@ export default async function HomePage() {
           </a>
         </nav>
         <Button asChild>
-          <Link href={isLoggedIn ? "/panel" : "/auth/login"}>
+          <Link href={isLoggedIn ? "/dashboard" : "/auth/login"}>
             {isLoggedIn ? "Dashboard" : "Sign In"}
           </Link>
         </Button>
