@@ -1,5 +1,5 @@
 /** Admin feature type definitions */
-import type { Profile } from "@/shared/types"
+import type { Profile } from "@/lib/types"
 
 export interface AnalyticsLog {
   id: string

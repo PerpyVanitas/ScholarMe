@@ -1,5 +1,5 @@
 /** Sessions feature type definitions */
-import type { Profile, Specialization } from "@/shared/types"
+import type { Profile, Specialization } from "@/lib/types"
 import type { Tutor } from "@/features/tutors/types"
 
 export type SessionStatus = "pending" | "confirmed" | "completed" | "cancelled"

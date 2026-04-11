@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/shared/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import type { Tutor } from "../types";
-import type { Specialization } from "@/shared/types";
+import type { Specialization } from "@/lib/types";
 
 export function useTutors() {
   const [tutors, setTutors] = useState<Tutor[]>([]);

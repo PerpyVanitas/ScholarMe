@@ -1,5 +1,5 @@
 /** Tutors feature type definitions */
-import type { Profile, Specialization } from "@/shared/types"
+import type { Profile, Specialization } from "@/lib/types"
 
 export interface Tutor {
   id: string

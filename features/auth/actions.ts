@@ -1,6 +1,6 @@
 "use server"
 
-import { createClient, createAdminClient } from "@/shared/lib/supabase/server"
+import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 
 export async function loginWithEmail(formData: FormData) {

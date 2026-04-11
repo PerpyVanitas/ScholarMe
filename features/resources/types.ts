@@ -1,5 +1,5 @@
 /** Resources feature type definitions */
-import type { Profile } from "@/shared/types"
+import type { Profile } from "@/lib/types"
 
 export interface Repository {
   id: string
