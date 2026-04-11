@@ -32,9 +32,36 @@ public class AuthDtos {
     @Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
     public static class UserDto {
         private String id;
-        private String name;
+        private String fullName;  // Matches Android ApiModels
         private String email;
         private String role;
         private String avatarUrl;
+        private String phone;
+        private String bio;
+        private String degreeProgram;
+        private Integer yearLevel;
+        private Double rating;
+        private Integer totalSessions;
+        private boolean isProfileComplete;
+    }
+    
+    @Getter @Setter @NoArgsConstructor @AllArgsConstructor
+    public static class RegisterRequest {
+        @NotBlank(message = "Email is required")
+        private String email;
+
+        @NotBlank(message = "Password is required")
+        private String password;
+        
+        @NotBlank(message = "Full name is required")
+        private String fullName;
+        
+        private String role = "LEARNER";
+    }
+    
+    @Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class RegisterResponse {
+        private UserDto user;
+        private String token;
     }
 }

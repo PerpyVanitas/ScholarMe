@@ -48,6 +48,22 @@ public class AuthController {
     }
 
     /**
+     * POST /auth/register
+     * Body: { "email": "string", "password": "string", "fullName": "string", "role": "LEARNER" }
+     * Response: { user, token }
+     */
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<RegisterResponse>> register(@Valid @RequestBody RegisterRequest request) {
+        try {
+            RegisterResponse response = authService.register(request);
+            return ResponseEntity.status(201).body(ApiResponse.ok(response));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("VALID-001", "Registration failed", e.getMessage()));
+        }
+    }
+
+    /**
      * POST /auth/logout
      * Headers: Authorization: Bearer {token}
      * Response: { message: "Logged out successfully" }

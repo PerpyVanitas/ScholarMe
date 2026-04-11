@@ -45,7 +45,7 @@ interface ApiService {
         @Body request: CardLoginRequest
     ): Response<ApiResponse<LoginResponse>>
     
-    @POST("auth/login")
+    @POST("auth/email-login")
     suspend fun login(
         @Body request: EmailLoginRequest
     ): Response<ApiResponse<LoginResponse>>
