@@ -1,28 +1,34 @@
-/** Quizzes feature type definitions */
+/** Quizzes feature type definitions - matches database schema */
 
-export type QuizType = "flashcard" | "multiple_choice" | "true_false"
-export type QuizDifficulty = "easy" | "medium" | "hard"
-export type QuizVisibility = "private" | "shared"
+export type StudySetType = "flashcard" | "multiple_choice" | "true_false" | "mixed"
+export type SourceType = "manual" | "resource" | "upload"
 
-export interface Quiz {
+export interface StudySet {
   id: string
-  owner_id: string
+  user_id: string
   title: string
   description: string | null
-  quiz_type: QuizType
-  difficulty: QuizDifficulty
-  visibility: QuizVisibility
-  question_count: number
+  type: StudySetType
+  is_public: boolean
+  source_type: SourceType
+  source_resource_id: string | null
   created_at: string
   updated_at: string
+  // Joined fields
+  study_set_items?: StudySetItem[]
+  profiles?: {
+    full_name: string
+    avatar_url: string | null
+  }
 }
 
-export interface QuizQuestion {
+export interface StudySetItem {
   id: string
-  quiz_id: string
+  study_set_id: string
   question: string
   answer: string
-  options?: string[] // For multiple choice
+  options: string[] | null
+  item_type: "flashcard" | "multiple_choice" | "true_false"
   order_index: number
   created_at: string
 }
@@ -30,10 +36,34 @@ export interface QuizQuestion {
 export interface QuizAttempt {
   id: string
   user_id: string
-  quiz_id: string
+  study_set_id: string
   score: number
-  total_items: number
+  total_questions: number
   answers: Record<string, string>
-  completed_at: string | null
+  time_spent_seconds: number | null
+  completed_at: string
   created_at: string
+  // Joined fields
+  study_sets?: {
+    title: string
+    type: StudySetType
+  }
+}
+
+// Form types for creating study sets
+export interface CreateStudySetForm {
+  title: string
+  description: string
+  type: StudySetType
+  is_public: boolean
+  source_type: SourceType
+  source_resource_id?: string
+  items: CreateStudySetItemForm[]
+}
+
+export interface CreateStudySetItemForm {
+  question: string
+  answer: string
+  options?: string[]
+  item_type: "flashcard" | "multiple_choice" | "true_false"
 }

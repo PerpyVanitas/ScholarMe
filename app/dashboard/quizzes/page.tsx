@@ -1,148 +1,160 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, Plus, Trash2, BookOpen, CheckCircle } from "lucide-react";
-import { toast } from "sonner";
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Loader2, Plus, Trash2, BookOpen, CheckCircle, Users, Lock, FileText } from "lucide-react"
+import { toast } from "sonner"
+import Link from "next/link"
 
-interface Quiz {
-  id: string;
-  title: string;
-  description: string;
-  type: "multiple_choice" | "true_false" | "flashcard";
-  difficulty: "easy" | "medium" | "hard";
-  questions: Question[];
-  created_at: string;
-}
-
-interface Question {
-  id: string;
-  prompt: string;
-  answer: string;
-  options?: string[];
-  explanation?: string;
+interface StudySet {
+  id: string
+  title: string
+  description: string | null
+  type: "flashcard" | "multiple_choice" | "true_false" | "mixed"
+  is_public: boolean
+  created_at: string
+  study_set_items?: { count: number }[]
+  profiles?: { full_name: string; avatar_url: string | null }
 }
 
 export default function QuizzesPage() {
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("my-sets")
+  const [myStudySets, setMyStudySets] = useState<StudySet[]>([])
+  const [sharedStudySets, setSharedStudySets] = useState<StudySet[]>([])
+  const [loading, setLoading] = useState(true)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [creating, setCreating] = useState(false)
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    type: "multiple_choice" as const,
-    difficulty: "medium" as const,
+    type: "flashcard" as "flashcard" | "multiple_choice" | "true_false" | "mixed",
+    is_public: false,
     content: "",
-  });
+  })
 
   useEffect(() => {
-    loadQuizzes();
-  }, []);
+    loadStudySets()
+  }, [])
 
-  const loadQuizzes = async () => {
+  const loadStudySets = async () => {
     try {
-      setLoading(true);
-      const supabase = await createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      setLoading(true)
+      const [myRes, sharedRes] = await Promise.all([
+        fetch("/api/quizzes/my-sets"),
+        fetch("/api/quizzes/shared")
+      ])
       
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from("study_sets")
-        .select("*")
-        .eq("owner_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setQuizzes(data || []);
+      if (myRes.ok) {
+        const myData = await myRes.json()
+        setMyStudySets(myData.data || [])
+      }
+      
+      if (sharedRes.ok) {
+        const sharedData = await sharedRes.json()
+        setSharedStudySets(sharedData.data || [])
+      }
     } catch (error) {
-      console.error("Error loading quizzes:", error);
-      toast.error("Failed to load quizzes");
+      console.error("Error loading study sets:", error)
+      toast.error("Failed to load study sets")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleCreateQuiz = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     
     if (!formData.title || !formData.content) {
-      toast.error("Please fill in all fields");
-      return;
+      toast.error("Please fill in title and content")
+      return
     }
 
     try {
-      setLoading(true);
-      const supabase = await createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) throw new Error("Not authenticated");
+      setCreating(true)
 
-      // Parse content into questions (simple format: "Q: ? A: answer" per line)
-      const lines = formData.content.split("\n").filter(line => line.trim());
-      const questions: Question[] = lines.map((line, idx) => {
-        const match = line.match(/Q:\s*(.+?)\s+A:\s*(.+)/);
+      // Parse content into items (format: "Q: question A: answer" per line)
+      const lines = formData.content.split("\n").filter(line => line.trim())
+      const items = lines.map((line) => {
+        const match = line.match(/Q:\s*(.+?)\s+A:\s*(.+)/i)
         if (match) {
           return {
-            id: `q-${idx}`,
-            prompt: match[1],
-            answer: match[2],
-          };
+            question: match[1].trim(),
+            answer: match[2].trim(),
+            item_type: formData.type === "mixed" ? "flashcard" : formData.type,
+          }
         }
-        return { id: `q-${idx}`, prompt: line, answer: "" };
-      });
+        return null
+      }).filter(Boolean)
 
-      const { error } = await supabase
-        .from("study_sets")
-        .insert({
-          owner_id: user.id,
+      if (items.length === 0) {
+        toast.error("Please add at least one question in format: Q: question A: answer")
+        setCreating(false)
+        return
+      }
+
+      const res = await fetch("/api/quizzes/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           title: formData.title,
           description: formData.description,
-          source_type: "upload",
-          generation_mode: formData.type,
-          difficulty: formData.difficulty,
-          question_count: questions.length,
-          visibility: "private",
-        });
+          type: formData.type,
+          is_public: formData.is_public,
+          source_type: "manual",
+          items,
+        }),
+      })
 
-      if (error) throw error;
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.error || "Failed to create study set")
+      }
 
-      toast.success("Quiz created successfully");
-      setFormData({ title: "", description: "", type: "multiple_choice", difficulty: "medium", content: "" });
-      setDialogOpen(false);
-      await loadQuizzes();
+      toast.success("Study set created!")
+      setFormData({ title: "", description: "", type: "flashcard", is_public: false, content: "" })
+      setDialogOpen(false)
+      await loadStudySets()
     } catch (error) {
-      console.error("Error creating quiz:", error);
-      toast.error("Failed to create quiz");
+      console.error("Error creating study set:", error)
+      toast.error(error instanceof Error ? error.message : "Failed to create study set")
     } finally {
-      setLoading(false);
+      setCreating(false)
     }
-  };
+  }
 
   const handleDeleteQuiz = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this study set?")) return
+    
     try {
-      const supabase = await createClient();
-      const { error } = await supabase
-        .from("study_sets")
-        .delete()
-        .eq("id", id);
-
-      if (error) throw error;
+      const res = await fetch(`/api/quizzes/${id}`, { method: "DELETE" })
+      if (!res.ok) throw new Error("Failed to delete")
       
-      toast.success("Quiz deleted");
-      await loadQuizzes();
+      toast.success("Study set deleted")
+      await loadStudySets()
     } catch (error) {
-      console.error("Error deleting quiz:", error);
-      toast.error("Failed to delete quiz");
+      console.error("Error deleting study set:", error)
+      toast.error("Failed to delete study set")
     }
-  };
+  }
+
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case "flashcard": return "Flashcards"
+      case "multiple_choice": return "Multiple Choice"
+      case "true_false": return "True/False"
+      case "mixed": return "Mixed"
+      default: return type
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -150,138 +162,219 @@ export default function QuizzesPage() {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Study Quizzes</h1>
-          <p className="text-sm text-muted-foreground">Create and manage your study quizzes</p>
+          <p className="text-sm text-muted-foreground">Create and study flashcards and quizzes</p>
         </div>
         <Button onClick={() => setDialogOpen(true)} className="gap-2">
           <Plus className="h-4 w-4" />
-          Create Quiz
+          Create Study Set
         </Button>
       </div>
 
-      {/* Quiz List */}
-      {loading && quizzes.length === 0 ? (
-        <Card>
-          <CardContent className="flex items-center justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </CardContent>
-        </Card>
-      ) : quizzes.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 gap-4">
-            <BookOpen className="h-12 w-12 text-muted-foreground/50" />
-            <p className="text-center text-muted-foreground">No quizzes yet. Create your first one!</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {quizzes.map((quiz) => (
-            <Card key={quiz.id} className="flex flex-col">
-              <CardHeader>
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1">
-                    <CardTitle>{quiz.title}</CardTitle>
-                    <CardDescription>{quiz.description || "No description"}</CardDescription>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDeleteQuiz(quiz.id)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="flex-1">
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">{quiz.generation_mode}</Badge>
-                  <Badge variant="outline">{quiz.difficulty}</Badge>
-                  <Badge variant="outline">{quiz.question_count} questions</Badge>
-                </div>
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="my-sets" className="flex items-center gap-2">
+            <Lock className="h-4 w-4" />
+            My Study Sets
+          </TabsTrigger>
+          <TabsTrigger value="shared" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Shared Sets
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="my-sets">
+          {loading ? (
+            <Card>
+              <CardContent className="flex items-center justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </CardContent>
             </Card>
-          ))}
-        </div>
-      )}
+          ) : myStudySets.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12 gap-4">
+                <BookOpen className="h-12 w-12 text-muted-foreground/50" />
+                <p className="text-center text-muted-foreground">No study sets yet. Create your first one!</p>
+                <Button onClick={() => setDialogOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Study Set
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {myStudySets.map((set) => (
+                <Card key={set.id} className="flex flex-col hover:border-primary/50 transition-colors">
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg">{set.title}</CardTitle>
+                        <CardDescription className="line-clamp-2">{set.description || "No description"}</CardDescription>
+                      </div>
+                      <Badge variant="secondary">{getTypeLabel(set.type)}</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="flex-1 flex flex-col">
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                      <span className="flex items-center gap-1">
+                        <FileText className="h-4 w-4" />
+                        {set.study_set_items?.[0]?.count || 0} items
+                      </span>
+                      <span className="flex items-center gap-1">
+                        {set.is_public ? <Users className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+                        {set.is_public ? "Public" : "Private"}
+                      </span>
+                    </div>
+                    <div className="flex gap-2 mt-auto">
+                      <Button asChild className="flex-1">
+                        <Link href={`/dashboard/quizzes/study/${set.id}`}>
+                          <BookOpen className="mr-2 h-4 w-4" />
+                          Study
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleDeleteQuiz(set.id)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
 
-      {/* Create Quiz Dialog */}
+        <TabsContent value="shared">
+          {loading ? (
+            <Card>
+              <CardContent className="flex items-center justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </CardContent>
+            </Card>
+          ) : sharedStudySets.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12 gap-4">
+                <Users className="h-12 w-12 text-muted-foreground/50" />
+                <p className="text-center text-muted-foreground">No shared study sets available yet.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {sharedStudySets.map((set) => (
+                <Card key={set.id} className="flex flex-col hover:border-primary/50 transition-colors">
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg">{set.title}</CardTitle>
+                        <CardDescription className="line-clamp-2">{set.description || "No description"}</CardDescription>
+                      </div>
+                      <Badge variant="secondary">{getTypeLabel(set.type)}</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="flex-1 flex flex-col">
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                      <span className="flex items-center gap-1">
+                        <FileText className="h-4 w-4" />
+                        {set.study_set_items?.[0]?.count || 0} items
+                      </span>
+                      <span>by {set.profiles?.full_name || "Unknown"}</span>
+                    </div>
+                    <Button asChild className="w-full mt-auto">
+                      <Link href={`/dashboard/quizzes/study/${set.id}`}>
+                        <BookOpen className="mr-2 h-4 w-4" />
+                        Study
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* Create Study Set Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Create New Quiz</DialogTitle>
-            <DialogDescription>Add a new study quiz with questions and answers</DialogDescription>
+            <DialogTitle>Create New Study Set</DialogTitle>
+            <DialogDescription>Add flashcards or quiz questions</DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleCreateQuiz} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Quiz Title</label>
+              <Label>Title</Label>
               <Input
                 placeholder="e.g., Biology Chapter 3"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                disabled={loading}
+                disabled={creating}
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Description</label>
+              <Label>Description (optional)</Label>
               <Input
-                placeholder="Optional description"
+                placeholder="What is this study set about?"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                disabled={loading}
+                disabled={creating}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Type</label>
+                <Label>Type</Label>
                 <Select value={formData.type} onValueChange={(v: any) => setFormData({ ...formData, type: v })}>
-                  <SelectTrigger disabled={loading}>
+                  <SelectTrigger disabled={creating}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="flashcard">Flashcards</SelectItem>
                     <SelectItem value="multiple_choice">Multiple Choice</SelectItem>
                     <SelectItem value="true_false">True/False</SelectItem>
-                    <SelectItem value="flashcard">Flashcard</SelectItem>
+                    <SelectItem value="mixed">Mixed</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Difficulty</label>
-                <Select value={formData.difficulty} onValueChange={(v: any) => setFormData({ ...formData, difficulty: v })}>
-                  <SelectTrigger disabled={loading}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="easy">Easy</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="hard">Hard</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Visibility</Label>
+                <div className="flex items-center gap-2 pt-2">
+                  <Switch 
+                    checked={formData.is_public} 
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_public: checked })}
+                    disabled={creating}
+                  />
+                  <span className="text-sm">{formData.is_public ? "Public" : "Private"}</span>
+                </div>
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Questions</label>
+              <Label>Questions</Label>
               <p className="text-xs text-muted-foreground">Format: Q: question text A: answer text (one per line)</p>
               <Textarea
                 placeholder="Q: What is the capital of France? A: Paris
-Q: What is 2+2? A: 4"
+Q: What is 2+2? A: 4
+Q: The sun is a star A: true"
                 value={formData.content}
                 onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                disabled={loading}
+                disabled={creating}
                 rows={6}
               />
             </div>
 
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={loading}>
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} disabled={creating}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? (
+              <Button type="submit" disabled={creating}>
+                {creating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Creating...
@@ -289,7 +382,7 @@ Q: What is 2+2? A: 4"
                 ) : (
                   <>
                     <CheckCircle className="mr-2 h-4 w-4" />
-                    Create Quiz
+                    Create Study Set
                   </>
                 )}
               </Button>
@@ -298,5 +391,5 @@ Q: What is 2+2? A: 4"
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }
