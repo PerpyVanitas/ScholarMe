@@ -168,7 +168,7 @@ export function TutorDetailModal({ open, onOpenChange, tutor }: TutorDetailModal
           {/* Actions */}
           <div className="space-y-2 flex flex-col gap-2">
             <Button asChild className="w-full">
-              <Link href={`/dashboard/book-session?tutor=${tutor.id}`}>
+              <Link href={`/dashboard/sessions?book=${tutor.id}`}>
                 <BookOpen className="mr-2 h-4 w-4" />
                 Book Session
               </Link>
