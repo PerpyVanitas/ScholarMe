@@ -15,10 +15,10 @@ import { NextResponse, type NextRequest } from "next/server"
 const PROTECTED_ROUTES = ["/dashboard"]
 
 /** Routes accessible only to unauthenticated users (login, signup, etc.) */
-const AUTH_ROUTES = ["/auth/login", "/auth/sign-up", "/auth/card-login"]
+const AUTH_ROUTES = ["/auth/login", "/auth/sign-up"]
 
-/** Routes accessible to all users regardless of auth state */
-const PUBLIC_ROUTES = ["/", "/auth/callback", "/auth/error"]
+/** Routes that should never trigger redirects (callbacks, errors, assets, etc.) */
+const EXCLUDED_ROUTES = ["/", "/auth/callback", "/auth/error", "/auth/setup-profile", "/auth/sign-up-success"]
 
 /**
  * Validates and refreshes the user session, then enforces route protection.
@@ -61,6 +61,12 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
+  // Skip redirect logic for excluded routes (home, callbacks, errors, etc.)
+  const isExcludedRoute = EXCLUDED_ROUTES.some(route => pathname === route)
+  if (isExcludedRoute) {
+    return supabaseResponse
+  }
+
   // Check if route is protected and user is not authenticated
   const isProtectedRoute = PROTECTED_ROUTES.some(route => 
     pathname.startsWith(route)
@@ -74,9 +80,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Check if route is auth-only and user is already authenticated
-  const isAuthRoute = AUTH_ROUTES.some(route => 
-    pathname === route || pathname.startsWith(route)
-  )
+  const isAuthRoute = AUTH_ROUTES.some(route => pathname === route)
   
   if (isAuthRoute && user) {
     // Redirect authenticated users away from auth pages
