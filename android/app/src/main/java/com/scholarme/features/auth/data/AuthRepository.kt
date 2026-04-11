@@ -3,17 +3,23 @@ package com.scholarme.features.auth.data
 import com.scholarme.core.data.local.TokenManager
 import com.scholarme.core.data.model.*
 import com.scholarme.core.data.remote.ApiClient
+import com.scholarme.core.data.remote.ApiService
 import com.scholarme.core.util.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 /**
  * Repository for authentication operations.
  * Handles login, registration, and token management.
  */
-class AuthRepository(private val tokenManager: TokenManager) {
+class AuthRepository @Inject constructor(
+    private val tokenManager: TokenManager,
+    private val apiService: ApiService
+) {
     
-    private val apiService = ApiClient.apiService
+    // Legacy constructor for non-Hilt usage
+    constructor(tokenManager: TokenManager) : this(tokenManager, ApiClient.apiService)
     
     suspend fun login(email: String, password: String): Result<UserProfile> {
         return withContext(Dispatchers.IO) {

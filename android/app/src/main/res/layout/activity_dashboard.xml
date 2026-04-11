@@ -243,6 +243,15 @@
                 android:textColor="@color/text_secondary"
                 android:visibility="gone" />
 
+            <!-- Sessions RecyclerView -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvSessions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:nestedScrollingEnabled="false"
+                android:visibility="gone" />
+
             <!-- Quick Actions -->
             <TextView
                 android:layout_width="wrap_content"

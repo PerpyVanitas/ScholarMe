@@ -5,7 +5,9 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
+import com.scholarme.features.dashboard.ui.adapter.SessionsAdapter
 import com.scholarme.core.data.local.TokenManager
 import com.scholarme.core.util.Result
 import com.scholarme.databinding.ActivityDashboardBinding
@@ -23,6 +25,7 @@ import com.scholarme.features.profile.ui.update.UpdateProfileActivity
 class DashboardActivity : AppCompatActivity() {
     
     private lateinit var binding: ActivityDashboardBinding
+    private lateinit var sessionsAdapter: SessionsAdapter
     
     private val viewModel: DashboardViewModel by viewModels {
         DashboardViewModelFactory(
@@ -44,6 +47,20 @@ class DashboardActivity : AppCompatActivity() {
     }
     
     private fun setupUI() {
+        // Setup RecyclerView for sessions
+        sessionsAdapter = SessionsAdapter { session ->
+            // Handle session click - can navigate to session details
+            Snackbar.make(
+                binding.root,
+                "Session with ${session.tutorName ?: "tutor"} - ${session.status}",
+                Snackbar.LENGTH_SHORT
+            ).show()
+        }
+        binding.rvSessions.apply {
+            layoutManager = LinearLayoutManager(this@DashboardActivity)
+            adapter = sessionsAdapter
+        }
+        
         // Swipe to refresh
         binding.swipeRefresh.setOnRefreshListener {
             viewModel.refresh()
@@ -116,9 +133,11 @@ class DashboardActivity : AppCompatActivity() {
                     binding.sessionsProgressBar.visibility = View.GONE
                     if (state.data.isEmpty()) {
                         binding.tvNoSessions.visibility = View.VISIBLE
+                        binding.rvSessions.visibility = View.GONE
                     } else {
                         binding.tvNoSessions.visibility = View.GONE
-                        // TODO: Set up RecyclerView adapter for sessions
+                        binding.rvSessions.visibility = View.VISIBLE
+                        sessionsAdapter.submitList(state.data)
                     }
                 }
                 is Result.Error -> {

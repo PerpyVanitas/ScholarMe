@@ -4,16 +4,22 @@ import com.scholarme.core.data.local.TokenManager
 import com.scholarme.core.data.model.DashboardStats
 import com.scholarme.core.data.model.Session
 import com.scholarme.core.data.remote.ApiClient
+import com.scholarme.core.data.remote.ApiService
 import com.scholarme.core.util.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 /**
  * Repository for dashboard data operations.
  */
-class DashboardRepository(private val tokenManager: TokenManager) {
+class DashboardRepository @Inject constructor(
+    private val tokenManager: TokenManager,
+    private val apiService: ApiService
+) {
     
-    private val apiService = ApiClient.apiService
+    // Legacy constructor for non-Hilt usage
+    constructor(tokenManager: TokenManager) : this(tokenManager, ApiClient.apiService)
     
     private fun getBearerToken(): String? {
         val token = tokenManager.getAccessToken()

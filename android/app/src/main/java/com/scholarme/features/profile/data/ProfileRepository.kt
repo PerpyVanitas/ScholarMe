@@ -5,17 +5,23 @@ import com.scholarme.core.data.model.ChangePasswordRequest
 import com.scholarme.core.data.model.UpdateProfileRequest
 import com.scholarme.core.data.model.UserProfile
 import com.scholarme.core.data.remote.ApiClient
+import com.scholarme.core.data.remote.ApiService
 import com.scholarme.core.util.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 /**
  * Repository for profile operations.
  * Handles profile viewing, updating, and password changes.
  */
-class ProfileRepository(private val tokenManager: TokenManager) {
+class ProfileRepository @Inject constructor(
+    private val tokenManager: TokenManager,
+    private val apiService: ApiService
+) {
     
-    private val apiService = ApiClient.apiService
+    // Legacy constructor for non-Hilt usage
+    constructor(tokenManager: TokenManager) : this(tokenManager, ApiClient.apiService)
     
     private fun getBearerToken(): String? {
         val token = tokenManager.getAccessToken()
