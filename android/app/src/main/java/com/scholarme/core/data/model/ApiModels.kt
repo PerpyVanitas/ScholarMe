@@ -3,97 +3,260 @@ package com.scholarme.core.data.model
 import com.google.gson.annotations.SerializedName
 
 // ============================================
-// API Response Wrapper
+// API Response Wrapper (matches Spring Boot ApiResponse)
 // ============================================
 
 data class ApiResponse<T>(
     val success: Boolean,
+    val data: T? = null,
+    val error: ErrorDetails? = null,
+    val timestamp: String? = null
+)
+
+data class ErrorDetails(
+    val code: String,
     val message: String,
-    val data: T? = null
+    val details: Any? = null
 )
 
 // ============================================
-// Auth Models
+// Auth Models (matches Spring Boot AuthDtos)
 // ============================================
 
-data class LoginRequest(
+data class CardLoginRequest(
+    @SerializedName("cardId") val cardId: String,
+    val pin: String
+)
+
+data class EmailLoginRequest(
     val email: String,
     val password: String
 )
 
+// Legacy support - maps to EmailLoginRequest
+typealias LoginRequest = EmailLoginRequest
+
 data class LoginResponse(
-    val token: String,
-    val user: UserProfile
+    val user: UserProfile,
+    val token: String
 )
 
 data class RegisterRequest(
     val email: String,
     val password: String,
-    @SerializedName("full_name") val fullName: String,
-    val role: String = "learner"
+    @SerializedName("fullName") val fullName: String,
+    val role: String = "LEARNER"
 )
 
 data class RegisterResponse(
-    @SerializedName("user_id") val userId: String
+    val user: UserProfile,
+    val token: String
 )
 
 // ============================================
-// User/Profile Models
+// User/Profile Models (matches Spring Boot UserDto)
 // ============================================
 
 data class UserProfile(
     val id: String,
     val email: String,
-    @SerializedName("full_name") val fullName: String,
-    @SerializedName("first_name") val firstName: String? = null,
-    @SerializedName("last_name") val lastName: String? = null,
-    @SerializedName("avatar_url") val avatarUrl: String? = null,
-    @SerializedName("phone_number") val phoneNumber: String? = null,
+    @SerializedName("fullName") val fullName: String,
     val role: String,
-    @SerializedName("profile_completed") val profileCompleted: Boolean = false,
-    @SerializedName("created_at") val createdAt: String? = null,
-    // Tutor-specific fields
+    @SerializedName("avatarUrl") val avatarUrl: String? = null,
+    val phone: String? = null,
     val bio: String? = null,
+    @SerializedName("degreeProgram") val degreeProgram: String? = null,
+    @SerializedName("yearLevel") val yearLevel: Int? = null,
     val rating: Double? = null,
-    @SerializedName("total_ratings") val totalRatings: Int? = null,
-    @SerializedName("years_experience") val yearsExperience: Int? = null,
-    @SerializedName("hourly_rate") val hourlyRate: Double? = null
+    @SerializedName("totalSessions") val totalSessions: Int? = null,
+    @SerializedName("isProfileComplete") val isProfileComplete: Boolean = false
 )
 
 data class UpdateProfileRequest(
-    @SerializedName("full_name") val fullName: String? = null,
-    @SerializedName("first_name") val firstName: String? = null,
-    @SerializedName("last_name") val lastName: String? = null,
-    @SerializedName("phone_number") val phoneNumber: String? = null,
-    val bio: String? = null
+    @SerializedName("fullName") val fullName: String? = null,
+    val phone: String? = null,
+    val bio: String? = null,
+    @SerializedName("degreeProgram") val degreeProgram: String? = null,
+    @SerializedName("yearLevel") val yearLevel: Int? = null
 )
 
 data class ChangePasswordRequest(
-    @SerializedName("current_password") val currentPassword: String,
-    @SerializedName("new_password") val newPassword: String
+    @SerializedName("currentPassword") val currentPassword: String,
+    @SerializedName("newPassword") val newPassword: String
 )
 
 // ============================================
-// Dashboard Models
+// Tutor Models (matches Spring Boot TutorDtos)
+// ============================================
+
+data class TutorDto(
+    val id: String,
+    @SerializedName("userId") val userId: String,
+    @SerializedName("fullName") val fullName: String,
+    val email: String,
+    @SerializedName("avatarUrl") val avatarUrl: String? = null,
+    val bio: String? = null,
+    @SerializedName("degreeProgram") val degreeProgram: String? = null,
+    val rating: Double? = null,
+    @SerializedName("totalSessions") val totalSessions: Int? = null,
+    @SerializedName("hourlyRate") val hourlyRate: Double? = null,
+    @SerializedName("experienceYears") val experienceYears: Int? = null,
+    @SerializedName("isAvailable") val isAvailable: Boolean = true,
+    val specializations: List<SpecializationDto> = emptyList(),
+    val availability: List<AvailabilityDto> = emptyList()
+)
+
+data class SpecializationDto(
+    val id: String,
+    val name: String,
+    val description: String? = null,
+    val category: String? = null
+)
+
+data class AvailabilityDto(
+    val id: String,
+    @SerializedName("dayOfWeek") val dayOfWeek: Int,
+    @SerializedName("startTime") val startTime: String,
+    @SerializedName("endTime") val endTime: String,
+    @SerializedName("isAvailable") val isAvailable: Boolean = true
+)
+
+data class TutorListResponse(
+    val tutors: List<TutorDto>,
+    val pagination: PaginationInfo
+)
+
+data class PaginationInfo(
+    val page: Int,
+    val limit: Int,
+    val total: Long,
+    val pages: Int
+)
+
+// ============================================
+// Session Models (matches Spring Boot SessionDtos)
+// ============================================
+
+data class SessionDto(
+    val id: String,
+    @SerializedName("tutorId") val tutorId: String,
+    @SerializedName("tutorName") val tutorName: String? = null,
+    @SerializedName("tutorAvatarUrl") val tutorAvatarUrl: String? = null,
+    @SerializedName("learnerId") val learnerId: String,
+    @SerializedName("learnerName") val learnerName: String? = null,
+    @SerializedName("scheduledAt") val scheduledAt: String,
+    @SerializedName("durationMinutes") val durationMinutes: Int = 60,
+    val status: String,
+    val topic: String? = null,
+    val notes: String? = null,
+    val location: String? = null,
+    @SerializedName("specializationName") val specializationName: String? = null,
+    val rating: RatingDto? = null,
+    @SerializedName("createdAt") val createdAt: String? = null
+)
+
+// Legacy alias
+typealias Session = SessionDto
+
+data class RatingDto(
+    val rating: Int,
+    val feedback: String? = null,
+    @SerializedName("createdAt") val createdAt: String? = null
+)
+
+data class CreateSessionRequest(
+    @SerializedName("tutorId") val tutorId: String,
+    @SerializedName("scheduledAt") val scheduledAt: String,
+    @SerializedName("specializationId") val specializationId: String? = null,
+    val topic: String? = null,
+    val notes: String? = null,
+    val location: String? = null,
+    @SerializedName("durationMinutes") val durationMinutes: Int = 60
+)
+
+data class UpdateSessionStatusRequest(
+    val status: String,
+    @SerializedName("cancellationReason") val cancellationReason: String? = null
+)
+
+data class RateSessionRequest(
+    val rating: Int,
+    val feedback: String? = null
+)
+
+// ============================================
+// Repository Models (matches Spring Boot RepositoryDtos)
+// ============================================
+
+data class RepositoryDto(
+    val id: String,
+    val title: String,
+    val description: String? = null,
+    val visibility: String = "private",
+    @SerializedName("ownerId") val ownerId: String,
+    @SerializedName("ownerName") val ownerName: String? = null,
+    @SerializedName("resourceCount") val resourceCount: Long = 0,
+    @SerializedName("createdAt") val createdAt: String? = null,
+    @SerializedName("updatedAt") val updatedAt: String? = null
+)
+
+data class CreateRepositoryRequest(
+    val title: String,
+    val description: String? = null,
+    val visibility: String = "private"
+)
+
+data class ResourceDto(
+    val id: String,
+    val title: String,
+    val description: String? = null,
+    val url: String? = null,
+    @SerializedName("fileType") val fileType: String? = null,
+    @SerializedName("fileSize") val fileSize: Long? = null,
+    @SerializedName("uploadedById") val uploadedById: String? = null,
+    @SerializedName("uploadedByName") val uploadedByName: String? = null,
+    @SerializedName("createdAt") val createdAt: String? = null
+)
+
+data class CreateResourceRequest(
+    val title: String,
+    val description: String? = null,
+    val url: String? = null,
+    @SerializedName("fileType") val fileType: String? = null,
+    @SerializedName("fileSize") val fileSize: Long? = null
+)
+
+data class RepositoryListResponse(
+    val repositories: List<RepositoryDto>
+)
+
+data class ResourceListResponse(
+    val resources: List<ResourceDto>
+)
+
+// ============================================
+// Dashboard Models (computed from sessions)
 // ============================================
 
 data class DashboardStats(
-    @SerializedName("total_sessions") val totalSessions: Int = 0,
-    @SerializedName("upcoming_sessions") val upcomingSessions: Int = 0,
-    @SerializedName("completed_sessions") val completedSessions: Int = 0,
-    @SerializedName("total_study_sets") val totalStudySets: Int = 0,
-    @SerializedName("average_quiz_score") val averageQuizScore: Double = 0.0
+    @SerializedName("totalSessions") val totalSessions: Int = 0,
+    @SerializedName("upcomingSessions") val upcomingSessions: Int = 0,
+    @SerializedName("completedSessions") val completedSessions: Int = 0,
+    @SerializedName("totalStudySets") val totalStudySets: Int = 0,
+    @SerializedName("averageQuizScore") val averageQuizScore: Double = 0.0
 )
 
-data class Session(
-    val id: String,
-    @SerializedName("tutor_id") val tutorId: String,
-    @SerializedName("learner_id") val learnerId: String,
-    @SerializedName("scheduled_date") val scheduledDate: String,
-    @SerializedName("start_time") val startTime: String,
-    @SerializedName("end_time") val endTime: String,
-    val status: String,
-    val notes: String? = null,
-    @SerializedName("tutor_name") val tutorName: String? = null,
-    @SerializedName("learner_name") val learnerName: String? = null
+// ============================================
+// Admin Models (matches Spring Boot AdminController)
+// ============================================
+
+data class RegisterCardRequest(
+    @SerializedName("cardId") val cardId: String,
+    val pin: String,
+    @SerializedName("userId") val userId: String
+)
+
+data class DeviceTokenRequest(
+    @SerializedName("deviceType") val deviceType: String,
+    val token: String
 )
