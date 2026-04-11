@@ -38,12 +38,20 @@ A full-stack tutoring management platform built with **Next.js 16**, **Supabase*
 - **Administrative dashboard** -- User management, session oversight, and org-wide analytics
 
 ### Extended Features (SSD SHOULD/COULD-HAVE)
+- **Flashcard & Quiz Generator** -- Create study sets, flashcards, multiple choice quizzes with study mode
 - **Organization voting** -- Create and manage polls with multiple choice voting (Journey 6)
 - **Tutor availability calendar** -- Weekly time-slot schedule management
 - **Session history tracking** -- Complete session lifecycle management
 - **Session ratings** -- 1-5 star ratings with feedback for completed sessions
 - **Timesheet system** -- Tutor clock-in/clock-out tracking
 - **Push notification infrastructure** -- Device token management for iOS/Android/Web
+
+### Native Android App
+- **Login/Register** -- Email/password authentication with role selection
+- **Dashboard** -- User stats, quick actions, session overview
+- **Profile Management** -- View profile, update details, change password
+- **MVVM Architecture** -- ViewModel + LiveData with encrypted token storage
+- **Retrofit API Client** -- Bearer token authentication with the Next.js backend
 
 ### Platform Features
 - **Role-based dashboards** -- Distinct views for learners, tutors, and administrators
@@ -65,92 +73,93 @@ A full-stack tutoring management platform built with **Next.js 16**, **Supabase*
 | Theming      | [next-themes](https://github.com/pacocoursey/next-themes)       |
 | Icons        | [Lucide React](https://lucide.dev)                              |
 | Deployment   | [Vercel](https://vercel.com)                                    |
-| Mobile       | [React Native](https://reactnative.dev) + [Expo Router](https://expo.github.io/router/) |
+| Mobile (RN)  | [React Native](https://reactnative.dev) + [Expo Router](https://expo.github.io/router/) |
+| Mobile (Native) | Kotlin + MVVM + Retrofit (Android)                           |
+| Architecture | Vertical Slicing (feature-based modules)                         |
 
 ---
 
-## Project Structure
+## Project Structure (Vertical Slicing Architecture)
+
+The codebase follows **vertical slicing architecture** where features are self-contained modules with their own types, actions, components, and hooks.
 
 ```
 .
-├── app/
+├── features/                           # Vertical slices (self-contained features)
+│   ├── auth/                           # Authentication feature
+│   │   ├── types.ts                    # AuthCard, LoginFormData, SignUpFormData
+│   │   ├── actions.ts                  # Server actions (login, signUp, signOut)
+│   │   └── index.ts                    # Barrel export
+│   ├── tutors/                         # Tutors feature
+│   │   ├── types.ts                    # Tutor, TutorAvailability
+│   │   ├── hooks/use-tutors.ts         # Custom hooks
+│   │   ├── components/                 # Feature-specific components
+│   │   └── index.ts
+│   ├── sessions/                       # Sessions feature
+│   │   ├── types.ts                    # Session, SessionRating, Timesheet
+│   │   └── index.ts
+│   ├── resources/                      # Resources feature
+│   │   ├── types.ts                    # Repository, Resource
+│   │   └── index.ts
+│   ├── quizzes/                        # Quizzes/Flashcards feature
+│   │   ├── types.ts                    # StudySet, StudySetItem, QuizAttempt
+│   │   ├── actions.ts                  # CRUD operations
+│   │   └── index.ts
+│   ├── admin/                          # Admin feature
+│   │   ├── types.ts                    # Poll, Notification, AnalyticsLog
+│   │   └── index.ts
+│   └── index.ts                        # Main features barrel export
+│
+├── shared/                             # Shared utilities across features
+│   ├── types/index.ts                  # Common types (Profile, Role, etc.)
+│   └── lib/supabase/                   # Supabase client/server utilities
+│
+├── app/                                # Next.js App Router (thin route layer)
 │   ├── page.tsx                        # Landing page
-│   ├── layout.tsx                      # Root layout (fonts, theme provider)
-│   ├── globals.css                     # ScholarMe color scheme + Tailwind v4
-│   ├── auth/
-│   │   ├── actions.ts                  # Server actions: signIn, signUp, signOut
-│   │   ├── login/page.tsx              # Email/password + Card login
-│   │   ├── sign-up/page.tsx            # Registration with role picker
-│   │   └── setup-profile/page.tsx      # Profile completion after signup
-│   ├── panel/                          # Main authenticated dashboard
-│   │   ├── layout.tsx                  # Sidebar + header + UserProvider
-│   │   ├── page.tsx                    # Role-routed dashboard
-│   │   ├── home/page.tsx               # Dashboard home
-│   │   ├── sessions/page.tsx           # View/manage sessions
-│   │   ├── tutors/page.tsx             # Browse and search tutors
-│   │   ├── tutors/[id]/page.tsx        # Tutor detail + booking form
-│   │   ├── availability/page.tsx       # Tutor schedule management
-│   │   ├── resources/page.tsx          # Repository browser
-│   │   ├── voting/page.tsx             # Organization polls (Journey 6)
-│   │   ├── notifications/page.tsx      # Notification center
-│   │   ├── timesheet/page.tsx          # Tutor clock-in/out
-│   │   ├── profile/page.tsx            # View/edit profile
-│   │   └── admin/
-│   │       ├── users/page.tsx          # User management
-│   │       ├── cards/page.tsx          # Auth card issuance
-│   │       ├── sessions/page.tsx       # All sessions overview
-│   │       └── analytics/page.tsx      # Org-wide charts and stats
+│   ├── layout.tsx                      # Root layout
+│   ├── auth/                           # Auth routes
+│   ├── dashboard/                      # Dashboard routes
+│   │   ├── home/                       # Dashboard home
+│   │   ├── sessions/                   # Sessions management
+│   │   ├── tutors/                     # Tutor browsing
+│   │   ├── resources/                  # Resource repository
+│   │   ├── quizzes/                    # Flashcards & quizzes
+│   │   │   ├── page.tsx                # My sets / Shared sets tabs
+│   │   │   └── study/[id]/page.tsx     # Study mode (flashcard/quiz)
+│   │   ├── voting/                     # Organization polls
+│   │   └── admin/                      # Admin-only routes
 │   └── api/
-│       ├── tutors/route.ts             # GET: list tutors
-│       ├── sessions/route.ts           # POST: book session
-│       ├── sessions/[id]/status/       # PUT: confirm/complete/cancel
-│       ├── sessions/[id]/rate/         # POST: rate a session
-│       ├── repositories/route.ts       # GET/POST: list/create repos
-│       ├── repositories/[id]/resources # POST: add resource to repo
-│       ├── polls/route.ts              # GET/POST: list/create polls
-│       ├── polls/[id]/vote/route.ts    # POST: cast vote
-│       ├── polls/[id]/results/route.ts # GET: poll results
-│       ├── users/device-token/route.ts # POST/DELETE: push notification tokens
-│       ├── dashboard/route.ts          # GET: dashboard data
-│       ├── auth/
-│       │   ├── card-login/route.ts     # POST: Card ID + PIN auth
-│       │   └── register-card/route.ts  # POST: Issue card (admin)
-│       └── admin/
-│           ├── users/route.ts          # POST: create user (admin)
-│           └── cards/route.ts          # POST/PUT: issue/revoke cards
-├── components/
-│   ├── app-sidebar.tsx                 # Role-aware navigation sidebar
-│   ├── dev-role-switcher.tsx           # Demo mode role toggle banner
-│   ├── theme-toggle.tsx                # Light/dark mode switch
-│   ├── theme-provider.tsx              # next-themes wrapper
-│   ├── error-alert.tsx                 # Standardized error display
-│   ├── dashboard/
-│   │   ├── dashboard-view.tsx          # Role-routed dashboard view
-│   │   ├── admin-dashboard.tsx         # Admin dashboard view
-│   │   ├── learner-dashboard.tsx       # Learner dashboard view
-│   │   └── tutor-dashboard.tsx         # Tutor dashboard view
-│   ├── landing/                        # Landing page sections
-│   └── ui/                             # shadcn/ui primitives
-├── lib/
-│   ├── types.ts                        # TypeScript interfaces (mirror DB tables)
-│   ├── constants.ts                    # Shared UI constants (status colors, etc.)
-│   ├── error-codes.ts                  # SSD-compliant error codes (50+ codes)
-│   ├── user-context.tsx                # Centralized user/profile state
-│   ├── demo.ts                         # Demo mode user ID mappings
-│   ├── utils.ts                        # cn() classname utility
-│   ├── api/
-│   │   └── pagination.ts               # Standardized pagination helpers
-│   └── supabase/
-│       ├── client.ts                   # Browser Supabase client
-│       ├── server.ts                   # Server client + admin client
-│       ├── create-client.ts            # Shared client factory
-│       └── middleware.ts               # Session refresh middleware
-├── hooks/
-│   ├── use-inactivity-timeout.ts       # Auto-logout after inactivity
-│   └── use-mobile.tsx                  # Mobile detection hook
-├── scripts/                            # SQL migration scripts (run in order)
+│       ├── android/auth/               # Android app API endpoints
+│       ├── quizzes/                    # Quiz CRUD APIs
+│       └── ...                         # Other API routes
+│
+├── android/                            # Native Android app (Kotlin)
+│   ├── app/src/main/java/com/scholarme/
+│   │   ├── core/                       # Shared utilities
+│   │   │   ├── data/local/             # TokenManager (encrypted storage)
+│   │   │   ├── data/model/             # API request/response models
+│   │   │   ├── data/remote/            # ApiService, ApiClient
+│   │   │   └── util/                   # Result wrapper
+│   │   └── features/                   # Vertical slices
+│   │       ├── auth/                   # Login, Register
+│   │       ├── dashboard/              # Dashboard screen
+│   │       └── profile/                # Profile, UpdateProfile, ChangePassword
+│   └── app/src/main/res/               # XML layouts, drawables, themes
+│
 ├── mobile/                             # React Native / Expo mobile app
-├── middleware.ts                       # Next.js middleware (session refresh)
+│
+├── components/                         # Shared UI components
+│   ├── ui/                             # shadcn/ui primitives
+│   ├── dashboard/                      # Dashboard views
+│   └── landing/                        # Landing page sections
+│
+├── lib/                                # Utilities (backward compatible)
+│   ├── types.ts                        # Re-exports from features
+│   ├── supabase/                       # Supabase clients
+│   └── ...
+│
+├── hooks/                              # Shared hooks
+├── scripts/                            # SQL migration scripts
 └── package.json
 ```
 
@@ -401,11 +410,11 @@ Demo mode is intended for development and preview purposes. In production, remov
 
 ---
 
-## Mobile App
+## Mobile Apps
+
+### React Native / Expo App
 
 The `mobile/` directory contains a **React Native** app built with **Expo Router**. It mirrors the web dashboard with tab-based navigation for home, sessions, tutors, resources, and profile screens.
-
-To run the mobile app:
 
 ```bash
 cd mobile
@@ -413,12 +422,52 @@ npm install
 npx expo start
 ```
 
-The mobile app uses the same Supabase backend. Set the following environment variables for Expo:
+Set environment variables for Expo:
 
 ```env
 EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
+
+### Native Android App (Kotlin)
+
+The `android/` directory contains a complete **native Android app** built with Kotlin, following MVVM architecture and vertical slicing.
+
+**Features:**
+- Login & Registration with role selection (Learner/Tutor)
+- Dashboard with stats and quick actions
+- Profile management (view, update, change password)
+- Encrypted token storage using AndroidX Security
+- Retrofit API client with Bearer authentication
+
+**To build the APK:**
+
+1. Open the `android/` folder in **Android Studio**
+2. Wait for Gradle sync to complete
+3. Update `API_BASE_URL` in `app/build.gradle.kts` with your Vercel URL
+4. Build > Build APK(s)
+5. Install on device/emulator
+
+**Project Structure:**
+```
+android/app/src/main/java/com/scholarme/
+├── core/                    # Shared utilities
+│   ├── data/local/          # TokenManager (encrypted SharedPreferences)
+│   ├── data/model/          # API request/response models
+│   ├── data/remote/         # ApiService, ApiClient (Retrofit)
+│   └── util/                # Result sealed class
+└── features/                # Vertical slices
+    ├── auth/                # Login, Register activities
+    ├── dashboard/           # Dashboard activity
+    └── profile/             # Profile, UpdateProfile, ChangePassword
+```
+
+**API Endpoints (for Android):**
+- `POST /api/android/auth/login` - Login with email/password
+- `POST /api/android/auth/register` - Register new user
+- `GET /api/android/auth/profile` - Get user profile
+- `PUT /api/android/auth/update-profile` - Update profile
+- `POST /api/android/auth/change-password` - Change password
 
 ---
 
@@ -448,8 +497,11 @@ Ensure the Supabase project's **Site URL** and **Redirect URLs** are configured 
 | Tutor availability calendar        | Implemented  | Weekly time slot management              |
 | Session history tracking           | Implemented  | Session lifecycle management             |
 | Organization voting (Journey 6)    | Implemented  | Polls, poll_options, user_votes          |
+| Flashcard & Quiz Generator         | Implemented  | Study sets, flashcards, quiz mode        |
 | Push notification infrastructure   | Implemented  | Device tokens table, API endpoints       |
-| Error codes (50+ variations)       | Implemented  | `lib/error-codes.ts`                     |
+| Error codes (50+ variations)       | Implemented  | `lib/api-errors.ts`                      |
 | Standardized API responses         | Implemented  | Success/error format with pagination     |
+| Native Android App                 | Implemented  | Kotlin MVVM with Retrofit                |
+| Vertical Slicing Architecture      | Implemented  | Feature-based code organization          |
 
-**Overall Compliance: ~95%**
+**Overall Compliance: ~98%**
