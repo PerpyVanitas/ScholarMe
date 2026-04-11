@@ -1,12 +1,17 @@
-package com.scholarme.features.sessions;
+package com.scholarme.shared.entity;
 
-import com.scholarme.shared.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
+/**
+ * Tutor entity - represents a user with tutor role.
+ * Shared across features (sessions, tutors, dashboard).
+ * 
+ * @see User for base profile information
+ */
 @Entity
 @Table(name = "tutors")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder

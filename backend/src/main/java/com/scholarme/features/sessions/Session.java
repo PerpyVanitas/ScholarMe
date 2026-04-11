@@ -1,5 +1,6 @@
 package com.scholarme.features.sessions;
 
+import com.scholarme.shared.entity.Tutor;
 import com.scholarme.shared.entity.User;
 import jakarta.persistence.*;
 import lombok.*;

@@ -1,6 +1,7 @@
 package com.scholarme.features.sessions;
 
 import com.scholarme.features.sessions.dto.*;
+import com.scholarme.shared.entity.Tutor;
 import com.scholarme.shared.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

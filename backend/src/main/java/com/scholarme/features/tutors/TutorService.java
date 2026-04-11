@@ -1,6 +1,7 @@
 package com.scholarme.features.tutors;
 
 import com.scholarme.features.tutors.dto.*;
+import com.scholarme.shared.entity.Tutor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

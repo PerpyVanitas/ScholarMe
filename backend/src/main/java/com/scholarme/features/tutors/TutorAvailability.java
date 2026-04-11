@@ -1,5 +1,6 @@
 package com.scholarme.features.tutors;
 
+import com.scholarme.shared.entity.Tutor;
 import jakarta.persistence.*;
 import lombok.*;
 
