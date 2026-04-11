@@ -4,128 +4,135 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* ScholarMe Color Scheme - Professional Educational Platform */
-  /* Primary:   Deep Blue  — trust, authority        */
-  /* Secondary: Mid Blue   — supporting actions      */
-  /* Accent:    Warm Gold  — achievement, highlights */
-  /* Neutrals:  Cool Grays — backgrounds, borders    */
+  /* ScholarMe Color Scheme - Per SSD Section 7.0 */
+  /* Primary-Light: #FFFFFF (Pure White - Main Text, Card Backgrounds) */
+  /* Primary-Dark: #1C1C1C (Deep Black/Charcoal - Main Background in dark mode) */
+  /* Accent/Gold: #B8860B (Dark Goldenrod - Primary Buttons, Key Links, Active States) */
+  /* Success: #37A169, Error: #D93B3B, Warning: #FFC300 */
 
-  --background: oklch(0.99 0.002 255);
-  --foreground: oklch(0.12 0.02 255);
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.15 0.01 0);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.12 0.02 255);
+  --card-foreground: oklch(0.15 0.01 0);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.12 0.02 255);
+  --popover-foreground: oklch(0.15 0.01 0);
 
-  /* Primary: Deep Blue ~#2E5090 */
-  --primary: oklch(0.42 0.18 260);
+  /* Primary: Dark Goldenrod #B8860B (SSD Accent/Action color) */
+  --primary: oklch(0.62 0.14 75);
   --primary-foreground: oklch(0.99 0 0);
 
-  /* Secondary: Soft Periwinkle-Blue ~#6B8FD4 */
-  --secondary: oklch(0.60 0.12 258);
-  --secondary-foreground: oklch(0.99 0 0);
+  /* Secondary: Neutral gray for supporting elements */
+  --secondary: oklch(0.92 0.01 0);
+  --secondary-foreground: oklch(0.15 0.01 0);
 
-  --muted: oklch(0.94 0.01 255);
-  --muted-foreground: oklch(0.46 0.03 258);
+  --muted: oklch(0.94 0.01 0);
+  --muted-foreground: oklch(0.46 0.02 0);
 
-  /* Accent: Warm Gold ~#E8A020 */
-  --accent: oklch(0.65 0.18 70);
-  --accent-foreground: oklch(0.15 0.02 70);
+  /* Accent: Same as Primary (Gold) */
+  --accent: oklch(0.62 0.14 75);
+  --accent-foreground: oklch(0.99 0 0);
 
-  --destructive: oklch(0.63 0.21 30);
+  /* Destructive: Deep Red #D93B3B */
+  --destructive: oklch(0.55 0.20 25);
   --destructive-foreground: oklch(1 0 0);
 
-  --border: oklch(0.91 0.01 255);
-  --input: oklch(0.96 0.01 255);
-  --ring: oklch(0.42 0.18 260);
+  --border: oklch(0.90 0.01 0);
+  --input: oklch(0.96 0.01 0);
+  --ring: oklch(0.62 0.14 75);
 
-  /* Charts — blue family + gold accent */
-  --chart-1: oklch(0.42 0.18 260);
-  --chart-2: oklch(0.55 0.15 258);
-  --chart-3: oklch(0.65 0.18 70);
-  --chart-4: oklch(0.68 0.10 255);
-  --chart-5: oklch(0.34 0.14 265);
+  /* Charts — charcoal + gold theme */
+  --chart-1: oklch(0.62 0.14 75);
+  --chart-2: oklch(0.50 0.12 75);
+  --chart-3: oklch(0.40 0.08 0);
+  --chart-4: oklch(0.70 0.10 75);
+  --chart-5: oklch(0.30 0.05 0);
 
   --radius: 0.625rem;
 
-  /* Sidebar — very light blue-tinted surface */
-  --sidebar: oklch(0.97 0.006 255);
-  --sidebar-foreground: oklch(0.12 0.02 255);
-  --sidebar-primary: oklch(0.42 0.18 260);
+  /* Sidebar — light neutral */
+  --sidebar: oklch(0.97 0.005 0);
+  --sidebar-foreground: oklch(0.15 0.01 0);
+  --sidebar-primary: oklch(0.62 0.14 75);
   --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.90 0.04 260);
-  --sidebar-accent-foreground: oklch(0.38 0.16 260);
-  --sidebar-border: oklch(0.91 0.01 255);
-  --sidebar-ring: oklch(0.42 0.18 260);
+  --sidebar-accent: oklch(0.94 0.02 75);
+  --sidebar-accent-foreground: oklch(0.50 0.10 75);
+  --sidebar-border: oklch(0.90 0.01 0);
+  --sidebar-ring: oklch(0.62 0.14 75);
 
-  /* Semantic status — kept intentionally distinct */
-  --success: oklch(0.52 0.14 145);
+  /* Semantic status - per SSD */
+  /* Success: #37A169 */
+  --success: oklch(0.58 0.14 155);
   --success-foreground: oklch(1 0 0);
 
-  --warning: oklch(0.74 0.16 68);
-  --warning-foreground: oklch(0.15 0.02 65);
+  /* Warning: #FFC300 */
+  --warning: oklch(0.82 0.16 85);
+  --warning-foreground: oklch(0.15 0.02 85);
 }
 
 .dark {
-  /* Dark mode — rich navy blue (NOT pitch black) */
-  /* Navy blue base ~#1A2744 with visible blue saturation */
+  /* Dark mode — Deep Black/Charcoal #1C1C1C per SSD Section 7.0 */
+  /* Primary-Dark: #1C1C1C (Deep Black/Charcoal - Main Background) */
 
-  --background: oklch(0.26 0.05 255);
-  --foreground: oklch(0.95 0.01 240);
-  --card: oklch(0.30 0.055 255);
-  --card-foreground: oklch(0.95 0.01 240);
-  --popover: oklch(0.30 0.055 255);
-  --popover-foreground: oklch(0.95 0.01 240);
+  --background: oklch(0.18 0.005 0);
+  --foreground: oklch(0.95 0 0);
+  --card: oklch(0.22 0.005 0);
+  --card-foreground: oklch(0.95 0 0);
+  --popover: oklch(0.22 0.005 0);
+  --popover-foreground: oklch(0.95 0 0);
 
-  /* Primary: Bright blue for navy contrast */
-  --primary: oklch(0.62 0.20 260);
-  --primary-foreground: oklch(0.99 0 0);
+  /* Primary: Gold #B8860B - stands out on dark */
+  --primary: oklch(0.68 0.15 75);
+  --primary-foreground: oklch(0.12 0 0);
 
-  /* Secondary: Lighter navy-blue */
-  --secondary: oklch(0.35 0.06 255);
-  --secondary-foreground: oklch(0.95 0.01 240);
+  /* Secondary: Dark gray */
+  --secondary: oklch(0.28 0.005 0);
+  --secondary-foreground: oklch(0.95 0 0);
 
-  --muted: oklch(0.32 0.05 255);
-  --muted-foreground: oklch(0.70 0.03 255);
+  --muted: oklch(0.25 0.005 0);
+  --muted-foreground: oklch(0.65 0.01 0);
 
-  /* Accent: Warm Gold — pops against navy */
-  --accent: oklch(0.72 0.18 72);
-  --accent-foreground: oklch(0.18 0.02 65);
+  /* Accent: Warm Gold — pops against charcoal */
+  --accent: oklch(0.68 0.15 75);
+  --accent-foreground: oklch(0.12 0 0);
 
-  --destructive: oklch(0.65 0.20 30);
+  /* Destructive: Deep Red #D93B3B */
+  --destructive: oklch(0.58 0.20 25);
   --destructive-foreground: oklch(1 0 0);
 
-  --border: oklch(0.36 0.05 255);
-  --input: oklch(0.32 0.05 255);
-  --ring: oklch(0.62 0.20 260);
+  --border: oklch(0.30 0.005 0);
+  --input: oklch(0.25 0.005 0);
+  --ring: oklch(0.68 0.15 75);
 
-  /* Charts — blue family + gold */
-  --chart-1: oklch(0.62 0.20 260);
-  --chart-2: oklch(0.72 0.14 258);
-  --chart-3: oklch(0.72 0.18 72);
-  --chart-4: oklch(0.80 0.09 255);
-  --chart-5: oklch(0.50 0.16 265);
+  /* Charts — gold + charcoal theme */
+  --chart-1: oklch(0.68 0.15 75);
+  --chart-2: oklch(0.55 0.12 75);
+  --chart-3: oklch(0.75 0.12 75);
+  --chart-4: oklch(0.45 0.08 0);
+  --chart-5: oklch(0.60 0.10 75);
 
-  /* Sidebar — slightly darker navy than background */
-  --sidebar: oklch(0.22 0.05 255);
-  --sidebar-foreground: oklch(0.95 0.01 240);
-  --sidebar-primary: oklch(0.62 0.20 260);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.32 0.06 260);
-  --sidebar-accent-foreground: oklch(0.88 0.05 255);
-  --sidebar-border: oklch(0.34 0.05 255);
-  --sidebar-ring: oklch(0.62 0.20 260);
+  /* Sidebar — slightly darker charcoal */
+  --sidebar: oklch(0.15 0.005 0);
+  --sidebar-foreground: oklch(0.95 0 0);
+  --sidebar-primary: oklch(0.68 0.15 75);
+  --sidebar-primary-foreground: oklch(0.12 0 0);
+  --sidebar-accent: oklch(0.25 0.01 75);
+  --sidebar-accent-foreground: oklch(0.75 0.10 75);
+  --sidebar-border: oklch(0.28 0.005 0);
+  --sidebar-ring: oklch(0.68 0.15 75);
 
-  --success: oklch(0.62 0.14 145);
+  /* Success: #37A169 */
+  --success: oklch(0.62 0.14 155);
   --success-foreground: oklch(0.99 0 0);
 
-  --warning: oklch(0.78 0.16 68);
-  --warning-foreground: oklch(0.15 0.02 65);
+  /* Warning: #FFC300 */
+  --warning: oklch(0.82 0.16 85);
+  --warning-foreground: oklch(0.15 0.02 85);
 }
 
 @theme inline {
-  --font-sans: 'Geist', 'Geist Fallback';
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  /* Per SSD Section 7.0: Inter font family */
+  --font-sans: var(--font-inter), 'Inter', system-ui, sans-serif;
+  --font-mono: var(--font-mono), 'JetBrains Mono', monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
