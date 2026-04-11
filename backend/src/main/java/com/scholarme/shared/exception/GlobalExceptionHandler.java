@@ -16,12 +16,23 @@ import java.util.Map;
 
 /**
  * Global Exception Handler
- * Standardized error responses per SSD Section 5.1
+ * 
+ * Provides centralized exception handling for all REST controllers.
+ * Returns standardized error responses per SSD Section 5.1 specifications.
+ * 
+ * Error Code Prefixes:
+ * - VALID-xxx: Validation/constraint errors (400)
+ * - AUTH-xxx: Authentication/authorization errors (401, 403)
+ * - BUS-xxx: Business logic errors (400)
+ * - SYS-xxx: System/infrastructure errors (500)
+ * 
+ * @see ApiResponse for response wrapper structure
  */
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
 
+    /** Handles @Valid annotation failures with field-level error details */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
@@ -32,24 +43,28 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("VALID-001", "Validation failed", errors));
     }
 
+    /** Handles JPA/Hibernate constraint violations (e.g., unique constraints) */
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ApiResponse<Object>> handleConstraintViolation(ConstraintViolationException ex) {
         return ResponseEntity.badRequest()
                 .body(ApiResponse.error("VALID-002", "Constraint violation", ex.getMessage()));
     }
 
+    /** Handles business logic validation failures from service layer */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Object>> handleIllegalArgument(IllegalArgumentException ex) {
         return ResponseEntity.badRequest()
                 .body(ApiResponse.error("BUS-001", "Business logic error", ex.getMessage()));
     }
 
+    /** Handles @PreAuthorize failures and role-based access denials */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Object>> handleAccessDenied(AccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.error("AUTH-002", "Access denied"));
     }
 
+    /** Catch-all handler for unexpected exceptions - logs full stack trace */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleGenericException(Exception ex) {
         log.error("Unhandled exception", ex);

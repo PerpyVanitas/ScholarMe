@@ -1,19 +1,35 @@
-/** Supabase middleware helper -- refreshes auth tokens on every request. */
+/**
+ * Supabase Authentication Middleware
+ * 
+ * Handles session management and route protection for the Next.js application:
+ * - Refreshes JWT tokens automatically on each request
+ * - Redirects unauthenticated users from protected routes to login
+ * - Redirects authenticated users away from auth pages to dashboard
+ * 
+ * @see proxy.ts - Next.js 16 proxy file that invokes this middleware
+ */
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
-// Routes that require authentication
+/** Routes requiring valid authentication session */
 const PROTECTED_ROUTES = ["/dashboard"]
 
-// Routes only for unauthenticated users
+/** Routes accessible only to unauthenticated users (login, signup, etc.) */
 const AUTH_ROUTES = ["/auth/login", "/auth/sign-up", "/auth/card-login"]
 
-// Routes that are always public
+/** Routes accessible to all users regardless of auth state */
 const PUBLIC_ROUTES = ["/", "/auth/callback", "/auth/error"]
 
+/**
+ * Validates and refreshes the user session, then enforces route protection.
+ * 
+ * @param request - Incoming Next.js request
+ * @returns NextResponse - Either continues to route or redirects based on auth state
+ */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
+  // Initialize Supabase client with cookie-based session management
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

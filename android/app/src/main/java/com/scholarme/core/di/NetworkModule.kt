@@ -21,36 +21,55 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 /**
- * Hilt module providing network-related dependencies.
+ * Hilt Dependency Injection Module for Network Layer
+ * 
+ * Provides singleton instances of:
+ * - Gson: JSON serialization with ISO 8601 date format
+ * - OkHttpClient: HTTP client with auth, logging, and error interceptors
+ * - Retrofit: Type-safe REST client configured for the backend API
+ * - ApiService: Interface implementation for all API endpoints
+ * 
+ * All dependencies are scoped to SingletonComponent (application lifecycle).
  */
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
+    /** Gson configured for ISO 8601 date parsing (UTC format from backend) */
     @Provides
     @Singleton
     fun provideGson(): Gson = GsonBuilder()
         .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
         .create()
 
+    /** Provides singleton TokenManager for secure credential storage */
     @Provides
     @Singleton
     fun provideTokenManager(@ApplicationContext context: Context): TokenManager {
         return TokenManager.getInstance(context)
     }
 
+    /** Interceptor that attaches Bearer token to authenticated requests */
     @Provides
     @Singleton
     fun provideAuthInterceptor(tokenManager: TokenManager): AuthInterceptor {
         return AuthInterceptor(tokenManager)
     }
     
+    /** Interceptor with retry logic and user-friendly error messages */
     @Provides
     @Singleton
     fun provideNetworkErrorInterceptor(): NetworkErrorInterceptor {
         return NetworkErrorInterceptor()
     }
 
+    /**
+     * Configures OkHttpClient with:
+     * - Auth interceptor (adds JWT to headers)
+     * - Network error interceptor (retry logic)
+     * - Logging interceptor (debug builds only)
+     * - 30-second timeouts for all operations
+     */
     @Provides
     @Singleton
     fun provideOkHttpClient(
@@ -76,6 +95,7 @@ object NetworkModule {
             .build()
     }
 
+    /** Retrofit instance configured with base URL from BuildConfig */
     @Provides
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
@@ -86,6 +106,7 @@ object NetworkModule {
             .build()
     }
 
+    /** Creates type-safe API interface implementation */
     @Provides
     @Singleton
     fun provideApiService(retrofit: Retrofit): ApiService {

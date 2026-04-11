@@ -17,8 +17,15 @@ import java.util.Locale
 import java.util.TimeZone
 
 /**
- * RecyclerView Adapter for displaying session items.
- * Uses ListAdapter with DiffUtil for efficient updates.
+ * RecyclerView Adapter for tutoring session cards.
+ * 
+ * Features:
+ * - Efficient updates via ListAdapter + DiffUtil (only re-renders changed items)
+ * - Color-coded status badges (pending, confirmed, completed, cancelled)
+ * - Tutor avatar loading with Coil (circular crop, placeholder handling)
+ * - UTC to local timezone conversion for session times
+ * 
+ * @param onItemClick Callback invoked when a session card is tapped
  */
 class SessionsAdapter(
     private val onItemClick: (SessionDto) -> Unit = {}
