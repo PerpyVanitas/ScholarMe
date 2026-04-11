@@ -13,15 +13,10 @@ export default async function HomePage() {
   let isLoggedIn = false
   try {
     const supabase = await createClient()
-    // Add timeout to prevent hanging if database is paused
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("Auth check timeout")), 3000)
-    )
-    const authPromise = supabase.auth.getUser()
-    const { data: { user } } = await Promise.race([authPromise, timeoutPromise]) as Awaited<typeof authPromise>
+    const { data: { user } } = await supabase.auth.getUser()
     isLoggedIn = !!user
   } catch {
-    // If auth check fails or times out, show the landing page as logged out
+    // If auth check fails, show the landing page as logged out
   }
 
   return (
