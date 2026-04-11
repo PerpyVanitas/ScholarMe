@@ -149,12 +149,20 @@ The codebase follows **vertical slicing architecture** where features are self-c
 │
 ├── backend/                            # Spring Boot 3.x API (Java 17)
 │   ├── src/main/java/com/scholarme/
-│   │   ├── controller/                 # REST controllers (/api/v1/*)
-│   │   ├── entity/                     # JPA entities
-│   │   ├── repository/                 # Spring Data JPA repositories
-│   │   ├── service/                    # Business logic services
-│   │   ├── security/                   # JWT authentication
-│   │   └── dto/                        # Data transfer objects
+│   │   ├── features/                   # Vertical slices (feature modules)
+│   │   │   ├── auth/                   # AuthController, AuthService, DTOs
+│   │   │   ├── admin/                  # AdminController, AdminService, AnalyticsLog
+│   │   │   ├── dashboard/              # DashboardController, DashboardService
+│   │   │   ├── notifications/          # NotificationController, Notification entity
+│   │   │   ├── sessions/               # SessionController, Session entity, DTOs
+│   │   │   ├── tutors/                 # TutorController, TutorAvailability
+│   │   │   └── users/                  # UserController, UserService
+│   │   └── shared/                     # Cross-cutting concerns
+│   │       ├── dto/                    # ApiResponse wrapper
+│   │       ├── entity/                 # User, Role, AuthCard, Tutor
+│   │       ├── exception/              # GlobalExceptionHandler
+│   │       ├── repository/             # UserRepository
+│   │       └── security/               # JwtService, SecurityConfig
 │   └── pom.xml                         # Maven configuration
 │
 ├── mobile/                             # React Native / Expo mobile app
@@ -446,10 +454,12 @@ The `android/` directory contains a complete **native Android app** built with K
 
 **Features:**
 - Login & Registration with role selection (Learner/Tutor)
-- Dashboard with stats and quick actions
+- Dashboard with stats, quick actions, and sessions list
 - Profile management (view, update, change password)
 - Encrypted token storage using AndroidX Security
 - Retrofit API client with Bearer authentication
+- Hilt dependency injection for testable, modular code
+- Network error handling with retry logic and user-friendly messages
 
 **To build the APK:**
 
@@ -462,16 +472,24 @@ The `android/` directory contains a complete **native Android app** built with K
 **Project Structure:**
 ```
 android/app/src/main/java/com/scholarme/
+├── ScholarMeApplication.kt  # Hilt Application class
 ├── core/                    # Shared utilities
+│   ├── di/                  # Hilt DI modules (NetworkModule, RepositoryModule)
 │   ├── data/local/          # TokenManager (encrypted SharedPreferences)
 │   ├── data/model/          # API request/response models
-│   ├── data/remote/         # ApiService, ApiClient (Retrofit)
+│   ├── data/remote/         # ApiService, ApiClient, Interceptors
 │   └── util/                # Result sealed class
-└── features/                # Vertical slices
-    ├── auth/                # Login, Register activities
-    ├── dashboard/           # Dashboard activity
+└── features/                # Vertical slices (MVVM)
+    ├── auth/                # Login, Register (Activity + ViewModel + Repository)
+    ├── dashboard/           # Dashboard with SessionsAdapter
     └── profile/             # Profile, UpdateProfile, ChangePassword
 ```
+
+**Key Features:**
+- Hilt dependency injection for cleaner architecture
+- Network error interceptor with automatic retry (3 attempts, exponential backoff)
+- Auth interceptor for automatic Bearer token attachment
+- RecyclerView with DiffUtil for efficient session list updates
 
 **API Endpoints (for Android):**
 - `POST /api/android/auth/login` - Login with email/password
@@ -512,7 +530,9 @@ Ensure the Supabase project's **Site URL** and **Redirect URLs** are configured 
 | Push notification infrastructure   | Implemented  | Device tokens table, API endpoints       |
 | Error codes (50+ variations)       | Implemented  | `lib/api-errors.ts`                      |
 | Standardized API responses         | Implemented  | Success/error format with pagination     |
-| Native Android App                 | Implemented  | Kotlin MVVM with Retrofit                |
-| Vertical Slicing Architecture      | Implemented  | Feature-based code organization          |
+| Native Android App                 | Implemented  | Kotlin MVVM + Hilt DI + Retrofit         |
+| Vertical Slicing Architecture      | Implemented  | Feature-based modules (Web, Backend, Android) |
+| Error Boundaries                   | Implemented  | Global + dashboard error handling        |
+| Auth Guards (Middleware)           | Implemented  | Protected routes, auth-only routes       |
 
 **Overall Compliance: ~98%**
