@@ -36,7 +36,7 @@ class DashboardRepository(private val tokenManager: TokenManager) {
                         Result.Success(DashboardStats()) // Return empty stats
                     }
                 } else {
-                    val errorMsg = response.body()?.message ?: "Failed to load stats"
+                    val errorMsg = response.body()?.error?.message ?: "Failed to load stats"
                     Result.Error(errorMsg)
                 }
             } catch (e: Exception) {
@@ -57,7 +57,7 @@ class DashboardRepository(private val tokenManager: TokenManager) {
                     val data = response.body()?.data ?: emptyList()
                     Result.Success(data)
                 } else {
-                    val errorMsg = response.body()?.message ?: "Failed to load sessions"
+                    val errorMsg = response.body()?.error?.message ?: "Failed to load sessions"
                     Result.Error(errorMsg)
                 }
             } catch (e: Exception) {

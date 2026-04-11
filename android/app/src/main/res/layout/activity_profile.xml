@@ -233,7 +233,7 @@
                                         android:text="0.0"
                                         android:textSize="24sp"
                                         android:textStyle="bold"
-                                        android:textColor="@color/warning" />
+                                        android:textColor="@color/accent" />
 
                                     <TextView
                                         android:layout_width="wrap_content"
@@ -251,10 +251,10 @@
                                     android:orientation="vertical">
 
                                     <TextView
-                                        android:id="@+id/tvExperience"
+                                        android:id="@+id/tvTotalSessions"
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:text="0 years"
+                                        android:text="0 sessions"
                                         android:textSize="24sp"
                                         android:textStyle="bold"
                                         android:textColor="@color/primary" />
@@ -262,31 +262,7 @@
                                     <TextView
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:text="Experience"
-                                        android:textSize="12sp"
-                                        android:textColor="@color/text_secondary" />
-                                </LinearLayout>
-
-                                <LinearLayout
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:gravity="center"
-                                    android:orientation="vertical">
-
-                                    <TextView
-                                        android:id="@+id/tvHourlyRate"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="$0/hr"
-                                        android:textSize="24sp"
-                                        android:textStyle="bold"
-                                        android:textColor="@color/success" />
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="Rate"
+                                        android:text="Total Sessions"
                                         android:textSize="12sp"
                                         android:textColor="@color/text_secondary" />
                                 </LinearLayout>

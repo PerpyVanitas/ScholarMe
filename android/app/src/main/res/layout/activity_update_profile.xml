@@ -46,40 +46,6 @@
                     android:maxLines="1" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- First Name -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/tilFirstName"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:hint="First Name">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etFirstName"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="textPersonName"
-                    android:maxLines="1" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <!-- Last Name -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/tilLastName"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:hint="Last Name">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etLastName"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="textPersonName"
-                    android:maxLines="1" />
-            </com.google.android.material.textfield.TextInputLayout>
-
             <!-- Phone -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilPhone"

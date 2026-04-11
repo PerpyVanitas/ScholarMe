@@ -1,29 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Brand Colors -->
-    <color name="primary">#3B82F6</color>
-    <color name="primary_dark">#2563EB</color>
-    <color name="primary_light">#60A5FA</color>
-    <color name="secondary">#10B981</color>
+    <!-- Brand Colors - Matching Web App Deep Blue Theme -->
+    <color name="primary">#2E5090</color>
+    <color name="primary_dark">#1E3A6E</color>
+    <color name="primary_light">#6B8FD4</color>
+    <color name="secondary">#6B8FD4</color>
+    <color name="accent">#E8A020</color>
     
     <!-- Background Colors -->
-    <color name="background">#F9FAFB</color>
+    <color name="background">#F8FAFF</color>
     <color name="surface">#FFFFFF</color>
-    <color name="surface_variant">#F3F4F6</color>
+    <color name="surface_variant">#F0F4FF</color>
     
     <!-- Text Colors -->
-    <color name="text_primary">#111827</color>
-    <color name="text_secondary">#6B7280</color>
+    <color name="text_primary">#1A1A2E</color>
+    <color name="text_secondary">#4A5568</color>
     <color name="text_hint">#9CA3AF</color>
     
     <!-- Status Colors -->
-    <color name="success">#10B981</color>
-    <color name="warning">#F59E0B</color>
-    <color name="error">#EF4444</color>
-    <color name="info">#3B82F6</color>
+    <color name="success">#38A169</color>
+    <color name="warning">#D69E2E</color>
+    <color name="error">#E53E3E</color>
+    <color name="info">#3182CE</color>
     
     <!-- Material Theme Colors -->
     <color name="colorPrimary">@color/primary</color>
     <color name="colorPrimaryDark">@color/primary_dark</color>
-    <color name="colorAccent">@color/secondary</color>
+    <color name="colorAccent">@color/accent</color>
+    
+    <!-- Dark Mode Colors -->
+    <color name="background_dark">#1A2744</color>
+    <color name="surface_dark">#243B5E</color>
+    <color name="text_primary_dark">#F0F4FF</color>
 </resources>

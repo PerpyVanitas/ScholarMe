@@ -36,7 +36,7 @@ class AuthRepository(private val tokenManager: TokenManager) {
                         Result.Error("Invalid response from server")
                     }
                 } else {
-                    val errorMsg = response.body()?.message ?: "Login failed"
+                    val errorMsg = response.body()?.error?.message ?: "Login failed"
                     Result.Error(errorMsg)
                 }
             } catch (e: Exception) {
@@ -57,14 +57,22 @@ class AuthRepository(private val tokenManager: TokenManager) {
                 val response = apiService.register(request)
                 
                 if (response.isSuccessful && response.body()?.success == true) {
-                    val userId = response.body()?.data?.userId
-                    if (userId != null) {
-                        Result.Success(userId)
+                    val data = response.body()?.data
+                    if (data != null) {
+                        // Save token and user info after registration
+                        tokenManager.saveAccessToken(data.token)
+                        tokenManager.saveUserInfo(
+                            userId = data.user.id,
+                            email = data.user.email,
+                            fullName = data.user.fullName,
+                            role = data.user.role
+                        )
+                        Result.Success(data.user.id)
                     } else {
-                        Result.Error("Registration successful but no user ID returned")
+                        Result.Error("Registration successful but no user data returned")
                     }
                 } else {
-                    val errorMsg = response.body()?.message ?: "Registration failed"
+                    val errorMsg = response.body()?.error?.message ?: "Registration failed"
                     Result.Error(errorMsg)
                 }
             } catch (e: Exception) {

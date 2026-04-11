@@ -1,6 +1,31 @@
 package com.scholarme.core.data.remote
 
-import com.scholarme.core.data.model.*
+import com.scholarme.core.data.model.ApiResponse
+import com.scholarme.core.data.model.AvailabilityDto
+import com.scholarme.core.data.model.CardLoginRequest
+import com.scholarme.core.data.model.ChangePasswordRequest
+import com.scholarme.core.data.model.CreateRepositoryRequest
+import com.scholarme.core.data.model.CreateResourceRequest
+import com.scholarme.core.data.model.CreateSessionRequest
+import com.scholarme.core.data.model.DashboardStats
+import com.scholarme.core.data.model.DeviceTokenRequest
+import com.scholarme.core.data.model.EmailLoginRequest
+import com.scholarme.core.data.model.LoginResponse
+import com.scholarme.core.data.model.RateSessionRequest
+import com.scholarme.core.data.model.RegisterCardRequest
+import com.scholarme.core.data.model.RegisterRequest
+import com.scholarme.core.data.model.RegisterResponse
+import com.scholarme.core.data.model.RepositoryDto
+import com.scholarme.core.data.model.RepositoryListResponse
+import com.scholarme.core.data.model.ResourceDto
+import com.scholarme.core.data.model.ResourceListResponse
+import com.scholarme.core.data.model.SessionDto
+import com.scholarme.core.data.model.SpecializationDto
+import com.scholarme.core.data.model.TutorDto
+import com.scholarme.core.data.model.TutorListResponse
+import com.scholarme.core.data.model.UpdateProfileRequest
+import com.scholarme.core.data.model.UpdateSessionStatusRequest
+import com.scholarme.core.data.model.UserProfile
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -219,8 +244,13 @@ interface ApiService {
     ): Response<ApiResponse<Map<String, Any>>>
     
     // ============================================
-    // Legacy Dashboard Support
+    // Dashboard Endpoints
     // ============================================
+    
+    @GET("dashboard/stats")
+    suspend fun getDashboardStats(
+        @Header("Authorization") token: String
+    ): Response<ApiResponse<DashboardStats>>
     
     @GET("sessions")
     suspend fun getUpcomingSessions(

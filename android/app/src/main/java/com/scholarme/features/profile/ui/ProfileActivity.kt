@@ -60,15 +60,14 @@ class ProfileActivity : AppCompatActivity() {
                     binding.tvFullName.text = profile.fullName
                     binding.tvEmail.text = profile.email
                     binding.tvRole.text = profile.role.replaceFirstChar { it.uppercase() }
-                    binding.tvPhone.text = profile.phoneNumber ?: "Not set"
+                    binding.tvPhone.text = profile.phone ?: "Not set"
                     binding.tvBio.text = profile.bio ?: "No bio provided"
                     
                     // Show tutor-specific info if applicable
-                    if (profile.role == "tutor") {
+                    if (profile.role.lowercase() == "tutor") {
                         binding.tutorSection.visibility = View.VISIBLE
                         binding.tvRating.text = String.format("%.1f", profile.rating ?: 0.0)
-                        binding.tvExperience.text = "${profile.yearsExperience ?: 0} years"
-                        binding.tvHourlyRate.text = "$${profile.hourlyRate ?: 0}/hr"
+                        binding.tvTotalSessions.text = "${profile.totalSessions ?: 0} sessions"
                     } else {
                         binding.tutorSection.visibility = View.GONE
                     }

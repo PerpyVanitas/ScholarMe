@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark Mode Colors - Matching Web App Navy Blue Theme -->
+    <color name="primary">#6B8FD4</color>
+    <color name="primary_dark">#2E5090</color>
+    <color name="primary_light">#8BA8E0</color>
+    <color name="secondary">#3D5A80</color>
+    <color name="accent">#E8A020</color>
+    
+    <!-- Background Colors - Navy Blue -->
+    <color name="background">#1A2744</color>
+    <color name="surface">#243B5E</color>
+    <color name="surface_variant">#2D4A6F</color>
+    
+    <!-- Text Colors -->
+    <color name="text_primary">#F0F4FF</color>
+    <color name="text_secondary">#A8B5C8</color>
+    <color name="text_hint">#7D8A9D</color>
+    
+    <!-- Status Colors -->
+    <color name="success">#68D391</color>
+    <color name="warning">#F6AD55</color>
+    <color name="error">#FC8181</color>
+    <color name="info">#63B3ED</color>
+    
+    <!-- Material Theme Colors -->
+    <color name="colorPrimary">@color/primary</color>
+    <color name="colorPrimaryDark">@color/primary_dark</color>
+    <color name="colorAccent">@color/accent</color>
+</resources>

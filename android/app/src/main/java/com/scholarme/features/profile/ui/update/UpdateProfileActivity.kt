@@ -40,12 +40,10 @@ class UpdateProfileActivity : AppCompatActivity() {
         
         binding.btnSave.setOnClickListener {
             val fullName = binding.etFullName.text.toString().trim()
-            val firstName = binding.etFirstName.text.toString().trim().ifBlank { null }
-            val lastName = binding.etLastName.text.toString().trim().ifBlank { null }
             val phone = binding.etPhone.text.toString().trim().ifBlank { null }
             val bio = binding.etBio.text.toString().trim().ifBlank { null }
             
-            viewModel.updateProfile(fullName, firstName, lastName, phone, bio)
+            viewModel.updateProfile(fullName, phone, bio)
         }
     }
     
@@ -55,13 +53,11 @@ class UpdateProfileActivity : AppCompatActivity() {
             when (state) {
                 is Result.Success -> {
                     binding.etFullName.setText(state.data.fullName)
-                    binding.etFirstName.setText(state.data.firstName ?: "")
-                    binding.etLastName.setText(state.data.lastName ?: "")
-                    binding.etPhone.setText(state.data.phoneNumber ?: "")
+                    binding.etPhone.setText(state.data.phone ?: "")
                     binding.etBio.setText(state.data.bio ?: "")
                     
                     // Show bio field only for tutors
-                    binding.tilBio.visibility = if (state.data.role == "tutor") {
+                    binding.tilBio.visibility = if (state.data.role.lowercase() == "tutor") {
                         View.VISIBLE
                     } else {
                         View.GONE

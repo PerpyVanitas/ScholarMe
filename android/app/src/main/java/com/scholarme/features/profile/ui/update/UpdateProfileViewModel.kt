@@ -32,8 +32,6 @@ class UpdateProfileViewModel(private val repository: ProfileRepository) : ViewMo
     
     fun updateProfile(
         fullName: String,
-        firstName: String?,
-        lastName: String?,
         phone: String?,
         bio: String?
     ) {
@@ -49,9 +47,7 @@ class UpdateProfileViewModel(private val repository: ProfileRepository) : ViewMo
         viewModelScope.launch {
             _updateState.value = repository.updateProfile(
                 fullName = fullName,
-                firstName = firstName,
-                lastName = lastName,
-                phoneNumber = phone,
+                phone = phone,
                 bio = bio
             )
         }

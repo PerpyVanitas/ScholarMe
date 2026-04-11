@@ -99,10 +99,12 @@
             android:text="Sign In"
             android:textAllCaps="false"
             android:textSize="16sp"
-            app:cornerRadius="8dp"
+            android:backgroundTint="@color/primary"
+            app:cornerRadius="10dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvForgotPassword" />
+            app:layout_constraintTop_toBottomOf="@id/tvForgotPassword"
+            app:rippleColor="@color/primary_light" />
 
         <!-- Progress Bar -->
         <ProgressBar

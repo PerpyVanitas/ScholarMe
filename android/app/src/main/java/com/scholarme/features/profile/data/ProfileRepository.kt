@@ -45,7 +45,7 @@ class ProfileRepository(private val tokenManager: TokenManager) {
                         Result.Error("Failed to load profile")
                     }
                 } else {
-                    val errorMsg = response.body()?.message ?: "Failed to load profile"
+                    val errorMsg = response.body()?.error?.message ?: "Failed to load profile"
                     Result.Error(errorMsg)
                 }
             } catch (e: Exception) {
@@ -56,10 +56,10 @@ class ProfileRepository(private val tokenManager: TokenManager) {
     
     suspend fun updateProfile(
         fullName: String?,
-        firstName: String?,
-        lastName: String?,
-        phoneNumber: String?,
-        bio: String?
+        phone: String?,
+        bio: String?,
+        degreeProgram: String? = null,
+        yearLevel: Int? = null
     ): Result<UserProfile> {
         return withContext(Dispatchers.IO) {
             try {
@@ -68,10 +68,10 @@ class ProfileRepository(private val tokenManager: TokenManager) {
                 
                 val request = UpdateProfileRequest(
                     fullName = fullName,
-                    firstName = firstName,
-                    lastName = lastName,
-                    phoneNumber = phoneNumber,
-                    bio = bio
+                    phone = phone,
+                    bio = bio,
+                    degreeProgram = degreeProgram,
+                    yearLevel = yearLevel
                 )
                 
                 val response = apiService.updateProfile(token, request)
@@ -91,7 +91,7 @@ class ProfileRepository(private val tokenManager: TokenManager) {
                         Result.Error("Profile updated but response was empty")
                     }
                 } else {
-                    val errorMsg = response.body()?.message ?: "Failed to update profile"
+                    val errorMsg = response.body()?.error?.message ?: "Failed to update profile"
                     Result.Error(errorMsg)
                 }
             } catch (e: Exception) {
@@ -115,7 +115,7 @@ class ProfileRepository(private val tokenManager: TokenManager) {
                 if (response.isSuccessful && response.body()?.success == true) {
                     Result.Success(Unit)
                 } else {
-                    val errorMsg = response.body()?.message ?: "Failed to change password"
+                    val errorMsg = response.body()?.error?.message ?: "Failed to change password"
                     Result.Error(errorMsg)
                 }
             } catch (e: Exception) {
