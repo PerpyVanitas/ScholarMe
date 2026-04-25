@@ -22,12 +22,10 @@ export async function POST(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
-    const callerRoles = callerProfile?.roles as any;
-    const isCallerAdmin = Array.isArray(callerRoles)
-      ? callerRoles.some((r) => r.name === "administrator")
-      : callerRoles?.name === "administrator";
-
-    if (callerError || !isCallerAdmin) {
+    const isAdmin = Array.isArray(callerProfile?.roles) && 
+      callerProfile.roles.some((role: any) => role.name === "administrator");
+    
+    if (callerError || !isAdmin) {
       return NextResponse.json(
         createErrorResponse("AUTH_003_ADMIN_ONLY", "Only administrators can create admin accounts"),
         { status: 403 }
@@ -125,7 +123,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (err) {
-    console.error("[v0] create-admin error:", err);
+    console.error("create-admin error:", err);
     return NextResponse.json(
       createErrorResponse("SYSTEM_001_UNKNOWN_ERROR", "An unexpected error occurred"),
       { status: 500 }

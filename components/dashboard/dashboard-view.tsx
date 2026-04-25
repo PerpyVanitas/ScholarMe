@@ -65,7 +65,7 @@ export default function DashboardView() {
             extra.recentSessions = []
           }
         } else if (role === "tutor") {
-          const userId = isAuthenticated ? profile?.id : getDemoProfileId("tutor")
+          const userId = isAuthenticated ? profile.id : getDemoProfileId("tutor")
           const { data: tutor } = await supabase
             .from("tutors")
             .select("*")
@@ -103,7 +103,7 @@ export default function DashboardView() {
           }
         } else {
           // Learner
-          const learnerId = isAuthenticated ? profile?.id : getDemoProfileId("learner")
+          const learnerId = isAuthenticated ? profile.id : getDemoProfileId("learner")
           const { data: sessions } = await supabase
             .from("sessions")
             .select("*, tutors(*, profiles(*)), specializations(*)")

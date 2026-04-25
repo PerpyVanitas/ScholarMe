@@ -2,42 +2,34 @@ package com.scholarme
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.scholarme.core.auth.SessionValidator
+import com.scholarme.core.data.local.TokenManager
 import com.scholarme.features.auth.ui.login.LoginActivity
-import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
+import com.scholarme.features.dashboard.ui.DashboardActivity
 
 /**
  * Main entry point activity.
- *
- * Improvements:
- * - @AndroidEntryPoint enables Hilt field injection
- * - SessionValidator injected via Hilt (single source of truth for auth state)
- * - isUserAuthenticated() used instead of TokenManager.getInstance() directly
- *   — keeps session check logic in the dedicated validator, not scattered
+ * Handles splash screen and navigation to the appropriate screen based on auth state.
  */
-@AndroidEntryPoint
-class MainActivity : ComponentActivity() {
-
-    @Inject
-    lateinit var sessionValidator: SessionValidator
-
+class MainActivity : AppCompatActivity() {
+    
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Install splash screen before super.onCreate()
         installSplashScreen()
+        
         super.onCreate(savedInstanceState)
-
-        if (sessionValidator.isUserAuthenticated()) {
-            // User is authenticated, launch the new Jetpack Compose App!
-            setContent {
-                ScholarMeApp()
-            }
+        
+        // Check authentication state and navigate accordingly
+        val tokenManager = TokenManager.getInstance(this)
+        
+        val targetActivity = if (tokenManager.isLoggedIn()) {
+            DashboardActivity::class.java
         } else {
-            // User is not authenticated, fallback to legacy LoginActivity until Auth is migrated to Compose
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
+            LoginActivity::class.java
         }
+        
+        startActivity(Intent(this, targetActivity))
+        finish()
     }
 }

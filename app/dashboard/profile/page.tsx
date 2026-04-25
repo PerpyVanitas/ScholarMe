@@ -115,7 +115,7 @@ export default function ProfilePage() {
             
             if (tutorInfo.tutor_specializations) {
               const specs = tutorInfo.tutor_specializations
-                .map((ts: any) => Array.isArray(ts.specializations) ? ts.specializations[0] : ts.specializations)
+                .map((ts: { specializations: Specialization }) => ts.specializations)
                 .filter(Boolean);
               setSpecializations(specs);
               setSelectedSpecializations(specs.map(s => s.id));
@@ -419,11 +419,8 @@ export default function ProfilePage() {
                 <Badge variant="secondary" className="w-fit mx-auto sm:mx-0 capitalize">
                   {roleName}
                 </Badge>
-                <Badge variant="default" className="w-fit mx-auto sm:mx-0 bg-yellow-500 hover:bg-yellow-600 text-black">
-                  Level {profile.current_level || 1}
-                </Badge>
               </div>
-              <p className="text-muted-foreground">{profile.email} • {profile.total_xp || 0} XP</p>
+              <p className="text-muted-foreground">{profile.email}</p>
               
               {specializations.length > 0 && (
                 <div className="flex flex-wrap gap-2 justify-center sm:justify-start pt-2">

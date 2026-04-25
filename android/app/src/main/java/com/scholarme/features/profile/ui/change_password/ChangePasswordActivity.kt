@@ -1,106 +1,87 @@
 package com.scholarme.features.profile.ui.change_password
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.snackbar.Snackbar
+import com.scholarme.core.data.local.TokenManager
+import com.scholarme.core.util.Result
 import com.scholarme.databinding.ActivityChangePasswordBinding
-import com.scholarme.features.auth.ui.login.LoginActivity
-import com.scholarme.core.presentation.NavigationEvent
-import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
+import com.scholarme.features.profile.data.ProfileRepository
 
 /**
- * Change password screen activity (Vertical Slice — Profile Feature).
- *
- * Migrated to @AndroidEntryPoint + Hilt ViewModel + StateFlow collectors.
+ * Change password screen activity.
+ * Allows user to change their password.
  */
-@AndroidEntryPoint
 class ChangePasswordActivity : AppCompatActivity() {
-
+    
     private lateinit var binding: ActivityChangePasswordBinding
-
-    private val viewModel: ChangePasswordViewModel by viewModels()
-
+    
+    private val viewModel: ChangePasswordViewModel by viewModels {
+        ChangePasswordViewModelFactory(
+            ProfileRepository(TokenManager.getInstance(this))
+        )
+    }
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityChangePasswordBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        
         setupUI()
         observeViewModel()
     }
-
+    
     private fun setupUI() {
-        binding.toolbar.setNavigationOnClickListener { finish() }
-
+        binding.toolbar.setNavigationOnClickListener {
+            finish()
+        }
+        
         binding.btnChangePassword.setOnClickListener {
-            viewModel.changePassword(
-                currentPassword = binding.etCurrentPassword.text.toString(),
-                newPassword = binding.etNewPassword.text.toString(),
-                confirmPassword = binding.etConfirmPassword.text.toString()
-            )
+            val currentPassword = binding.etCurrentPassword.text.toString()
+            val newPassword = binding.etNewPassword.text.toString()
+            val confirmPassword = binding.etConfirmPassword.text.toString()
+            
+            viewModel.changePassword(currentPassword, newPassword, confirmPassword)
         }
     }
-
+    
     private fun observeViewModel() {
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-
-                launch {
-                    viewModel.state.collect { state ->
-                        if (state.isSuccess) {
-                            Snackbar.make(binding.root, "Password changed successfully!", Snackbar.LENGTH_SHORT).show()
-                            finish()
-                        }
-                    }
+        viewModel.changePasswordState.observe(this) { state ->
+            when (state) {
+                is Result.Loading -> {
+                    binding.progressBar.visibility = View.VISIBLE
+                    binding.btnChangePassword.isEnabled = false
                 }
-
-                launch {
-                    viewModel.isLoading.collect { loading ->
-                        binding.progressBar.visibility = if (loading) View.VISIBLE else View.GONE
-                        binding.btnChangePassword.isEnabled = !loading
-                    }
+                is Result.Success -> {
+                    binding.progressBar.visibility = View.GONE
+                    binding.btnChangePassword.isEnabled = true
+                    Snackbar.make(binding.root, "Password changed successfully!", Snackbar.LENGTH_SHORT).show()
+                    finish()
                 }
-
-                launch {
-                    viewModel.errorMessage.collect { error ->
-                        if (!error.isNullOrBlank()) {
-                            Snackbar.make(binding.root, error, Snackbar.LENGTH_LONG).show()
-                        }
-                    }
+                is Result.Error -> {
+                    binding.progressBar.visibility = View.GONE
+                    binding.btnChangePassword.isEnabled = true
+                    Snackbar.make(binding.root, state.message, Snackbar.LENGTH_LONG).show()
                 }
-
-                launch {
-                    viewModel.formState.collect { form ->
-                        binding.tilCurrentPassword.error = form.currentPasswordError
-                        binding.tilNewPassword.error = form.newPasswordError
-                        binding.tilConfirmPassword.error = form.confirmPasswordError
-                    }
-                }
-
-                launch {
-                    viewModel.navigationEvent.collect { event ->
-                        if (event is NavigationEvent.NavigateToLogin) {
-                            viewModel.clearNavigationEvent()
-                            navigateToLogin()
-                        }
-                    }
+                null -> {
+                    binding.progressBar.visibility = View.GONE
+                    binding.btnChangePassword.isEnabled = true
                 }
             }
         }
-    }
-
-    private fun navigateToLogin() {
-        val intent = Intent(this, LoginActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        
+        viewModel.currentPasswordError.observe(this) { error ->
+            binding.tilCurrentPassword.error = error
         }
-        startActivity(intent)
-        finish()
+        
+        viewModel.newPasswordError.observe(this) { error ->
+            binding.tilNewPassword.error = error
+        }
+        
+        viewModel.confirmPasswordError.observe(this) { error ->
+            binding.tilConfirmPassword.error = error
+        }
     }
 }

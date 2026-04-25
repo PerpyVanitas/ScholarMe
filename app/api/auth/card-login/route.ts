@@ -107,9 +107,13 @@ export async function POST(request: Request) {
       );
     }
 
+    const userRole = Array.isArray(card.profiles?.roles) && card.profiles.roles.length > 0 
+      ? card.profiles.roles[0].name 
+      : "learner";
+    
     return NextResponse.json(
       createSuccessResponse({
-        role: (Array.isArray(card.profiles?.roles) ? (card.profiles.roles[0] as any)?.name : (card.profiles?.roles as any)?.name) || "learner",
+        role: userRole,
       })
     );
   } catch {

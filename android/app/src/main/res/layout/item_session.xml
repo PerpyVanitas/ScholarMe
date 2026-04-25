@@ -5,8 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="4dp"
-    android:layout_marginVertical="5dp"
+    android:layout_marginVertical="6dp"
     app:cardCornerRadius="12dp"
     app:cardElevation="2dp"
     app:strokeWidth="0dp"
@@ -17,147 +16,128 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:padding="16dp">
 
-        <!-- Left accent bar — color changes with status via code -->
-        <View
-            android:id="@+id/viewStatusAccent"
-            android:layout_width="4dp"
-            android:layout_height="match_parent"
-            android:background="@color/secondary" />
+        <!-- Tutor Avatar -->
+        <ImageView
+            android:id="@+id/ivTutorAvatar"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:contentDescription="Tutor avatar"
+            android:src="@drawable/ic_person"
+            app:tint="@color/primary" />
 
+        <!-- Session Details -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="14dp">
+            android:layout_weight="1"
+            android:layout_marginStart="12dp"
+            android:orientation="vertical">
 
-            <!-- Tutor Avatar -->
-            <ImageView
-                android:id="@+id/ivTutorAvatar"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:contentDescription="Tutor avatar"
-                android:src="@drawable/ic_person"
-                app:tint="@color/primary" />
-
-            <!-- Session Details -->
+            <!-- Tutor Name and Status Row -->
             <LinearLayout
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="12dp"
-                android:orientation="vertical">
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-                <!-- Tutor Name + Status Chip Row -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <TextView
-                        android:id="@+id/tvTutorName"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:textSize="15sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary"
-                        android:maxLines="1"
-                        android:ellipsize="end"
-                        tools:text="Dr. John Santos" />
-
-                    <TextView
-                        android:id="@+id/tvStatus"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:paddingHorizontal="8dp"
-                        android:paddingVertical="3dp"
-                        android:textSize="10sp"
-                        android:textColor="@android:color/white"
-                        android:textAllCaps="true"
-                        android:textStyle="bold"
-                        android:background="@drawable/bg_status_pending"
-                        tools:text="PENDING" />
-
-                </LinearLayout>
-
-                <!-- Topic / Specialization -->
                 <TextView
-                    android:id="@+id/tvTopic"
-                    android:layout_width="match_parent"
+                    android:id="@+id/tvTutorName"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
-                    android:textSize="13sp"
-                    android:textColor="@color/text_secondary"
+                    android:layout_weight="1"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
                     android:maxLines="1"
                     android:ellipsize="end"
-                    tools:text="Calculus — Differential Equations" />
+                    tools:text="John Doe" />
 
-                <!-- Date/Time + Duration Row -->
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/tvStatus"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="2dp"
+                    android:textSize="10sp"
+                    android:textColor="@android:color/white"
+                    android:textAllCaps="true"
+                    android:background="@drawable/bg_status_pending"
+                    tools:text="Scheduled" />
+            </LinearLayout>
 
-                    <ImageView
-                        android:layout_width="13dp"
-                        android:layout_height="13dp"
-                        android:src="@drawable/ic_schedule"
-                        app:tint="@color/text_hint" />
+            <!-- Topic -->
+            <TextView
+                android:id="@+id/tvTopic"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:maxLines="1"
+                android:ellipsize="end"
+                tools:text="Calculus Tutorial" />
 
-                    <TextView
-                        android:id="@+id/tvDateTime"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="4dp"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_hint"
-                        tools:text="Jan 15 at 2:00 PM" />
+            <!-- Date/Time and Duration Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-                    <TextView
-                        android:id="@+id/tvDuration"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_hint"
-                        tools:text="60 min" />
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:src="@drawable/ic_schedule"
+                    app:tint="@color/text_hint" />
 
-                </LinearLayout>
-
-                <!-- Location (shown only if present) -->
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/tvDateTime"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_hint"
+                    tools:text="Jan 15, 2025 at 2:00 PM" />
 
-                    <ImageView
-                        android:layout_width="13dp"
-                        android:layout_height="13dp"
-                        android:src="@drawable/ic_location"
-                        app:tint="@color/text_hint" />
+                <TextView
+                    android:id="@+id/tvDuration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_hint"
+                    tools:text="60 min" />
+            </LinearLayout>
 
-                    <TextView
-                        android:id="@+id/tvLocation"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="4dp"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_hint"
-                        android:visibility="gone"
-                        tools:text="Library Room 101"
-                        tools:visibility="visible" />
+            <!-- Location (optional) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-                </LinearLayout>
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:src="@drawable/ic_location"
+                    app:tint="@color/text_hint" />
 
+                <TextView
+                    android:id="@+id/tvLocation"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_hint"
+                    android:visibility="gone"
+                    tools:text="Library Room 101"
+                    tools:visibility="visible" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
-
 </com.google.android.material.card.MaterialCardView>

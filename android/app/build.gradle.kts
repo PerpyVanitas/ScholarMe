@@ -11,44 +11,17 @@ android {
 
     defaultConfig {
         applicationId = "com.scholarme"
-        minSdk = 26
+        minSdk = 24
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
-        // Default values (overridden by flavors)
+        // API Base URL - UPDATE THIS to your Spring Boot backend URL
+        // For local dev: http://10.0.2.2:8080/api/v1/ (Android emulator localhost)
+        // For production: https://your-backend.railway.app/api/v1/
         buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080/api/v1/\"")
-        buildConfigField("String", "ENVIRONMENT", "\"development\"")
-        buildConfigField("Boolean", "ENABLE_NETWORK_LOGGING", "true")
-    }
-
-    flavorDimensions += "environment"
-    
-    productFlavors {
-        create("dev") {
-            dimension = "environment"
-            applicationIdSuffix = ".dev"
-            versionNameSuffix = "-dev"
-            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080/api/v1/\"")
-            buildConfigField("String", "ENVIRONMENT", "\"development\"")
-            buildConfigField("Boolean", "ENABLE_NETWORK_LOGGING", "true")
-        }
-        create("staging") {
-            dimension = "environment"
-            applicationIdSuffix = ".staging"
-            versionNameSuffix = "-staging"
-            buildConfigField("String", "API_BASE_URL", "\"https://staging-api.scholarme.app/api/v1/\"")
-            buildConfigField("String", "ENVIRONMENT", "\"staging\"")
-            buildConfigField("Boolean", "ENABLE_NETWORK_LOGGING", "false")
-        }
-        create("production") {
-            dimension = "environment"
-            buildConfigField("String", "API_BASE_URL", "\"https://api.scholarme.app/api/v1/\"")
-            buildConfigField("String", "ENVIRONMENT", "\"production\"")
-            buildConfigField("Boolean", "ENABLE_NETWORK_LOGGING", "false")
-        }
     }
 
     buildTypes {
@@ -76,11 +49,6 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
-        compose = true
-    }
-    
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.3"
     }
 }
 
@@ -92,13 +60,10 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.8.2")
     implementation("androidx.fragment:fragment-ktx:1.6.2")
     
-    // Lifecycle & ViewModel (includes StateFlow support)
+    // Lifecycle & ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
-    
-    // Kotlin Flow (for StateFlow)
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     
     // Material Design
     implementation("com.google.android.material:material:1.11.0")
@@ -142,17 +107,4 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    
-    // Jetpack Compose
-    val composeBom = platform("androidx.compose:compose-bom:2023.10.01")
-    implementation(composeBom)
-    androidTestImplementation(composeBom)
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.activity:activity-compose:1.8.2")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
 }

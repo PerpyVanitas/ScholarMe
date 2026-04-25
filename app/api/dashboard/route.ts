@@ -35,11 +35,11 @@ export async function GET() {
   if (user && !profile) {
     profile = {
       id: user.id,
+      role_id: null,
       full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
       email: user.email || "",
       avatar_url: null,
       created_at: user.created_at || new Date().toISOString(),
-      role_id: "fallback",
       roles: { id: "fallback", name: "learner" },
     };
   }
@@ -60,11 +60,11 @@ export async function GET() {
       const demoInfo = DEMO_USERS[selectedRole as keyof typeof DEMO_USERS] || DEMO_USERS.administrator;
       profile = {
         id: demoInfo.profileId,
+        role_id: null,
         full_name: demoInfo.fullName,
         email: demoInfo.email,
         avatar_url: null,
         created_at: new Date().toISOString(),
-        role_id: "demo-role",
         roles: { id: "demo-role", name: selectedRole },
       };
     }
@@ -74,18 +74,16 @@ export async function GET() {
   if (!profile) {
     profile = {
       id: user?.id || "unknown",
+      role_id: null,
       full_name: user?.user_metadata?.full_name || "User",
       email: user?.email || "",
       avatar_url: null,
       created_at: new Date().toISOString(),
-      role_id: "fallback",
       roles: { id: "fallback", name: "learner" },
     };
   }
 
-  const roles = profile?.roles as any;
-  const roleName = Array.isArray(roles) ? roles[0]?.name : roles?.name;
-  const role = (isDemoMode && devRole ? devRole : (roleName || "learner")) as UserRole;
+  const role = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "learner")) as UserRole;
 
   try {
     if (role === "administrator") {

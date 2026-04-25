@@ -7,7 +7,7 @@ export interface AuthCard {
   pin: string
   status: "active" | "revoked"
   issued_at: string
-  profiles?: import("@/lib/types").Profile
+  profiles?: import("@/shared/types").Profile
 }
 
 export interface LoginFormData {

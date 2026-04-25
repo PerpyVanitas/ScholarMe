@@ -43,8 +43,6 @@ import {
   Timer,
   Vote,
   Lightbulb,
-  MessageCircle,
-  Trophy,
 } from "lucide-react";
 import { signOut } from "@/app/auth/actions";
 
@@ -57,8 +55,6 @@ interface AppSidebarProps {
 function getNavItems(role: UserRole) {
   const shared = [
     { title: "Dashboard", href: "/dashboard/home", icon: LayoutDashboard },
-    { title: "Leaderboard", href: "/dashboard/leaderboard", icon: Trophy },
-    { title: "Messages", href: "/dashboard/messages", icon: MessageCircle },
     { title: "Voting", href: "/dashboard/voting", icon: Vote },
     { title: "Notifications", href: "/dashboard/notifications", icon: Bell },
     { title: "Profile", href: "/dashboard/profile", icon: UserCircle },

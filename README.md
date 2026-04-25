@@ -67,7 +67,7 @@ A full-stack tutoring management platform built with **Next.js 16**, **Supabase*
 | Layer        | Technology                                                       |
 | ------------ | ---------------------------------------------------------------- |
 | Backend API  | [Spring Boot 3.x](https://spring.io/projects/spring-boot) (Java 17, JPA, JWT) |
-| Web Frontend | [Next.js 16](https://nextjs.org) (App Router, Server Components) |
+| Web Frontend | [Next.js 16](https://nextjs.org) (App Router, React 19)         |
 | Database     | [PostgreSQL 14+](https://www.postgresql.org/) via Supabase      |
 | UI           | [shadcn/ui](https://ui.shadcn.com) + [Tailwind CSS v4](https://tailwindcss.com) |
 | Charts       | [Recharts](https://recharts.org)                                 |
@@ -75,7 +75,7 @@ A full-stack tutoring management platform built with **Next.js 16**, **Supabase*
 | Icons        | [Lucide React](https://lucide.dev)                              |
 | Deployment   | Railway/Heroku (Backend), Vercel (Web), APK (Mobile)            |
 | Mobile (RN)  | [React Native](https://reactnative.dev) + [Expo Router](https://expo.github.io/router/) |
-| Mobile (Native) | Kotlin + Jetpack Compose + MVVM + Hilt (Android)              |
+| Mobile (Native) | Kotlin + MVVM + Retrofit (Android)                           |
 | Architecture | Vertical Slicing (feature-based modules)                         |
 
 ---
@@ -450,14 +450,16 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 ### Native Android App (Kotlin)
 
-The `android/` directory contains a complete **native Android app** built with Kotlin, completely overhauled to use a modern **Jetpack Compose** architecture mapped to 9 distinct vertical slices.
+The `android/` directory contains a complete **native Android app** built with Kotlin, following MVVM architecture and vertical slicing.
 
 **Features:**
-- **Jetpack Compose UI** -- 14 pristine screens matching the web app's minimal Shadcn aesthetic.
-- **Single-Activity Architecture** -- Navigated entirely via Compose `AppNavHost`.
-- **9 Vertical Slices** -- Tutors, Sessions, Resources, Quizzes, Timesheets, Availability, Voting, Admin, and Notifications.
-- **MVVM Architecture** -- ViewModel + StateFlow bindings connected to Hilt.
-- **Retrofit API Client** -- Bearer token authentication with the Spring Boot backend.
+- Login & Registration with role selection (Learner/Tutor)
+- Dashboard with stats, quick actions, and sessions list
+- Profile management (view, update, change password)
+- Encrypted token storage using AndroidX Security
+- Retrofit API client with Bearer authentication
+- Hilt dependency injection for testable, modular code
+- Network error handling with retry logic and user-friendly messages
 
 **To build the APK:**
 
@@ -470,21 +472,17 @@ The `android/` directory contains a complete **native Android app** built with K
 **Project Structure:**
 ```
 android/app/src/main/java/com/scholarme/
-├── ScholarMeApp.kt          # Root Jetpack Compose App (NavHost)
-├── MainActivity.kt          # ComponentActivity entry point
+├── ScholarMeApplication.kt  # Hilt Application class
 ├── core/                    # Shared utilities
-│   ├── navigation/          # AppNavHost, Screen definitions
-│   ├── theme/               # Custom Material3 ScholarMeTheme
-│   ├── di/                  # Hilt DI modules
-│   ├── data/local/          # Encrypted SharedPreferences
-│   └── data/remote/         # Retrofit ApiService
-└── features/                # Vertical slices
-    ├── auth/                # Login, Register
-    ├── tutors/              # TutorsScreen, TutorProfileScreen
-    ├── sessions/            # SessionBookingScreen, SessionManagementScreen
-    ├── admin/               # AdminDashboardScreen, UserManagementScreen
-    ├── quizzes/             # QuizListScreen, QuizActiveScreen
-    └── ...                  # Other features
+│   ├── di/                  # Hilt DI modules (NetworkModule, RepositoryModule)
+│   ├── data/local/          # TokenManager (encrypted SharedPreferences)
+│   ├── data/model/          # API request/response models
+│   ├── data/remote/         # ApiService, ApiClient, Interceptors
+│   └── util/                # Result sealed class
+└── features/                # Vertical slices (MVVM)
+    ├── auth/                # Login, Register (Activity + ViewModel + Repository)
+    ├── dashboard/           # Dashboard with SessionsAdapter
+    └── profile/             # Profile, UpdateProfile, ChangePassword
 ```
 
 **Key Features:**
@@ -532,9 +530,8 @@ Ensure the Supabase project's **Site URL** and **Redirect URLs** are configured 
 | Push notification infrastructure   | Implemented  | Device tokens table, API endpoints       |
 | Error codes (50+ variations)       | Implemented  | `lib/api-errors.ts`                      |
 | Standardized API responses         | Implemented  | Success/error format with pagination     |
-| Native Android App                 | Implemented  | Jetpack Compose + MVVM + Hilt + NavHost |
+| Native Android App                 | Implemented  | Kotlin MVVM + Hilt DI + Retrofit         |
 | Vertical Slicing Architecture      | Implemented  | Feature-based modules (Web, Backend, Android) |
-| Web Optimization (Next.js)         | Implemented  | Server Components mapped to Client interactive forms |
 | Error Boundaries                   | Implemented  | Global + dashboard error handling        |
 | Auth Guards (Middleware)           | Implemented  | Protected routes, auth-only routes       |
 

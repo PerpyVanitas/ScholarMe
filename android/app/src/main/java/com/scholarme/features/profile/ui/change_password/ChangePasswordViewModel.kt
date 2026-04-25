@@ -1,99 +1,65 @@
 package com.scholarme.features.profile.ui.change_password
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.scholarme.core.network.NetworkResult
-import com.scholarme.core.presentation.BaseViewModel
-import com.scholarme.core.presentation.NavigationEvent
+import com.scholarme.core.util.Result
 import com.scholarme.features.profile.data.ProfileRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-/**
- * ViewModel for the Change Password screen (Vertical Slice — Profile Feature).
- *
- * Migrated to @HiltViewModel + BaseViewModel<ChangePasswordScreenState>.
- */
-@HiltViewModel
-class ChangePasswordViewModel @Inject constructor(
-    private val repository: ProfileRepository
-) : BaseViewModel<ChangePasswordScreenState>() {
-
-    private val _formState = MutableStateFlow(ChangePasswordFormState())
-    val formState: StateFlow<ChangePasswordFormState> = _formState.asStateFlow()
-
-    override fun createInitialState() = ChangePasswordScreenState()
-
+class ChangePasswordViewModel(private val repository: ProfileRepository) : ViewModel() {
+    
+    private val _changePasswordState = MutableLiveData<Result<Unit>?>()
+    val changePasswordState: LiveData<Result<Unit>?> = _changePasswordState
+    
+    private val _currentPasswordError = MutableLiveData<String?>()
+    val currentPasswordError: LiveData<String?> = _currentPasswordError
+    
+    private val _newPasswordError = MutableLiveData<String?>()
+    val newPasswordError: LiveData<String?> = _newPasswordError
+    
+    private val _confirmPasswordError = MutableLiveData<String?>()
+    val confirmPasswordError: LiveData<String?> = _confirmPasswordError
+    
     fun changePassword(
         currentPassword: String,
         newPassword: String,
         confirmPassword: String
     ) {
-        if (!validateForm(currentPassword, newPassword, confirmPassword)) return
-
-        setLoading(true)
+        // Validate inputs
+        var hasError = false
+        
+        if (currentPassword.isBlank()) {
+            _currentPasswordError.value = "Current password is required"
+            hasError = true
+        } else {
+            _currentPasswordError.value = null
+        }
+        
+        if (newPassword.isBlank()) {
+            _newPasswordError.value = "New password is required"
+            hasError = true
+        } else if (newPassword.length < 6) {
+            _newPasswordError.value = "Password must be at least 6 characters"
+            hasError = true
+        } else {
+            _newPasswordError.value = null
+        }
+        
+        if (confirmPassword != newPassword) {
+            _confirmPasswordError.value = "Passwords do not match"
+            hasError = true
+        } else {
+            _confirmPasswordError.value = null
+        }
+        
+        if (hasError) return
+        
+        _changePasswordState.value = Result.Loading
+        
         viewModelScope.launch {
-            val result = repository.changePassword(currentPassword, newPassword)
-            setLoading(false)
-            when (result) {
-                is NetworkResult.Success -> {
-                    updateState { it.copy(isSuccess = true) }
-                    clearError()
-                }
-                is NetworkResult.Error -> setError(result.message)
-                is NetworkResult.Unauthorized -> {
-                    setError("Session expired.")
-                    navigate(NavigationEvent.NavigateToLogin)
-                }
-                else -> {}
-            }
+            _changePasswordState.value = repository.changePassword(currentPassword, newPassword)
         }
-    }
-
-    private fun validateForm(
-        currentPassword: String,
-        newPassword: String,
-        confirmPassword: String
-    ): Boolean {
-        var valid = true
-
-        val currentError = when {
-            currentPassword.isBlank() -> "Current password is required"
-            else -> null
-        }
-        val newError = when {
-            newPassword.isBlank() -> "New password is required"
-            newPassword.length < 6 -> "Password must be at least 6 characters"
-            else -> null
-        }
-        val confirmError = when {
-            confirmPassword != newPassword -> "Passwords do not match"
-            else -> null
-        }
-
-        _formState.update {
-            it.copy(
-                currentPasswordError = currentError,
-                newPasswordError = newError,
-                confirmPasswordError = confirmError
-            )
-        }
-
-        if (currentError != null || newError != null || confirmError != null) valid = false
-        return valid
     }
 }
-
-data class ChangePasswordFormState(
-    val currentPasswordError: String? = null,
-    val newPasswordError: String? = null,
-    val confirmPasswordError: String? = null
-)
-
-data class ChangePasswordScreenState(
-    val isSuccess: Boolean = false
-)

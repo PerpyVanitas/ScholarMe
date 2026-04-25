@@ -1,104 +1,109 @@
 package com.scholarme.features.auth.ui.register
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.snackbar.Snackbar
+import com.scholarme.core.data.local.TokenManager
+import com.scholarme.core.util.Result
 import com.scholarme.databinding.ActivityRegisterBinding
-import com.scholarme.features.dashboard.ui.DashboardActivity
-import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
+import com.scholarme.features.auth.data.AuthRepository
 
 /**
- * Registration screen activity (Vertical Slice — Auth Feature).
- *
- * Migrated to @AndroidEntryPoint + Hilt ViewModel + StateFlow collectors.
+ * Registration screen activity.
+ * Handles new user account creation.
  */
-@AndroidEntryPoint
 class RegisterActivity : AppCompatActivity() {
-
+    
     private lateinit var binding: ActivityRegisterBinding
-
-    private val viewModel: RegisterViewModel by viewModels()
-
+    
+    private val viewModel: RegisterViewModel by viewModels {
+        RegisterViewModelFactory(
+            AuthRepository(TokenManager.getInstance(this))
+        )
+    }
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        
         setupUI()
         observeViewModel()
     }
-
+    
     private fun setupUI() {
-        binding.toolbar.setNavigationOnClickListener { finish() }
-
+        binding.toolbar.setNavigationOnClickListener {
+            finish()
+        }
+        
         binding.btnRegister.setOnClickListener {
             val fullName = binding.etFullName.text.toString().trim()
             val email = binding.etEmail.text.toString().trim()
             val password = binding.etPassword.text.toString()
             val confirmPassword = binding.etConfirmPassword.text.toString()
+            
+            // Get selected role
             val role = when (binding.rgRole.checkedRadioButtonId) {
-                binding.rbTutor.id -> "TUTOR"
-                else -> "LEARNER"
+                binding.rbTutor.id -> "tutor"
+                else -> "learner"
             }
+            
             viewModel.register(fullName, email, password, confirmPassword, role)
         }
-
-        binding.tvLogin.setOnClickListener { finish() }
+        
+        binding.tvLogin.setOnClickListener {
+            finish()
+        }
     }
-
+    
     private fun observeViewModel() {
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-
-                launch {
-                    viewModel.state.collect { state ->
-                        if (state.isSuccess) {
-                            Snackbar.make(
-                                binding.root,
-                                "Account created! Welcome to ScholarMe.",
-                                Snackbar.LENGTH_SHORT
-                            ).show()
-                            // Navigate to dashboard on successful registration
-                            val intent = Intent(this@RegisterActivity, DashboardActivity::class.java).apply {
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                            }
-                            startActivity(intent)
-                            finish()
-                        }
-                    }
+        viewModel.registerState.observe(this) { state ->
+            when (state) {
+                is Result.Loading -> {
+                    binding.progressBar.visibility = View.VISIBLE
+                    binding.btnRegister.isEnabled = false
                 }
-
-                launch {
-                    viewModel.isLoading.collect { loading ->
-                        binding.progressBar.visibility = if (loading) View.VISIBLE else View.GONE
-                        binding.btnRegister.isEnabled = !loading
-                    }
+                is Result.Success -> {
+                    binding.progressBar.visibility = View.GONE
+                    binding.btnRegister.isEnabled = true
+                    
+                    Snackbar.make(
+                        binding.root,
+                        "Registration successful! Please check your email to verify your account.",
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                    
+                    // Go back to login
+                    finish()
                 }
-
-                launch {
-                    viewModel.errorMessage.collect { error ->
-                        if (!error.isNullOrBlank()) {
-                            Snackbar.make(binding.root, error, Snackbar.LENGTH_LONG).show()
-                        }
-                    }
+                is Result.Error -> {
+                    binding.progressBar.visibility = View.GONE
+                    binding.btnRegister.isEnabled = true
+                    Snackbar.make(binding.root, state.message, Snackbar.LENGTH_LONG).show()
                 }
-
-                launch {
-                    viewModel.formState.collect { form ->
-                        binding.tilFullName.error = form.fullNameError
-                        binding.tilEmail.error = form.emailError
-                        binding.tilPassword.error = form.passwordError
-                        binding.tilConfirmPassword.error = form.confirmPasswordError
-                    }
+                null -> {
+                    binding.progressBar.visibility = View.GONE
+                    binding.btnRegister.isEnabled = true
                 }
             }
+        }
+        
+        viewModel.fullNameError.observe(this) { error ->
+            binding.tilFullName.error = error
+        }
+        
+        viewModel.emailError.observe(this) { error ->
+            binding.tilEmail.error = error
+        }
+        
+        viewModel.passwordError.observe(this) { error ->
+            binding.tilPassword.error = error
+        }
+        
+        viewModel.confirmPasswordError.observe(this) { error ->
+            binding.tilConfirmPassword.error = error
         }
     }
 }

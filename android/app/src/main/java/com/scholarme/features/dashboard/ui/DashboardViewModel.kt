@@ -1,89 +1,63 @@
 package com.scholarme.features.dashboard.ui
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.scholarme.core.data.model.DashboardStats
-import com.scholarme.core.data.model.SessionDto
-import com.scholarme.core.network.NetworkResult
-import com.scholarme.core.presentation.BaseViewModel
+import com.scholarme.core.data.model.Session
+import com.scholarme.core.util.Result
 import com.scholarme.features.dashboard.data.DashboardRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
- * ViewModel for the Dashboard screen (Vertical Slice — Dashboard Feature).
- *
- * Migrated to:
- * - @HiltViewModel for Hilt injection (eliminates DashboardViewModelFactory)
- * - BaseViewModel<DashboardScreenState> for StateFlow infrastructure
- * - NetworkResult for unified result handling
- * - Parallel loading of stats + sessions via async/await
+ * ViewModel for the Dashboard screen.
+ * Manages dashboard stats and upcoming sessions.
  */
-@HiltViewModel
-class DashboardViewModel @Inject constructor(
-    private val repository: DashboardRepository
-) : BaseViewModel<DashboardScreenState>() {
-
-    override fun createInitialState() = DashboardScreenState(
-        userName = repository.getUserName(),
-        userRole = repository.getUserRole()
-    )
-
+class DashboardViewModel(private val repository: DashboardRepository) : ViewModel() {
+    
+    private val _statsState = MutableLiveData<Result<DashboardStats>>()
+    val statsState: LiveData<Result<DashboardStats>> = _statsState
+    
+    private val _sessionsState = MutableLiveData<Result<List<Session>>>()
+    val sessionsState: LiveData<Result<List<Session>>> = _sessionsState
+    
+    private val _userName = MutableLiveData<String>()
+    val userName: LiveData<String> = _userName
+    
+    private val _userRole = MutableLiveData<String>()
+    val userRole: LiveData<String> = _userRole
+    
     init {
+        loadUserInfo()
         loadDashboard()
     }
-
+    
+    private fun loadUserInfo() {
+        _userName.value = repository.getUserName()
+        _userRole.value = repository.getUserRole()
+    }
+    
     fun loadDashboard() {
-        setLoading(true)
+        loadStats()
+        loadSessions()
+    }
+    
+    private fun loadStats() {
+        _statsState.value = Result.Loading
         viewModelScope.launch {
-            // Load stats and sessions in parallel
-            val statsDeferred = async { repository.getDashboardStats() }
-            val sessionsDeferred = async { repository.getUpcomingSessions() }
-
-            val statsResult = statsDeferred.await()
-            val sessionsResult = sessionsDeferred.await()
-
-            setLoading(false)
-
-            // Handle stats result
-            when (statsResult) {
-                is NetworkResult.Success -> updateState { it.copy(stats = statsResult.data) }
-                is NetworkResult.Error -> setError(statsResult.message)
-                is NetworkResult.Unauthorized -> {
-                    setError("Session expired. Please log in again.")
-                    navigate(com.scholarme.core.presentation.NavigationEvent.NavigateToLogin)
-                }
-                else -> {}
-            }
-
-            // Handle sessions result independently — don't fail both on one error
-            when (sessionsResult) {
-                is NetworkResult.Success -> updateState { it.copy(sessions = sessionsResult.data) }
-                is NetworkResult.Error -> updateState { it.copy(sessionsError = sessionsResult.message) }
-                is NetworkResult.Unauthorized -> {
-                    navigate(com.scholarme.core.presentation.NavigationEvent.NavigateToLogin)
-                }
-                else -> {}
-            }
+            _statsState.value = repository.getDashboardStats()
         }
     }
-
+    
+    private fun loadSessions() {
+        _sessionsState.value = Result.Loading
+        viewModelScope.launch {
+            _sessionsState.value = repository.getUpcomingSessions()
+        }
+    }
+    
     fun refresh() {
-        updateState { it.copy(sessionsError = null) }
-        clearError()
         loadDashboard()
     }
 }
-
-/**
- * Immutable state for the Dashboard screen.
- * Drives all UI rendering — single source of truth.
- */
-data class DashboardScreenState(
-    val userName: String = "User",
-    val userRole: String = "learner",
-    val stats: DashboardStats = DashboardStats(),
-    val sessions: List<SessionDto> = emptyList(),
-    val sessionsError: String? = null
-)
