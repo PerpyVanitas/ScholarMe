@@ -5,88 +5,108 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.snackbar.Snackbar
-import com.scholarme.core.data.local.TokenManager
-import com.scholarme.core.util.Result
 import com.scholarme.databinding.ActivityLoginBinding
-import com.scholarme.features.auth.data.AuthRepository
 import com.scholarme.features.auth.ui.register.RegisterActivity
 import com.scholarme.features.dashboard.ui.DashboardActivity
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 /**
- * Login screen activity.
- * Handles user authentication with email and password.
+ * Login screen activity (Vertical Slice — Auth Feature).
+ *
+ * Fixes applied:
+ * - @AndroidEntryPoint enables Hilt injection (eliminates LoginViewModelFactory)
+ * - viewModels<LoginViewModel>() uses Hilt — no factory needed
+ * - Correct method calls: loginWithEmail() / loginWithCard()
+ * - StateFlow collected via lifecycleScope + repeatOnLifecycle(STARTED)
+ *   (correct pattern — LiveData.observe() cannot collect StateFlow)
  */
+@AndroidEntryPoint
 class LoginActivity : AppCompatActivity() {
-    
+
     private lateinit var binding: ActivityLoginBinding
-    
-    private val viewModel: LoginViewModel by viewModels {
-        LoginViewModelFactory(
-            AuthRepository(TokenManager.getInstance(this))
-        )
-    }
-    
+
+    // Hilt injects LoginViewModel — no factory required
+    private val viewModel: LoginViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        
+
         setupUI()
         observeViewModel()
     }
-    
+
     private fun setupUI() {
         binding.btnLogin.setOnClickListener {
+            // Populate form state then trigger login
             val email = binding.etEmail.text.toString().trim()
             val password = binding.etPassword.text.toString()
-            viewModel.login(email, password)
+            viewModel.updateEmail(email)
+            viewModel.updatePassword(password)
+            viewModel.loginWithEmail()
         }
-        
+
         binding.tvRegister.setOnClickListener {
             startActivity(Intent(this, RegisterActivity::class.java))
         }
-        
+
         binding.tvForgotPassword.setOnClickListener {
             Snackbar.make(binding.root, "Password reset coming soon", Snackbar.LENGTH_SHORT).show()
         }
     }
-    
+
     private fun observeViewModel() {
-        viewModel.loginState.observe(this) { state ->
-            when (state) {
-                is Result.Loading -> {
-                    binding.progressBar.visibility = View.VISIBLE
-                    binding.btnLogin.isEnabled = false
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+
+                // Observe loading + success state
+                launch {
+                    viewModel.state.collect { screenState ->
+                        if (screenState.isSuccess) {
+                            navigateToDashboard()
+                        }
+                    }
                 }
-                is Result.Success -> {
-                    binding.progressBar.visibility = View.GONE
-                    binding.btnLogin.isEnabled = true
-                    
-                    // Navigate to dashboard
-                    val intent = Intent(this, DashboardActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    startActivity(intent)
-                    finish()
+
+                // Observe loading spinner
+                launch {
+                    viewModel.isLoading.collect { loading ->
+                        binding.progressBar.visibility = if (loading) View.VISIBLE else View.GONE
+                        binding.btnLogin.isEnabled = !loading
+                    }
                 }
-                is Result.Error -> {
-                    binding.progressBar.visibility = View.GONE
-                    binding.btnLogin.isEnabled = true
-                    Snackbar.make(binding.root, state.message, Snackbar.LENGTH_LONG).show()
+
+                // Observe global error messages (e.g. network errors)
+                launch {
+                    viewModel.errorMessage.collect { error ->
+                        if (!error.isNullOrBlank()) {
+                            Snackbar.make(binding.root, error, Snackbar.LENGTH_LONG).show()
+                        }
+                    }
                 }
-                null -> {
-                    binding.progressBar.visibility = View.GONE
-                    binding.btnLogin.isEnabled = true
+
+                // Observe per-field form validation errors
+                launch {
+                    viewModel.formState.collect { form ->
+                        binding.tilEmail.error = form.emailError
+                        binding.tilPassword.error = form.passwordError
+                    }
                 }
             }
         }
-        
-        viewModel.emailError.observe(this) { error ->
-            binding.tilEmail.error = error
+    }
+
+    private fun navigateToDashboard() {
+        val intent = Intent(this, DashboardActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
-        
-        viewModel.passwordError.observe(this) { error ->
-            binding.tilPassword.error = error
-        }
+        startActivity(intent)
+        finish()
     }
 }

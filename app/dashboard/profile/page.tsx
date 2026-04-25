@@ -115,7 +115,7 @@ export default function ProfilePage() {
             
             if (tutorInfo.tutor_specializations) {
               const specs = tutorInfo.tutor_specializations
-                .map((ts: { specializations: Specialization }) => ts.specializations)
+                .map((ts: any) => Array.isArray(ts.specializations) ? ts.specializations[0] : ts.specializations)
                 .filter(Boolean);
               setSpecializations(specs);
               setSelectedSpecializations(specs.map(s => s.id));

@@ -21,7 +21,12 @@ export async function GET(
     .eq("id", user.id)
     .single()
 
-  if (!profile || profile.roles?.name !== "admin") {
+  const roles = profile?.roles as any
+  const isAdmin = Array.isArray(roles)
+    ? roles.some((r) => r.name === "admin" || r.name === "administrator")
+    : roles?.name === "admin" || roles?.name === "administrator"
+
+  if (!profile || !isAdmin) {
     return NextResponse.json({ error: "Access denied - admin only" }, { status: 403 })
   }
 

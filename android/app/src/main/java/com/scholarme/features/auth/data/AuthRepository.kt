@@ -4,7 +4,6 @@ import android.util.Log
 import com.scholarme.core.auth.SessionValidator
 import com.scholarme.core.data.local.TokenManager
 import com.scholarme.core.data.model.*
-import com.scholarme.core.data.remote.ApiClient
 import com.scholarme.core.data.remote.ApiService
 import com.scholarme.core.error.ErrorHandler
 import com.scholarme.core.network.NetworkResult
@@ -36,13 +35,18 @@ class AuthRepository @Inject constructor(
     }
 
     /**
-     * Legacy constructor for non-Hilt usage (ViewModelFactory).
-     * Uses singleton instances from direct initialization.
+     * Legacy constructor — kept for backward compatibility only.
+     * Prefer Hilt injection via the primary constructor.
+     * NOTE: This path bypasses Hilt-configured OkHttpClient interceptors.
      */
-    constructor(tokenManager: TokenManager) : this(
+    @Deprecated(
+        message = "Use Hilt injection instead. This constructor bypasses auth/error interceptors.",
+        replaceWith = ReplaceWith("Inject AuthRepository via Hilt")
+    )
+    constructor(tokenManager: TokenManager, apiService: ApiService) : this(
         tokenManager,
         SessionValidator(tokenManager),
-        ApiClient.apiService
+        apiService
     )
 
     // =====================================================================

@@ -186,7 +186,7 @@ export default function TutorsPage() {
         <TutorDetailModal
           open={modalOpen}
           onOpenChange={setModalOpen}
-          tutor={selectedTutor}
+          tutor={selectedTutor as any}
         />
       )}
     </div>

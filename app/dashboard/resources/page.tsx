@@ -38,6 +38,7 @@ import {
   ChevronRight,
 } from "lucide-react"
 import { toast } from "sonner"
+import { getDemoUserFromCookie } from "@/lib/demo"
 import type { UserRole } from "@/lib/types"
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -165,7 +166,9 @@ export default function ResourcesPage() {
         .select("roles(*)")
         .eq("id", uid)
         .maybeSingle()
-      userRole = ((profile?.roles as { name: string } | null)?.name || "learner") as UserRole
+      const roles = profile?.roles as any;
+      const roleName = Array.isArray(roles) ? roles[0]?.name : roles?.name;
+      userRole = (roleName || "learner") as UserRole;
     } else {
       const demo = getDemoUserFromCookie("learner")
       userRole = demo.role

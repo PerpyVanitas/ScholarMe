@@ -1,27 +1,52 @@
 package com.scholarme.features.profile.ui
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.scholarme.core.data.model.UserProfile
-import com.scholarme.core.util.Result
+import com.scholarme.core.network.NetworkResult
+import com.scholarme.core.presentation.BaseViewModel
+import com.scholarme.core.presentation.NavigationEvent
 import com.scholarme.features.profile.data.ProfileRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ProfileViewModel(private val repository: ProfileRepository) : ViewModel() {
-    
-    private val _profileState = MutableLiveData<Result<UserProfile>>()
-    val profileState: LiveData<Result<UserProfile>> = _profileState
-    
+/**
+ * ViewModel for the Profile screen (Vertical Slice — Profile Feature).
+ *
+ * Migrated to @HiltViewModel + BaseViewModel<ProfileScreenState>.
+ */
+@HiltViewModel
+class ProfileViewModel @Inject constructor(
+    private val repository: ProfileRepository
+) : BaseViewModel<ProfileScreenState>() {
+
+    override fun createInitialState() = ProfileScreenState()
+
     init {
         loadProfile()
     }
-    
+
     fun loadProfile() {
-        _profileState.value = Result.Loading
+        setLoading(true)
         viewModelScope.launch {
-            _profileState.value = repository.getProfile()
+            val result = repository.getProfile()
+            setLoading(false)
+            when (result) {
+                is NetworkResult.Success -> {
+                    updateState { it.copy(profile = result.data) }
+                    clearError()
+                }
+                is NetworkResult.Error -> setError(result.message)
+                is NetworkResult.Unauthorized -> {
+                    setError("Session expired.")
+                    navigate(NavigationEvent.NavigateToLogin)
+                }
+                else -> {}
+            }
         }
     }
 }
+
+data class ProfileScreenState(
+    val profile: UserProfile? = null
+)

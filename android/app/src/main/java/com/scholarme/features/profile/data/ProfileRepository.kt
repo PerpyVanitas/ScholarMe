@@ -4,74 +4,67 @@ import com.scholarme.core.data.local.TokenManager
 import com.scholarme.core.data.model.ChangePasswordRequest
 import com.scholarme.core.data.model.UpdateProfileRequest
 import com.scholarme.core.data.model.UserProfile
-import com.scholarme.core.data.remote.ApiClient
 import com.scholarme.core.data.remote.ApiService
-import com.scholarme.core.util.Result
+import com.scholarme.core.network.NetworkResult
+import com.scholarme.core.network.toNetworkResultWithData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 /**
- * Repository for profile operations.
- * Handles profile viewing, updating, and password changes.
+ * Repository for profile operations (Vertical Slice — Profile Feature).
+ *
+ * Migrated from core.util.Result → core.network.NetworkResult for consistency.
+ * Removed ApiClient fallback — injection is exclusively via Hilt.
  */
 class ProfileRepository @Inject constructor(
     private val tokenManager: TokenManager,
     private val apiService: ApiService
 ) {
-    
-    // Legacy constructor for non-Hilt usage
-    constructor(tokenManager: TokenManager) : this(tokenManager, ApiClient.apiService)
-    
+
     private fun getBearerToken(): String? {
         val token = tokenManager.getAccessToken()
         return if (token != null) "Bearer $token" else null
     }
-    
-    suspend fun getProfile(): Result<UserProfile> {
+
+    suspend fun getProfile(): NetworkResult<UserProfile> {
         return withContext(Dispatchers.IO) {
             try {
                 val token = getBearerToken()
-                    ?: return@withContext Result.Error("Not authenticated")
-                
-                val response = apiService.getProfile(token)
-                
-                if (response.isSuccessful && response.body()?.success == true) {
-                    val profile = response.body()?.data
-                    if (profile != null) {
-                        // Update local storage with latest info
-                        tokenManager.saveUserInfo(
-                            userId = profile.id,
-                            email = profile.email,
-                            fullName = profile.fullName,
-                            role = profile.role
-                        )
-                        Result.Success(profile)
-                    } else {
-                        Result.Error("Failed to load profile")
-                    }
-                } else {
-                    val errorMsg = response.body()?.error?.message ?: "Failed to load profile"
-                    Result.Error(errorMsg)
+                    ?: return@withContext NetworkResult.Unauthorized("Not authenticated")
+
+                val result = apiService.getProfile(token)
+                    .toNetworkResultWithData { it.data }
+
+                // On success, sync local cache
+                if (result is NetworkResult.Success) {
+                    val profile = result.data
+                    tokenManager.saveUserInfo(
+                        userId = profile.id,
+                        email = profile.email,
+                        fullName = profile.fullName,
+                        role = profile.role
+                    )
                 }
+                result
             } catch (e: Exception) {
-                Result.Error(e.message ?: "Network error occurred")
+                NetworkResult.Error(e.message ?: "Network error occurred", exception = e)
             }
         }
     }
-    
+
     suspend fun updateProfile(
         fullName: String?,
         phone: String?,
         bio: String?,
         degreeProgram: String? = null,
         yearLevel: Int? = null
-    ): Result<UserProfile> {
+    ): NetworkResult<UserProfile> {
         return withContext(Dispatchers.IO) {
             try {
                 val token = getBearerToken()
-                    ?: return@withContext Result.Error("Not authenticated")
-                
+                    ?: return@withContext NetworkResult.Unauthorized("Not authenticated")
+
                 val request = UpdateProfileRequest(
                     fullName = fullName,
                     phone = phone,
@@ -79,53 +72,41 @@ class ProfileRepository @Inject constructor(
                     degreeProgram = degreeProgram,
                     yearLevel = yearLevel
                 )
-                
-                val response = apiService.updateProfile(token, request)
-                
-                if (response.isSuccessful && response.body()?.success == true) {
-                    val profile = response.body()?.data
-                    if (profile != null) {
-                        // Update local storage
-                        tokenManager.saveUserInfo(
-                            userId = profile.id,
-                            email = profile.email,
-                            fullName = profile.fullName,
-                            role = profile.role
-                        )
-                        Result.Success(profile)
-                    } else {
-                        Result.Error("Profile updated but response was empty")
-                    }
-                } else {
-                    val errorMsg = response.body()?.error?.message ?: "Failed to update profile"
-                    Result.Error(errorMsg)
+
+                val result = apiService.updateProfile(token, request)
+                    .toNetworkResultWithData { it.data }
+
+                // On success, sync local cache
+                if (result is NetworkResult.Success) {
+                    val profile = result.data
+                    tokenManager.saveUserInfo(
+                        userId = profile.id,
+                        email = profile.email,
+                        fullName = profile.fullName,
+                        role = profile.role
+                    )
                 }
+                result
             } catch (e: Exception) {
-                Result.Error(e.message ?: "Network error occurred")
+                NetworkResult.Error(e.message ?: "Network error occurred", exception = e)
             }
         }
     }
-    
+
     suspend fun changePassword(
         currentPassword: String,
         newPassword: String
-    ): Result<Unit> {
+    ): NetworkResult<Unit> {
         return withContext(Dispatchers.IO) {
             try {
                 val token = getBearerToken()
-                    ?: return@withContext Result.Error("Not authenticated")
-                
+                    ?: return@withContext NetworkResult.Unauthorized("Not authenticated")
+
                 val request = ChangePasswordRequest(currentPassword, newPassword)
-                val response = apiService.changePassword(token, request)
-                
-                if (response.isSuccessful && response.body()?.success == true) {
-                    Result.Success(Unit)
-                } else {
-                    val errorMsg = response.body()?.error?.message ?: "Failed to change password"
-                    Result.Error(errorMsg)
-                }
+                apiService.changePassword(token, request)
+                    .toNetworkResultWithData { Unit }
             } catch (e: Exception) {
-                Result.Error(e.message ?: "Network error occurred")
+                NetworkResult.Error(e.message ?: "Network error occurred", exception = e)
             }
         }
     }

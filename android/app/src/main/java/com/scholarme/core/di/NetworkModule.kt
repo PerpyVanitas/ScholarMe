@@ -3,7 +3,6 @@ package com.scholarme.core.di
 import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.scholarme.BuildConfig
 import com.scholarme.core.auth.SessionValidator
 import com.scholarme.core.config.AppConfig
 import com.scholarme.core.data.local.TokenManager
@@ -121,21 +120,6 @@ object NetworkModule {
     }
 
     /** Retrofit ApiService interface implementation for all API endpoints */
-    @Provides
-    @Singleton
-    fun provideApiService(retrofit: Retrofit): ApiService {
-        return retrofit.create(ApiService::class.java)
-    }
-}
-    fun provideRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl(BuildConfig.API_BASE_URL)
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create(gson))
-            .build()
-    }
-
-    /** Creates type-safe API interface implementation */
     @Provides
     @Singleton
     fun provideApiService(retrofit: Retrofit): ApiService {

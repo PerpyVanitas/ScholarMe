@@ -39,6 +39,7 @@ export async function GET() {
       email: user.email || "",
       avatar_url: null,
       created_at: user.created_at || new Date().toISOString(),
+      role_id: "fallback",
       roles: { id: "fallback", name: "learner" },
     };
   }
@@ -63,6 +64,7 @@ export async function GET() {
         email: demoInfo.email,
         avatar_url: null,
         created_at: new Date().toISOString(),
+        role_id: "demo-role",
         roles: { id: "demo-role", name: selectedRole },
       };
     }
@@ -76,11 +78,14 @@ export async function GET() {
       email: user?.email || "",
       avatar_url: null,
       created_at: new Date().toISOString(),
+      role_id: "fallback",
       roles: { id: "fallback", name: "learner" },
     };
   }
 
-  const role = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "learner")) as UserRole;
+  const roles = profile?.roles as any;
+  const roleName = Array.isArray(roles) ? roles[0]?.name : roles?.name;
+  const role = (isDemoMode && devRole ? devRole : (roleName || "learner")) as UserRole;
 
   try {
     if (role === "administrator") {

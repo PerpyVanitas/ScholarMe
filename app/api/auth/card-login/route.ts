@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     // Verify card belongs to user and is still valid
     if (!card.user_id) {
       return NextResponse.json(
-        createErrorResponse("AUTH_001_CARD_NOT_CONFIGURED", "Card is not properly configured"),
+        createErrorResponse("AUTH_001_INVALID_CARD", "Card is not properly configured"),
         { status: 400 }
       );
     }
@@ -109,7 +109,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       createSuccessResponse({
-        role: card.profiles?.roles?.name || "learner",
+        role: (Array.isArray(card.profiles?.roles) ? (card.profiles.roles[0] as any)?.name : (card.profiles?.roles as any)?.name) || "learner",
       })
     );
   } catch {

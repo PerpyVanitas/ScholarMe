@@ -50,7 +50,7 @@ export default function AdminCardsPage() {
         supabase.from("profiles").select("id, full_name, email").order("full_name"),
       ]);
       setCards(cardsRes.data || []);
-      setProfiles(profilesRes.data || []);
+      setProfiles((profilesRes.data as any) || []);
       setLoading(false);
     }
     load();

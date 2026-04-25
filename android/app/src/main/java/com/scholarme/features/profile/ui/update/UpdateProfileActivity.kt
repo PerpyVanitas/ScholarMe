@@ -1,94 +1,113 @@
 package com.scholarme.features.profile.ui.update
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.snackbar.Snackbar
-import com.scholarme.core.data.local.TokenManager
-import com.scholarme.core.util.Result
 import com.scholarme.databinding.ActivityUpdateProfileBinding
-import com.scholarme.features.profile.data.ProfileRepository
+import com.scholarme.features.auth.ui.login.LoginActivity
+import com.scholarme.core.presentation.NavigationEvent
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 /**
- * Update profile screen activity.
- * Allows user to edit their profile information.
+ * Update profile screen activity (Vertical Slice — Profile Feature).
+ *
+ * Migrated to @AndroidEntryPoint + Hilt ViewModel + StateFlow collectors.
  */
+@AndroidEntryPoint
 class UpdateProfileActivity : AppCompatActivity() {
-    
+
     private lateinit var binding: ActivityUpdateProfileBinding
-    
-    private val viewModel: UpdateProfileViewModel by viewModels {
-        UpdateProfileViewModelFactory(
-            ProfileRepository(TokenManager.getInstance(this))
-        )
-    }
-    
+
+    private val viewModel: UpdateProfileViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityUpdateProfileBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        
+
         setupUI()
         observeViewModel()
     }
-    
+
     private fun setupUI() {
-        binding.toolbar.setNavigationOnClickListener {
-            finish()
-        }
-        
+        binding.toolbar.setNavigationOnClickListener { finish() }
+
         binding.btnSave.setOnClickListener {
-            val fullName = binding.etFullName.text.toString().trim()
-            val phone = binding.etPhone.text.toString().trim().ifBlank { null }
-            val bio = binding.etBio.text.toString().trim().ifBlank { null }
-            
-            viewModel.updateProfile(fullName, phone, bio)
+            viewModel.updateProfile(
+                fullName = binding.etFullName.text.toString().trim(),
+                phone = binding.etPhone.text.toString().trim().ifBlank { null },
+                bio = binding.etBio.text.toString().trim().ifBlank { null }
+            )
         }
     }
-    
+
     private fun observeViewModel() {
-        // Load current profile to populate fields
-        viewModel.currentProfile.observe(this) { state ->
-            when (state) {
-                is Result.Success -> {
-                    binding.etFullName.setText(state.data.fullName)
-                    binding.etPhone.setText(state.data.phone ?: "")
-                    binding.etBio.setText(state.data.bio ?: "")
-                    
-                    // Show bio field only for tutors
-                    binding.tilBio.visibility = if (state.data.role.lowercase() == "tutor") {
-                        View.VISIBLE
-                    } else {
-                        View.GONE
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+
+                launch {
+                    viewModel.state.collect { state ->
+                        // Pre-fill form with current profile
+                        state.currentProfile?.let { profile ->
+                            binding.etFullName.setText(profile.fullName)
+                            binding.etPhone.setText(profile.phone ?: "")
+                            binding.etBio.setText(profile.bio ?: "")
+                            binding.tilBio.visibility =
+                                if (profile.role.lowercase() == "tutor") View.VISIBLE else View.GONE
+                        }
+
+                        if (state.isSuccess) {
+                            Snackbar.make(binding.root, "Profile updated successfully!", Snackbar.LENGTH_SHORT).show()
+                            finish()
+                        }
                     }
                 }
-                else -> {}
+
+                launch {
+                    viewModel.isLoading.collect { loading ->
+                        binding.progressBar.visibility = if (loading) View.VISIBLE else View.GONE
+                        binding.btnSave.isEnabled = !loading
+                    }
+                }
+
+                launch {
+                    viewModel.errorMessage.collect { error ->
+                        if (!error.isNullOrBlank()) {
+                            Snackbar.make(binding.root, error, Snackbar.LENGTH_LONG).show()
+                        }
+                    }
+                }
+
+                launch {
+                    viewModel.formState.collect { form ->
+                        binding.tilFullName.error = form.fullNameError
+                    }
+                }
+
+                launch {
+                    viewModel.navigationEvent.collect { event ->
+                        if (event is NavigationEvent.NavigateToLogin) {
+                            viewModel.clearNavigationEvent()
+                            navigateToLogin()
+                        }
+                    }
+                }
             }
         }
-        
-        viewModel.updateState.observe(this) { state ->
-            when (state) {
-                is Result.Loading -> {
-                    binding.progressBar.visibility = View.VISIBLE
-                    binding.btnSave.isEnabled = false
-                }
-                is Result.Success -> {
-                    binding.progressBar.visibility = View.GONE
-                    binding.btnSave.isEnabled = true
-                    Snackbar.make(binding.root, "Profile updated successfully!", Snackbar.LENGTH_SHORT).show()
-                    finish()
-                }
-                is Result.Error -> {
-                    binding.progressBar.visibility = View.GONE
-                    binding.btnSave.isEnabled = true
-                    Snackbar.make(binding.root, state.message, Snackbar.LENGTH_LONG).show()
-                }
-            }
+    }
+
+    private fun navigateToLogin() {
+        val intent = Intent(this, LoginActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
-        
-        viewModel.fullNameError.observe(this) { error ->
-            binding.tilFullName.error = error
-        }
+        startActivity(intent)
+        finish()
     }
 }

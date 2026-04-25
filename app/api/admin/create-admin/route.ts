@@ -22,7 +22,12 @@ export async function POST(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
-    if (callerError || callerProfile?.roles?.name !== "administrator") {
+    const callerRoles = callerProfile?.roles as any;
+    const isCallerAdmin = Array.isArray(callerRoles)
+      ? callerRoles.some((r) => r.name === "administrator")
+      : callerRoles?.name === "administrator";
+
+    if (callerError || !isCallerAdmin) {
       return NextResponse.json(
         createErrorResponse("AUTH_003_ADMIN_ONLY", "Only administrators can create admin accounts"),
         { status: 403 }

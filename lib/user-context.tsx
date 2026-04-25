@@ -39,9 +39,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
       if (p) {
         setProfile({
           ...p,
-          roles: p.roles || undefined,
-        } as Profile);
-        const roleName = p.roles?.name || "learner";
+          roles: Array.isArray(p.roles) ? p.roles[0] : (p.roles || undefined),
+        } as unknown as Profile);
+        const rolesArray = Array.isArray(p.roles) ? p.roles : [p.roles];
+        const roleName = rolesArray[0]?.name || "learner";
         setRole(roleName as UserRole);
       } else {
         // Profile not found, create a fallback
@@ -77,9 +78,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
       if (demoProfile) {
         setProfile({
           ...demoProfile,
-          roles: demoProfile.roles || undefined,
-        } as Profile);
-        const roleName = demoProfile.roles?.name || demoRole;
+          roles: Array.isArray(demoProfile.roles) ? demoProfile.roles[0] : (demoProfile.roles || undefined),
+        } as unknown as Profile);
+        const rolesArray = Array.isArray(demoProfile.roles) ? demoProfile.roles : [demoProfile.roles];
+        const roleName = rolesArray[0]?.name || demoRole;
         setRole(roleName as UserRole);
       } else {
         const demoInfo = DEMO_USERS[demoRole as keyof typeof DEMO_USERS] || DEMO_USERS.learner;

@@ -1,5 +1,6 @@
 package com.scholarme.core.di
 
+import com.scholarme.core.auth.SessionValidator
 import com.scholarme.core.data.local.TokenManager
 import com.scholarme.core.data.remote.ApiService
 import com.scholarme.features.auth.data.AuthRepository
@@ -13,6 +14,7 @@ import javax.inject.Singleton
 
 /**
  * Hilt module providing repository dependencies.
+ * All repositories are scoped to the application lifecycle (SingletonComponent).
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -22,9 +24,10 @@ object RepositoryModule {
     @Singleton
     fun provideAuthRepository(
         apiService: ApiService,
-        tokenManager: TokenManager
+        tokenManager: TokenManager,
+        sessionValidator: SessionValidator
     ): AuthRepository {
-        return AuthRepository(tokenManager, apiService)
+        return AuthRepository(tokenManager, sessionValidator, apiService)
     }
 
     @Provides
