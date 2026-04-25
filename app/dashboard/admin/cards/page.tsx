@@ -47,7 +47,7 @@ export default function AdminCardsPage() {
       const supabase = createClient();
       const [cardsRes, profilesRes] = await Promise.all([
         supabase.from("auth_cards").select("*, profiles(full_name, email)").order("issued_at", { ascending: false }),
-        supabase.from("profiles").select("id, full_name, email").order("full_name"),
+        supabase.from("profiles").select("id, role_id, full_name, email, avatar_url, created_at").order("full_name"),
       ]);
       setCards(cardsRes.data || []);
       setProfiles(profilesRes.data || []);

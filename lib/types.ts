@@ -197,3 +197,21 @@ export interface DeviceToken {
   created_at: string
   updated_at: string
 }
+
+export interface Conversation {
+  id: string
+  participant_id: string
+  messages?: ConversationMessage[]
+  profiles?: Profile
+  created_at: string
+  updated_at: string
+}
+
+export interface ConversationMessage {
+  id: string
+  conversation_id: string
+  sender_id: string
+  content: string
+  created_at: string
+  sender?: Profile
+}

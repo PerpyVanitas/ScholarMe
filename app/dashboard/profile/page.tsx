@@ -115,10 +115,13 @@ export default function ProfilePage() {
             
             if (tutorInfo.tutor_specializations) {
               const specs = tutorInfo.tutor_specializations
-                .map((ts: { specializations: Specialization }) => ts.specializations)
+                .map((ts: any) => {
+                  const specs = Array.isArray(ts.specializations) ? ts.specializations : [];
+                  return specs.length > 0 ? specs[0] : null;
+                })
                 .filter(Boolean);
               setSpecializations(specs);
-              setSelectedSpecializations(specs.map(s => s.id));
+              setSelectedSpecializations(specs.map((s: any) => s.id));
             }
           }
         }
