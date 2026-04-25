@@ -42,15 +42,15 @@ export interface Specialization {
 
 export interface Tutor {
   id: string
-  user_id: string
+  profile_id: string
   bio: string | null
   rating: number
   total_ratings: number
-  years_experience?: number | null
-  hourly_rate?: number | null
+  years_experience: number | null
+  hourly_rate: number | null
   created_at: string
-  profiles?: Profile
-  tutor_specializations?: { specializations: Specialization }[]
+  profiles: Profile
+  tutor_specializations: { specializations: Specialization }[]
 }
 
 export interface TutorAvailability {

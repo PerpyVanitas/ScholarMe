@@ -39,6 +39,7 @@ export async function GET() {
       full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
       email: user.email || "",
       avatar_url: null,
+      phone_number: null,
       created_at: user.created_at || new Date().toISOString(),
       roles: { id: "fallback", name: "learner" },
     };
@@ -64,6 +65,7 @@ export async function GET() {
         full_name: demoInfo.fullName,
         email: demoInfo.email,
         avatar_url: null,
+        phone_number: null,
         created_at: new Date().toISOString(),
         roles: { id: "demo-role", name: selectedRole },
       };
@@ -78,6 +80,7 @@ export async function GET() {
       full_name: user?.user_metadata?.full_name || "User",
       email: user?.email || "",
       avatar_url: null,
+      phone_number: null,
       created_at: new Date().toISOString(),
       roles: { id: "fallback", name: "learner" },
     };
