@@ -12,6 +12,7 @@ import com.scholarme.core.data.model.DeviceTokenRequest
 import com.scholarme.core.data.model.EmailLoginRequest
 import com.scholarme.core.data.model.LoginResponse
 import com.scholarme.core.data.model.RateSessionRequest
+import com.scholarme.core.data.model.RefreshTokenRequest
 import com.scholarme.core.data.model.RegisterCardRequest
 import com.scholarme.core.data.model.RegisterRequest
 import com.scholarme.core.data.model.RegisterResponse

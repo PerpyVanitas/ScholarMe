@@ -15,7 +15,10 @@ import com.scholarme.core.data.model.ApiError
  * Replaces the generic Result<T> for better type safety and explicit error handling.
  */
 sealed class NetworkResult<out T> {
-    data class Loading<T> : NetworkResult<T>()
+    class Loading<T> : NetworkResult<T>() {
+        override fun equals(other: Any?): Boolean = other is Loading<*>
+        override fun hashCode(): Int = javaClass.hashCode()
+    }
     data class Success<T>(val data: T) : NetworkResult<T>()
     data class Error<T>(
         val message: String,
