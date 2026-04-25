@@ -4,6 +4,8 @@ import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.scholarme.BuildConfig
+import com.scholarme.core.auth.SessionValidator
+import com.scholarme.core.config.AppConfig
 import com.scholarme.core.data.local.TokenManager
 import com.scholarme.core.data.remote.ApiService
 import com.scholarme.core.data.remote.AuthInterceptor
@@ -25,6 +27,8 @@ import javax.inject.Singleton
  * 
  * Provides singleton instances of:
  * - Gson: JSON serialization with ISO 8601 date format
+ * - TokenManager: Secure token storage
+ * - SessionValidator: Session state validation
  * - OkHttpClient: HTTP client with auth, logging, and error interceptors
  * - Retrofit: Type-safe REST client configured for the backend API
  * - ApiService: Interface implementation for all API endpoints
@@ -49,6 +53,13 @@ object NetworkModule {
         return TokenManager.getInstance(context)
     }
 
+    /** Provides session validator for authentication checks */
+    @Provides
+    @Singleton
+    fun provideSessionValidator(tokenManager: TokenManager): SessionValidator {
+        return SessionValidator(tokenManager)
+    }
+
     /** Interceptor that attaches Bearer token to authenticated requests */
     @Provides
     @Singleton
@@ -68,7 +79,7 @@ object NetworkModule {
      * - Auth interceptor (adds JWT to headers)
      * - Network error interceptor (retry logic)
      * - Logging interceptor (debug builds only)
-     * - 30-second timeouts for all operations
+     * - Configurable timeouts from AppConfig
      */
     @Provides
     @Singleton
@@ -77,7 +88,7 @@ object NetworkModule {
         networkErrorInterceptor: NetworkErrorInterceptor
     ): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = if (BuildConfig.DEBUG) {
+            level = if (AppConfig.enableNetworkLogging) {
                 HttpLoggingInterceptor.Level.BODY
             } else {
                 HttpLoggingInterceptor.Level.NONE
@@ -88,16 +99,34 @@ object NetworkModule {
             .addInterceptor(authInterceptor)
             .addInterceptor(networkErrorInterceptor)
             .addInterceptor(loggingInterceptor)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
+            .connectTimeout(AppConfig.CONNECT_TIMEOUT, TimeUnit.SECONDS)
+            .readTimeout(AppConfig.READ_TIMEOUT, TimeUnit.SECONDS)
+            .writeTimeout(AppConfig.WRITE_TIMEOUT, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
             .build()
     }
 
-    /** Retrofit instance configured with base URL from BuildConfig */
+    /** Retrofit instance configured with base URL from AppConfig (build flavor specific) */
     @Provides
     @Singleton
+    fun provideRetrofit(
+        okHttpClient: OkHttpClient,
+        gson: Gson
+    ): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(AppConfig.apiBaseUrl)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
+    }
+
+    /** Retrofit ApiService interface implementation for all API endpoints */
+    @Provides
+    @Singleton
+    fun provideApiService(retrofit: Retrofit): ApiService {
+        return retrofit.create(ApiService::class.java)
+    }
+}
     fun provideRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
         return Retrofit.Builder()
             .baseUrl(BuildConfig.API_BASE_URL)

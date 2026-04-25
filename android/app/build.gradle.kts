@@ -18,10 +18,37 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
-        // API Base URL - UPDATE THIS to your Spring Boot backend URL
-        // For local dev: http://10.0.2.2:8080/api/v1/ (Android emulator localhost)
-        // For production: https://your-backend.railway.app/api/v1/
+        // Default values (overridden by flavors)
         buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080/api/v1/\"")
+        buildConfigField("String", "ENVIRONMENT", "\"development\"")
+        buildConfigField("Boolean", "ENABLE_NETWORK_LOGGING", "true")
+    }
+
+    flavorDimensions += "environment"
+    
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080/api/v1/\"")
+            buildConfigField("String", "ENVIRONMENT", "\"development\"")
+            buildConfigField("Boolean", "ENABLE_NETWORK_LOGGING", "true")
+        }
+        create("staging") {
+            dimension = "environment"
+            applicationIdSuffix = ".staging"
+            versionNameSuffix = "-staging"
+            buildConfigField("String", "API_BASE_URL", "\"https://staging-api.scholarme.app/api/v1/\"")
+            buildConfigField("String", "ENVIRONMENT", "\"staging\"")
+            buildConfigField("Boolean", "ENABLE_NETWORK_LOGGING", "false")
+        }
+        create("production") {
+            dimension = "environment"
+            buildConfigField("String", "API_BASE_URL", "\"https://api.scholarme.app/api/v1/\"")
+            buildConfigField("String", "ENVIRONMENT", "\"production\"")
+            buildConfigField("Boolean", "ENABLE_NETWORK_LOGGING", "false")
+        }
     }
 
     buildTypes {
@@ -60,10 +87,13 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.8.2")
     implementation("androidx.fragment:fragment-ktx:1.6.2")
     
-    // Lifecycle & ViewModel
+    // Lifecycle & ViewModel (includes StateFlow support)
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+    
+    // Kotlin Flow (for StateFlow)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     
     // Material Design
     implementation("com.google.android.material:material:1.11.0")

@@ -19,6 +19,14 @@ data class ErrorDetails(
     val details: Any? = null
 )
 
+data class ApiError(
+    val success: Boolean = false,
+    val error: ErrorDetails? = null,
+    val code: String? = null,
+    val message: String? = null,
+    val timestamp: String? = null
+)
+
 // ============================================
 // Auth Models (matches Spring Boot AuthDtos)
 // ============================================
@@ -39,6 +47,10 @@ typealias LoginRequest = EmailLoginRequest
 data class LoginResponse(
     val user: UserProfile,
     val token: String
+)
+
+data class RefreshTokenRequest(
+    @SerializedName("refreshToken") val refreshToken: String
 )
 
 data class RegisterRequest(

@@ -60,6 +60,11 @@ interface ApiService {
         @Header("Authorization") token: String
     ): Response<ApiResponse<Map<String, String>>>
     
+    @POST("auth/refresh")
+    suspend fun refreshToken(
+        @Body request: RefreshTokenRequest
+    ): Response<ApiResponse<LoginResponse>>
+    
     // ============================================
     // User/Profile Endpoints
     // ============================================
