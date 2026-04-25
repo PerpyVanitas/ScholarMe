@@ -10,6 +10,7 @@ import com.scholarme.core.network.NetworkResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import com.scholarme.core.auth.LogoutHandler
 
 /**
  * Authentication Repository (Vertical Slice - Auth Feature)
@@ -28,7 +29,7 @@ class AuthRepository @Inject constructor(
     private val tokenManager: TokenManager,
     private val sessionValidator: SessionValidator,
     private val apiService: ApiService
-) {
+) : LogoutHandler {
 
     companion object {
         private const val TAG = "AuthRepository"
@@ -254,13 +255,13 @@ class AuthRepository @Inject constructor(
      * @return NetworkResult.Success on success (regardless of API response)
      *         NetworkResult.Error on network failure
      */
-    suspend fun logout(): NetworkResult<Unit> {
+    override suspend fun logout(): NetworkResult<Unit> {
         return withContext(Dispatchers.IO) {
             try {
                 val token = tokenManager.getAccessToken()
                 if (!token.isNullOrBlank()) {
                     Log.d(TAG, "Logging out user")
-                    val response = apiService.logout("Bearer $token")
+                    val response = apiService.logout()
                     // Don't care about response, clear local session anyway
                 }
             } catch (e: Exception) {

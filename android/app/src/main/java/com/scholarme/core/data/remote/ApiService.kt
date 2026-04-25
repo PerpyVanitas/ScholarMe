@@ -58,7 +58,7 @@ interface ApiService {
     
     @POST("auth/logout")
     suspend fun logout(
-        @Header("Authorization") token: String
+
     ): Response<ApiResponse<Map<String, String>>>
     
     @POST("auth/refresh")
@@ -72,24 +72,24 @@ interface ApiService {
     
     @GET("users/me")
     suspend fun getProfile(
-        @Header("Authorization") token: String
+
     ): Response<ApiResponse<UserProfile>>
     
     @PUT("users/me")
     suspend fun updateProfile(
-        @Header("Authorization") token: String,
+
         @Body request: UpdateProfileRequest
     ): Response<ApiResponse<UserProfile>>
     
     @POST("users/me/change-password")
     suspend fun changePassword(
-        @Header("Authorization") token: String,
+
         @Body request: ChangePasswordRequest
     ): Response<ApiResponse<Map<String, String>>>
     
     @POST("users/{id}/device-token")
     suspend fun registerDeviceToken(
-        @Header("Authorization") token: String,
+
         @Path("id") userId: String,
         @Body request: DeviceTokenRequest
     ): Response<ApiResponse<Map<String, String>>>
@@ -118,7 +118,7 @@ interface ApiService {
     
     @POST("tutors/availability")
     suspend fun updateAvailability(
-        @Header("Authorization") token: String,
+
         @Body request: List<AvailabilityDto>
     ): Response<ApiResponse<List<AvailabilityDto>>>
     
@@ -128,7 +128,7 @@ interface ApiService {
     
     @GET("sessions")
     suspend fun getSessions(
-        @Header("Authorization") token: String,
+
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 20,
         @Query("role") role: String? = null
@@ -136,26 +136,26 @@ interface ApiService {
     
     @GET("sessions/{id}")
     suspend fun getSession(
-        @Header("Authorization") token: String,
+
         @Path("id") sessionId: String
     ): Response<ApiResponse<SessionDto>>
     
     @POST("sessions")
     suspend fun createSession(
-        @Header("Authorization") token: String,
+
         @Body request: CreateSessionRequest
     ): Response<ApiResponse<SessionDto>>
     
     @PUT("sessions/{id}/status")
     suspend fun updateSessionStatus(
-        @Header("Authorization") token: String,
+
         @Path("id") sessionId: String,
         @Body request: UpdateSessionStatusRequest
     ): Response<ApiResponse<SessionDto>>
     
     @POST("sessions/{id}/rate")
     suspend fun rateSession(
-        @Header("Authorization") token: String,
+
         @Path("id") sessionId: String,
         @Body request: RateSessionRequest
     ): Response<ApiResponse<Map<String, String>>>
@@ -173,7 +173,7 @@ interface ApiService {
     
     @GET("repositories")
     suspend fun getRepositories(
-        @Header("Authorization") token: String,
+
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 20,
         @Query("search") search: String? = null
@@ -181,19 +181,19 @@ interface ApiService {
     
     @GET("repositories/{id}")
     suspend fun getRepository(
-        @Header("Authorization") token: String,
+
         @Path("id") repoId: String
     ): Response<ApiResponse<RepositoryDto>>
     
     @POST("repositories")
     suspend fun createRepository(
-        @Header("Authorization") token: String,
+
         @Body request: CreateRepositoryRequest
     ): Response<ApiResponse<RepositoryDto>>
     
     @GET("repositories/{id}/resources")
     suspend fun getResources(
-        @Header("Authorization") token: String,
+
         @Path("id") repoId: String,
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 50
@@ -201,7 +201,7 @@ interface ApiService {
     
     @POST("repositories/{id}/resources")
     suspend fun addResource(
-        @Header("Authorization") token: String,
+
         @Path("id") repoId: String,
         @Body request: CreateResourceRequest
     ): Response<ApiResponse<ResourceDto>>
@@ -212,7 +212,7 @@ interface ApiService {
     
     @GET("admin/users")
     suspend fun getUsers(
-        @Header("Authorization") token: String,
+
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 20,
         @Query("role") role: String? = null,
@@ -221,32 +221,32 @@ interface ApiService {
     
     @POST("admin/users")
     suspend fun createUser(
-        @Header("Authorization") token: String,
+
         @Body request: RegisterRequest
     ): Response<ApiResponse<UserProfile>>
     
     @PUT("admin/users/{id}/role")
     suspend fun updateUserRole(
-        @Header("Authorization") token: String,
+
         @Path("id") userId: String,
         @Body request: Map<String, String>
     ): Response<ApiResponse<UserProfile>>
     
     @POST("admin/credentials/issue")
     suspend fun issueCredentials(
-        @Header("Authorization") token: String,
+
         @Body request: RegisterCardRequest
     ): Response<ApiResponse<Map<String, String>>>
     
     @DELETE("admin/credentials/{cardId}")
     suspend fun revokeCredentials(
-        @Header("Authorization") token: String,
+
         @Path("cardId") cardId: String
     ): Response<ApiResponse<Map<String, String>>>
     
     @GET("admin/analytics/overview")
     suspend fun getAnalyticsOverview(
-        @Header("Authorization") token: String
+
     ): Response<ApiResponse<Map<String, Any>>>
     
     // ============================================
@@ -255,12 +255,12 @@ interface ApiService {
     
     @GET("dashboard/stats")
     suspend fun getDashboardStats(
-        @Header("Authorization") token: String
+
     ): Response<ApiResponse<DashboardStats>>
     
     @GET("sessions")
     suspend fun getUpcomingSessions(
-        @Header("Authorization") token: String,
+
         @Query("status") status: String = "PENDING"
     ): Response<ApiResponse<List<SessionDto>>>
 }

@@ -31,10 +31,7 @@ class DashboardRepository @Inject constructor(
     suspend fun getDashboardStats(): NetworkResult<DashboardStats> {
         return withContext(Dispatchers.IO) {
             try {
-                val token = getBearerToken()
-                    ?: return@withContext NetworkResult.Unauthorized("Not authenticated")
-
-                apiService.getDashboardStats(token)
+                apiService.getDashboardStats()
                     .toNetworkResultWithData { it.data ?: DashboardStats() }
             } catch (e: Exception) {
                 NetworkResult.Error(e.message ?: "Network error occurred", exception = e)
@@ -45,10 +42,7 @@ class DashboardRepository @Inject constructor(
     suspend fun getUpcomingSessions(): NetworkResult<List<SessionDto>> {
         return withContext(Dispatchers.IO) {
             try {
-                val token = getBearerToken()
-                    ?: return@withContext NetworkResult.Unauthorized("Not authenticated")
-
-                apiService.getUpcomingSessions(token)
+                apiService.getUpcomingSessions()
                     .toNetworkResultWithData { it.data ?: emptyList() }
             } catch (e: Exception) {
                 NetworkResult.Error(e.message ?: "Network error occurred", exception = e)

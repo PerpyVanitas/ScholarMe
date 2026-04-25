@@ -1,4 +1,3 @@
-import { createClient } from "@/lib/supabase/create-client"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { GraduationCap } from "lucide-react"
@@ -8,17 +7,9 @@ import { StatsSection } from "@/components/landing/stats-section"
 import { RolesSection } from "@/components/landing/roles-section"
 import { CTASection } from "@/components/landing/cta-section"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { AuthButton } from "@/components/landing/auth-button"
 
-export default async function HomePage() {
-  let isLoggedIn = false
-  try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    isLoggedIn = !!user
-  } catch {
-    // If auth check fails, show the landing page as logged out
-  }
-
+export default function HomePage() {
   return (
     <div id="top" className="flex min-h-screen flex-col bg-background">
       {/* Header */}
@@ -42,11 +33,7 @@ export default async function HomePage() {
             Roles
           </a>
         </nav>
-        <Button asChild>
-          <Link href={isLoggedIn ? "/dashboard" : "/auth/login"}>
-            {isLoggedIn ? "Dashboard" : "Sign In"}
-          </Link>
-        </Button>
+        <AuthButton />
       </header>
 
       {/* Main Content */}

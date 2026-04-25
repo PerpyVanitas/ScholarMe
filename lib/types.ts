@@ -21,6 +21,9 @@ export interface Profile {
   membership_number?: string | null
   profile_completed?: boolean | null
   terms_accepted_at?: string | null
+  total_xp?: number
+  current_level?: number
+  profile_theme_color?: string | null
   created_at: string
   roles?: Role
 }
@@ -48,6 +51,9 @@ export interface Tutor {
   total_ratings: number
   years_experience?: number | null
   hourly_rate?: number | null
+  total_xp?: number
+  current_level?: number
+  profile_theme_color?: string | null
   created_at: string
   profiles?: Profile
   tutor_specializations?: { specializations: Specialization }[]
@@ -73,6 +79,9 @@ export interface Session {
   specialization_id: string | null
   status: SessionStatus
   notes: string | null
+  total_xp?: number
+  current_level?: number
+  profile_theme_color?: string | null
   created_at: string
   tutors?: Tutor & { profiles?: Profile }
   learner_profile?: Profile
@@ -86,6 +95,9 @@ export interface SessionRating {
   learner_id: string
   rating: number
   feedback: string | null
+  total_xp?: number
+  current_level?: number
+  profile_theme_color?: string | null
   created_at: string
 }
 
@@ -95,6 +107,9 @@ export interface Repository {
   title: string
   description: string | null
   access_role: "all" | "tutor" | "admin"
+  total_xp?: number
+  current_level?: number
+  profile_theme_color?: string | null
   created_at: string
   profiles?: Profile
   resources?: Resource[]
@@ -108,6 +123,9 @@ export interface Resource {
   url: string
   file_type: string | null
   uploaded_by: string
+  total_xp?: number
+  current_level?: number
+  profile_theme_color?: string | null
   created_at: string
   profiles?: Profile
 }
@@ -120,6 +138,9 @@ export interface Notification {
   type: "session" | "system" | "resource"
   is_read: boolean
   link: string | null
+  total_xp?: number
+  current_level?: number
+  profile_theme_color?: string | null
   created_at: string
 }
 
@@ -130,6 +151,9 @@ export interface Timesheet {
   clock_in: string
   clock_out: string | null
   notes: string | null
+  total_xp?: number
+  current_level?: number
+  profile_theme_color?: string | null
   created_at: string
   tutors?: Tutor & { profiles?: Profile }
 }
@@ -141,6 +165,9 @@ export interface AnalyticsLog {
   entity_type: string | null
   entity_id: string | null
   metadata: Record<string, unknown> | null
+  total_xp?: number
+  current_level?: number
+  profile_theme_color?: string | null
   created_at: string
 }
 
@@ -166,6 +193,9 @@ export interface Poll {
   end_date: string
   allow_multiple_votes: boolean
   is_anonymous: boolean
+  total_xp?: number
+  current_level?: number
+  profile_theme_color?: string | null
   created_at: string
   updated_at: string
   profiles?: Profile
@@ -177,6 +207,9 @@ export interface PollOption {
   poll_id: string
   option_text: string
   display_order: number
+  total_xp?: number
+  current_level?: number
+  profile_theme_color?: string | null
   created_at: string
   vote_count?: number
 }
@@ -186,6 +219,9 @@ export interface UserVote {
   poll_id: string
   option_id: string
   user_id: string
+  total_xp?: number
+  current_level?: number
+  profile_theme_color?: string | null
   created_at: string
 }
 
@@ -194,6 +230,42 @@ export interface DeviceToken {
   user_id: string
   token: string
   platform: "ios" | "android" | "web"
+  total_xp?: number
+  current_level?: number
+  profile_theme_color?: string | null
   created_at: string
   updated_at: string
+}
+
+export interface Conversation {
+  id: string
+  total_xp?: number
+  current_level?: number
+  profile_theme_color?: string | null
+  created_at: string
+  updated_at: string
+  title: string | null
+  conversation_participants?: ConversationParticipant[]
+  messages?: Message[]
+}
+
+export interface ConversationParticipant {
+  conversation_id: string
+  profile_id: string
+  joined_at: string
+  last_read_at: string
+  profiles?: Profile
+}
+
+export interface Message {
+  id: string
+  conversation_id: string
+  sender_id: string | null
+  content: string
+  total_xp?: number
+  current_level?: number
+  profile_theme_color?: string | null
+  created_at: string
+  is_edited: boolean
+  profiles?: Profile
 }

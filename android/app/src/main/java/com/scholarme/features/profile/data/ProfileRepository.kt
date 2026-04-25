@@ -30,10 +30,7 @@ class ProfileRepository @Inject constructor(
     suspend fun getProfile(): NetworkResult<UserProfile> {
         return withContext(Dispatchers.IO) {
             try {
-                val token = getBearerToken()
-                    ?: return@withContext NetworkResult.Unauthorized("Not authenticated")
-
-                val result = apiService.getProfile(token)
+                val result = apiService.getProfile()
                     .toNetworkResultWithData { it.data }
 
                 // On success, sync local cache
@@ -62,9 +59,6 @@ class ProfileRepository @Inject constructor(
     ): NetworkResult<UserProfile> {
         return withContext(Dispatchers.IO) {
             try {
-                val token = getBearerToken()
-                    ?: return@withContext NetworkResult.Unauthorized("Not authenticated")
-
                 val request = UpdateProfileRequest(
                     fullName = fullName,
                     phone = phone,
@@ -73,7 +67,7 @@ class ProfileRepository @Inject constructor(
                     yearLevel = yearLevel
                 )
 
-                val result = apiService.updateProfile(token, request)
+                val result = apiService.updateProfile(request)
                     .toNetworkResultWithData { it.data }
 
                 // On success, sync local cache
@@ -99,11 +93,8 @@ class ProfileRepository @Inject constructor(
     ): NetworkResult<Unit> {
         return withContext(Dispatchers.IO) {
             try {
-                val token = getBearerToken()
-                    ?: return@withContext NetworkResult.Unauthorized("Not authenticated")
-
                 val request = ChangePasswordRequest(currentPassword, newPassword)
-                apiService.changePassword(token, request)
+                apiService.changePassword(request)
                     .toNetworkResultWithData { Unit }
             } catch (e: Exception) {
                 NetworkResult.Error(e.message ?: "Network error occurred", exception = e)

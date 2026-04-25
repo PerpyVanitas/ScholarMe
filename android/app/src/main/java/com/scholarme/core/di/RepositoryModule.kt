@@ -1,6 +1,7 @@
 package com.scholarme.core.di
 
 import com.scholarme.core.auth.SessionValidator
+import com.scholarme.core.auth.LogoutHandler
 import com.scholarme.core.data.local.TokenManager
 import com.scholarme.core.data.remote.ApiService
 import com.scholarme.features.auth.data.AuthRepository
@@ -28,6 +29,12 @@ object RepositoryModule {
         sessionValidator: SessionValidator
     ): AuthRepository {
         return AuthRepository(tokenManager, sessionValidator, apiService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideLogoutHandler(authRepository: AuthRepository): LogoutHandler {
+        return authRepository
     }
 
     @Provides

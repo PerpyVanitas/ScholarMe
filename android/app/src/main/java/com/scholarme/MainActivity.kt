@@ -2,11 +2,11 @@ package com.scholarme
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.scholarme.core.auth.SessionValidator
 import com.scholarme.features.auth.ui.login.LoginActivity
-import com.scholarme.features.dashboard.ui.DashboardActivity
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -20,7 +20,7 @@ import javax.inject.Inject
  *   — keeps session check logic in the dedicated validator, not scattered
  */
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var sessionValidator: SessionValidator
@@ -29,13 +29,15 @@ class MainActivity : AppCompatActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
 
-        val targetActivity = if (sessionValidator.isUserAuthenticated()) {
-            DashboardActivity::class.java
+        if (sessionValidator.isUserAuthenticated()) {
+            // User is authenticated, launch the new Jetpack Compose App!
+            setContent {
+                ScholarMeApp()
+            }
         } else {
-            LoginActivity::class.java
+            // User is not authenticated, fallback to legacy LoginActivity until Auth is migrated to Compose
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
         }
-
-        startActivity(Intent(this, targetActivity))
-        finish()
     }
 }
