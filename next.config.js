@@ -28,7 +28,7 @@ const securityHeaders = [
 ];
 
 const nextConfig = {
-  reactCompiler: true,
+  // reactCompiler: true,  // Disabled — requires babel-plugin-react-compiler (not installed)
   poweredByHeader: false,
   async headers() {
     return [

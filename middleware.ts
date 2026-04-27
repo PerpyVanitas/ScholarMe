@@ -1,13 +1,15 @@
-/** Root proxy -- delegates to Supabase session refresh. */
+/**
+ * Next.js Middleware — Supabase session refresh.
+ *
+ * Required export name is `middleware` (not `proxy`, not `default`-only).
+ * Next.js reads the named export `middleware` from this file.
+ */
 import { updateSession } from "@/lib/supabase/middleware"
 import { type NextRequest } from "next/server"
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   return await updateSession(request)
 }
-
-// Also export as default for compatibility
-export default proxy
 
 export const config = {
   matcher: [
