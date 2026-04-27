@@ -175,7 +175,7 @@ export default function AdminUsersPage() {
       !search ||
       p.full_name?.toLowerCase().includes(search.toLowerCase()) ||
       p.email?.toLowerCase().includes(search.toLowerCase());
-    const roleMatch = roleFilter === "all" || p.roles?.name === roleFilter;
+    const roleMatch = roleFilter === "all" || (Array.isArray(p.roles) && p.roles.length > 0 && p.roles[0].name === roleFilter);
     return nameMatch && roleMatch;
   });
 
@@ -214,7 +214,7 @@ export default function AdminUsersPage() {
     setEditUser(p);
     setEditName(p.full_name || "");
     setEditEmail(p.email || "");
-    setEditRole(p.roles?.name || "learner");
+    setEditRole(Array.isArray(p.roles) && p.roles.length > 0 ? p.roles[0].name : "learner");
     setEditOpen(true);
   }
 

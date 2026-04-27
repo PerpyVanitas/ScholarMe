@@ -39,9 +39,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
       if (p) {
         setProfile({
           ...p,
-          roles: p.roles || undefined,
+          roles: Array.isArray(p.roles) ? p.roles : undefined,
         } as Profile);
-        const roleName = p.roles?.name || "learner";
+        const roleName = Array.isArray(p.roles) && p.roles.length > 0 ? p.roles[0].name : "learner";
         setRole(roleName as UserRole);
       } else {
         // Profile not found, create a fallback

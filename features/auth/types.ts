@@ -1,5 +1,7 @@
 /** Auth feature type definitions */
 
+import type { Profile } from "@/lib/types"
+
 export interface AuthCard {
   id: string
   user_id: string
@@ -7,7 +9,7 @@ export interface AuthCard {
   pin: string
   status: "active" | "revoked"
   issued_at: string
-  profiles?: import("@/shared/types").Profile
+  profiles?: Profile
 }
 
 export interface LoginFormData {

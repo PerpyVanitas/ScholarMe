@@ -22,7 +22,7 @@ export interface Profile {
   profile_completed?: boolean | null
   terms_accepted_at?: string | null
   created_at: string
-  roles?: Role
+  roles?: Array<{ id: string; name: string }>
 }
 
 export interface AuthCard {
@@ -201,6 +201,7 @@ export interface DeviceToken {
 export interface Conversation {
   id: string
   participant_id: string
+  title?: string | null
   messages?: ConversationMessage[]
   conversation_participants?: Array<{ profile_id: string; profiles?: Profile }>
   profiles?: Profile
@@ -223,5 +224,5 @@ export interface Message {
   sender_id: string
   content: string
   created_at: string
-  sender?: Profile
+  profiles?: { id: string; full_name: string; avatar_url: string | null } | null
 }

@@ -41,7 +41,7 @@ export async function GET() {
       avatar_url: null,
       phone_number: null,
       created_at: user.created_at || new Date().toISOString(),
-      roles: { id: "fallback", name: "learner" },
+      roles: [{ id: "fallback", name: "learner" }],
     };
   }
 
@@ -67,7 +67,7 @@ export async function GET() {
         avatar_url: null,
         phone_number: null,
         created_at: new Date().toISOString(),
-        roles: { id: "demo-role", name: selectedRole },
+        roles: [{ id: "demo-role", name: selectedRole }],
       };
     }
   }
@@ -82,11 +82,11 @@ export async function GET() {
       avatar_url: null,
       phone_number: null,
       created_at: new Date().toISOString(),
-      roles: { id: "fallback", name: "learner" },
+      roles: [{ id: "fallback", name: "learner" }],
     };
   }
 
-  const role = (isDemoMode && devRole ? devRole : (profile?.roles?.name || "learner")) as UserRole;
+  const role = (isDemoMode && devRole ? devRole : (Array.isArray(profile?.roles) && profile.roles.length > 0 ? profile.roles[0].name : "learner")) as UserRole;
 
   try {
     if (role === "administrator") {
