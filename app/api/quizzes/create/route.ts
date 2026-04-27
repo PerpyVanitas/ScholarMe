@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
         description: description?.trim() || null,
         generation_mode: type || "flashcard",
         visibility: is_public ? "shared" : "private",
-        source_type: source_type || "manual",
+        source_type: source_type || "upload",
         question_count: items.length,
         difficulty: "medium",
       })

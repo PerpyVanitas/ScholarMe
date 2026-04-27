@@ -22,7 +22,7 @@ export async function GET() {
         study_set_items(count)
       `)
       .eq("owner_id", user.id)
-      .eq("is_archived", false)
+      .eq("archived", false)
       .order("created_at", { ascending: false })
 
     if (error) {
