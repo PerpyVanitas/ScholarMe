@@ -228,7 +228,7 @@ export default function AdminUsersPage() {
         user_id: editUser.id,
         full_name: editName,
         email: editEmail !== editUser.email ? editEmail : undefined,
-        role_name: editRole !== editUser.roles?.name ? editRole : undefined,
+        role_name: editRole !== (Array.isArray(editUser.roles) && editUser.roles.length > 0 ? editUser.roles[0].name : "learner") ? editRole : undefined,
       }),
     });
     if (res.ok) {
