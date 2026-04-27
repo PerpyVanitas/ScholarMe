@@ -1,7 +1,7 @@
 /** Notifications page -- view, mark-read, and mark-all-read for the current user. */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { getDemoUserFromCookie } from "@/lib/demo";
 import type { Notification } from "@/lib/types";
 
-const typeIcons: Record<string, React.ReactNode> = {
+const typeIcons: Record<string, ReactNode> = {
   session: <Calendar className="h-4 w-4" />,
   resource: <BookOpen className="h-4 w-4" />,
   system: <Settings className="h-4 w-4" />,
@@ -34,7 +34,8 @@ export default function NotificationsPage() {
 
       let userId = user?.id;
       if (!userId) {
-        userId = getDemoUserFromCookie("administrator").userId;
+        // Default to lowest-privilege demo role
+        userId = getDemoUserFromCookie("learner").userId;
       }
 
       const { data } = await supabase

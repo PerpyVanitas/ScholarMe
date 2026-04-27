@@ -90,6 +90,16 @@ export async function GET() {
 
   try {
     if (role === "administrator") {
+      // SECURITY: Prevent data leak by blocking adminClient in demo mode
+      if (isDemoMode) {
+        return NextResponse.json({
+          role,
+          profile,
+          adminStats: { totalUsers: 142, totalSessions: 450, activeTutors: 25, pendingSessions: 12 },
+          recentSessions: [],
+        });
+      }
+
       // Use admin client to bypass RLS for org-wide stats
       const adminClient = await createAdminClient();
 
@@ -125,7 +135,7 @@ export async function GET() {
       const { data: tutor } = await supabase
         .from("tutors")
         .select("*")
-        .eq("user_id", userId)
+        .eq("profile_id", userId)
         .maybeSingle();
 
       const effectiveTutorId = tutor?.id || demoTutorId || "none";

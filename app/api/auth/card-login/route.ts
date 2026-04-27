@@ -2,6 +2,12 @@
 import { createClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
 import { createErrorResponse, createSuccessResponse } from "@/lib/api-errors";
+import crypto from "crypto";
+
+// Simple in-memory rate limiter (per instance)
+const failedAttempts = new Map<string, { count: number; lockedUntil: number }>();
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
 
 export async function POST(request: Request) {
   try {
@@ -16,6 +22,18 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    // Rate Limiting Check
+    const rateLimit = failedAttempts.get(cardId);
+    if (rateLimit && rateLimit.lockedUntil > Date.now()) {
+      return NextResponse.json(
+        createErrorResponse("AUTH_001_ACCOUNT_LOCKED", "Too many failed attempts. Try again later."),
+        { status: 429 }
+      );
+    }
+
+    // Artificial delay to prevent timing attacks and rapid brute-forcing
+    await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 500));
 
     // Use the admin client to look up the card (bypasses RLS)
     const { createClient: createAdminClientImport } = await import("@supabase/supabase-js");
@@ -39,17 +57,34 @@ export async function POST(request: Request) {
       );
     }
 
-    // Compare PIN (simple string comparison; in production should use bcrypt)
-    // Also implement brute force protection
-    if (card.pin !== pin) {
-      // Log failed attempt (could be used to implement rate limiting)
-      console.warn(`[auth] Failed PIN attempt for card ${cardId}`);
+    // Constant-time string comparison to mitigate timing attacks
+    let pinMatches = false;
+    try {
+      const dbPinBuf = Buffer.from(card.pin || "");
+      const inputPinBuf = Buffer.from(pin || "");
+      if (dbPinBuf.length === inputPinBuf.length) {
+        pinMatches = crypto.timingSafeEqual(dbPinBuf, inputPinBuf);
+      }
+    } catch {
+      pinMatches = false;
+    }
+
+    if (!pinMatches) {
+      // Record failed attempt
+      const attempts = (rateLimit?.count || 0) + 1;
+      const lockedUntil = attempts >= MAX_ATTEMPTS ? Date.now() + LOCKOUT_MS : 0;
+      failedAttempts.set(cardId, { count: attempts, lockedUntil });
+
+      console.warn(`[auth] Failed PIN attempt for card ${cardId}. Attempt ${attempts}/${MAX_ATTEMPTS}`);
       
       return NextResponse.json(
         createErrorResponse("AUTH_001_INVALID_PIN", "Incorrect PIN"),
         { status: 401 }
       );
     }
+
+    // Successful login: clear failed attempts
+    failedAttempts.delete(cardId);
 
     // Verify card belongs to user and is still valid
     if (!card.user_id) {

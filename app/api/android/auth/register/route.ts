@@ -28,7 +28,29 @@ export async function POST(request: Request) {
       );
     }
 
+    // SECURITY: Allowlist roles to prevent privilege escalation
+    const selectedRole = accountType === "tutor" ? "tutor" : "learner";
+
     const supabase = await createClient();
+    const adminClient = createBareAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Resolve the actual role UUID from the roles table
+    const { data: roleRow, error: roleError } = await adminClient
+      .from("roles")
+      .select("id")
+      .eq("name", selectedRole)
+      .single();
+
+    if (roleError || !roleRow) {
+      console.error("[Android Auth] Role resolution error:", roleError);
+      return NextResponse.json(
+        { success: false, message: "Invalid account type" },
+        { status: 400 }
+      );
+    }
 
     // Sign up with email/password
     const { data, error: signUpError } = await supabase.auth.signUp({
@@ -38,6 +60,8 @@ export async function POST(request: Request) {
         data: {
           first_name: firstName,
           last_name: lastName,
+          role_id: roleRow.id,
+          role_name: selectedRole,
         },
       },
     });
@@ -60,12 +84,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create profile
-    const adminClient = createBareAdminClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
+    // Create profile with the resolved role UUID
     const { error: profileError } = await adminClient
       .from("profiles")
       .insert({
@@ -75,12 +94,14 @@ export async function POST(request: Request) {
         last_name: lastName,
         full_name: `${firstName} ${lastName}`,
         phone_number: phoneNumber,
-        role_id: accountType === "tutor" ? "tutor" : "learner",
+        role_id: roleRow.id,
         profile_completed: false,
       });
 
     if (profileError) {
       console.error("[Android Auth] Profile creation error:", profileError);
+      // Rollback auth user to avoid orphaned accounts
+      await adminClient.auth.admin.deleteUser(data.user.id).catch(() => {});
       return NextResponse.json(
         { success: false, message: "Failed to create profile" },
         { status: 500 }

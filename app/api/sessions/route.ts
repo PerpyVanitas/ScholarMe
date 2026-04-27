@@ -15,8 +15,25 @@ export async function POST(request: Request) {
 
   if (!tutor_id || !scheduled_date || !start_time || !end_time) {
     return NextResponse.json(
-      { error: "Missing required fields" },
+      { error: "Missing required fields: tutor_id, scheduled_date, start_time, end_time are required" },
       { status: 400 }
+    );
+  }
+
+  // Prevent double-booking: check for an existing session with same tutor + date + overlapping time
+  const { data: existing } = await supabase
+    .from("sessions")
+    .select("id")
+    .eq("tutor_id", tutor_id)
+    .eq("scheduled_date", scheduled_date)
+    .neq("status", "cancelled")
+    .or(`and(start_time.lte.${end_time},end_time.gte.${start_time})`)
+    .maybeSingle();
+
+  if (existing) {
+    return NextResponse.json(
+      { error: "This tutor already has a session booked in this time slot" },
+      { status: 409 }
     );
   }
 

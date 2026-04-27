@@ -13,6 +13,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import okhttp3.CertificatePinner
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -84,7 +85,14 @@ object NetworkModule {
             }
         }
 
+        // SECURITY: Certificate Pinning to prevent MITM attacks
+        // Replace this hash with your actual production certificate's Subject Public Key Info (SPKI) hash
+        val certificatePinner = CertificatePinner.Builder()
+            .add("api.scholarme.app", "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=")
+            .build()
+
         return OkHttpClient.Builder()
+            .certificatePinner(certificatePinner)
             .addInterceptor(authInterceptor)
             .addInterceptor(networkErrorInterceptor)
             .addInterceptor(loggingInterceptor)
