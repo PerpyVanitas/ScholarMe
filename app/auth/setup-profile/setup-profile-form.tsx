@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { updateProfile } from "./actions"
+import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -41,6 +41,7 @@ export function SetupProfileForm({
 }: SetupProfileFormProps) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const supabase = createClient()
 
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -113,14 +114,55 @@ export function SetupProfileForm({
 
     setSaving(true)
     try {
-      await updateProfile({
-        firstName,
-        lastName,
-        birthdate: birthdate || null,
-        avatarPathname: avatarPathname || null,
-        membershipNumber: isTutor ? membershipNumber.trim() || null : null,
-        selectedSpecs
-      })
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          full_name: `${firstName.trim()} ${lastName.trim()}`,
+          birthdate: birthdate || null,
+          avatar_url: avatarPathname || null,
+          membership_number: isTutor ? membershipNumber.trim() || null : null,
+          profile_completed: true,
+        })
+        .eq("id", userId)
+
+      if (profileError) throw profileError
+
+      if (isTutor) {
+        let { data: tutorRow } = await supabase
+          .from("tutors")
+          .select("id")
+          .eq("profile_id", userId)
+          .single()
+
+        if (!tutorRow) {
+          const { data: newTutor } = await supabase
+            .from("tutors")
+            .insert({ profile_id: userId })
+            .select("id")
+            .single()
+          tutorRow = newTutor
+        }
+
+        if (tutorRow) {
+          await supabase
+            .from("tutor_specializations")
+            .delete()
+            .eq("tutor_id", tutorRow.id)
+
+          if (selectedSpecs.length > 0) {
+            await supabase
+              .from("tutor_specializations")
+              .insert(
+                selectedSpecs.map(specId => ({
+                  tutor_id: tutorRow!.id,
+                  specialization_id: specId,
+                }))
+              )
+          }
+        }
+      }
 
       toast.success("Profile setup complete!")
       router.push("/dashboard")

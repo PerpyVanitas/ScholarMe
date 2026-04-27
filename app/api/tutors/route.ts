@@ -8,16 +8,13 @@ export async function GET(request: Request) {
   const search = searchParams.get("search") || "";
   const specialization = searchParams.get("specialization") || "";
 
-  // Build query with server-side filtering for scalability
-  let query = supabase
+  // Fetch all tutors with their profile info and specializations (nested JOIN)
+  // tutors -> profiles (user info)
+  // tutors -> tutor_specializations -> specializations (subjects they teach)
+  const query = supabase
     .from("tutors")
     .select("*, profiles(*), tutor_specializations(specializations(*))")
     .order("rating", { ascending: false });
-
-  // Server-side search filter: match against tutor name in the profiles join
-  if (search) {
-    query = query.ilike("profiles.full_name", `%${search}%`);
-  }
 
   const { data: tutors, error } = await query;
 
@@ -25,9 +22,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  let filtered = (tutors || []).filter(Boolean);
+  let filtered = tutors || [];
 
-  // Post-filter for search on bio (not easily done via join ilike)
+  // Client-side search filter: match against tutor name or bio
   if (search) {
     const lower = search.toLowerCase();
     filtered = filtered.filter(
@@ -37,7 +34,7 @@ export async function GET(request: Request) {
     );
   }
 
-  // Server-side specialization filter using the already-joined data
+  // Client-side specialization filter: check if tutor teaches this subject
   if (specialization) {
     filtered = filtered.filter((t) =>
       t.tutor_specializations?.some(

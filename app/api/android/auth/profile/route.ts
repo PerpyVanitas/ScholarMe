@@ -47,8 +47,8 @@ export async function GET(request: Request) {
       const { data: tutor } = await supabase
         .from("tutors")
         .select("*")
-        .eq("profile_id", data.user.id)
-        .maybeSingle();
+        .eq("user_id", data.user.id)
+        .single();
 
       if (tutor) {
         tutorStats = {

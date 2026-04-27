@@ -25,11 +25,6 @@ export async function signUp(formData: FormData) {
   const dateOfBirth = formData.get("date_of_birth") as string
   const selectedRole = (formData.get("role") as string) || "learner"
 
-  // SECURITY: Prevent privilege escalation by restricting allowed roles
-  if (!["learner", "tutor"].includes(selectedRole)) {
-    return { error: "Invalid role selected." }
-  }
-
   // Check if phone number is already registered
   if (phoneNumber) {
     const { data: existingPhone } = await adminClient

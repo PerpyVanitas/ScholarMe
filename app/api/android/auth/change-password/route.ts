@@ -77,27 +77,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Verify old password by attempting a sign-in
-    const email = data.user.email;
-    if (!email) {
-      return NextResponse.json(
-        { success: false, message: "Could not verify user identity" },
-        { status: 400 }
-      );
-    }
-
-    const { error: verifyError } = await supabase.auth.signInWithPassword({
-      email,
-      password: oldPassword,
-    });
-
-    if (verifyError) {
-      return NextResponse.json(
-        { success: false, message: "Current password is incorrect" },
-        { status: 401 }
-      );
-    }
-
     // Update password
     const { error: updateError } = await supabase.auth.updateUser({
       password: newPassword,

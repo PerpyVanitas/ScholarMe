@@ -95,9 +95,6 @@ dependencies {
     // AndroidX Security for encrypted SharedPreferences
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
     
-    // Biometrics
-    implementation("androidx.biometric:biometric:1.1.0")
-    
     // Splash Screen
     implementation("androidx.core:core-splashscreen:1.0.1")
     
@@ -105,11 +102,6 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.48")
     ksp("com.google.dagger:hilt-android-compiler:2.48")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
-    
-    // Room Database
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
-    ksp("androidx.room:room-compiler:2.6.1")
     
     // Testing
     testImplementation("junit:junit:4.13.2")

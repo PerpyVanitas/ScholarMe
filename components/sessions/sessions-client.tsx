@@ -31,40 +31,21 @@ export function SessionsClient({ initialSessions, role }: SessionsClientProps) {
   const [ratingValue, setRatingValue] = useState(0)
   const [ratingFeedback, setRatingFeedback] = useState("")
   const [ratingLoading, setRatingLoading] = useState(false)
-  // Track per-session loading state for optimistic UI
-  const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set())
 
   async function updateStatus(sessionId: string, status: string) {
-    setUpdatingIds((prev) => new Set(prev).add(sessionId))
-    try {
-      const res = await fetch(`/api/sessions/${sessionId}/status`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      })
+    const res = await fetch(`/api/sessions/${sessionId}/status`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    })
 
-      if (res.ok) {
-        setSessions((prev) =>
-          prev.map((s) => (s.id === sessionId ? { ...s, status: status as Session["status"] } : s))
-        )
-        toast.success(`Session ${status}`)
-      } else {
-        // Surface the actual server error message when available
-        let msg = "Failed to update session"
-        try {
-          const err = await res.json()
-          if (err?.error) msg = err.error
-        } catch { /* ignore parse errors */ }
-        toast.error(msg)
-      }
-    } catch {
-      toast.error("Network error. Please check your connection and try again.")
-    } finally {
-      setUpdatingIds((prev) => {
-        const next = new Set(prev)
-        next.delete(sessionId)
-        return next
-      })
+    if (res.ok) {
+      setSessions((prev) =>
+        prev.map((s) => (s.id === sessionId ? { ...s, status: status as Session["status"] } : s))
+      )
+      toast.success(`Session ${status}`)
+    } else {
+      toast.error("Failed to update session")
     }
   }
 
@@ -96,12 +77,7 @@ export function SessionsClient({ initialSessions, role }: SessionsClientProps) {
       setRatingValue(0)
       setRatingFeedback("")
     } else {
-      let msg = "Failed to submit rating"
-      try {
-        const err = await res.json()
-        if (err?.error) msg = err.error
-      } catch { /* ignore */ }
-      toast.error(msg)
+      toast.error("Failed to submit rating")
     }
     setRatingLoading(false)
   }
@@ -136,7 +112,6 @@ export function SessionsClient({ initialSessions, role }: SessionsClientProps) {
           <SessionList
             sessions={upcoming}
             role={role}
-            updatingIds={updatingIds}
             onUpdateStatus={updateStatus}
             onRate={(s) => setRatingSession(s)}
           />
@@ -146,7 +121,6 @@ export function SessionsClient({ initialSessions, role }: SessionsClientProps) {
           <SessionList
             sessions={past}
             role={role}
-            updatingIds={updatingIds}
             onUpdateStatus={updateStatus}
             onRate={(s) => setRatingSession(s)}
           />
@@ -170,14 +144,14 @@ export function SessionsClient({ initialSessions, role }: SessionsClientProps) {
                     key={v}
                     type="button"
                     onClick={() => setRatingValue(v)}
-                    className="p-1 transition-transform hover:scale-110"
+                    className="p-1"
                     aria-label={`${v} star${v > 1 ? "s" : ""}`}
                   >
                     <Star
-                      className={`h-7 w-7 transition-colors ${
+                      className={`h-7 w-7 ${
                         v <= ratingValue
                           ? "fill-accent text-accent"
-                          : "text-muted-foreground/30 hover:text-muted-foreground"
+                          : "text-muted-foreground/30"
                       }`}
                     />
                   </button>
@@ -219,13 +193,11 @@ export function SessionsClient({ initialSessions, role }: SessionsClientProps) {
 function SessionList({
   sessions,
   role,
-  updatingIds,
   onUpdateStatus,
   onRate,
 }: {
   sessions: Session[]
   role: UserRole
-  updatingIds: Set<string>
   onUpdateStatus: (id: string, status: string) => void
   onRate: (session: Session) => void
 }) {
@@ -247,10 +219,9 @@ function SessionList({
       {sessions.map((session) => {
         const hasRating = session.session_ratings && session.session_ratings.length > 0
         const canRate = role === "learner" && session.status === "completed" && !hasRating
-        const isUpdating = updatingIds.has(session.id)
 
         return (
-          <Card key={session.id} className="border-border/60 transition-shadow hover:shadow-sm">
+          <Card key={session.id} className="border-border/60">
             <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2">
@@ -304,26 +275,16 @@ function SessionList({
                     <Button
                       size="sm"
                       onClick={() => onUpdateStatus(session.id, "confirmed")}
-                      disabled={isUpdating}
                     >
-                      {isUpdating ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
-                      )}
+                      <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
                       Confirm
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => onUpdateStatus(session.id, "cancelled")}
-                      disabled={isUpdating}
                     >
-                      {isUpdating ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <XCircle className="mr-1 h-3.5 w-3.5" />
-                      )}
+                      <XCircle className="mr-1 h-3.5 w-3.5" />
                       Decline
                     </Button>
                   </>
@@ -332,13 +293,8 @@ function SessionList({
                   <Button
                     size="sm"
                     onClick={() => onUpdateStatus(session.id, "completed")}
-                    disabled={isUpdating}
                   >
-                    {isUpdating ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
-                    )}
+                    <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
                     Mark Complete
                   </Button>
                 )}
@@ -347,9 +303,8 @@ function SessionList({
                     size="sm"
                     variant="outline"
                     onClick={() => onUpdateStatus(session.id, "cancelled")}
-                    disabled={isUpdating}
                   >
-                    {isUpdating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Cancel"}
+                    Cancel
                   </Button>
                 )}
                 {canRate && (

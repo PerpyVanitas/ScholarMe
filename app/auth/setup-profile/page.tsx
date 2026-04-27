@@ -80,20 +80,23 @@ export default function SetupProfilePage() {
       if (specs) setSpecializations(specs)
 
       // Load existing tutor specializations
-      if (profile?.roles?.name === "tutor") {
-        const { data: tutorRow } = await supabase
-          .from("tutors")
-          .select("id")
-          .eq("profile_id", user.id)
-          .single()
+      if (profile && profile.roles && Array.isArray(profile.roles)) {
+        const roles = profile.roles as Array<{ name: string }>;
+        if (roles[0]?.name === "tutor") {
+          const { data: tutorRow } = await supabase
+            .from("tutors")
+            .select("id")
+            .eq("profile_id", user.id)
+            .single()
 
-        if (tutorRow) {
-          const { data: tutorSpecs } = await supabase
-            .from("tutor_specializations")
-            .select("specialization_id")
-            .eq("tutor_id", tutorRow.id)
-          if (tutorSpecs) {
-            setSelectedSpecs(tutorSpecs.map(s => s.specialization_id))
+          if (tutorRow) {
+            const { data: tutorSpecs } = await supabase
+              .from("tutor_specializations")
+              .select("specialization_id")
+              .eq("tutor_id", tutorRow.id)
+            if (tutorSpecs) {
+              setSelectedSpecs(tutorSpecs.map(s => s.specialization_id))
+            }
           }
         }
       }

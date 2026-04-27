@@ -22,6 +22,7 @@ import { useUser } from "@/lib/user-context";
 
 export default function ProfilePage() {
   const router = useRouter();
+  const supabase = createClient();
   const { refreshProfile } = useUser();
 
   // Profile state
@@ -66,7 +67,6 @@ export default function ProfilePage() {
   // Load profile data
   useEffect(() => {
     async function loadProfile() {
-      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         router.push("/auth/login");
@@ -130,7 +130,7 @@ export default function ProfilePage() {
     }
 
     loadProfile();
-  }, [router]);
+  }, [supabase, router]);
 
   // Open edit modal with current values
   const openEditModal = useCallback(() => {
@@ -297,10 +297,7 @@ export default function ProfilePage() {
         date_of_birth: updateData.birthdate,
         membership_number: updateData.membership_number,
       } : null);
-
-      // Issue #4: Refresh user context so sidebar name/avatar updates immediately
-      await refreshProfile();
-
+      
       toast.success("Profile updated successfully");
       setEditOpen(false);
     } else {
@@ -326,26 +323,7 @@ export default function ProfilePage() {
     }
 
     setChangingPassword(true);
-
-    // Issue #2: Verify old password before allowing the change
-    const supabase = createClient();
-    const email = (await supabase.auth.getUser()).data.user?.email;
-    if (!email) {
-      toast.error("Could not verify user identity. Please sign in again.");
-      setChangingPassword(false);
-      return;
-    }
-
-    const { error: verifyError } = await supabase.auth.signInWithPassword({
-      email,
-      password: currentPassword,
-    });
-    if (verifyError) {
-      toast.error("Current password is incorrect.");
-      setChangingPassword(false);
-      return;
-    }
-
+    
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     
     if (error) {

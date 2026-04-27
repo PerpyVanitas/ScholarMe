@@ -3,9 +3,7 @@ package com.scholarme.core.di
 import com.scholarme.core.data.local.TokenManager
 import com.scholarme.core.data.remote.ApiService
 import com.scholarme.features.auth.data.AuthRepository
-import com.scholarme.features.dashboard.domain.repository.DashboardRepository
-import com.scholarme.features.dashboard.data.repository.DashboardRepositoryImpl
-import com.scholarme.core.data.local.dao.DashboardDao
+import com.scholarme.features.dashboard.data.DashboardRepository
 import com.scholarme.features.profile.data.ProfileRepository
 import dagger.Module
 import dagger.Provides
@@ -33,10 +31,9 @@ object RepositoryModule {
     @Singleton
     fun provideDashboardRepository(
         apiService: ApiService,
-        tokenManager: TokenManager,
-        dashboardDao: DashboardDao
+        tokenManager: TokenManager
     ): DashboardRepository {
-        return DashboardRepositoryImpl(tokenManager, apiService, dashboardDao)
+        return DashboardRepository(tokenManager, apiService)
     }
 
     @Provides

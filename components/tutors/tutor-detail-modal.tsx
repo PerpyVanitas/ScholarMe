@@ -24,7 +24,7 @@ interface TutorDetailModalProps {
       full_name: string;
       email: string;
       avatar_url: string | null;
-      phone_number: string | null;
+      phone_number?: string | null;
     };
     tutor_specializations: Array<{
       specializations: {
