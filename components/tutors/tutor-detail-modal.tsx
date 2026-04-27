@@ -8,32 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Star, Mail, BookOpen, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import type { Tutor } from "@/lib/types";
 
 interface TutorDetailModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  tutor: {
-    id: string;
-    profile_id: string;
-    bio: string | null;
-    hourly_rate: number | null;
-    years_experience: number | null;
-    rating: number;
-    total_ratings: number;
-    profiles: {
-      full_name: string;
-      email: string;
-      avatar_url: string | null;
-      phone_number?: string | null;
-    };
-    tutor_specializations: Array<{
-      specializations: {
-        id: string;
-        name: string;
-      };
-    }>;
-  };
+  tutor: Tutor;
 }
+
 
 export function TutorDetailModal({ open, onOpenChange, tutor }: TutorDetailModalProps) {
   const [hasBooked, setHasBooked] = useState(false);
@@ -73,11 +55,12 @@ export function TutorDetailModal({ open, onOpenChange, tutor }: TutorDetailModal
     return avatarUrl;
   };
 
-  const specs = tutor.tutor_specializations
+  const specs = (tutor.tutor_specializations ?? [])
     .map(ts => ts.specializations?.name)
     .filter(Boolean);
 
-  const initials = tutor.profiles.full_name
+  const profileName = tutor.profiles?.full_name ?? "Tutor";
+  const initials = profileName
     .split(" ")
     .map(n => n[0])
     .join("")
@@ -95,13 +78,13 @@ export function TutorDetailModal({ open, onOpenChange, tutor }: TutorDetailModal
           {/* Header with Avatar and Name */}
           <div className="flex items-start gap-4">
             <Avatar className="h-16 w-16">
-              <AvatarImage src={getAvatarUrl(tutor.profiles.avatar_url)} alt={tutor.profiles.full_name} />
+              <AvatarImage src={getAvatarUrl(tutor.profiles?.avatar_url)} alt={profileName} />
               <AvatarFallback className="text-lg bg-primary/10 text-primary">
                 {initials}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <h3 className="text-xl font-semibold">{tutor.profiles.full_name}</h3>
+              <h3 className="text-xl font-semibold">{profileName}</h3>
               <div className="flex items-center gap-2 mt-1">
                 <Star className="h-4 w-4 fill-accent text-accent" />
                 <span className="text-sm text-muted-foreground">
@@ -150,20 +133,21 @@ export function TutorDetailModal({ open, onOpenChange, tutor }: TutorDetailModal
             </div>
           )}
 
-          {/* Contact Info */}
-          <div className="space-y-2 pt-2 border-t">
-            <p className="text-sm font-medium">Contact</p>
-            <a href={`mailto:${tutor.profiles.email}`} className="flex items-center gap-2 text-sm text-primary hover:underline">
-              <Mail className="h-4 w-4" />
-              {tutor.profiles.email}
-            </a>
-            {tutor.profiles.phone_number && (
-              <a href={`tel:${tutor.profiles.phone_number}`} className="flex items-center gap-2 text-sm text-primary hover:underline">
-                <MessageSquare className="h-4 w-4" />
-                {tutor.profiles.phone_number}
+          {tutor.profiles?.email && (
+            <div className="space-y-2 pt-2 border-t">
+              <p className="text-sm font-medium">Contact</p>
+              <a href={`mailto:${tutor.profiles.email}`} className="flex items-center gap-2 text-sm text-primary hover:underline">
+                <Mail className="h-4 w-4" />
+                {tutor.profiles.email}
               </a>
-            )}
-          </div>
+              {tutor.profiles.phone_number && (
+                <a href={`tel:${tutor.profiles.phone_number}`} className="flex items-center gap-2 text-sm text-primary hover:underline">
+                  <MessageSquare className="h-4 w-4" />
+                  {tutor.profiles.phone_number}
+                </a>
+              )}
+            </div>
+          )}
 
           {/* Actions */}
           <div className="space-y-2 flex flex-col gap-2">
