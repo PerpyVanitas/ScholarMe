@@ -22,7 +22,11 @@ async function getAdminUser(supabase: Awaited<ReturnType<typeof createClient>>) 
     .select("roles(name)")
     .eq("id", user.id)
     .single();
-  if (profile?.roles?.name !== "administrator") return null;
+  
+  const isAdmin = Array.isArray(profile?.roles) && 
+    profile.roles.some((role: any) => role.name === "administrator");
+  
+  if (!isAdmin) return null;
   return user;
 }
 

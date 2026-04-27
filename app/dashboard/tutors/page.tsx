@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Search, Star, Loader2, Users } from "lucide-react";
-import Link from "next/link";
+import { TutorDetailModal } from "@/components/tutors/tutor-detail-modal";
 import type { Tutor, Specialization } from "@/lib/types";
 
 export default function TutorsPage() {
@@ -19,6 +19,8 @@ export default function TutorsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedSpec, setSelectedSpec] = useState("all");
+  const [selectedTutor, setSelectedTutor] = useState<Tutor | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -162,14 +164,30 @@ export default function TutorsPage() {
 
                 {/* Button Section - Fixed to Bottom */}
                 <div className="px-5 pb-5">
-                  <Button asChild size="sm" className="w-full">
-                    <Link href={`/d/tutors/${tutor.id}`}>View Profile</Link>
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    onClick={() => {
+                      setSelectedTutor(tutor);
+                      setModalOpen(true);
+                    }}
+                  >
+                    View Profile
                   </Button>
                 </div>
               </Card>
             );
           })}
         </div>
+      )}
+
+      {/* Tutor Detail Modal */}
+      {selectedTutor && (
+        <TutorDetailModal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          tutor={selectedTutor}
+        />
       )}
     </div>
   );

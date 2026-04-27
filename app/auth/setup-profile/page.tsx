@@ -27,6 +27,7 @@ export default function SetupProfilePage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [roleName, setRoleName] = useState<string>("learner")
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [avatarPathname, setAvatarPathname] = useState<string | null>(null) // Store actual Blob pathname
 
   // Form fields
   const [firstName, setFirstName] = useState("")
@@ -79,20 +80,23 @@ export default function SetupProfilePage() {
       if (specs) setSpecializations(specs)
 
       // Load existing tutor specializations
-      if (profile?.roles?.name === "tutor") {
-        const { data: tutorRow } = await supabase
-          .from("tutors")
-          .select("id")
-          .eq("profile_id", user.id)
-          .single()
+      if (profile && profile.roles && Array.isArray(profile.roles)) {
+        const roles = profile.roles as Array<{ name: string }>;
+        if (roles[0]?.name === "tutor") {
+          const { data: tutorRow } = await supabase
+            .from("tutors")
+            .select("id")
+            .eq("profile_id", user.id)
+            .single()
 
-        if (tutorRow) {
-          const { data: tutorSpecs } = await supabase
-            .from("tutor_specializations")
-            .select("specialization_id")
-            .eq("tutor_id", tutorRow.id)
-          if (tutorSpecs) {
-            setSelectedSpecs(tutorSpecs.map(s => s.specialization_id))
+          if (tutorRow) {
+            const { data: tutorSpecs } = await supabase
+              .from("tutor_specializations")
+              .select("specialization_id")
+              .eq("tutor_id", tutorRow.id)
+            if (tutorSpecs) {
+              setSelectedSpecs(tutorSpecs.map(s => s.specialization_id))
+            }
           }
         }
       }
@@ -122,7 +126,7 @@ export default function SetupProfilePage() {
       const formData = new FormData()
       formData.append("file", file)
 
-      const res = await fetch("/api/upload/avatar", {
+      const res = await fetch("/api/avatar", {
         method: "POST",
         body: formData,
       })
@@ -133,7 +137,11 @@ export default function SetupProfilePage() {
         throw new Error(data.error || "Upload failed")
       }
 
-      setAvatarUrl(data.url)
+      // Store the actual pathname in state
+      setAvatarPathname(data.pathname)
+      // Convert pathname to displayable URL for private Blob
+      const displayUrl = `/api/avatar?pathname=${encodeURIComponent(data.pathname)}`
+      setAvatarUrl(displayUrl)
       toast.success("Photo uploaded!")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed")
@@ -167,6 +175,7 @@ export default function SetupProfilePage() {
           last_name: lastName.trim(),
           full_name: `${firstName.trim()} ${lastName.trim()}`,
           birthdate: birthdate || null,
+          avatar_url: avatarPathname || null, // Store the actual Blob pathname
           membership_number: isTutor ? membershipNumber.trim() || null : null,
           profile_completed: true,
         })

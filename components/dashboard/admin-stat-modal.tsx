@@ -56,7 +56,7 @@ function UserRow({ user }: { user: Record<string, unknown> }) {
   const profile = user as { id: string; full_name: string; email: string; avatar_url: string | null; roles?: { name: string } }
   return (
     <Link
-      href={`/d/admin/users`}
+      href="/dashboard/admin/users"
       className="flex items-center gap-3 rounded-lg border border-border/60 p-3 transition-colors hover:bg-muted/50"
     >
       <Avatar className="h-9 w-9">
@@ -84,7 +84,7 @@ function TutorRow({ tutor }: { tutor: Record<string, unknown> }) {
   const profile = t.profiles
   return (
     <Link
-      href={`/d/tutors/${t.id}`}
+      href={`/dashboard/tutors/${t.id}`}
       className="flex items-center gap-3 rounded-lg border border-border/60 p-3 transition-colors hover:bg-muted/50"
     >
       <Avatar className="h-9 w-9">
@@ -117,7 +117,7 @@ function SessionRow({ session }: { session: Record<string, unknown> }) {
   }
   return (
     <Link
-      href={`/d/sessions`}
+      href="/dashboard/admin/sessions"
       className="flex items-center justify-between rounded-lg border border-border/60 p-3 transition-colors hover:bg-muted/50"
     >
       <div className="flex flex-col gap-1 min-w-0">

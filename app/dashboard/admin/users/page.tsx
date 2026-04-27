@@ -175,7 +175,7 @@ export default function AdminUsersPage() {
       !search ||
       p.full_name?.toLowerCase().includes(search.toLowerCase()) ||
       p.email?.toLowerCase().includes(search.toLowerCase());
-    const roleMatch = roleFilter === "all" || p.roles?.name === roleFilter;
+    const roleMatch = roleFilter === "all" || (Array.isArray(p.roles) && p.roles.length > 0 && p.roles[0].name === roleFilter);
     return nameMatch && roleMatch;
   });
 
@@ -214,7 +214,7 @@ export default function AdminUsersPage() {
     setEditUser(p);
     setEditName(p.full_name || "");
     setEditEmail(p.email || "");
-    setEditRole(p.roles?.name || "learner");
+    setEditRole(Array.isArray(p.roles) && p.roles.length > 0 ? p.roles[0].name : "learner");
     setEditOpen(true);
   }
 
@@ -228,7 +228,7 @@ export default function AdminUsersPage() {
         user_id: editUser.id,
         full_name: editName,
         email: editEmail !== editUser.email ? editEmail : undefined,
-        role_name: editRole !== editUser.roles?.name ? editRole : undefined,
+        role_name: editRole !== (Array.isArray(editUser.roles) && editUser.roles.length > 0 ? editUser.roles[0].name : "learner") ? editRole : undefined,
       }),
     });
     if (res.ok) {
@@ -387,8 +387,8 @@ export default function AdminUsersPage() {
                     <span className="font-medium text-foreground truncate">{p.full_name || "Unnamed"}</span>
                     <span className="text-xs text-muted-foreground truncate">{p.email}</span>
                     <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline" className={`text-[10px] ${roleColors[p.roles?.name || "learner"]}`}>
-                        {p.roles?.name || "learner"}
+                      <Badge variant="outline" className={`text-[10px] ${roleColors[(Array.isArray(p.roles) && p.roles.length > 0 ? p.roles[0].name : "learner")]}`}>
+                        {Array.isArray(p.roles) && p.roles.length > 0 ? p.roles[0].name : "learner"}
                       </Badge>
                     </div>
                   </div>
@@ -424,8 +424,8 @@ export default function AdminUsersPage() {
                       </TableCell>
                       <TableCell className="text-muted-foreground">{p.email}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={roleColors[p.roles?.name || "learner"]}>
-                          {p.roles?.name || "learner"}
+                        <Badge variant="outline" className={roleColors[(Array.isArray(p.roles) && p.roles.length > 0 ? p.roles[0].name : "learner")]}>
+                          {Array.isArray(p.roles) && p.roles.length > 0 ? p.roles[0].name : "learner"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">

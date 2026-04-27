@@ -39,11 +39,23 @@ export async function POST(request: Request) {
       );
     }
 
-    // Compare PIN (stored as plain text for simplicity in this MVP; in production use bcrypt)
+    // Compare PIN (simple string comparison; in production should use bcrypt)
+    // Also implement brute force protection
     if (card.pin !== pin) {
+      // Log failed attempt (could be used to implement rate limiting)
+      console.warn(`[auth] Failed PIN attempt for card ${cardId}`);
+      
       return NextResponse.json(
         createErrorResponse("AUTH_001_INVALID_PIN", "Incorrect PIN"),
         { status: 401 }
+      );
+    }
+
+    // Verify card belongs to user and is still valid
+    if (!card.user_id) {
+      return NextResponse.json(
+        createErrorResponse("AUTH_001_INVALID_CARD", "Card is not properly configured"),
+        { status: 400 }
       );
     }
 
@@ -75,23 +87,33 @@ export async function POST(request: Request) {
     const supabase = await createClient();
     const tokenHash = linkData.properties?.hashed_token;
 
-    if (tokenHash) {
-      const { error: verifyError } = await supabase.auth.verifyOtp({
-        token_hash: tokenHash,
-        type: "magiclink",
-      });
-
-      if (verifyError) {
-        return NextResponse.json(
-          createErrorResponse("SYSTEM_001_INTERNAL_ERROR", "Failed to complete authentication"),
-          { status: 500 }
-        );
-      }
+    if (!tokenHash) {
+      return NextResponse.json(
+        createErrorResponse("SYSTEM_001_INTERNAL_ERROR", "Failed to generate valid authentication token"),
+        { status: 500 }
+      );
     }
 
+    const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: "magiclink",
+    });
+
+    if (verifyError || !verifyData?.user) {
+      console.error("[auth] Token verification failed:", verifyError);
+      return NextResponse.json(
+        createErrorResponse("SYSTEM_001_INTERNAL_ERROR", "Failed to complete authentication"),
+        { status: 500 }
+      );
+    }
+
+    const userRole = Array.isArray(card.profiles?.roles) && card.profiles.roles.length > 0 
+      ? card.profiles.roles[0].name 
+      : "learner";
+    
     return NextResponse.json(
       createSuccessResponse({
-        role: card.profiles?.roles?.name || "learner",
+        role: userRole,
       })
     );
   } catch {

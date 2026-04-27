@@ -5,6 +5,26 @@ export async function GET() {
   try {
     const adminClient = await createAdminClient();
 
+    // Verify user is authenticated
+    const { data: { user } } = await adminClient.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Verify user is admin
+    const { data: profile } = await adminClient
+      .from("profiles")
+      .select("roles(name)")
+      .eq("id", user.id)
+      .single();
+
+    const isAdmin = Array.isArray(profile?.roles) && 
+      profile.roles.some((role: any) => role.name === "admin" || role.name === "administrator");
+    
+    if (!profile || !isAdmin) {
+      return NextResponse.json({ error: "Access denied - admin only" }, { status: 403 });
+    }
+
     const results = await Promise.allSettled([
       adminClient.from("profiles").select("*", { count: "exact", head: true }),
       adminClient.from("sessions").select("*", { count: "exact", head: true }),

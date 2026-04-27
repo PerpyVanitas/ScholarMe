@@ -22,7 +22,7 @@ export interface Profile {
   profile_completed?: boolean | null
   terms_accepted_at?: string | null
   created_at: string
-  roles?: Role
+  roles?: Array<{ id: string; name: string }>
 }
 
 export interface AuthCard {
@@ -42,20 +42,22 @@ export interface Specialization {
 
 export interface Tutor {
   id: string
-  user_id: string
+  profile_id: string
   bio: string | null
   rating: number
   total_ratings: number
+  years_experience: number | null
+  hourly_rate: number | null
   created_at: string
-  profiles?: Profile
-  tutor_specializations?: { specializations: Specialization }[]
+  profiles: Profile
+  tutor_specializations: { specializations: Specialization }[]
 }
 
 export interface TutorAvailability {
   id: string
   tutor_id: string
-  day_of_week: number // 0 = Sunday ... 6 = Saturday
-  start_time: string  // "HH:MM:SS"
+  day_of_week: number
+  start_time: string
   end_time: string
 }
 
@@ -142,7 +144,6 @@ export interface AnalyticsLog {
   created_at: string
 }
 
-/** Maps day_of_week numbers (0-6) to readable names. */
 export const DAYS_OF_WEEK = [
   "Sunday",
   "Monday",
@@ -152,10 +153,6 @@ export const DAYS_OF_WEEK = [
   "Friday",
   "Saturday",
 ] as const
-
-// ============================================
-// Voting System Types (SSD Journey 6)
-// ============================================
 
 export type PollStatus = "draft" | "active" | "closed"
 
@@ -192,10 +189,6 @@ export interface UserVote {
   created_at: string
 }
 
-// ============================================
-// Push Notification Types (SSD)
-// ============================================
-
 export interface DeviceToken {
   id: string
   user_id: string
@@ -203,4 +196,33 @@ export interface DeviceToken {
   platform: "ios" | "android" | "web"
   created_at: string
   updated_at: string
+}
+
+export interface Conversation {
+  id: string
+  participant_id: string
+  title?: string | null
+  messages?: ConversationMessage[]
+  conversation_participants?: Array<{ profile_id: string; profiles?: Profile }>
+  profiles?: Profile
+  created_at: string
+  updated_at: string
+}
+
+export interface ConversationMessage {
+  id: string
+  conversation_id: string
+  sender_id: string
+  content: string
+  created_at: string
+  sender?: Profile
+}
+
+export interface Message {
+  id: string
+  conversation_id: string
+  sender_id: string
+  content: string
+  created_at: string
+  profiles?: { id: string; full_name: string; avatar_url: string | null } | null
 }

@@ -1,6 +1,6 @@
 {
   "name": "scholarme-web",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -41,6 +41,7 @@
     "@supabase/supabase-js": "^2.49.0",
     "@vercel/analytics": "1.6.1",
     "@vercel/blob": "^2.3.1",
+    "ai": "^6.0.116",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.1.1",

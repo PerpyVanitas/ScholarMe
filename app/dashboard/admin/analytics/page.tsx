@@ -80,9 +80,14 @@ export default function AdminAnalyticsPage() {
 
       const { data: profilesWithRoles } = await supabase.from("profiles").select("roles(name)");
       const roleCounts: Record<string, number> = {};
-      (profilesWithRoles || []).forEach((p: { roles?: { name?: string } | null }) => {
-        const role = p.roles?.name || "unknown";
-        roleCounts[role] = (roleCounts[role] || 0) + 1;
+      (profilesWithRoles || []).forEach((p: any) => {
+        const roles = Array.isArray(p.roles) ? p.roles : [];
+        if (roles.length > 0) {
+          const role = roles[0].name || "unknown";
+          roleCounts[role] = (roleCounts[role] || 0) + 1;
+        } else {
+          roleCounts["unknown"] = (roleCounts["unknown"] || 0) + 1;
+        }
       });
       setRoleBreakdown(
         Object.entries(roleCounts).map(([name, value]) => ({

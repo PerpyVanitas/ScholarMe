@@ -21,7 +21,10 @@ export async function GET(
     .eq("id", user.id)
     .single();
 
-  if (profile?.roles?.name !== "administrator") {
+  const isAdmin = Array.isArray(profile?.roles) && 
+    profile.roles.some((role: any) => role.name === "administrator");
+  
+  if (!isAdmin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 

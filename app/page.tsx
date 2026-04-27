@@ -13,12 +13,10 @@ export default async function HomePage() {
   let isLoggedIn = false
   try {
     const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser()
     isLoggedIn = !!user
   } catch {
-    // If auth check fails, show the landing page
+    // If auth check fails, show the landing page as logged out
   }
 
   return (
@@ -45,7 +43,7 @@ export default async function HomePage() {
           </a>
         </nav>
         <Button asChild>
-          <Link href={isLoggedIn ? "/panel" : "/auth/login"}>
+          <Link href={isLoggedIn ? "/dashboard" : "/auth/login"}>
             {isLoggedIn ? "Dashboard" : "Sign In"}
           </Link>
         </Button>
