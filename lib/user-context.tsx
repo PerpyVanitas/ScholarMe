@@ -52,7 +52,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           avatar_url: null,
           created_at: user.created_at || new Date().toISOString(),
           role_id: null,
-          roles: { id: "fallback", name: "learner" },
+          roles: [{ id: "fallback", name: "learner" }],
         } as Profile);
         setRole("learner");
       }
@@ -77,9 +77,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
       if (demoProfile) {
         setProfile({
           ...demoProfile,
-          roles: demoProfile.roles || undefined,
+          roles: Array.isArray(demoProfile.roles) ? demoProfile.roles : undefined,
         } as Profile);
-        const roleName = demoProfile.roles?.name || demoRole;
+        const roleName = Array.isArray(demoProfile.roles) && demoProfile.roles.length > 0 ? demoProfile.roles[0].name : demoRole;
         setRole(roleName as UserRole);
       } else {
         const demoInfo = DEMO_USERS[demoRole as keyof typeof DEMO_USERS] || DEMO_USERS.learner;
@@ -90,7 +90,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           avatar_url: null,
           created_at: new Date().toISOString(),
           role_id: null,
-          roles: { id: "demo-role", name: demoRole },
+          roles: [{ id: "demo-role", name: demoRole }],
         } as Profile);
         setRole(demoRole);
       }
