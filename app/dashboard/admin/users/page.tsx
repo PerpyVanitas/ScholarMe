@@ -387,8 +387,8 @@ export default function AdminUsersPage() {
                     <span className="font-medium text-foreground truncate">{p.full_name || "Unnamed"}</span>
                     <span className="text-xs text-muted-foreground truncate">{p.email}</span>
                     <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline" className={`text-[10px] ${roleColors[p.roles?.name || "learner"]}`}>
-                        {p.roles?.name || "learner"}
+                      <Badge variant="outline" className={`text-[10px] ${roleColors[(Array.isArray(p.roles) && p.roles.length > 0 ? p.roles[0].name : "learner")]}`}>
+                        {Array.isArray(p.roles) && p.roles.length > 0 ? p.roles[0].name : "learner"}
                       </Badge>
                     </div>
                   </div>
@@ -424,8 +424,8 @@ export default function AdminUsersPage() {
                       </TableCell>
                       <TableCell className="text-muted-foreground">{p.email}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={roleColors[p.roles?.name || "learner"]}>
-                          {p.roles?.name || "learner"}
+                        <Badge variant="outline" className={roleColors[(Array.isArray(p.roles) && p.roles.length > 0 ? p.roles[0].name : "learner")]}>
+                          {Array.isArray(p.roles) && p.roles.length > 0 ? p.roles[0].name : "learner"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
