@@ -43,6 +43,7 @@ import {
   Timer,
   Vote,
   Lightbulb,
+  MessageSquare,
 } from "lucide-react";
 import { signOut } from "@/app/auth/actions";
 
@@ -50,11 +51,13 @@ interface AppSidebarProps {
   profile: Profile;
   role: UserRole;
   notificationCount: number;
+  messageCount?: number;
 }
 
 function getNavItems(role: UserRole) {
   const shared = [
     { title: "Dashboard", href: "/dashboard/home", icon: LayoutDashboard },
+    { title: "Messages", href: "/dashboard/messages", icon: MessageSquare, badge: "messages" },
     { title: "Voting", href: "/dashboard/voting", icon: Vote },
     { title: "Notifications", href: "/dashboard/notifications", icon: Bell },
     { title: "Profile", href: "/dashboard/profile", icon: UserCircle },
@@ -64,12 +67,13 @@ function getNavItems(role: UserRole) {
     { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
     { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
     { title: "Resources", href: "/dashboard/resources", icon: BookOpen },
-    { title: "Study Quizzes", href: "/dashboard/quizzes", icon: Lightbulb },
+    { title: "Study Sets", href: "/dashboard/quizzes", icon: Lightbulb },
   ];
 
   const tutorItems = [
     { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
     { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
+    { title: "Study Sets", href: "/dashboard/quizzes", icon: Lightbulb },
     { title: "Timesheet", href: "/dashboard/timesheet", icon: Timer },
     { title: "Availability", href: "/dashboard/availability", icon: Clock },
     { title: "My Repositories", href: "/dashboard/resources", icon: FolderOpen },
@@ -99,7 +103,7 @@ const roleLabels: Record<UserRole, string> = {
   administrator: "Admin",
 };
 
-export function AppSidebar({ profile, role, notificationCount }: AppSidebarProps) {
+export function AppSidebar({ profile, role, notificationCount, messageCount = 0 }: AppSidebarProps) {
   const pathname = usePathname();
   const { shared, roleSpecific } = getNavItems(role);
   const initials = profile?.full_name
@@ -156,6 +160,11 @@ export function AppSidebar({ profile, role, notificationCount }: AppSidebarProps
                       {item.title === "Notifications" && notificationCount > 0 && (
                         <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium text-primary-foreground">
                           {notificationCount > 99 ? "99+" : notificationCount}
+                        </span>
+                      )}
+                      {item.title === "Messages" && messageCount > 0 && (
+                        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-500 px-1 text-[10px] font-medium text-white">
+                          {messageCount > 99 ? "99+" : messageCount}
                         </span>
                       )}
                     </Link>

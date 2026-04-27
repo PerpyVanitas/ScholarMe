@@ -2,7 +2,8 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { Profile, UserRole } from "@/lib/types";
+import type { Profile, UserRole, Role } from "@/lib/types";
+import { normalizeRole } from "@/lib/utils/roles";
 import { DEMO_USERS, getDemoUserFromCookie } from "@/lib/demo";
 
 interface UserContextType {
@@ -37,12 +38,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
 
       if (p) {
-        setProfile({
-          ...p,
-          roles: Array.isArray(p.roles) ? p.roles : undefined,
-        } as Profile);
-        const roleName = Array.isArray(p.roles) && p.roles.length > 0 ? p.roles[0].name : "learner";
-        setRole(roleName as UserRole);
+        const roleObj = normalizeRole(p.roles as Role | Role[] | undefined);
+        setProfile({ ...p, roles: roleObj ? [roleObj] : undefined } as Profile);
+        setRole((roleObj?.name ?? "learner") as UserRole);
       } else {
         // Profile not found, create a fallback
         setProfile({
@@ -75,12 +73,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
 
       if (demoProfile) {
-        setProfile({
-          ...demoProfile,
-          roles: Array.isArray(demoProfile.roles) ? demoProfile.roles : undefined,
-        } as Profile);
-        const roleName = Array.isArray(demoProfile.roles) && demoProfile.roles.length > 0 ? demoProfile.roles[0].name : demoRole;
-        setRole(roleName as UserRole);
+        const roleObj = normalizeRole(demoProfile.roles as Role | Role[] | undefined);
+        setProfile({ ...demoProfile, roles: roleObj ? [roleObj] : undefined } as Profile);
+        setRole((roleObj?.name ?? demoRole) as UserRole);
       } else {
         const demoInfo = DEMO_USERS[demoRole as keyof typeof DEMO_USERS] || DEMO_USERS.learner;
         setProfile({

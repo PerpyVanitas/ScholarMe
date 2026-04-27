@@ -1,11 +1,16 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextRequest, NextResponse } from "next/server"
 
+/**
+ * POST /api/quizzes/create
+ * Creates a study set and its items.
+ * Schema: owner_id, generation_mode, visibility ('private'|'shared'), source_type, prompt+answer (not question/answer)
+ */
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    
+
     if (!user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
     }
@@ -17,48 +22,54 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 })
     }
 
+    if (!items || items.length === 0) {
+      return NextResponse.json({ error: "At least one question is required" }, { status: 400 })
+    }
+
     // Create study set
     const { data: studySet, error: setError } = await supabase
       .from("study_sets")
       .insert({
-        user_id: user.id,
+        owner_id: user.id,
         title: title.trim(),
         description: description?.trim() || null,
-        type: type || "flashcard",
-        is_public: is_public || false,
+        generation_mode: type || "flashcard",
+        visibility: is_public ? "shared" : "private",
         source_type: source_type || "manual",
+        question_count: items.length,
+        difficulty: "medium",
       })
       .select()
       .single()
 
     if (setError) {
+      console.error("[quizzes/create] set error:", setError)
       return NextResponse.json({ error: setError.message }, { status: 500 })
     }
 
-    // Add items if provided
-    if (items && items.length > 0) {
-      const itemsToInsert = items.map((item: any, index: number) => ({
-        study_set_id: studySet.id,
-        question: item.question,
-        answer: item.answer,
-        options: item.options || null,
-        item_type: item.item_type || "flashcard",
-        order_index: index,
-      }))
+    // Insert items — schema uses prompt/answer not question/answer
+    const itemsToInsert = items.map((item: { question: string; answer: string; options?: string[]; item_type?: string }, index: number) => ({
+      study_set_id: studySet.id,
+      prompt: item.question,
+      answer: item.answer,
+      options: item.options || null,
+      item_type: item.item_type || type || "flashcard",
+      order_index: index,
+    }))
 
-      const { error: itemsError } = await supabase
-        .from("study_set_items")
-        .insert(itemsToInsert)
+    const { error: itemsError } = await supabase
+      .from("study_set_items")
+      .insert(itemsToInsert)
 
-      if (itemsError) {
-        // Rollback: delete the study set
-        await supabase.from("study_sets").delete().eq("id", studySet.id)
-        return NextResponse.json({ error: itemsError.message }, { status: 500 })
-      }
+    if (itemsError) {
+      // Rollback the study set
+      await supabase.from("study_sets").delete().eq("id", studySet.id)
+      console.error("[quizzes/create] items error:", itemsError)
+      return NextResponse.json({ error: itemsError.message }, { status: 500 })
     }
 
-    return NextResponse.json({ data: studySet })
-  } catch (error) {
+    return NextResponse.json({ data: studySet }, { status: 201 })
+  } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
