@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { RoleGate } from "@/components/auth/role-gate";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -124,6 +125,14 @@ function getInitials(name: string | null | undefined) {
 }
 
 export default function AdminUsersPage() {
+  return (
+    <RoleGate allowedRoles={["administrator"]}>
+      <AdminUsersPageContent />
+    </RoleGate>
+  );
+}
+
+function AdminUsersPageContent() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");

@@ -1,6 +1,7 @@
 /** Availability page -- tutors manage weekly schedule slots and bio. */
 "use client";
 
+import { RoleGate } from "@/components/auth/role-gate";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +18,14 @@ import type { TutorAvailability, Tutor } from "@/lib/types";
 import { DAYS_OF_WEEK } from "@/lib/types";
 
 export default function AvailabilityPage() {
+  return (
+    <RoleGate allowedRoles={["tutor"]}>
+      <AvailabilityPageContent />
+    </RoleGate>
+  );
+}
+
+function AvailabilityPageContent() {
   const [tutor, setTutor] = useState<Tutor | null>(null);
   const [slots, setSlots] = useState<TutorAvailability[]>([]);
   const [loading, setLoading] = useState(true);

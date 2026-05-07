@@ -55,46 +55,62 @@ interface AppSidebarProps {
 }
 
 function getNavItems(role: UserRole) {
-  const shared = [
+  // Shared across all roles
+  const common = [
     { title: "Dashboard", href: "/dashboard/home", icon: LayoutDashboard },
-    { title: "Messages", href: "/dashboard/messages", icon: MessageSquare, badge: "messages" },
-    { title: "Voting", href: "/dashboard/voting", icon: Vote },
     { title: "Notifications", href: "/dashboard/notifications", icon: Bell },
     { title: "Profile", href: "/dashboard/profile", icon: UserCircle },
   ];
 
-  const learnerItems = [
-    { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
-    { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
-    { title: "Resources", href: "/dashboard/resources", icon: BookOpen },
-    { title: "Study Sets", href: "/dashboard/quizzes", icon: Lightbulb },
-  ];
+  if (role === "administrator") {
+    return {
+      shared: [
+        ...common,
+        { title: "Messages", href: "/dashboard/messages", icon: MessageSquare, badge: "messages" },
+        { title: "Voting", href: "/dashboard/voting", icon: Vote },
+      ],
+      roleSpecific: [
+        { title: "Users", href: "/dashboard/admin/users", icon: Users },
+        { title: "Cards", href: "/dashboard/admin/cards", icon: CreditCard },
+        { title: "All Sessions", href: "/dashboard/admin/sessions", icon: Calendar },
+        { title: "Timesheets", href: "/dashboard/admin/timesheets", icon: Timer },
+        { title: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
+      ],
+    };
+  }
 
-  const tutorItems = [
-    { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
-    { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
-    { title: "Study Sets", href: "/dashboard/quizzes", icon: Lightbulb },
-    { title: "Timesheet", href: "/dashboard/timesheet", icon: Timer },
-    { title: "Availability", href: "/dashboard/availability", icon: Clock },
-    { title: "My Repositories", href: "/dashboard/resources", icon: FolderOpen },
-  ];
+  if (role === "tutor") {
+    return {
+      shared: [
+        ...common,
+        { title: "Messages", href: "/dashboard/messages", icon: MessageSquare, badge: "messages" },
+        { title: "Voting", href: "/dashboard/voting", icon: Vote },
+      ],
+      roleSpecific: [
+        { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
+        { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
+        { title: "Availability", href: "/dashboard/availability", icon: Clock },
+        { title: "Timesheet", href: "/dashboard/timesheet", icon: Timer },
+        { title: "My Repositories", href: "/dashboard/resources", icon: FolderOpen },
+        { title: "Study Sets", href: "/dashboard/quizzes", icon: Lightbulb },
+      ],
+    };
+  }
 
-  const adminItems = [
-    { title: "Users", href: "/dashboard/admin/users", icon: Users },
-    { title: "Cards", href: "/dashboard/admin/cards", icon: CreditCard },
-    { title: "All Sessions", href: "/dashboard/admin/sessions", icon: Calendar },
-    { title: "Timesheets", href: "/dashboard/admin/timesheets", icon: Timer },
-    { title: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
-    { title: "Resources", href: "/dashboard/resources", icon: FolderOpen },
-  ];
-
-  const roleItems = {
-    learner: learnerItems,
-    tutor: tutorItems,
-    administrator: adminItems,
+  // Learner (default)
+  return {
+    shared: [
+      ...common,
+      { title: "Messages", href: "/dashboard/messages", icon: MessageSquare, badge: "messages" },
+      { title: "Voting", href: "/dashboard/voting", icon: Vote },
+    ],
+    roleSpecific: [
+      { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
+      { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
+      { title: "Resources", href: "/dashboard/resources", icon: BookOpen },
+      { title: "Study Sets", href: "/dashboard/quizzes", icon: Lightbulb },
+    ],
   };
-
-  return { shared, roleSpecific: roleItems[role] || learnerItems };
 }
 
 const roleLabels: Record<UserRole, string> = {
