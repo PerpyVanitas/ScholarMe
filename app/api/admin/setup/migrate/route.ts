@@ -73,3 +73,27 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export async function GET(request: NextRequest) {
+  // Check status endpoint
+  const adminSecret = process.env.ADMIN_MIGRATION_SECRET || 'scholarme-admin-migration';
+  const authHeader = request.headers.get('authorization');
+
+  if (!authHeader || !authHeader.startsWith('Bearer ') || authHeader.substring(7) !== adminSecret) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+
+  return NextResponse.json({
+    status: 'ready',
+    message: 'Migration endpoint is ready. POST with admin token to execute migrations.',
+    instructions: `
+POST /api/admin/setup/migrate
+Headers: Authorization: Bearer [ADMIN_MIGRATION_SECRET]
+
+The DATABASE_URL environment variable must also be set for raw SQL execution.
+    `,
+  });
+}
