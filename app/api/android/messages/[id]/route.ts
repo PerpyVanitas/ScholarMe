@@ -9,9 +9,10 @@ function getBearerToken(request: Request): string | null {
 /** GET /api/android/messages/[id] — get messages in a conversation */
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const token = getBearerToken(request);
     if (!token) return NextResponse.json({ success: false, error: { code: "UNAUTHORIZED", message: "Missing token" } }, { status: 401 });
 
@@ -23,7 +24,7 @@ export async function GET(
     const { data: participant } = await supabase
       .from("conversation_participants")
       .select("profile_id")
-      .eq("conversation_id", params.id)
+      .eq("conversation_id", id)
       .eq("profile_id", authData.user.id)
       .maybeSingle();
 
@@ -37,7 +38,7 @@ export async function GET(
     const { data: messages, error } = await supabase
       .from("messages")
       .select("id, content, sender_id, created_at, is_edited, profiles!sender_id(full_name, avatar_url)")
-      .eq("conversation_id", params.id)
+      .eq("conversation_id", id)
       .order("created_at", { ascending: true })
       .limit(limit);
 
@@ -47,13 +48,13 @@ export async function GET(
     await supabase
       .from("conversation_participants")
       .update({ last_read_at: new Date().toISOString() })
-      .eq("conversation_id", params.id)
+      .eq("conversation_id", id)
       .eq("profile_id", authData.user.id);
 
     return NextResponse.json({
       success: true,
       data: {
-        conversationId: params.id,
+        conversationId: id,
         messages: (messages ?? []).map((m: any) => ({
           id: m.id,
           content: m.content,
@@ -75,9 +76,10 @@ export async function GET(
 /** POST /api/android/messages/[id] — send a message in a conversation */
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const token = getBearerToken(request);
     if (!token) return NextResponse.json({ success: false, error: { code: "UNAUTHORIZED", message: "Missing token" } }, { status: 401 });
 
@@ -93,7 +95,7 @@ export async function POST(
     const { data: message, error } = await supabase
       .from("messages")
       .insert({
-        conversation_id: params.id,
+        conversation_id: id,
         sender_id: authData.user.id,
         content: content.trim(),
       })

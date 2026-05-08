@@ -26,6 +26,9 @@ import com.scholarme.core.data.model.AndroidVoteRequest
 import com.scholarme.core.data.model.AndroidSpecializationsResponse
 import com.scholarme.core.data.model.AndroidUpdateProfileRequest
 import com.scholarme.core.data.model.ChangePasswordRequest
+import com.scholarme.core.data.model.AndroidLeaderboardResponse
+import com.scholarme.core.data.model.AndroidStudySetsResponse
+import com.scholarme.core.data.model.AndroidQuizQuestionsResponse
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -155,4 +158,26 @@ interface ApiService {
         @Path("id") pollId: String,
         @Body request: AndroidVoteRequest
     ): Response<ApiResponse<Map<String, String>>>
+
+    // ── Gamification ──────────────────────────────────────────────────────────
+
+    @GET("gamification/leaderboard")
+    suspend fun getLeaderboard(
+        @Header("Authorization") token: String,
+        @Query("limit") limit: Int = 50
+    ): Response<ApiResponse<AndroidLeaderboardResponse>>
+
+    // ── Quizzes ───────────────────────────────────────────────────────────────
+
+    @GET("quizzes")
+    suspend fun getStudySets(
+        @Header("Authorization") token: String,
+        @Query("tab") tab: String = "my"
+    ): Response<ApiResponse<AndroidStudySetsResponse>>
+
+    @GET("quizzes/{id}/questions")
+    suspend fun getQuizQuestions(
+        @Header("Authorization") token: String,
+        @Path("id") studySetId: String
+    ): Response<ApiResponse<AndroidQuizQuestionsResponse>>
 }

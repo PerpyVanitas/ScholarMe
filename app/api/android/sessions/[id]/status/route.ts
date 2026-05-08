@@ -9,9 +9,10 @@ function getBearerToken(request: Request): string | null {
 /** PUT /api/android/sessions/[id]/status — update session status */
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const token = getBearerToken(request);
     if (!token) {
       return NextResponse.json(
@@ -44,7 +45,7 @@ export async function PUT(
     const { data: session, error } = await supabase
       .from("sessions")
       .update(updateData)
-      .eq("id", params.id)
+      .eq("id", id)
       .select()
       .single();
 

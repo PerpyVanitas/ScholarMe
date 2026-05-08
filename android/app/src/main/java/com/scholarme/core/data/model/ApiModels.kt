@@ -261,6 +261,59 @@ data class AndroidVoteRequest(
     @SerializedName("optionId") val optionId: String
 )
 
+// ── Gamification ──────────────────────────────────────────────────────────────
+
+data class AndroidLeaderboardEntry(
+    val rank: Int,
+    val id: String,
+    @SerializedName("fullName") val fullName: String,
+    @SerializedName("avatarUrl") val avatarUrl: String? = null,
+    @SerializedName("totalXp") val totalXp: Int = 0,
+    @SerializedName("currentLevel") val currentLevel: Int = 1,
+    @SerializedName("profileThemeColor") val profileThemeColor: String? = null,
+    @SerializedName("isCurrentUser") val isCurrentUser: Boolean = false
+)
+
+data class AndroidLeaderboardResponse(
+    val leaderboard: List<AndroidLeaderboardEntry>,
+    @SerializedName("currentUserId") val currentUserId: String
+)
+
+// ── Quizzes ───────────────────────────────────────────────────────────────────
+
+data class AndroidStudySetDto(
+    val id: String,
+    val title: String,
+    val description: String? = null,
+    val type: String,
+    @SerializedName("isPublic") val isPublic: Boolean = false,
+    @SerializedName("questionCount") val questionCount: Int = 0,
+    @SerializedName("createdAt") val createdAt: String? = null,
+    @SerializedName("ownerName") val ownerName: String? = null,
+    @SerializedName("ownerAvatarUrl") val ownerAvatarUrl: String? = null
+)
+
+data class AndroidStudySetsResponse(
+    val studySets: List<AndroidStudySetDto>
+)
+
+data class AndroidQuizQuestionDto(
+    val id: String,
+    @SerializedName("questionText") val questionText: String,
+    val answer: String,
+    @SerializedName("itemType") val itemType: String,
+    val options: List<String> = emptyList(),
+    @SerializedName("correctAnswerIndex") val correctAnswerIndex: Int = 0,
+    @SerializedName("displayOrder") val displayOrder: Int = 0
+)
+
+data class AndroidQuizQuestionsResponse(
+    @SerializedName("studySetId") val studySetId: String,
+    val title: String,
+    val type: String,
+    val questions: List<AndroidQuizQuestionDto>
+)
+
 // ── Legacy aliases for existing code compatibility ────────────────────────────
 
 @Deprecated("Use AndroidDashboardStats", ReplaceWith("AndroidDashboardStats"))

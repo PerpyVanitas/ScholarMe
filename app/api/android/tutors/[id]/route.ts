@@ -4,9 +4,10 @@ import { NextResponse } from "next/server";
 /** GET /api/android/tutors/[id] — single tutor with availability */
 export async function GET(
   _request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createClient();
     const { data: tutor, error } = await supabase
       .from("tutors")
@@ -16,7 +17,7 @@ export async function GET(
          tutor_specializations(specializations(id, name, description)),
          tutor_availability(id, day_of_week, start_time, end_time, is_available)`
       )
-      .eq("id", params.id)
+      .eq("id", id)
       .single();
 
     if (error || !tutor) {

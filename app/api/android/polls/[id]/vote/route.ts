@@ -9,9 +9,10 @@ function getBearerToken(request: Request): string | null {
 /** POST /api/android/polls/[id]/vote — cast a vote */
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const token = getBearerToken(request);
     if (!token) return NextResponse.json({ success: false, error: { code: "UNAUTHORIZED", message: "Missing token" } }, { status: 401 });
 
@@ -28,7 +29,7 @@ export async function POST(
     const { data: poll } = await supabase
       .from("polls")
       .select("id, status, end_date, allow_multiple_votes")
-      .eq("id", params.id)
+      .eq("id", id)
       .single();
 
     if (!poll || poll.status !== "active" || new Date(poll.end_date) < new Date()) {
@@ -40,7 +41,7 @@ export async function POST(
       const { data: existingVote } = await supabase
         .from("user_votes")
         .select("id")
-        .eq("poll_id", params.id)
+        .eq("poll_id", id)
         .eq("user_id", authData.user.id)
         .maybeSingle();
       if (existingVote) {
@@ -49,7 +50,7 @@ export async function POST(
     }
 
     const { error } = await supabase.from("user_votes").insert({
-      poll_id: params.id,
+      poll_id: id,
       option_id: optionId,
       user_id: authData.user.id,
     });

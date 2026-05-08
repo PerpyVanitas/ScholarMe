@@ -60,8 +60,8 @@ fun LeaderboardScreen(
                     )
                 }
 
-                itemsIndexed(leaderboard) { index, user ->
-                    LeaderboardCard(user = user, rank = index + 1)
+                itemsIndexed(leaderboard) { _, user ->
+                    LeaderboardCard(user = user, rank = user.rank)
                 }
             }
         }
@@ -70,9 +70,9 @@ fun LeaderboardScreen(
 
 @Composable
 fun LeaderboardCard(user: LeaderboardUserDto, rank: Int) {
-    val isMe = user.id == "me" // Mock current user
-    
-    // Determine Theme Color based on mock string
+    val isMe = user.isCurrentUser
+
+    // Determine theme color from user's profile setting
     val themeColor = when (user.profileThemeColor) {
         "gold" -> Color(0xFFFFD700)
         "purple" -> Color(0xFF9C27B0)

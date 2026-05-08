@@ -1,8 +1,10 @@
 package com.scholarme.features.quizzes.data
 
+import com.scholarme.core.data.local.TokenManager
+import com.scholarme.core.data.remote.ApiClient
+import com.scholarme.core.data.remote.ApiService
 import com.scholarme.core.network.NetworkResult
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -10,48 +12,98 @@ data class QuizDto(
     val id: String,
     val title: String,
     val description: String,
-    val questionCount: Int
+    val questionCount: Int,
+    val type: String = "flashcard",
+    val isPublic: Boolean = false,
+    val ownerName: String? = null,
+    val createdAt: String? = null
 )
 
 data class QuizQuestionDto(
     val id: String,
     val questionText: String,
-    val options: List<String>,
-    val correctAnswerIndex: Int
+    val answer: String,
+    val itemType: String,
+    val options: List<String> = emptyList(),
+    val correctAnswerIndex: Int = 0
 )
 
-class QuizRepository @Inject constructor() {
-    
-    // Mock data for functional UI
-    private val mockQuizzes = listOf(
-        QuizDto("1", "Advanced Calculus", "Test your knowledge on limits and derivatives.", 10),
-        QuizDto("2", "World History", "A comprehensive review of the 20th century.", 15),
-        QuizDto("3", "Organic Chemistry", "Carbon structures and reactions.", 20)
-    )
+class QuizRepository @Inject constructor(
+    private val tokenManager: TokenManager,
+    private val apiService: ApiService
+) {
+    // Secondary constructor for non-Hilt usage
+    constructor(tokenManager: TokenManager) : this(tokenManager, ApiClient.apiService)
 
-    private val mockQuestions = listOf(
-        QuizQuestionDto("q1", "What is the derivative of x^2?", listOf("x", "2x", "x^2", "2"), 1),
-        QuizQuestionDto("q2", "What is the integral of 2x?", listOf("x^2", "x", "2x^2", "2"), 0)
-    )
+    private fun getBearerToken(): String? {
+        val token = tokenManager.getAccessToken()
+        return if (token != null) "Bearer $token" else null
+    }
 
-    suspend fun getQuizzes(): NetworkResult<List<QuizDto>> {
+    suspend fun getMyStudySets(): NetworkResult<List<QuizDto>> = getStudySets("my")
+
+    suspend fun getSharedStudySets(): NetworkResult<List<QuizDto>> = getStudySets("shared")
+
+    private suspend fun getStudySets(tab: String): NetworkResult<List<QuizDto>> {
         return withContext(Dispatchers.IO) {
-            delay(800) // Simulate network
-            NetworkResult.Success(mockQuizzes)
+            try {
+                val token = getBearerToken()
+                    ?: return@withContext NetworkResult.Error("Not authenticated")
+
+                val response = apiService.getStudySets(token, tab)
+                if (response.isSuccessful && response.body()?.success == true) {
+                    val sets = response.body()?.data?.studySets ?: emptyList()
+                    NetworkResult.Success(sets.map { s ->
+                        QuizDto(
+                            id = s.id,
+                            title = s.title,
+                            description = s.description ?: "",
+                            questionCount = s.questionCount,
+                            type = s.type,
+                            isPublic = s.isPublic,
+                            ownerName = s.ownerName,
+                            createdAt = s.createdAt
+                        )
+                    })
+                } else {
+                    NetworkResult.Error(response.body()?.error?.message ?: "Failed to load study sets")
+                }
+            } catch (e: Exception) {
+                NetworkResult.Error(e.message ?: "Network error")
+            }
         }
     }
 
-    suspend fun getQuizQuestions(quizId: String): NetworkResult<List<QuizQuestionDto>> {
+    suspend fun getQuizQuestions(studySetId: String): NetworkResult<List<QuizQuestionDto>> {
         return withContext(Dispatchers.IO) {
-            delay(600) // Simulate network
-            NetworkResult.Success(mockQuestions)
+            try {
+                val token = getBearerToken()
+                    ?: return@withContext NetworkResult.Error("Not authenticated")
+
+                val response = apiService.getQuizQuestions(token, studySetId)
+                if (response.isSuccessful && response.body()?.success == true) {
+                    val questions = response.body()?.data?.questions ?: emptyList()
+                    NetworkResult.Success(questions.map { q ->
+                        QuizQuestionDto(
+                            id = q.id,
+                            questionText = q.questionText,
+                            answer = q.answer,
+                            itemType = q.itemType,
+                            options = q.options,
+                            correctAnswerIndex = q.correctAnswerIndex
+                        )
+                    })
+                } else {
+                    NetworkResult.Error(response.body()?.error?.message ?: "Failed to load questions")
+                }
+            } catch (e: Exception) {
+                NetworkResult.Error(e.message ?: "Network error")
+            }
         }
     }
 
-    suspend fun submitQuizResult(quizId: String, score: Int): NetworkResult<Unit> {
-        return withContext(Dispatchers.IO) {
-            delay(1000)
-            NetworkResult.Success(Unit)
-        }
+    suspend fun submitQuizResult(studySetId: String, score: Int): NetworkResult<Unit> {
+        // XP is awarded server-side via the xp_logs trigger. This is a no-op for now.
+        return NetworkResult.Success(Unit)
     }
 }
