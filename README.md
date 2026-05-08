@@ -211,23 +211,21 @@ The `SUPABASE_SERVICE_ROLE_KEY` is required for admin operations (creating users
 
 ### Database Setup
 
-Run the SQL migration scripts in order against your Supabase project. You can execute them via the **Supabase SQL Editor** or any PostgreSQL client:
+The database schema is fully modularized and stored in the \`scripts/migrations/\` directory. 
 
-```
-scripts/001_roles_and_profiles.sql          # Roles table, profiles table, auth trigger
-scripts/001a_create_roles.sql               # Seed learner/tutor/admin roles
-scripts/002_auth_cards.sql                  # Auth cards table + RLS
-scripts/003_tutors_and_specializations.sql  # Tutors, specializations, availability
-scripts/004_sessions.sql                    # Sessions + ratings tables
-scripts/005_repositories.sql                # Resource repositories + resources
-scripts/006_notifications.sql               # Notifications table
-scripts/007_analytics_logs.sql              # Analytics logging table
-scripts/008_timesheets.sql                  # Tutor timesheet clock-in/out
-scripts/009-create-voting-system.sql        # Polls, poll_options, user_votes
-scripts/010_auto_create_tutor_on_signup.sql # Auto-create tutor record on signup
-```
+To execute the migrations automatically against your production database:
 
-**Note:** Device tokens table is created via Supabase migration for push notification support.
+1. Ensure the \`DATABASE_URL\` and \`ADMIN_MIGRATION_SECRET\` environment variables are set in your Vercel project.
+2. Run the automated migration API endpoint via curl:
+
+\`\`\`bash
+curl -X POST https://your-project.vercel.app/api/admin/setup/migrate \\
+  -H "Authorization: Bearer YOUR_ADMIN_MIGRATION_SECRET"
+\`\`\`
+
+The endpoint will automatically scan the \`scripts/migrations/\` directory and execute all 12 SQL steps in alphabetical order. 
+
+Alternatively, if you prefer manual setup, you can copy the contents of the files in \`scripts/migrations/\` and run them directly in the **Supabase SQL Editor**.
 
 ### Running the App
 

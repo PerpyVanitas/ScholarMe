@@ -43,27 +43,51 @@ export async function POST(request: NextRequest) {
 
     await client.connect();
 
-    // 4. Read the migration SQL file
-    const migrationPath = path.join(process.cwd(), 'scripts', 'scholarme_supabase_setup.txt');
+    // 4. Read the migration SQL files
+    const migrationsDir = path.join(process.cwd(), 'scripts', 'migrations');
     
-    if (!fs.existsSync(migrationPath)) {
+    if (!fs.existsSync(migrationsDir)) {
       await client.end();
-      return NextResponse.json({ error: 'Migration SQL file not found at scripts/scholarme_supabase_setup.txt' }, { status: 500 });
+      return NextResponse.json({ error: 'Migrations directory not found at scripts/migrations' }, { status: 500 });
     }
 
-    const sql = fs.readFileSync(migrationPath, 'utf-8');
+    const files = fs.readdirSync(migrationsDir)
+      .filter(file => file.endsWith('.sql'))
+      .sort(); // Sort alphabetically to ensure 01, 02, 03... order
 
-    // 5. Execute the SQL directly using the pg client
-    // By running the whole file at once, Postgres handles function creation and transactions properly
-    console.log('[Migration API] Executing raw SQL migration...');
-    await client.query(sql);
+    if (files.length === 0) {
+      await client.end();
+      return NextResponse.json({ error: 'No .sql migration files found in scripts/migrations' }, { status: 400 });
+    }
+
+    console.log(`[Migration API] Found ${files.length} migration files. Executing sequentially...`);
+    const executedFiles = [];
+
+    // 5. Execute each SQL file sequentially using the pg client
+    for (const file of files) {
+      console.log(`[Migration API] Executing ${file}...`);
+      const filePath = path.join(migrationsDir, file);
+      const sql = fs.readFileSync(filePath, 'utf-8');
+      
+      await client.query('BEGIN');
+      try {
+        await client.query(sql);
+        await client.query('COMMIT');
+        executedFiles.push(file);
+      } catch (err: any) {
+        await client.query('ROLLBACK');
+        console.error(`[Migration Error] Failed in ${file}:`, err);
+        throw new Error(`Failed executing ${file}: ${err.message}`);
+      }
+    }
 
     // 6. Cleanup and return
     await client.end();
 
     return NextResponse.json({
       success: true,
-      message: 'Supabase migration executed successfully. All tables, functions, and RLS policies have been created.',
+      message: 'Supabase migrations executed successfully. All tables, functions, and RLS policies have been created.',
+      executedFiles,
     });
   } catch (error: any) {
     console.error('[Migration Error]', error);
