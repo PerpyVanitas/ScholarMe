@@ -17,6 +17,8 @@ import com.scholarme.features.quizzes.data.remote.QuizApi
 import com.scholarme.features.resources.data.remote.ResourceApi
 import com.scholarme.features.sessions.data.remote.SessionApi
 import com.scholarme.features.tutors.data.remote.TutorApi
+import com.scholarme.features.voting.data.remote.VotingApi
+import com.scholarme.features.messaging.data.remote.MessagingApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
