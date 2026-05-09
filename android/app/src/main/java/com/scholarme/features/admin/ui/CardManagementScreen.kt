@@ -113,7 +113,6 @@ fun IssueCardDialog(onDismiss: () -> Unit, onConfirm: (String, String, String) -
                 Text("Issue")
             }
         },
-        confirmButtonColor = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary).containerColor,
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text("Cancel")
