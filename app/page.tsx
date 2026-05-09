@@ -3,6 +3,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { GraduationCap } from "lucide-react"
 import { HeroSection } from "@/components/landing/hero-section"
+import { CommunityGallery } from "@/components/landing/community-gallery"
 import { FeaturesSection } from "@/components/landing/features-section"
 import { StatsSection } from "@/components/landing/stats-section"
 import { RolesSection } from "@/components/landing/roles-section"
@@ -52,6 +53,7 @@ export default async function HomePage() {
       {/* Main Content */}
       <main className="flex flex-1 flex-col">
         <HeroSection />
+        <CommunityGallery />
         <StatsSection />
         <div id="features">
           <FeaturesSection />
