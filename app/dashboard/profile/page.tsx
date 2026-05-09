@@ -19,7 +19,7 @@ import {
 import { useRouter } from "next/navigation";
 import { updateProfile, UpdateProfileData, updateTutorInfo } from "./actions";
 import { useUser } from "@/lib/user-context";
-import { QrIdCard } from "@/components/qr-id-card";
+import { QrIdCard } from "@/features/auth/components/qr-id-card";
 
 export default function ProfilePage() {
   const router = useRouter();

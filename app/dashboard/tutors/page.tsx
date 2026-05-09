@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Search, Star, Loader2, Users } from "lucide-react";
-import { TutorDetailModal } from "@/components/tutors/tutor-detail-modal";
+import { TutorDetailModal } from "@/features/tutors/components/tutor-detail-modal";
 import type { Tutor, Specialization } from "@/lib/types";
 
 export default function TutorsPage() {

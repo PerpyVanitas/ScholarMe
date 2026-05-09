@@ -1,11 +1,8 @@
 package com.scholarme.features.profile.data
 
 import com.scholarme.core.data.local.TokenManager
-import com.scholarme.core.data.model.ChangePasswordRequest
-import com.scholarme.core.data.model.UpdateProfileRequest
-import com.scholarme.core.data.model.UserProfile
-import com.scholarme.core.data.remote.ApiClient
-import com.scholarme.core.data.remote.ApiService
+import com.scholarme.features.profile.data.model.*
+import com.scholarme.features.profile.data.remote.ProfileApi
 import com.scholarme.core.util.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -13,34 +10,22 @@ import javax.inject.Inject
 
 /**
  * Repository for profile operations.
- * Handles profile viewing, updating, and password changes.
  */
 class ProfileRepository @Inject constructor(
     private val tokenManager: TokenManager,
-    private val apiService: ApiService
+    private val profileApi: ProfileApi
 ) {
-    
-    // Legacy constructor for non-Hilt usage
-    constructor(tokenManager: TokenManager) : this(tokenManager, ApiClient.apiService)
-    
-    private fun getBearerToken(): String? {
-        val token = tokenManager.getAccessToken()
-        return if (token != null) "Bearer $token" else null
-    }
     
     suspend fun getProfile(): Result<UserProfile> {
         return withContext(Dispatchers.IO) {
             try {
                 if (!tokenManager.isLoggedIn()) return@withContext Result.Error("Not authenticated")
                 
-                val response = apiService.getProfile()
-
-
+                val response = profileApi.getProfile()
                 
                 if (response.isSuccessful && response.body()?.success == true) {
                     val profile = response.body()?.data
                     if (profile != null) {
-                        // Update local storage with latest info
                         tokenManager.saveUserInfo(
                             userId = profile.id,
                             email = profile.email,
@@ -73,7 +58,6 @@ class ProfileRepository @Inject constructor(
                 if (!tokenManager.isLoggedIn()) return@withContext Result.Error("Not authenticated")
                 
                 val request = UpdateProfileRequest(
-
                     fullName = fullName,
                     phone = phone,
                     bio = bio,
@@ -81,13 +65,11 @@ class ProfileRepository @Inject constructor(
                     yearLevel = yearLevel
                 )
                 
-                val response = apiService.updateProfile(request)
-
+                val response = profileApi.updateProfile(request)
                 
                 if (response.isSuccessful && response.body()?.success == true) {
                     val profile = response.body()?.data
                     if (profile != null) {
-                        // Update local storage
                         tokenManager.saveUserInfo(
                             userId = profile.id,
                             email = profile.email,
@@ -117,9 +99,7 @@ class ProfileRepository @Inject constructor(
                 if (!tokenManager.isLoggedIn()) return@withContext Result.Error("Not authenticated")
                 
                 val request = ChangePasswordRequest(currentPassword, newPassword)
-
-                val response = apiService.changePassword(request)
-
+                val response = profileApi.changePassword(request)
                 
                 if (response.isSuccessful && response.body()?.success == true) {
                     Result.Success(Unit)

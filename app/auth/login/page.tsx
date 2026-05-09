@@ -13,7 +13,7 @@ import { GraduationCap, Mail, CreditCard, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { mapSupabaseErrorToCode, formatErrorForDisplay } from "@/lib/api-errors";
 import { ErrorAlert } from "@/components/ui/error-alert";
-import { LoginInactivityCheck } from "@/components/auth/login-inactivity-check";
+import { LoginInactivityCheck } from "@/features/auth/components/login-inactivity-check";
 
 export default function LoginPage() {
   const [emailLoading, setEmailLoading] = useState(false);

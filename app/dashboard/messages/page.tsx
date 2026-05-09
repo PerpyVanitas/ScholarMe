@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { ChatInterface } from "@/components/messages/chat-interface";
+import { ChatInterface } from "@/features/messaging/components/chat-interface";
 import type { Conversation } from "@/lib/types";
 
 export const metadata = {

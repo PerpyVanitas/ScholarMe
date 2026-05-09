@@ -1,10 +1,9 @@
 package com.scholarme.features.dashboard.data
 
 import com.scholarme.core.data.local.TokenManager
-import com.scholarme.core.data.model.DashboardStats
-import com.scholarme.core.data.model.Session
-import com.scholarme.core.data.remote.ApiClient
-import com.scholarme.core.data.remote.ApiService
+import com.scholarme.features.dashboard.data.model.DashboardStats
+import com.scholarme.features.sessions.data.model.SessionDto
+import com.scholarme.features.dashboard.data.remote.DashboardApi
 import com.scholarme.core.util.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -15,32 +14,22 @@ import javax.inject.Inject
  */
 class DashboardRepository @Inject constructor(
     private val tokenManager: TokenManager,
-    private val apiService: ApiService
+    private val dashboardApi: DashboardApi
 ) {
-    
-    // Legacy constructor for non-Hilt usage
-    constructor(tokenManager: TokenManager) : this(tokenManager, ApiClient.apiService)
-    
-    private fun getBearerToken(): String? {
-        val token = tokenManager.getAccessToken()
-        return if (token != null) "Bearer $token" else null
-    }
     
     suspend fun getDashboardStats(): Result<DashboardStats> {
         return withContext(Dispatchers.IO) {
             try {
                 if (!tokenManager.isLoggedIn()) return@withContext Result.Error("Not authenticated")
                 
-                val response = apiService.getDashboardStats()
-
+                val response = dashboardApi.getDashboardStats()
                 
                 if (response.isSuccessful && response.body()?.success == true) {
-
                     val data = response.body()?.data
                     if (data != null) {
                         Result.Success(data)
                     } else {
-                        Result.Success(DashboardStats()) // Return empty stats
+                        Result.Success(DashboardStats())
                     }
                 } else {
                     val errorMsg = response.body()?.error?.message ?: "Failed to load stats"
@@ -52,19 +41,16 @@ class DashboardRepository @Inject constructor(
         }
     }
     
-    suspend fun getUpcomingSessions(): Result<List<Session>> {
+    suspend fun getUpcomingSessions(): Result<List<SessionDto>> {
         return withContext(Dispatchers.IO) {
             try {
                 if (!tokenManager.isLoggedIn()) return@withContext Result.Error("Not authenticated")
                 
-                val response = apiService.getUpcomingSessions()
-
-
+                val response = dashboardApi.getUpcomingSessions()
                 
                 if (response.isSuccessful && response.body()?.success == true) {
                     val data = response.body()?.data?.sessions ?: emptyList()
                     Result.Success(data)
-
                 } else {
                     val errorMsg = response.body()?.error?.message ?: "Failed to load sessions"
                     Result.Error(errorMsg)
