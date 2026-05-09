@@ -39,30 +39,34 @@ export async function POST(request: Request) {
       );
     }
 
-    // Fetch user profile
-    const { data: profile } = await supabase
+    // Fetch user profile with role
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("*")
+      .select("*, roles(name)")
       .eq("id", data.user.id)
       .single();
+
+    if (profileError) {
+        console.error("Profile fetch error:", profileError);
+    }
 
     return NextResponse.json({
       success: true,
       message: "Login successful",
       data: {
-        userId: data.user.id,
-        email: data.user.email,
-        session: data.session?.access_token,
-        profile: {
-          firstName: profile?.first_name || "",
-          lastName: profile?.last_name || "",
+        token: data.session?.access_token,
+        user: {
+          id: data.user.id,
+          email: data.user.email,
           fullName: profile?.full_name || "",
+          role: (profile?.roles as any)?.name || "learner",
           avatarUrl: profile?.avatar_url || null,
           phoneNumber: profile?.phone_number || null,
-          birthdate: profile?.birthdate || null,
+          isProfileComplete: !!profile?.full_name
         },
       },
     });
+
   } catch (error) {
     console.error("[Android Auth] Login error:", error);
     return NextResponse.json(

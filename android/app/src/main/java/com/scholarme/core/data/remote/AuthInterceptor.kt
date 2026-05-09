@@ -26,7 +26,7 @@ class AuthInterceptor @Inject constructor(
         // Add token if available
         val token = tokenManager.getToken()
         
-        return if (!token.isNullOrBlank()) {
+        val response = if (!token.isNullOrBlank()) {
             val authenticatedRequest = originalRequest.newBuilder()
                 .header("Authorization", "Bearer $token")
                 .build()
@@ -34,5 +34,13 @@ class AuthInterceptor @Inject constructor(
         } else {
             chain.proceed(originalRequest)
         }
+
+        if (response.code == 401) {
+            tokenManager.clearAll()
+            // Optional: Broadcast event or trigger logout in repository
+        }
+
+        return response
     }
 }
+

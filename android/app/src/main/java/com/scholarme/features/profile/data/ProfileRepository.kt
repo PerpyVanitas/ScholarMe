@@ -31,10 +31,11 @@ class ProfileRepository @Inject constructor(
     suspend fun getProfile(): Result<UserProfile> {
         return withContext(Dispatchers.IO) {
             try {
-                val token = getBearerToken()
-                    ?: return@withContext Result.Error("Not authenticated")
+                if (!tokenManager.isLoggedIn()) return@withContext Result.Error("Not authenticated")
                 
-                val response = apiService.getProfile(token)
+                val response = apiService.getProfile()
+
+
                 
                 if (response.isSuccessful && response.body()?.success == true) {
                     val profile = response.body()?.data
@@ -69,10 +70,10 @@ class ProfileRepository @Inject constructor(
     ): Result<UserProfile> {
         return withContext(Dispatchers.IO) {
             try {
-                val token = getBearerToken()
-                    ?: return@withContext Result.Error("Not authenticated")
+                if (!tokenManager.isLoggedIn()) return@withContext Result.Error("Not authenticated")
                 
                 val request = UpdateProfileRequest(
+
                     fullName = fullName,
                     phone = phone,
                     bio = bio,
@@ -80,7 +81,8 @@ class ProfileRepository @Inject constructor(
                     yearLevel = yearLevel
                 )
                 
-                val response = apiService.updateProfile(token, request)
+                val response = apiService.updateProfile(request)
+
                 
                 if (response.isSuccessful && response.body()?.success == true) {
                     val profile = response.body()?.data
@@ -112,11 +114,12 @@ class ProfileRepository @Inject constructor(
     ): Result<Unit> {
         return withContext(Dispatchers.IO) {
             try {
-                val token = getBearerToken()
-                    ?: return@withContext Result.Error("Not authenticated")
+                if (!tokenManager.isLoggedIn()) return@withContext Result.Error("Not authenticated")
                 
                 val request = ChangePasswordRequest(currentPassword, newPassword)
-                val response = apiService.changePassword(token, request)
+
+                val response = apiService.changePassword(request)
+
                 
                 if (response.isSuccessful && response.body()?.success == true) {
                     Result.Success(Unit)

@@ -42,13 +42,43 @@ class MessagingViewModel @Inject constructor(
         }
     }
 
+    private var pollingJob: kotlinx.coroutines.Job? = null
+
     fun loadMessages(conversationId: String) {
+        stopPolling()
         viewModelScope.launch {
             when (val result = repository.getMessages(conversationId)) {
                 is NetworkResult.Success -> _activeMessages.value = result.data
                 else -> {}
             }
+            startPolling(conversationId)
         }
+    }
+
+    private fun startPolling(conversationId: String) {
+        pollingJob = viewModelScope.launch {
+            while (true) {
+                kotlinx.coroutines.delay(5000) // Poll every 5 seconds
+                when (val result = repository.getMessages(conversationId)) {
+                    is NetworkResult.Success -> {
+                        if (result.data.size > _activeMessages.value.size) {
+                            _activeMessages.value = result.data
+                        }
+                    }
+                    else -> {}
+                }
+            }
+        }
+    }
+
+    private fun stopPolling() {
+        pollingJob?.cancel()
+        pollingJob = null
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        stopPolling()
     }
 
     fun sendMessage(conversationId: String, content: String) {
@@ -64,3 +94,4 @@ class MessagingViewModel @Inject constructor(
         }
     }
 }
+

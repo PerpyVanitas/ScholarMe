@@ -5,6 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 import { Menu, X, GraduationCap } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme-toggle';
+
 
 const GALLERY_IMAGES = [
   {
@@ -85,6 +87,7 @@ export default function HomePage() {
             <a href="#community" className="text-sm hover:text-blue-600 transition">Community</a>
             <a href="#how" className="text-sm hover:text-blue-600 transition">How It Works</a>
             <a href="#tutors" className="text-sm hover:text-blue-600 transition">Tutors</a>
+            <ThemeToggle />
           </div>
 
           <Link 
@@ -102,12 +105,17 @@ export default function HomePage() {
               <a href="#community" className="block text-sm hover:text-blue-600">Community</a>
               <a href="#how" className="block text-sm hover:text-blue-600">How It Works</a>
               <a href="#tutors" className="block text-sm hover:text-blue-600">Tutors</a>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Appearance</span>
+                <ThemeToggle />
+              </div>
               <Link href={isLoggedIn ? '/dashboard' : '/auth/login'} className="block text-sm font-medium hover:text-blue-600">
                 {isLoggedIn ? 'Dashboard' : 'Sign in'}
               </Link>
             </div>
           </div>
         )}
+
       </nav>
 
       {/* Hero */}
@@ -164,7 +172,9 @@ export default function HomePage() {
                 fill
                 className="object-cover"
                 priority
+                sizes="(max-width: 768px) 100vw, 50vw"
               />
+
               <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
             </div>
           </div>
@@ -190,7 +200,10 @@ export default function HomePage() {
                   alt={image.alt}
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  loading="lazy"
                 />
+
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
                   <div className="p-6 w-full">
                     <p className="text-white font-semibold">{image.title}</p>

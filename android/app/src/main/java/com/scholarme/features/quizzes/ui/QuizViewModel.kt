@@ -2,9 +2,9 @@ package com.scholarme.features.quizzes.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.scholarme.core.network.NetworkResult
-import com.scholarme.features.quizzes.data.QuizDto
+import com.scholarme.core.data.model.*
 import com.scholarme.features.quizzes.data.QuizRepository
+import com.scholarme.core.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,22 +20,45 @@ class QuizViewModel @Inject constructor(
     private val _quizzes = MutableStateFlow<List<QuizDto>>(emptyList())
     val quizzes: StateFlow<List<QuizDto>> = _quizzes.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(true)
+    private val _currentStudySet = MutableStateFlow<StudySetResponse?>(null)
+    val currentStudySet: StateFlow<StudySetResponse?> = _currentStudySet.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
 
     init {
         loadQuizzes()
     }
 
-    private fun loadQuizzes() {
+    fun loadQuizzes() {
         viewModelScope.launch {
             _isLoading.value = true
             when (val result = repository.getQuizzes()) {
-                is NetworkResult.Success -> {
+                is Result.Success -> {
                     _quizzes.value = result.data
+                    _error.value = null
                 }
-                else -> {
-                    // Handle error state
+                is Result.Error -> {
+                    _error.value = result.message
+                }
+            }
+            _isLoading.value = false
+        }
+    }
+
+    fun fetchStudySet(quizId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            when (val result = repository.getStudySet(quizId)) {
+                is Result.Success -> {
+                    _currentStudySet.value = result.data
+                    _error.value = null
+                }
+                is Result.Error -> {
+                    _error.value = result.message
                 }
             }
             _isLoading.value = false

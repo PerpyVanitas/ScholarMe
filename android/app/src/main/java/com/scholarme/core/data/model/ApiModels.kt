@@ -1,6 +1,8 @@
 package com.scholarme.core.data.model
 
 import com.google.gson.annotations.SerializedName
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
 // ============================================
 // API Response Wrapper (matches Spring Boot ApiResponse)
@@ -37,8 +39,11 @@ data class EmailLoginRequest(
 typealias LoginRequest = EmailLoginRequest
 
 data class LoginResponse(
-    val user: UserProfile,
-    val token: String
+    @SerializedName("user") val user: UserProfile?,
+    @SerializedName("session") val token: String,
+    @SerializedName("profile") val profile: UserProfile? = null,
+    @SerializedName("userId") val userId: String? = null,
+    @SerializedName("email") val email: String? = null
 )
 
 data class RegisterRequest(
@@ -49,8 +54,9 @@ data class RegisterRequest(
 )
 
 data class RegisterResponse(
-    val user: UserProfile,
-    val token: String
+    @SerializedName("user") val user: UserProfile?,
+    @SerializedName("token") val token: String?,
+    @SerializedName("session") val sessionToken: String? = null
 )
 
 // ============================================
@@ -58,10 +64,10 @@ data class RegisterResponse(
 // ============================================
 
 data class UserProfile(
-    val id: String,
-    val email: String,
-    @SerializedName("fullName") val fullName: String,
-    val role: String,
+    val id: String? = null,
+    val email: String? = null,
+    @SerializedName("fullName") val fullName: String? = null,
+    val role: String? = null,
     @SerializedName("avatarUrl") val avatarUrl: String? = null,
     val phone: String? = null,
     val bio: String? = null,
@@ -69,8 +75,15 @@ data class UserProfile(
     @SerializedName("yearLevel") val yearLevel: Int? = null,
     val rating: Double? = null,
     @SerializedName("totalSessions") val totalSessions: Int? = null,
-    @SerializedName("isProfileComplete") val isProfileComplete: Boolean = false
+    @SerializedName("isProfileComplete") val isProfileComplete: Boolean = false,
+    
+    // Gamification fields
+    @SerializedName("totalXp") val totalXp: Int? = 0,
+    @SerializedName("currentLevel") val currentLevel: Int? = 1
 )
+
+// Alias for convenience
+typealias ProfileDto = UserProfile
 
 data class UpdateProfileRequest(
     @SerializedName("fullName") val fullName: String? = null,
@@ -144,10 +157,10 @@ data class SessionDto(
     @SerializedName("tutorAvatarUrl") val tutorAvatarUrl: String? = null,
     @SerializedName("learnerId") val learnerId: String,
     @SerializedName("learnerName") val learnerName: String? = null,
-    @SerializedName("scheduledAt") val scheduledAt: String,
-    @SerializedName("durationMinutes") val durationMinutes: Int = 60,
+    @SerializedName("scheduledDate") val scheduledDate: String,
+    @SerializedName("startTime") val startTime: String,
+    @SerializedName("endTime") val endTime: String,
     val status: String,
-    val topic: String? = null,
     val notes: String? = null,
     val location: String? = null,
     @SerializedName("specializationName") val specializationName: String? = null,
@@ -155,7 +168,11 @@ data class SessionDto(
     @SerializedName("createdAt") val createdAt: String? = null
 )
 
-// Legacy alias
+data class SessionListResponse(
+    val sessions: List<SessionDto>,
+    val pagination: PaginationInfo
+)
+
 typealias Session = SessionDto
 
 data class RatingDto(
@@ -185,7 +202,7 @@ data class RateSessionRequest(
 )
 
 // ============================================
-// Repository Models (matches Spring Boot RepositoryDtos)
+// Repository Models
 // ============================================
 
 data class RepositoryDto(
@@ -200,12 +217,6 @@ data class RepositoryDto(
     @SerializedName("updatedAt") val updatedAt: String? = null
 )
 
-data class CreateRepositoryRequest(
-    val title: String,
-    val description: String? = null,
-    val visibility: String = "private"
-)
-
 data class ResourceDto(
     val id: String,
     val title: String,
@@ -218,14 +229,6 @@ data class ResourceDto(
     @SerializedName("createdAt") val createdAt: String? = null
 )
 
-data class CreateResourceRequest(
-    val title: String,
-    val description: String? = null,
-    val url: String? = null,
-    @SerializedName("fileType") val fileType: String? = null,
-    @SerializedName("fileSize") val fileSize: Long? = null
-)
-
 data class RepositoryListResponse(
     val repositories: List<RepositoryDto>
 )
@@ -235,28 +238,118 @@ data class ResourceListResponse(
 )
 
 // ============================================
-// Dashboard Models (computed from sessions)
+// Dashboard Models
 // ============================================
 
 data class DashboardStats(
+    @SerializedName("role") val role: String? = null,
     @SerializedName("totalSessions") val totalSessions: Int = 0,
     @SerializedName("upcomingSessions") val upcomingSessions: Int = 0,
     @SerializedName("completedSessions") val completedSessions: Int = 0,
+    @SerializedName("totalUsers") val totalUsers: Int? = null,
+    @SerializedName("activeTutors") val activeTutors: Int? = null,
+    @SerializedName("pendingSessions") val pendingSessions: Int? = null,
+    @SerializedName("rating") val rating: Double? = null,
+    @SerializedName("totalRatings") val totalRatings: Int? = null,
     @SerializedName("totalStudySets") val totalStudySets: Int = 0,
     @SerializedName("averageQuizScore") val averageQuizScore: Double = 0.0
 )
 
 // ============================================
-// Admin Models (matches Spring Boot AdminController)
+// Admin & Specialized Models
 // ============================================
 
-data class RegisterCardRequest(
-    @SerializedName("cardId") val cardId: String,
-    val pin: String,
-    @SerializedName("userId") val userId: String
+data class AdminAnalytics(
+    val totalRevenue: Double,
+    val userGrowth: List<DataPoint>,
+    val sessionSuccessRate: Double,
+    val topSpecializations: List<StringCount>
 )
 
-data class DeviceTokenRequest(
-    @SerializedName("deviceType") val deviceType: String,
-    val token: String
+data class DataPoint(val label: String, val value: Double)
+data class StringCount(val name: String, val count: Int)
+
+data class AuditLogEntry(
+    val id: String,
+    val userId: String,
+    val action: String,
+    val entityType: String,
+    val entityId: String,
+    val details: String?,
+    val timestamp: String
+)
+
+data class AdminTimesheet(
+    val id: String,
+    val tutorId: String,
+    val tutorName: String,
+    val totalHours: Double,
+    val amount: Double,
+    val status: String,
+    val periodStart: String,
+    val periodEnd: String
+)
+
+data class StudySetItem(
+    val id: String,
+    val term: String,
+    val definition: String
+)
+
+data class StudySetResponse(
+    val id: String,
+    val title: String,
+    val description: String?,
+    val items: List<StudySetItem>
+)
+
+data class QuizDto(
+    val id: String,
+    val title: String,
+    val description: String?,
+    val questionCount: Int
+)
+
+data class QuizQuestionDto(
+    val id: String,
+    val questionText: String,
+    val options: List<String>,
+    val correctAnswerIndex: Int
+)
+
+@Parcelize
+data class AuthCard(
+    val id: String,
+    val userId: String?,
+    val userName: String?,
+    val pin: String,
+    val status: String,
+    val issuedAt: String
+) : Parcelable
+
+@Parcelize
+data class LeaderboardEntry(
+    val rank: Int,
+    val id: String,
+    val fullName: String,
+    val avatarUrl: String?,
+    @SerializedName("totalXp") val totalXp: Int,
+    @SerializedName("currentLevel") val currentLevel: Int,
+    val profileThemeColor: String?,
+    val isCurrentUser: Boolean
+) : Parcelable
+
+@Parcelize
+data class LeaderboardResponse(
+    val leaderboard: List<LeaderboardEntry>,
+    val currentUserId: String
+) : Parcelable
+
+data class NotificationDto(
+    val id: String,
+    val title: String,
+    val message: String,
+    val type: String,
+    val time: String,
+    val read: Boolean
 )

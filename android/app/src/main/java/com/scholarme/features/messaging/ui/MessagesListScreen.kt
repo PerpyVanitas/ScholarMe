@@ -7,18 +7,25 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.ui.Modifier
+
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.scholarme.features.messaging.data.ConversationDto
 
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MessagesListScreen(
     viewModel: MessagingViewModel = hiltViewModel(),
-    onNavigateToChat: (String) -> Unit
+    onNavigateToChat: (String) -> Unit,
+    onBackClick: () -> Unit
 ) {
     val conversations by viewModel.conversations.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -27,7 +34,14 @@ fun MessagesListScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Messages") },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
+
                     containerColor = MaterialTheme.colorScheme.surface,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
                 )

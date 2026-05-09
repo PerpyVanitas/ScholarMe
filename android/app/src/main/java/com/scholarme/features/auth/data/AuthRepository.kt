@@ -47,15 +47,25 @@ class AuthRepository @Inject constructor(
                 if (response.isSuccessful && response.body()?.success == true) {
                     val data = response.body()?.data
                     if (data != null) {
+                        // Extract user data robustly from various possible fields
+                        // Stitch together the ID and Email which are flat, with the Profile which has the name
+                        val user = UserProfile(
+                            id = data.user?.id ?: data.userId ?: "",
+                            email = data.user?.email ?: data.email ?: "",
+                            fullName = data.user?.fullName ?: data.profile?.fullName ?: "",
+                            role = data.user?.role ?: data.profile?.role ?: "learner"
+                        )
+                        
                         // Save token and user info
                         tokenManager.saveAccessToken(data.token)
+
                         tokenManager.saveUserInfo(
-                            userId = data.user.id,
-                            email = data.user.email,
-                            fullName = data.user.fullName,
-                            role = data.user.role
+                            userId = user.id,
+                            email = user.email,
+                            fullName = user.fullName,
+                            role = user.role
                         )
-                        Result.Success(data.user)
+                        Result.Success(user)
                     } else {
                         Result.Error("Invalid response from server")
                     }
@@ -93,15 +103,20 @@ class AuthRepository @Inject constructor(
                 if (response.isSuccessful && response.body()?.success == true) {
                     val data = response.body()?.data
                     if (data != null) {
+                        // Support both 'token' and 'session' fields for registration
+                        val token = data.token ?: data.sessionToken ?: ""
+                        val user = data.user ?: UserProfile(id = "", email = email, fullName = fullName, role = role)
+
                         // Save token and user info after registration
-                        tokenManager.saveAccessToken(data.token)
+                        tokenManager.saveAccessToken(token)
                         tokenManager.saveUserInfo(
-                            userId = data.user.id,
-                            email = data.user.email,
-                            fullName = data.user.fullName,
-                            role = data.user.role
+                            userId = user.id,
+                            email = user.email,
+                            fullName = user.fullName,
+                            role = user.role
                         )
-                        Result.Success(data.user.id)
+                        Result.Success(user.id)
+
                     } else {
                         Result.Error("Registration successful but no user data returned")
                     }

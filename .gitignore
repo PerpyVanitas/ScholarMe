@@ -8,3 +8,16 @@ node_modules/
 .next/
 .env*.local
 .DS_Store
+
+# Android ignores
+android/.gradle/
+android/.idea/
+android/app/build/
+android/build/
+android/local.properties
+*.apk
+*.aar
+
+# Java/Maven ignores
+backend/target/
+*.class

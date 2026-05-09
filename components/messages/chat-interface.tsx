@@ -57,42 +57,41 @@ export function ChatInterface({ initialConversations, currentUserId }: ChatInter
     fetchMessages();
   }, [activeConversationId, supabase]);
 
-  // 2. Set up Supabase Realtime subscription
-  useEffect(() => {
-    if (!activeConversationId) return;
+    // 2. Set up Supabase Realtime subscription
+    useEffect(() => {
+      // Global channel to listen for ANY new message for this user's conversations
+      const globalChannel = supabase
+        .channel('global_chat_updates')
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'messages' },
+          async (payload) => {
+            // Update the conversation list to show the latest message
+            setConversations(prev => prev.map(conv => {
+              if (conv.id === payload.new.conversation_id) {
+                return {
+                  ...conv,
+                  messages: [payload.new, ...(conv.messages || [])],
+                  updated_at: new Date().toISOString()
+                };
+              }
+              return conv;
+            }).sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()));
 
-    const channel = supabase
-      .channel(`chat_${activeConversationId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `conversation_id=eq.${activeConversationId}`,
-        },
-        async (payload) => {
-          // Fetch the profile for the new message
-          const { data: profileData } = await supabase
-            .from("profiles")
-            .select("id, full_name, avatar_url")
-            .eq("id", payload.new.sender_id)
-            .single();
+            // If it's for the active chat, handled by active channel or we can just append here
+            if (payload.new.conversation_id === activeConversationId) {
+               // Profile fetch logic (simplified for global)
+               setMessages(prev => [...prev, payload.new as Message]);
+            }
+          }
+        )
+        .subscribe();
 
-          const newMsg = {
-            ...payload.new,
-            profiles: profileData,
-          } as Message;
+      return () => {
+        supabase.removeChannel(globalChannel);
+      };
+    }, [activeConversationId, supabase]);
 
-          setMessages((prev) => [...prev, newMsg]);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [activeConversationId, supabase]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {

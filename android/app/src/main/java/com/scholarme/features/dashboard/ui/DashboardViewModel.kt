@@ -1,63 +1,57 @@
 package com.scholarme.features.dashboard.ui
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.scholarme.core.data.model.DashboardStats
-import com.scholarme.core.data.model.Session
+import com.scholarme.core.data.local.TokenManager
+import com.scholarme.core.data.model.SessionDto
+import com.scholarme.core.data.remote.ApiService
 import com.scholarme.core.util.Result
-import com.scholarme.features.dashboard.data.DashboardRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-/**
- * ViewModel for the Dashboard screen.
- * Manages dashboard stats and upcoming sessions.
- */
-class DashboardViewModel(private val repository: DashboardRepository) : ViewModel() {
-    
-    private val _statsState = MutableLiveData<Result<DashboardStats>>()
-    val statsState: LiveData<Result<DashboardStats>> = _statsState
-    
-    private val _sessionsState = MutableLiveData<Result<List<Session>>>()
-    val sessionsState: LiveData<Result<List<Session>>> = _sessionsState
-    
-    private val _userName = MutableLiveData<String>()
-    val userName: LiveData<String> = _userName
-    
-    private val _userRole = MutableLiveData<String>()
-    val userRole: LiveData<String> = _userRole
-    
+@HiltViewModel
+class DashboardViewModel @Inject constructor(
+    private val apiService: ApiService,
+    private val tokenManager: TokenManager
+) : ViewModel() {
+
+    private val _sessions = MutableStateFlow<Result<List<SessionDto>>>(Result.Loading)
+    val sessions: StateFlow<Result<List<SessionDto>>> = _sessions
+
+    private val _userName = MutableStateFlow("Scholar")
+    val userName: StateFlow<String> = _userName
+
     init {
-        loadUserInfo()
-        loadDashboard()
+        fetchDashboardData()
     }
-    
-    private fun loadUserInfo() {
-        _userName.value = repository.getUserName()
-        _userRole.value = repository.getUserRole()
-    }
-    
-    fun loadDashboard() {
-        loadStats()
-        loadSessions()
-    }
-    
-    private fun loadStats() {
-        _statsState.value = Result.Loading
+
+    fun fetchDashboardData() {
         viewModelScope.launch {
-            _statsState.value = repository.getDashboardStats()
+            _sessions.value = Result.Loading
+            try {
+                // Fetch profile to get name
+                val profileRes = apiService.getProfile()
+                if (profileRes.isSuccessful) {
+                    _userName.value = profileRes.body()?.data?.fullName ?: "Scholar"
+                }
+
+                // Fetch upcoming sessions
+                val sessionsRes = apiService.getSessions()
+                if (sessionsRes.isSuccessful) {
+                    _sessions.value = Result.Success(sessionsRes.body()?.data ?: emptyList())
+                } else {
+                    _sessions.value = Result.Error("Failed to load sessions")
+                }
+            } catch (e: Exception) {
+                _sessions.value = Result.Error(e.message ?: "Network error")
+            }
         }
     }
-    
-    private fun loadSessions() {
-        _sessionsState.value = Result.Loading
-        viewModelScope.launch {
-            _sessionsState.value = repository.getUpcomingSessions()
-        }
-    }
-    
-    fun refresh() {
-        loadDashboard()
+
+    fun logout() {
+        tokenManager.clearToken()
     }
 }

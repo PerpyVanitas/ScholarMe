@@ -1,35 +1,61 @@
 package com.scholarme
 
-import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.navigation.compose.rememberNavController
 import com.scholarme.core.data.local.TokenManager
-import com.scholarme.features.auth.ui.login.LoginActivity
-import com.scholarme.features.dashboard.ui.DashboardActivity
+import com.scholarme.core.navigation.AppNavHost
+import com.scholarme.core.navigation.Screen
+import com.scholarme.core.ui.theme.ScholarMeTheme
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
  * Main entry point activity.
- * Handles splash screen and navigation to the appropriate screen based on auth state.
+ * Handles the Single-Activity Architecture using Jetpack Compose Navigation.
  */
-class MainActivity : AppCompatActivity() {
+@AndroidEntryPoint
+class MainActivity : ComponentActivity() {
     
+    @Inject
+    lateinit var tokenManager: TokenManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Install splash screen before super.onCreate()
+        // Install splash screen
         installSplashScreen()
         
         super.onCreate(savedInstanceState)
         
-        // Check authentication state and navigate accordingly
-        val tokenManager = TokenManager.getInstance(this)
-        
-        val targetActivity = if (tokenManager.isLoggedIn()) {
-            DashboardActivity::class.java
-        } else {
-            LoginActivity::class.java
+        setContent {
+            ScholarMeTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    val navController = rememberNavController()
+                    
+                    // Determine start destination based on auth state
+                    val startDestination = if (tokenManager.isLoggedIn()) {
+                        Screen.Dashboard.route
+                    } else {
+                        // For now, if no login screen is ready in Compose, 
+                        // we start at Dashboard or a placeholder.
+                        // I will implement the LoginScreen next.
+                        Screen.Dashboard.route 
+                    }
+                    
+                    AppNavHost(
+                        navController = navController,
+                        startDestination = startDestination
+                    )
+                }
+            }
         }
-        
-        startActivity(Intent(this, targetActivity))
-        finish()
     }
 }

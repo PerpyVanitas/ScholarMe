@@ -1,19 +1,28 @@
 package com.scholarme.features.notifications.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.scholarme.core.util.Result
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotificationsScreen() {
+fun NotificationsScreen(
+    viewModel: NotificationViewModel
+) {
+    val state by viewModel.notifications.collectAsState()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -21,19 +30,40 @@ fun NotificationsScreen() {
             )
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(5) {
-                NotificationCard(
-                    title = "Session Request Approved",
-                    message = "Your tutor has approved the session for tomorrow at 2:00 PM.",
-                    time = "2 hours ago"
-                )
+        when (state) {
+            is Result.Loading -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+            is Result.Error -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text((state as Result.Error).message)
+                }
+            }
+            is Result.Success -> {
+                val list = (state as Result.Success<List<NotificationDto>>).data
+                if (list.isEmpty()) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("No notifications yet")
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(padding)
+                            .padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(list) { notification ->
+                            NotificationCard(
+                                title = notification.title,
+                                message = notification.message,
+                                time = "Today" // Simplified for now
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -50,7 +80,7 @@ fun NotificationCard(title: String, message: String, time: String) {
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .androidx.compose.foundation.background(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.shapes.small),
+                    .background(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.shapes.small),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(Icons.Default.Notifications, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)

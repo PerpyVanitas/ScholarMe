@@ -48,6 +48,7 @@ fun PollCard(question: String, upvotes: Int, downvotes: Int) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+
             Text(question, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
             Spacer(modifier = Modifier.height(16.dp))
             Row(
@@ -71,10 +72,17 @@ fun PollCard(question: String, upvotes: Int, downvotes: Int) {
 
 // Helper extension matching the one in Sessions
 @Composable
-private fun Button(onClick: () -> Unit, modifier: Modifier = Modifier, variant: String = "primary", content: @Composable RowScope.() -> Unit) {
+private fun Button(
+    onClick: () -> Unit, 
+    modifier: Modifier = Modifier, 
+    variant: String = "primary", 
+    shape: androidx.compose.ui.graphics.Shape = MaterialTheme.shapes.small,
+    content: @Composable RowScope.() -> Unit
+) {
     if (variant == "outline") {
-        OutlinedButton(onClick = onClick, modifier = modifier, shape = MaterialTheme.shapes.small, content = content)
+        OutlinedButton(onClick = onClick, modifier = modifier, shape = shape, content = content)
     } else {
-        androidx.compose.material3.Button(onClick = onClick, modifier = modifier, shape = MaterialTheme.shapes.small, content = content)
+        androidx.compose.material3.Button(onClick = onClick, modifier = modifier, shape = shape, content = content)
     }
 }
+

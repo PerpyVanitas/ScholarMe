@@ -29,12 +29,13 @@ class DashboardRepository @Inject constructor(
     suspend fun getDashboardStats(): Result<DashboardStats> {
         return withContext(Dispatchers.IO) {
             try {
-                val token = getBearerToken()
-                    ?: return@withContext Result.Error("Not authenticated")
+                if (!tokenManager.isLoggedIn()) return@withContext Result.Error("Not authenticated")
                 
-                val response = apiService.getDashboardStats(token)
+                val response = apiService.getDashboardStats()
+
                 
                 if (response.isSuccessful && response.body()?.success == true) {
+
                     val data = response.body()?.data
                     if (data != null) {
                         Result.Success(data)
@@ -54,14 +55,16 @@ class DashboardRepository @Inject constructor(
     suspend fun getUpcomingSessions(): Result<List<Session>> {
         return withContext(Dispatchers.IO) {
             try {
-                val token = getBearerToken()
-                    ?: return@withContext Result.Error("Not authenticated")
+                if (!tokenManager.isLoggedIn()) return@withContext Result.Error("Not authenticated")
                 
-                val response = apiService.getUpcomingSessions(token)
+                val response = apiService.getUpcomingSessions()
+
+
                 
                 if (response.isSuccessful && response.body()?.success == true) {
-                    val data = response.body()?.data ?: emptyList()
+                    val data = response.body()?.data?.sessions ?: emptyList()
                     Result.Success(data)
+
                 } else {
                     val errorMsg = response.body()?.error?.message ?: "Failed to load sessions"
                     Result.Error(errorMsg)

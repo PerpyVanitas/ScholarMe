@@ -84,6 +84,8 @@ class UpdateProfileActivity : AppCompatActivity() {
                     binding.btnSave.isEnabled = true
                     Snackbar.make(binding.root, state.message, Snackbar.LENGTH_LONG).show()
                 }
+                else -> {}
+
             }
         }
         

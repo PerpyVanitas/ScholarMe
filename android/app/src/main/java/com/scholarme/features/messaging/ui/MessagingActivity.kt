@@ -19,26 +19,31 @@ class MessagingActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MessagingNavHost(
-                onBack = { finish() }
+                onNavigateBack = { finish() }
             )
         }
+
     }
 }
 
 @Composable
-fun MessagingNavHost(onBack: () -> Unit) {
+fun MessagingNavHost(onNavigateBack: () -> Unit) {
     var activeConversationId by remember { mutableStateOf<String?>(null) }
+
 
     if (activeConversationId == null) {
         MessagesListScreen(
             onNavigateToChat = { conversationId ->
                 activeConversationId = conversationId
-            }
+            },
+            onBackClick = onNavigateBack
         )
     } else {
+
         ActiveChatScreen(
             conversationId = activeConversationId!!,
-            onBack = { activeConversationId = null }
+            onNavigateBack = { activeConversationId = null }
         )
     }
+
 }

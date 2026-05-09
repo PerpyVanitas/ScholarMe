@@ -18,8 +18,9 @@ class SessionsActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 SessionManagementScreen(
-                    onBack = { finish() }
+                    onBackClick = { finish() }
                 )
+
             }
         }
     }
