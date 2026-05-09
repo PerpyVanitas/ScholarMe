@@ -13,13 +13,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.scholarme.core.util.Result
-import com.scholarme.features.notifications.data.model.NotificationDto
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsScreen(
-    state: Result<List<NotificationDto>>,
+    state: NotificationListState,
     onBackClick: () -> Unit
 ) {
     Scaffold(
@@ -34,39 +32,32 @@ fun NotificationsScreen(
             )
         }
     ) { padding ->
-        when (state) {
-            is Result.Loading -> {
-                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+        if (state.isLoading) {
+            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
             }
-            is Result.Error -> {
-                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                    Text(state.message)
-                }
+        } else if (state.error != null) {
+            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Text(state.error, color = MaterialTheme.colorScheme.error)
             }
-            is Result.Success -> {
-                val list = state.data
-                if (list.isEmpty()) {
-                    Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                        Text("No notifications yet")
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding)
-                            .padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(list) { notification ->
-                            NotificationCard(
-                                title = notification.title,
-                                message = notification.message,
-                                time = "Today"
-                            )
-                        }
-                    }
+        } else if (state.notifications.isEmpty()) {
+            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Text("No notifications yet")
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(state.notifications) { notification ->
+                    NotificationCard(
+                        title = notification.title,
+                        message = notification.message,
+                        time = "Today"
+                    )
                 }
             }
         }

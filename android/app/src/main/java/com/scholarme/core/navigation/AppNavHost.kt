@@ -11,6 +11,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.scholarme.core.util.Result
+import com.scholarme.features.dashboard.domain.model.Session
 import com.scholarme.features.admin.ui.*
 import com.scholarme.features.dashboard.ui.*
 import com.scholarme.features.profile.ui.*

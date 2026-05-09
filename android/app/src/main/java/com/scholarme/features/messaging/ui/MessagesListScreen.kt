@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.material3.HorizontalDivider
 import com.scholarme.features.messaging.data.model.ConversationDto
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,7 +58,7 @@ fun MessagesListScreen(
                         conversation = conversation,
                         onClick = { onNavigateToChat(conversation.id) }
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                    Divider(color = MaterialTheme.colorScheme.surfaceVariant)
                 }
             }
         }

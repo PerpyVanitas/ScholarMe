@@ -21,16 +21,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.scholarme.features.sessions.data.model.SessionDto
+import com.scholarme.features.dashboard.domain.model.Session
 
 @Composable
 fun DashboardScreen(
     userName: String,
-    sessions: List<SessionDto>,
+    sessions: List<Session>,
     onStudyClick: () -> Unit,
     onQuizClick: () -> Unit,
     onProfileClick: () -> Unit,
-    onSessionClick: (SessionDto) -> Unit
+    onSessionClick: (Session) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -147,7 +147,7 @@ fun QuickActionCard(
 }
 
 @Composable
-fun SessionItem(session: SessionDto, onClick: () -> Unit) {
+fun SessionItem(session: Session, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -195,7 +195,7 @@ fun SessionItem(session: SessionDto, onClick: () -> Unit) {
                     )
                     Spacer(Modifier.width(4.dp))
                     Text(
-                        "${session.scheduledDate} at ${session.startTime}",
+                        session.scheduledAt,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
