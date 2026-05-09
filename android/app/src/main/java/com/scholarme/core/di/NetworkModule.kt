@@ -9,6 +9,7 @@ import com.scholarme.core.data.remote.AuthInterceptor
 import com.scholarme.core.data.remote.NetworkErrorInterceptor
 import com.scholarme.features.admin.data.remote.AdminApi
 import com.scholarme.features.auth.data.remote.AuthApi
+import com.scholarme.features.dashboard.data.remote.DashboardApi
 import com.scholarme.features.gamification.data.remote.GamificationApi
 import com.scholarme.features.notifications.data.remote.NotificationApi
 import com.scholarme.features.profile.data.remote.ProfileApi

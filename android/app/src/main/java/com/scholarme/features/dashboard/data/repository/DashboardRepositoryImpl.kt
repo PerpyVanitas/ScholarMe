@@ -2,7 +2,7 @@ package com.scholarme.features.dashboard.data.repository
 
 import com.scholarme.core.data.local.TokenManager
 import com.scholarme.core.data.local.dao.DashboardDao
-import com.scholarme.core.data.remote.ApiService
+import com.scholarme.features.dashboard.data.remote.DashboardApi
 import com.scholarme.core.network.NetworkResult
 import com.scholarme.core.network.toNetworkResultWithData
 import com.scholarme.features.dashboard.data.mapper.toDomain
@@ -17,7 +17,7 @@ import javax.inject.Inject
 
 class DashboardRepositoryImpl @Inject constructor(
     private val tokenManager: TokenManager,
-    private val apiService: ApiService,
+    private val dashboardApi: DashboardApi,
     private val dashboardDao: DashboardDao
 ) : DashboardRepository {
 
@@ -25,17 +25,14 @@ class DashboardRepositoryImpl @Inject constructor(
         emit(NetworkResult.Loading())
 
         try {
-            // 1. Emit cached local data first
             val cached = dashboardDao.observeDashboardStats().firstOrNull()
             if (cached != null) {
                 emit(NetworkResult.Success(cached.toDomain()))
             }
 
-            // 2. Fetch from network
-            val remoteResult = apiService.getDashboardStats()
-                .toNetworkResultWithData { it.data ?: com.scholarme.core.data.model.DashboardStats() }
+            val remoteResponse = dashboardApi.getDashboardStats()
+            val remoteResult = remoteResponse.toNetworkResultWithData { it.data ?: com.scholarme.features.dashboard.data.model.DashboardStats() }
 
-            // 3. Update local DB and emit fresh data
             if (remoteResult is NetworkResult.Success) {
                 dashboardDao.insertDashboardStats(remoteResult.data.toEntity())
                 val fresh = dashboardDao.observeDashboardStats().firstOrNull()
@@ -56,17 +53,14 @@ class DashboardRepositoryImpl @Inject constructor(
         emit(NetworkResult.Loading())
 
         try {
-            // 1. Emit cached local data first
             val cached = dashboardDao.observeUpcomingSessions().firstOrNull()
             if (!cached.isNullOrEmpty()) {
                 emit(NetworkResult.Success(cached.map { it.toDomain() }))
             }
 
-            // 2. Fetch from network
-            val remoteResult = apiService.getUpcomingSessions()
-                .toNetworkResultWithData { it.data ?: emptyList() }
+            val remoteResponse = dashboardApi.getUpcomingSessions()
+            val remoteResult = remoteResponse.toNetworkResultWithData { it.data?.sessions ?: emptyList() }
 
-            // 3. Update local DB and emit fresh data
             if (remoteResult is NetworkResult.Success) {
                 dashboardDao.updateSessions(remoteResult.data.map { it.toEntity() })
                 val fresh = dashboardDao.observeUpcomingSessions().firstOrNull()

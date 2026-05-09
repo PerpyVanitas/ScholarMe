@@ -2,8 +2,8 @@ package com.scholarme.features.voting.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.scholarme.core.network.NetworkResult
-import com.scholarme.features.voting.data.PollDto
+import com.scholarme.core.util.Result
+import com.scholarme.features.voting.data.model.PollDto
 import com.scholarme.features.voting.data.VotingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,7 +31,7 @@ class VotingViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             when (val result = repository.getActivePolls()) {
-                is NetworkResult.Success -> {
+                is Result.Success -> {
                     _polls.value = result.data
                 }
                 else -> {}
@@ -43,8 +43,8 @@ class VotingViewModel @Inject constructor(
     fun castVote(pollId: String, optionId: String) {
         viewModelScope.launch {
             when (repository.castVote(pollId, optionId)) {
-                is NetworkResult.Success -> {
-                    loadPolls() // Reload to get updated vote counts
+                is Result.Success -> {
+                    loadPolls()
                 }
                 else -> {}
             }

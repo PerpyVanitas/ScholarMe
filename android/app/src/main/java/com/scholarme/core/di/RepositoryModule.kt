@@ -1,13 +1,15 @@
 package com.scholarme.core.di
 
 import com.scholarme.core.data.local.TokenManager
+import com.scholarme.core.data.local.dao.DashboardDao
 import com.scholarme.core.data.local.db.OfflineDao
 import com.scholarme.features.admin.data.AdminRepository
 import com.scholarme.features.admin.data.remote.AdminApi
 import com.scholarme.features.auth.data.AuthRepository
 import com.scholarme.features.auth.data.remote.AuthApi
-import com.scholarme.features.dashboard.data.DashboardRepository
 import com.scholarme.features.dashboard.data.remote.DashboardApi
+import com.scholarme.features.dashboard.data.repository.DashboardRepositoryImpl
+import com.scholarme.features.dashboard.domain.repository.DashboardRepository
 import com.scholarme.features.gamification.data.GamificationRepository
 import com.scholarme.features.gamification.data.remote.GamificationApi
 import com.scholarme.features.messaging.data.MessagingRepository
@@ -34,7 +36,13 @@ object RepositoryModule {
 
     @Provides @Singleton fun provideAuthRepository(api: AuthApi, tokenManager: TokenManager) = AuthRepository(tokenManager, api)
     @Provides @Singleton fun provideProfileRepository(api: ProfileApi, tokenManager: TokenManager) = ProfileRepository(tokenManager, api)
-    @Provides @Singleton fun provideDashboardRepository(api: DashboardApi, tokenManager: TokenManager) = DashboardRepository(tokenManager, api)
+    
+    @Provides @Singleton fun provideDashboardRepository(
+        api: DashboardApi, 
+        tokenManager: TokenManager,
+        dao: DashboardDao
+    ): DashboardRepository = DashboardRepositoryImpl(tokenManager, api, dao)
+    
     @Provides @Singleton fun provideTutorRepository(api: TutorApi) = TutorRepository(api)
     @Provides @Singleton fun provideSessionRepository(api: SessionApi) = SessionRepository(api)
     @Provides @Singleton fun provideAdminRepository(api: AdminApi) = AdminRepository(api)

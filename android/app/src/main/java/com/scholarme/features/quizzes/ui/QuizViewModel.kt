@@ -2,7 +2,7 @@ package com.scholarme.features.quizzes.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.scholarme.core.data.model.*
+import com.scholarme.features.quizzes.data.model.*
 import com.scholarme.features.quizzes.data.QuizRepository
 import com.scholarme.core.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel

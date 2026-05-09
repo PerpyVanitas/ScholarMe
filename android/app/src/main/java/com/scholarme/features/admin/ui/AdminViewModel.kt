@@ -2,7 +2,8 @@ package com.scholarme.features.admin.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.scholarme.core.data.model.*
+import com.scholarme.features.admin.data.model.*
+import com.scholarme.features.auth.data.model.AuthCard
 import com.scholarme.features.admin.data.AdminRepository
 import com.scholarme.core.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,7 +30,6 @@ class AdminViewModel @Inject constructor(
     val cards: StateFlow<List<AuthCard>> = _cards
 
     private val _isLoading = MutableStateFlow(false)
-
     val isLoading: StateFlow<Boolean> = _isLoading
 
     private val _error = MutableStateFlow<String?>(null)
@@ -70,14 +70,14 @@ class AdminViewModel @Inject constructor(
     fun approveTimesheet(id: String) {
         viewModelScope.launch {
             repository.updateTimesheetStatus(id, "approved")
-            fetchTimesheets() // Refresh
+            fetchTimesheets()
         }
     }
 
     fun rejectTimesheet(id: String) {
         viewModelScope.launch {
             repository.updateTimesheetStatus(id, "rejected")
-            fetchTimesheets() // Refresh
+            fetchTimesheets()
         }
     }
 
@@ -112,20 +112,4 @@ class AdminViewModel @Inject constructor(
             _isLoading.value = false
         }
     }
-
-    fun issueCard(userId: String, cardId: String, pin: String) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            when (val result = repository.issueCard(userId, cardId, pin)) {
-                is Result.Success -> {
-                    fetchCards() // Refresh
-                }
-                is Result.Error -> {
-                    _error.value = result.message
-                }
-            }
-            _isLoading.value = false
-        }
-    }
 }
-

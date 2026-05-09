@@ -2,9 +2,9 @@ package com.scholarme.features.gamification.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.scholarme.core.network.NetworkResult
+import com.scholarme.core.util.Result
 import com.scholarme.features.gamification.data.GamificationRepository
-import com.scholarme.features.gamification.data.LeaderboardUserDto
+import com.scholarme.features.gamification.data.model.LeaderboardEntry
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,8 +17,8 @@ class LeaderboardViewModel @Inject constructor(
     private val repository: GamificationRepository
 ) : ViewModel() {
 
-    private val _leaderboard = MutableStateFlow<List<LeaderboardUserDto>>(emptyList())
-    val leaderboard: StateFlow<List<LeaderboardUserDto>> = _leaderboard.asStateFlow()
+    private val _leaderboard = MutableStateFlow<List<LeaderboardEntry>>(emptyList())
+    val leaderboard: StateFlow<List<LeaderboardEntry>> = _leaderboard.asStateFlow()
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -31,7 +31,7 @@ class LeaderboardViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             when (val result = repository.getLeaderboard()) {
-                is NetworkResult.Success -> _leaderboard.value = result.data
+                is Result.Success -> _leaderboard.value = result.data.leaderboard
                 else -> {}
             }
             _isLoading.value = false
