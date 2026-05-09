@@ -15,6 +15,8 @@ import com.scholarme.features.dashboard.domain.model.Session
 import com.scholarme.features.admin.ui.*
 import com.scholarme.features.dashboard.ui.*
 import com.scholarme.features.profile.ui.*
+import com.scholarme.features.auth.ui.login.*
+import com.scholarme.features.auth.ui.register.*
 import com.scholarme.features.availability.ui.AvailabilityManagerScreen
 import com.scholarme.features.notifications.ui.NotificationsScreen
 import com.scholarme.features.notifications.ui.NotificationViewModel
@@ -359,6 +361,31 @@ fun AppNavHost(
                 state = state,
                 onSendMessage = { viewModel.sendMessage(conversationId, it) },
                 onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        // Auth Flow
+        composable(Screen.Login.route) {
+            val viewModel: LoginViewModel = hiltViewModel()
+            LoginScreen(
+                viewModel = viewModel,
+                onLoginSuccess = {
+                    navController.navigate(Screen.Dashboard.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                },
+                onRegisterClick = { navController.navigate(Screen.Register.route) }
+            )
+        }
+
+        composable(Screen.Register.route) {
+            val viewModel: RegisterViewModel = hiltViewModel()
+            RegisterScreen(
+                viewModel = viewModel,
+                onRegisterSuccess = {
+                    navController.popBackStack()
+                },
+                onBackToLogin = { navController.popBackStack() }
             )
         }
     }

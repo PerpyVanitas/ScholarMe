@@ -1,37 +1,35 @@
 package com.scholarme.features.auth.ui.register
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.scholarme.core.util.Result
 import com.scholarme.features.auth.data.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * ViewModel for the Register screen.
- */
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
     
-    private val _registerState = MutableLiveData<Result<String>?>()
-    val registerState: LiveData<Result<String>?> = _registerState
+    private val _registerState = MutableStateFlow<Result<String>?>(null)
+    val registerState: StateFlow<Result<String>?> = _registerState.asStateFlow()
     
-    private val _fullNameError = MutableLiveData<String?>()
-    val fullNameError: LiveData<String?> = _fullNameError
+    private val _fullNameError = MutableStateFlow<String?>(null)
+    val fullNameError: StateFlow<String?> = _fullNameError.asStateFlow()
     
-    private val _emailError = MutableLiveData<String?>()
-    val emailError: LiveData<String?> = _emailError
+    private val _emailError = MutableStateFlow<String?>(null)
+    val emailError: StateFlow<String?> = _emailError.asStateFlow()
     
-    private val _passwordError = MutableLiveData<String?>()
-    val passwordError: LiveData<String?> = _passwordError
+    private val _passwordError = MutableStateFlow<String?>(null)
+    val passwordError: StateFlow<String?> = _passwordError.asStateFlow()
     
-    private val _confirmPasswordError = MutableLiveData<String?>()
-    val confirmPasswordError: LiveData<String?> = _confirmPasswordError
+    private val _confirmPasswordError = MutableStateFlow<String?>(null)
+    val confirmPasswordError: StateFlow<String?> = _confirmPasswordError.asStateFlow()
     
     fun register(
         fullName: String,
