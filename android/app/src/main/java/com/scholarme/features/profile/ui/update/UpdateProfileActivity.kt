@@ -5,24 +5,20 @@ import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
-import com.scholarme.core.data.local.TokenManager
 import com.scholarme.core.util.Result
 import com.scholarme.databinding.ActivityUpdateProfileBinding
-import com.scholarme.features.profile.data.ProfileRepository
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * Update profile screen activity.
  * Allows user to edit their profile information.
  */
+@AndroidEntryPoint
 class UpdateProfileActivity : AppCompatActivity() {
     
     private lateinit var binding: ActivityUpdateProfileBinding
     
-    private val viewModel: UpdateProfileViewModel by viewModels {
-        UpdateProfileViewModelFactory(
-            ProfileRepository(TokenManager.getInstance(this))
-        )
-    }
+    private val viewModel: UpdateProfileViewModel by viewModels()
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,7 +53,7 @@ class UpdateProfileActivity : AppCompatActivity() {
                     binding.etBio.setText(state.data.bio ?: "")
                     
                     // Show bio field only for tutors
-                    binding.tilBio.visibility = if (state.data.role.lowercase() == "tutor") {
+                    binding.tilBio.visibility = if (state.data.role?.lowercase() == "tutor") {
                         View.VISIBLE
                     } else {
                         View.GONE
@@ -85,7 +81,6 @@ class UpdateProfileActivity : AppCompatActivity() {
                     Snackbar.make(binding.root, state.message, Snackbar.LENGTH_LONG).show()
                 }
                 else -> {}
-
             }
         }
         

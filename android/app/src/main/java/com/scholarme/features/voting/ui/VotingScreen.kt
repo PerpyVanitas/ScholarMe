@@ -53,7 +53,7 @@ fun VotingScreen(
                 items(state.polls) { poll ->
                     PollCard(
                         question = poll.title,
-                        description = poll.description,
+                        description = poll.description ?: "",
                         options = poll.options.map { it.text + " (" + it.voteCount + ")" }
                     )
                 }

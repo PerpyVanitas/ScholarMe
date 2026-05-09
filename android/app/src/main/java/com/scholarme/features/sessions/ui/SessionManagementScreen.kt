@@ -49,7 +49,7 @@ fun SessionManagementScreen(
             ) {
                 items(uiState.sessions) { session ->
                     SessionCard(
-                        title = session.title,
+                        title = session.topic ?: "Tutoring Session",
                         status = session.status,
                         date = session.startTime
                     )

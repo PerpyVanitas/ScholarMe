@@ -4,12 +4,17 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.scholarme.core.data.model.UserProfile
+import com.scholarme.features.profile.data.model.UserProfile
 import com.scholarme.core.util.Result
 import com.scholarme.features.profile.data.ProfileRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class UpdateProfileViewModel(private val repository: ProfileRepository) : ViewModel() {
+@HiltViewModel
+class UpdateProfileViewModel @Inject constructor(
+    private val repository: ProfileRepository
+) : ViewModel() {
     
     private val _currentProfile = MutableLiveData<Result<UserProfile>>()
     val currentProfile: LiveData<Result<UserProfile>> = _currentProfile

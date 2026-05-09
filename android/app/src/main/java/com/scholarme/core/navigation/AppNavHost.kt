@@ -33,6 +33,7 @@ import com.scholarme.features.gamification.ui.LeaderboardViewModel
 import com.scholarme.features.messaging.ui.MessagesListScreen
 import com.scholarme.features.messaging.ui.ActiveChatScreen
 import com.scholarme.features.messaging.ui.MessagingViewModel
+import com.scholarme.features.gamification.data.model.LeaderboardEntry
 
 @Composable
 fun AppNavHost(

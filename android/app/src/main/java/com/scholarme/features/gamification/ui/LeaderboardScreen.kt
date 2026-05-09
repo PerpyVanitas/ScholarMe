@@ -20,7 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.scholarme.core.data.model.LeaderboardEntry
+import com.scholarme.features.gamification.data.model.LeaderboardEntry
+import androidx.compose.ui.draw.rotate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -194,8 +195,3 @@ fun LeaderboardItem(entry: LeaderboardEntry, isCurrentUser: Boolean) {
         }
     }
 }
-
-// Extension to rotate icons
-private fun Modifier.rotate(degrees: Float): Modifier = this.then(
-    androidx.compose.ui.draw.rotate(degrees)
-)

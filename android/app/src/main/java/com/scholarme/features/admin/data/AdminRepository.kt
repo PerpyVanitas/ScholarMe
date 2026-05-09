@@ -110,4 +110,24 @@ class AdminRepository @Inject constructor(
             }
         }
     }
+
+    suspend fun issueCard(userId: String, cardId: String, pin: String): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val request = mapOf(
+                    "userId" to userId,
+                    "cardId" to cardId,
+                    "pin" to pin
+                )
+                val response = adminApi.issueCard(request)
+                if (response.isSuccessful && response.body()?.success == true) {
+                    Result.Success(Unit)
+                } else {
+                    Result.Error("Failed to issue card")
+                }
+            } catch (e: Exception) {
+                Result.Error(e.message ?: "Network error occurred")
+            }
+        }
+    }
 }

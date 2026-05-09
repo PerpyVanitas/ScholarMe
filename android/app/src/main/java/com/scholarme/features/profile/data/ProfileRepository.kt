@@ -27,10 +27,10 @@ class ProfileRepository @Inject constructor(
                     val profile = response.body()?.data
                     if (profile != null) {
                         tokenManager.saveUserInfo(
-                            userId = profile.id,
-                            email = profile.email,
-                            fullName = profile.fullName,
-                            role = profile.role
+                            userId = profile.id ?: "",
+                            email = profile.email ?: "",
+                            fullName = profile.fullName ?: "",
+                            role = profile.role ?: "learner"
                         )
                         Result.Success(profile)
                     } else {
@@ -71,10 +71,10 @@ class ProfileRepository @Inject constructor(
                     val profile = response.body()?.data
                     if (profile != null) {
                         tokenManager.saveUserInfo(
-                            userId = profile.id,
-                            email = profile.email,
-                            fullName = profile.fullName,
-                            role = profile.role
+                            userId = profile.id ?: "",
+                            email = profile.email ?: "",
+                            fullName = profile.fullName ?: "",
+                            role = profile.role ?: "learner"
                         )
                         Result.Success(profile)
                     } else {

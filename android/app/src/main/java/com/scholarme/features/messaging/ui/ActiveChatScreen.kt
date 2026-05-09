@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontWeight
 import com.scholarme.features.messaging.data.model.MessageDto
 
 @OptIn(ExperimentalMaterial3Api::class)

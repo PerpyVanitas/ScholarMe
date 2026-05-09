@@ -35,8 +35,8 @@ fun SessionDto.toEntity(): SessionEntity {
         tutorAvatarUrl = this.tutorAvatarUrl,
         learnerId = this.learnerId,
         learnerName = this.learnerName,
-        scheduledAt = this.scheduledAt,
-        durationMinutes = this.durationMinutes,
+        scheduledAt = "${this.scheduledDate} ${this.startTime}",
+        durationMinutes = 60, // Default duration if not provided in DTO
         status = this.status,
         topic = this.topic,
         notes = this.notes,

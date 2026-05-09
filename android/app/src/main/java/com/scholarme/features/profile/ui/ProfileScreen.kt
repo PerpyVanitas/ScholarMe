@@ -19,7 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.scholarme.core.data.model.ProfileDto
+import com.scholarme.features.profile.data.model.ProfileDto
 import com.scholarme.core.util.Result
 import com.scholarme.core.util.ui.AndroidQrIdCard
 

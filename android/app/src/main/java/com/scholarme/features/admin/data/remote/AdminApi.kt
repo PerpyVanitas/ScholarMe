@@ -27,6 +27,11 @@ interface AdminApi {
 
     @GET("admin/cards")
     suspend fun getAdminCards(): Response<ApiResponse<List<AuthCard>>>
+
+    @POST("admin/cards/issue")
+    suspend fun issueCard(
+        @Body request: Map<String, String>
+    ): Response<ApiResponse<Unit>>
     
     @GET("admin/users")
     suspend fun getUsers(

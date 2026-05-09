@@ -6,9 +6,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.scholarme.core.util.Result
 import com.scholarme.features.profile.data.ProfileRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ChangePasswordViewModel(private val repository: ProfileRepository) : ViewModel() {
+@HiltViewModel
+class ChangePasswordViewModel @Inject constructor(
+    private val repository: ProfileRepository
+) : ViewModel() {
     
     private val _changePasswordState = MutableLiveData<Result<Unit>?>()
     val changePasswordState: LiveData<Result<Unit>?> = _changePasswordState

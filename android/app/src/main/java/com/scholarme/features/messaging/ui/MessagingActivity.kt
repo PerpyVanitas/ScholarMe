@@ -10,7 +10,6 @@ import dagger.hilt.android.AndroidEntryPoint
 /**
  * MessagingActivity — entry point for the messaging feature.
  * Hosts the MessagesListScreen and navigates to ActiveChatScreen.
- * Accessible from the bottom navigation for all account types.
  */
 @AndroidEntryPoint
 class MessagingActivity : ComponentActivity() {
@@ -22,28 +21,31 @@ class MessagingActivity : ComponentActivity() {
                 onNavigateBack = { finish() }
             )
         }
-
     }
 }
 
 @Composable
 fun MessagingNavHost(onNavigateBack: () -> Unit) {
     var activeConversationId by remember { mutableStateOf<String?>(null) }
-
+    val viewModel: MessagingViewModel = hiltViewModel()
+    val uiState by viewModel.uiState.collectAsState()
+    val chatState by viewModel.chatState.collectAsState()
 
     if (activeConversationId == null) {
         MessagesListScreen(
+            state = uiState,
             onNavigateToChat = { conversationId ->
                 activeConversationId = conversationId
+                viewModel.loadMessages(conversationId)
             },
             onBackClick = onNavigateBack
         )
     } else {
-
         ActiveChatScreen(
             conversationId = activeConversationId!!,
+            state = chatState,
+            onSendMessage = { viewModel.sendMessage(activeConversationId!!, it) },
             onNavigateBack = { activeConversationId = null }
         )
     }
-
 }

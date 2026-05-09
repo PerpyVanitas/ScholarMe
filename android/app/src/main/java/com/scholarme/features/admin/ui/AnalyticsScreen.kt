@@ -85,10 +85,10 @@ fun AnalyticsScreen(
                 item {
                     ChartCard(title = "Top Specializations", icon = Icons.Default.TrendingUp) {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            analytics.topSpecializations.forEachIndexed { index, spec ->
-                                HorizontalBarItem(
-                                    label = spec,
-                                    value = (100 - (index * 15)).toFloat() / 100f,
+                                analytics.topSpecializations.forEachIndexed { index, spec ->
+                                    HorizontalBarItem(
+                                        label = spec.name,
+                                        value = (100 - (index * 15)).toFloat() / 100f,
                                     color = when(index) {
                                         0 -> MaterialTheme.colorScheme.primary
                                         1 -> MaterialTheme.colorScheme.secondary

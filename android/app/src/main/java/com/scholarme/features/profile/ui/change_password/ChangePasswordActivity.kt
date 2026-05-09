@@ -5,24 +5,20 @@ import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
-import com.scholarme.core.data.local.TokenManager
 import com.scholarme.core.util.Result
 import com.scholarme.databinding.ActivityChangePasswordBinding
-import com.scholarme.features.profile.data.ProfileRepository
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * Change password screen activity.
  * Allows user to change their password.
  */
+@AndroidEntryPoint
 class ChangePasswordActivity : AppCompatActivity() {
     
     private lateinit var binding: ActivityChangePasswordBinding
     
-    private val viewModel: ChangePasswordViewModel by viewModels {
-        ChangePasswordViewModelFactory(
-            ProfileRepository(TokenManager.getInstance(this))
-        )
-    }
+    private val viewModel: ChangePasswordViewModel by viewModels()
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

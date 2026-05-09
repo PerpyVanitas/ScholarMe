@@ -21,7 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.scholarme.core.data.model.SessionDto
+import com.scholarme.features.sessions.data.model.SessionDto
 
 @Composable
 fun DashboardScreen(
@@ -219,7 +219,7 @@ fun SessionItem(session: SessionDto, onClick: () -> Unit) {
                 shape = RoundedCornerShape(100.dp)
             ) {
                 Text(
-                    session.status.replaceFirstChar { it.uppercase() },
+                    session.status.replaceFirstChar { it.uppercaseChar() },
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold

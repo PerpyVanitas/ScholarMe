@@ -17,11 +17,8 @@ class LeaderboardViewModel @Inject constructor(
     private val repository: GamificationRepository
 ) : ViewModel() {
 
-    private val _leaderboard = MutableStateFlow<List<LeaderboardEntry>>(emptyList())
-    val leaderboard: StateFlow<List<LeaderboardEntry>> = _leaderboard.asStateFlow()
-
-    private val _isLoading = MutableStateFlow(true)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    private val _uiState = MutableStateFlow<Result<List<LeaderboardEntry>>>(Result.Loading)
+    val uiState: StateFlow<Result<List<LeaderboardEntry>>> = _uiState.asStateFlow()
 
     init {
         loadLeaderboard()
@@ -29,12 +26,12 @@ class LeaderboardViewModel @Inject constructor(
 
     fun loadLeaderboard() {
         viewModelScope.launch {
-            _isLoading.value = true
+            _uiState.value = Result.Loading
             when (val result = repository.getLeaderboard()) {
-                is Result.Success -> _leaderboard.value = result.data.leaderboard
+                is Result.Success -> _uiState.value = Result.Success(result.data.leaderboard)
+                is Result.Error -> _uiState.value = Result.Error(result.message)
                 else -> {}
             }
-            _isLoading.value = false
         }
     }
 }

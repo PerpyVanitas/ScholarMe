@@ -12,16 +12,19 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+data class VotingListState(
+    val polls: List<PollDto> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null
+)
+
 @HiltViewModel
 class VotingViewModel @Inject constructor(
     private val repository: VotingRepository
 ) : ViewModel() {
 
-    private val _polls = MutableStateFlow<List<PollDto>>(emptyList())
-    val polls: StateFlow<List<PollDto>> = _polls.asStateFlow()
-
-    private val _isLoading = MutableStateFlow(true)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    private val _uiState = MutableStateFlow(VotingListState())
+    val uiState: StateFlow<VotingListState> = _uiState.asStateFlow()
 
     init {
         loadPolls()
@@ -29,14 +32,25 @@ class VotingViewModel @Inject constructor(
 
     private fun loadPolls() {
         viewModelScope.launch {
-            _isLoading.value = true
+            _uiState.value = _uiState.value.copy(isLoading = true)
             when (val result = repository.getActivePolls()) {
                 is Result.Success -> {
-                    _polls.value = result.data
+                    _uiState.value = _uiState.value.copy(
+                        polls = result.data,
+                        isLoading = false,
+                        error = null
+                    )
                 }
-                else -> {}
+                is Result.Error -> {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = result.message
+                    )
+                }
+                else -> {
+                    _uiState.value = _uiState.value.copy(isLoading = false)
+                }
             }
-            _isLoading.value = false
         }
     }
 
