@@ -2,8 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { Profile, UserRole, Role } from "@/lib/types";
-import { normalizeRole } from "@/lib/utils/roles";
+import type { Profile, UserRole } from "@/lib/types";
 import { DEMO_USERS, getDemoUserFromCookie } from "@/lib/demo";
 
 interface UserContextType {
@@ -18,40 +17,6 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-/**
- * Resolve the UserRole for a given profile.
- *
- * Strategy (in order):
- * 1. Use the embedded `roles` join from the profile query (fastest, no extra round-trip)
- * 2. If join returned null (RLS block / missing FK), fetch the role directly via role_id
- * 3. Fall back to "learner" if both fail
- */
-async function resolveRole(
-  supabase: ReturnType<typeof createClient>,
-  p: { roles?: unknown; role_id?: string | null },
-  fallback: UserRole = "learner"
-): Promise<UserRole> {
-  // Attempt 1: embedded join
-  const fromJoin = normalizeRole(p.roles as Role | Role[] | undefined | null);
-  if (fromJoin?.name) {
-    return fromJoin.name as UserRole;
-  }
-
-  // Attempt 2: direct lookup via role_id
-  if (p.role_id) {
-    const { data: roleRow } = await supabase
-      .from("roles")
-      .select("name")
-      .eq("id", p.role_id)
-      .maybeSingle();
-    if (roleRow?.name) {
-      return roleRow.name as UserRole;
-    }
-  }
-
-  return fallback;
-}
-
 export function UserProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<UserRole>("learner");
@@ -65,25 +30,21 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     if (user) {
       setIsAuthenticated(true);
-
-      // Use explicit FK hint `roles!role_id` to avoid PostgREST ambiguity
-      const { data: p, error: profileError } = await supabase
+      const { data: p } = await supabase
         .from("profiles")
-        .select("id, email, full_name, first_name, last_name, avatar_url, phone_number, birthdate, date_of_birth, membership_number, role_id, created_at, roles:roles!role_id(id, name)")
+        .select("id, email, full_name, first_name, last_name, avatar_url, phone_number, birthdate, date_of_birth, membership_number, role_id, created_at, roles(id, name)")
         .eq("id", user.id)
         .maybeSingle();
 
-      if (profileError) {
-        console.error("[UserContext] profile fetch error:", profileError.message);
-      }
-
       if (p) {
-        const resolvedRole = await resolveRole(supabase, p);
-        const roleObj = normalizeRole(p.roles as Role | Role[] | undefined);
-        setProfile({ ...p, roles: roleObj ?? undefined } as Profile);
-        setRole(resolvedRole);
+        setProfile({
+          ...p,
+          roles: Array.isArray(p.roles) ? p.roles : undefined,
+        } as Profile);
+        const roleName = Array.isArray(p.roles) && p.roles.length > 0 ? p.roles[0].name : "learner";
+        setRole(roleName as UserRole);
       } else {
-        // Profile not found — create a minimal fallback
+        // Profile not found, create a fallback
         setProfile({
           id: user.id,
           full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
@@ -91,6 +52,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           avatar_url: null,
           created_at: user.created_at || new Date().toISOString(),
           role_id: null,
+          roles: [{ id: "fallback", name: "learner" }],
         } as Profile);
         setRole("learner");
       }
@@ -106,19 +68,19 @@ export function UserProvider({ children }: { children: ReactNode }) {
       // Demo mode fallback
       setIsAuthenticated(false);
       const { role: demoRole, userId: demoUserId } = getDemoUserFromCookie("learner");
-      const supabase = createClient();
-
       const { data: demoProfile } = await supabase
         .from("profiles")
-        .select("id, email, full_name, avatar_url, role_id, created_at, roles:roles!role_id(id, name)")
+        .select("id, email, full_name, avatar_url, role_id, created_at, roles(id, name)")
         .eq("id", demoUserId)
         .maybeSingle();
 
       if (demoProfile) {
-        const resolvedRole = await resolveRole(supabase, demoProfile, demoRole as UserRole);
-        const roleObj = normalizeRole(demoProfile.roles as Role | Role[] | undefined);
-        setProfile({ ...demoProfile, roles: roleObj ?? undefined } as Profile);
-        setRole(resolvedRole);
+        setProfile({
+          ...demoProfile,
+          roles: Array.isArray(demoProfile.roles) ? demoProfile.roles : undefined,
+        } as Profile);
+        const roleName = Array.isArray(demoProfile.roles) && demoProfile.roles.length > 0 ? demoProfile.roles[0].name : demoRole;
+        setRole(roleName as UserRole);
       } else {
         const demoInfo = DEMO_USERS[demoRole as keyof typeof DEMO_USERS] || DEMO_USERS.learner;
         setProfile({
@@ -128,8 +90,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
           avatar_url: null,
           created_at: new Date().toISOString(),
           role_id: null,
+          roles: [{ id: "demo-role", name: demoRole }],
         } as Profile);
-        setRole(demoRole as UserRole);
+        setRole(demoRole);
       }
     }
 
@@ -150,6 +113,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     loadUserData();
 
+    // Listen for auth state changes
     const supabase = createClient();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") {

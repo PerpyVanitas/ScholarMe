@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
 import { useInactivityTimeout } from "@/hooks/use-inactivity-timeout";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -9,14 +8,8 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { UserProvider, useUser } from "@/lib/user-context";
 import { Loader2 } from "lucide-react";
 
-// MessageToastProvider is disabled until messaging tables exist in Supabase.
-// To re-enable: create conversations, conversation_participants, messages tables
-// then uncomment: import { MessageToastProvider } from "@/components/messages/message-toast-provider";
-
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const { profile, role, loading, notificationCount } = useUser();
-  const [messageCount] = useState(0);
-  // Message count will be wired once messaging tables are created in Supabase
 
   useInactivityTimeout();
 
@@ -34,7 +27,6 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
         profile={profile!}
         role={role}
         notificationCount={notificationCount}
-        messageCount={messageCount}
       />
       <SidebarInset>
         <header className="flex h-14 items-center gap-2 border-b border-border/60 px-4">
@@ -48,7 +40,6 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </SidebarInset>
-      {/* MessageToastProvider disabled — messaging tables not yet in Supabase */}
     </SidebarProvider>
   );
 }

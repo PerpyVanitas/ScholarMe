@@ -43,7 +43,6 @@ import {
   Timer,
   Vote,
   Lightbulb,
-  MessageSquare,
 } from "lucide-react";
 import { signOut } from "@/app/auth/actions";
 
@@ -51,66 +50,47 @@ interface AppSidebarProps {
   profile: Profile;
   role: UserRole;
   notificationCount: number;
-  messageCount?: number;
 }
 
 function getNavItems(role: UserRole) {
-  // Shared across all roles
-  const common = [
+  const shared = [
     { title: "Dashboard", href: "/dashboard/home", icon: LayoutDashboard },
+    { title: "Voting", href: "/dashboard/voting", icon: Vote },
     { title: "Notifications", href: "/dashboard/notifications", icon: Bell },
     { title: "Profile", href: "/dashboard/profile", icon: UserCircle },
   ];
 
-  if (role === "administrator") {
-    return {
-      shared: [
-        ...common,
-        { title: "Messages", href: "/dashboard/messages", icon: MessageSquare, badge: "messages" },
-        { title: "Voting", href: "/dashboard/voting", icon: Vote },
-      ],
-      roleSpecific: [
-        { title: "Users", href: "/dashboard/admin/users", icon: Users },
-        { title: "Cards", href: "/dashboard/admin/cards", icon: CreditCard },
-        { title: "All Sessions", href: "/dashboard/admin/sessions", icon: Calendar },
-        { title: "Timesheets", href: "/dashboard/admin/timesheets", icon: Timer },
-        { title: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
-      ],
-    };
-  }
+  const learnerItems = [
+    { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
+    { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
+    { title: "Resources", href: "/dashboard/resources", icon: BookOpen },
+    { title: "Study Quizzes", href: "/dashboard/quizzes", icon: Lightbulb },
+  ];
 
-  if (role === "tutor") {
-    return {
-      shared: [
-        ...common,
-        { title: "Messages", href: "/dashboard/messages", icon: MessageSquare, badge: "messages" },
-        { title: "Voting", href: "/dashboard/voting", icon: Vote },
-      ],
-      roleSpecific: [
-        { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
-        { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
-        { title: "Availability", href: "/dashboard/availability", icon: Clock },
-        { title: "Timesheet", href: "/dashboard/timesheet", icon: Timer },
-        { title: "My Repositories", href: "/dashboard/resources", icon: FolderOpen },
-        { title: "Study Sets", href: "/dashboard/quizzes", icon: Lightbulb },
-      ],
-    };
-  }
+  const tutorItems = [
+    { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
+    { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
+    { title: "Timesheet", href: "/dashboard/timesheet", icon: Timer },
+    { title: "Availability", href: "/dashboard/availability", icon: Clock },
+    { title: "My Repositories", href: "/dashboard/resources", icon: FolderOpen },
+  ];
 
-  // Learner (default)
-  return {
-    shared: [
-      ...common,
-      { title: "Messages", href: "/dashboard/messages", icon: MessageSquare, badge: "messages" },
-      { title: "Voting", href: "/dashboard/voting", icon: Vote },
-    ],
-    roleSpecific: [
-      { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
-      { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
-      { title: "Resources", href: "/dashboard/resources", icon: BookOpen },
-      { title: "Study Sets", href: "/dashboard/quizzes", icon: Lightbulb },
-    ],
+  const adminItems = [
+    { title: "Users", href: "/dashboard/admin/users", icon: Users },
+    { title: "Cards", href: "/dashboard/admin/cards", icon: CreditCard },
+    { title: "All Sessions", href: "/dashboard/admin/sessions", icon: Calendar },
+    { title: "Timesheets", href: "/dashboard/admin/timesheets", icon: Timer },
+    { title: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
+    { title: "Resources", href: "/dashboard/resources", icon: FolderOpen },
+  ];
+
+  const roleItems = {
+    learner: learnerItems,
+    tutor: tutorItems,
+    administrator: adminItems,
   };
+
+  return { shared, roleSpecific: roleItems[role] || learnerItems };
 }
 
 const roleLabels: Record<UserRole, string> = {
@@ -119,7 +99,7 @@ const roleLabels: Record<UserRole, string> = {
   administrator: "Admin",
 };
 
-export function AppSidebar({ profile, role, notificationCount, messageCount = 0 }: AppSidebarProps) {
+export function AppSidebar({ profile, role, notificationCount }: AppSidebarProps) {
   const pathname = usePathname();
   const { shared, roleSpecific } = getNavItems(role);
   const initials = profile?.full_name
@@ -176,11 +156,6 @@ export function AppSidebar({ profile, role, notificationCount, messageCount = 0 
                       {item.title === "Notifications" && notificationCount > 0 && (
                         <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium text-primary-foreground">
                           {notificationCount > 99 ? "99+" : notificationCount}
-                        </span>
-                      )}
-                      {item.title === "Messages" && messageCount > 0 && (
-                        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-500 px-1 text-[10px] font-medium text-white">
-                          {messageCount > 99 ? "99+" : messageCount}
                         </span>
                       )}
                     </Link>

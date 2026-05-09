@@ -1,13 +1,18 @@
 package com.scholarme.features.voting.data
 
-import com.scholarme.core.data.local.TokenManager
-import com.scholarme.core.data.remote.ApiClient
-import com.scholarme.core.data.remote.ApiService
-import com.scholarme.core.data.model.AndroidVoteRequest
 import com.scholarme.core.network.NetworkResult
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+
+data class PollDto(
+    val id: String,
+    val title: String,
+    val description: String,
+    val options: List<PollOptionDto>,
+    val userVotedOptionId: String? = null
+)
 
 data class PollOptionDto(
     val id: String,
@@ -15,71 +20,44 @@ data class PollOptionDto(
     val voteCount: Int
 )
 
-data class PollDto(
-    val id: String,
-    val title: String,
-    val description: String,
-    val options: List<PollOptionDto>,
-    val userVotedOptionId: String? = null,
-    val hasVoted: Boolean = false
-)
-
-class VotingRepository @Inject constructor(
-    private val tokenManager: TokenManager,
-    private val apiService: ApiService
-) {
-    // Secondary constructor for non-Hilt usage
-    constructor(tokenManager: TokenManager) : this(tokenManager, ApiClient.apiService)
-
-    private fun getBearerToken(): String? {
-        val token = tokenManager.getAccessToken()
-        return if (token != null) "Bearer $token" else null
-    }
+class VotingRepository @Inject constructor() {
+    
+    private val mockPolls = mutableListOf(
+        PollDto(
+            id = "p1",
+            title = "Next Semester Workshop Topics",
+            description = "What should be the focus of our next student workshop?",
+            options = listOf(
+                PollOptionDto("o1", "Resume Building", 45),
+                PollOptionDto("o2", "Interview Prep", 30),
+                PollOptionDto("o3", "Time Management", 15)
+            )
+        )
+    )
 
     suspend fun getActivePolls(): NetworkResult<List<PollDto>> {
         return withContext(Dispatchers.IO) {
-            try {
-                val token = getBearerToken()
-                    ?: return@withContext NetworkResult.Error("Not authenticated")
-
-                val response = apiService.getPolls(token)
-                if (response.isSuccessful && response.body()?.success == true) {
-                    val polls = response.body()?.data?.polls ?: emptyList()
-                    NetworkResult.Success(polls.map { p ->
-                        PollDto(
-                            id = p.id,
-                            title = p.title,
-                            description = p.description ?: "",
-                            options = p.options.map { o ->
-                                PollOptionDto(id = o.id, text = o.text, voteCount = o.voteCount)
-                            },
-                            userVotedOptionId = p.userVotedOptionIds.firstOrNull(),
-                            hasVoted = p.hasVoted
-                        )
-                    })
-                } else {
-                    NetworkResult.Error(response.body()?.error?.message ?: "Failed to load polls")
-                }
-            } catch (e: Exception) {
-                NetworkResult.Error(e.message ?: "Network error")
-            }
+            delay(700)
+            NetworkResult.Success(mockPolls.toList())
         }
     }
 
     suspend fun castVote(pollId: String, optionId: String): NetworkResult<Unit> {
         return withContext(Dispatchers.IO) {
-            try {
-                val token = getBearerToken()
-                    ?: return@withContext NetworkResult.Error("Not authenticated")
-
-                val response = apiService.castVote(token, pollId, AndroidVoteRequest(optionId))
-                if (response.isSuccessful && response.body()?.success == true) {
-                    NetworkResult.Success(Unit)
-                } else {
-                    NetworkResult.Error(response.body()?.error?.message ?: "Failed to cast vote")
+            delay(500)
+            
+            // Mock vote casting logic
+            val pollIndex = mockPolls.indexOfFirst { it.id == pollId }
+            if (pollIndex != -1) {
+                val poll = mockPolls[pollIndex]
+                val updatedOptions = poll.options.map { option ->
+                    if (option.id == optionId) option.copy(voteCount = option.voteCount + 1)
+                    else option
                 }
-            } catch (e: Exception) {
-                NetworkResult.Error(e.message ?: "Network error")
+                mockPolls[pollIndex] = poll.copy(options = updatedOptions, userVotedOptionId = optionId)
+                NetworkResult.Success(Unit)
+            } else {
+                NetworkResult.Error("Poll not found")
             }
         }
     }

@@ -1,7 +1,6 @@
 /** Admin analytics page — org-wide stat cards, charts, and admin account creation. */
 "use client";
 
-import { RoleGate } from "@/components/auth/role-gate";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -44,14 +43,6 @@ const CHART_COLORS = [
 ];
 
 export default function AdminAnalyticsPage() {
-  return (
-    <RoleGate allowedRoles={["administrator"]}>
-      <AdminAnalyticsContent />
-    </RoleGate>
-  );
-}
-
-function AdminAnalyticsContent() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [roleBreakdown, setRoleBreakdown] = useState<{ name: string; value: number }[]>([]);
   const [sessionsByStatus, setSessionsByStatus] = useState<{ name: string; value: number }[]>([]);

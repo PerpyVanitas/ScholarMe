@@ -1,10 +1,8 @@
 package com.scholarme.features.messaging.data
 
-import com.scholarme.core.data.local.TokenManager
-import com.scholarme.core.data.remote.ApiClient
-import com.scholarme.core.data.remote.ApiService
 import com.scholarme.core.network.NetworkResult
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.util.Date
 import javax.inject.Inject
@@ -15,8 +13,7 @@ data class MessageDto(
     val senderId: String,
     val createdAt: Date,
     val senderName: String,
-    val senderAvatar: String? = null,
-    val isOwn: Boolean = false
+    val senderAvatar: String? = null
 )
 
 data class ConversationDto(
@@ -28,102 +25,67 @@ data class ConversationDto(
     val avatarUrl: String? = null
 )
 
-class MessagingRepository @Inject constructor(
-    private val tokenManager: TokenManager,
-    private val apiService: ApiService
-) {
-    // Secondary constructor for non-Hilt usage
-    constructor(tokenManager: TokenManager) : this(tokenManager, ApiClient.apiService)
+class MessagingRepository @Inject constructor() {
+    
+    // Mock conversations for UI validation before backend API is ready
+    private val mockConversations = mutableListOf(
+        ConversationDto(
+            id = "c1",
+            title = "Dr. Alan Turing",
+            lastMessage = "Yes, the homework is due on Friday.",
+            updatedAt = Date(),
+            unreadCount = 2
+        ),
+        ConversationDto(
+            id = "c2",
+            title = "Study Group A",
+            lastMessage = "Who wants to meet at the library?",
+            updatedAt = Date(System.currentTimeMillis() - 86400000)
+        )
+    )
 
-    private fun getBearerToken(): String? {
-        val token = tokenManager.getAccessToken()
-        return if (token != null) "Bearer $token" else null
-    }
+    private val mockMessages = mutableListOf(
+        MessageDto("m1", "Hello! I have a question about chapter 4.", "me", Date(System.currentTimeMillis() - 3600000), "Me"),
+        MessageDto("m2", "Sure, what's your question?", "tutor1", Date(System.currentTimeMillis() - 3500000), "Dr. Alan Turing"),
+        MessageDto("m3", "Yes, the homework is due on Friday.", "tutor1", Date(), "Dr. Alan Turing")
+    )
 
     suspend fun getConversations(): NetworkResult<List<ConversationDto>> {
         return withContext(Dispatchers.IO) {
-            try {
-                val token = getBearerToken()
-                    ?: return@withContext NetworkResult.Error("Not authenticated")
-
-                val response = apiService.getConversations(token)
-                if (response.isSuccessful && response.body()?.success == true) {
-                    val conversations = response.body()?.data?.conversations ?: emptyList()
-                    NetworkResult.Success(conversations.map { c ->
-                        ConversationDto(
-                            id = c.id,
-                            title = c.title,
-                            lastMessage = c.lastMessage,
-                            updatedAt = try { Date(c.updatedAt) } catch (_: Exception) { Date() },
-                            unreadCount = c.unreadCount,
-                            avatarUrl = c.avatarUrl
-                        )
-                    })
-                } else {
-                    NetworkResult.Error(response.body()?.error?.message ?: "Failed to load conversations")
-                }
-            } catch (e: Exception) {
-                NetworkResult.Error(e.message ?: "Network error")
-            }
+            delay(500)
+            NetworkResult.Success(mockConversations.toList())
         }
     }
 
     suspend fun getMessages(conversationId: String): NetworkResult<List<MessageDto>> {
         return withContext(Dispatchers.IO) {
-            try {
-                val token = getBearerToken()
-                    ?: return@withContext NetworkResult.Error("Not authenticated")
-
-                val response = apiService.getMessages(token, conversationId)
-                if (response.isSuccessful && response.body()?.success == true) {
-                    val messages = response.body()?.data?.messages ?: emptyList()
-                    NetworkResult.Success(messages.map { m ->
-                        MessageDto(
-                            id = m.id,
-                            content = m.content,
-                            senderId = m.senderId,
-                            createdAt = try { Date(m.createdAt) } catch (_: Exception) { Date() },
-                            senderName = m.senderName,
-                            senderAvatar = m.senderAvatar,
-                            isOwn = m.isOwn
-                        )
-                    })
-                } else {
-                    NetworkResult.Error(response.body()?.error?.message ?: "Failed to load messages")
-                }
-            } catch (e: Exception) {
-                NetworkResult.Error(e.message ?: "Network error")
-            }
+            delay(400)
+            NetworkResult.Success(mockMessages.toList())
         }
     }
 
     suspend fun sendMessage(conversationId: String, content: String): NetworkResult<MessageDto> {
         return withContext(Dispatchers.IO) {
-            try {
-                val token = getBearerToken()
-                    ?: return@withContext NetworkResult.Error("Not authenticated")
-
-                val response = apiService.sendMessage(
-                    token,
-                    conversationId,
-                    com.scholarme.core.data.model.AndroidSendMessageRequest(content)
+            delay(300)
+            val newMsg = MessageDto(
+                id = System.currentTimeMillis().toString(),
+                content = content,
+                senderId = "me", // Current user
+                createdAt = Date(),
+                senderName = "Me"
+            )
+            mockMessages.add(newMsg)
+            
+            // Update conversation lastMessage
+            val idx = mockConversations.indexOfFirst { it.id == conversationId }
+            if (idx != -1) {
+                mockConversations[idx] = mockConversations[idx].copy(
+                    lastMessage = content,
+                    updatedAt = Date()
                 )
-                if (response.isSuccessful && response.body()?.success == true) {
-                    val m = response.body()!!.data!!
-                    NetworkResult.Success(MessageDto(
-                        id = m.id,
-                        content = m.content,
-                        senderId = tokenManager.getUserId() ?: "",
-                        createdAt = try { Date(m.createdAt) } catch (_: Exception) { Date() },
-                        senderName = tokenManager.getUserName() ?: "Me",
-                        isOwn = true
-                    ))
-                } else {
-                    NetworkResult.Error(response.body()?.error?.message ?: "Failed to send message")
-                }
-            } catch (e: Exception) {
-                NetworkResult.Error(e.message ?: "Network error")
             }
+            
+            NetworkResult.Success(newMsg)
         }
     }
 }
