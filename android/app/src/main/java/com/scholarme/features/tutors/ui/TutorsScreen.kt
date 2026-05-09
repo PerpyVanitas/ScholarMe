@@ -11,13 +11,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.scholarme.features.tutors.data.model.TutorDto
+import com.scholarme.core.util.ui.ShimmerTutorCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TutorsScreen(
     state: TutorListState,
+    onSearchQueryChanged: (String) -> Unit,
     onTutorClick: (String) -> Unit
 ) {
     Scaffold(
@@ -37,19 +38,22 @@ fun TutorsScreen(
                 .padding(horizontal = 16.dp)
         ) {
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = state.searchQuery,
+                onValueChange = onSearchQueryChanged,
                 placeholder = { Text("Search subjects or names...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
                 modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.medium
+                shape = MaterialTheme.shapes.medium,
+                singleLine = true
             )
             
             Spacer(modifier = Modifier.height(16.dp))
 
             if (state.isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    items(5) {
+                        ShimmerTutorCard()
+                    }
                 }
             } else if (state.error != null) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -59,11 +63,11 @@ fun TutorsScreen(
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(state.tutors) { tutor ->
+                    items(state.filteredTutors) { tutor ->
                         TutorCard(tutor = tutor, onClick = { onTutorClick(tutor.id) })
                     }
                     
-                    if (state.tutors.isEmpty()) {
+                    if (state.filteredTutors.isEmpty()) {
                         item {
                             Text("No tutors available", modifier = Modifier.padding(16.dp))
                         }

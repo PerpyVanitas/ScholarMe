@@ -9,6 +9,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.navigation.navArgument
 import com.scholarme.core.util.Result
 import com.scholarme.features.dashboard.domain.model.Session
@@ -45,7 +47,19 @@ fun AppNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = startDestination
+        startDestination = startDestination,
+        enterTransition = {
+            slideInHorizontally(initialOffsetX = { 1000 }, animationSpec = tween(400)) + fadeIn(animationSpec = tween(400))
+        },
+        exitTransition = {
+            slideOutHorizontally(targetOffsetX = { -1000 }, animationSpec = tween(400)) + fadeOut(animationSpec = tween(400))
+        },
+        popEnterTransition = {
+            slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(400)) + fadeIn(animationSpec = tween(400))
+        },
+        popExitTransition = {
+            slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(400)) + fadeOut(animationSpec = tween(400))
+        }
     ) {
         // Dashboard
         composable(Screen.Dashboard.route) {
@@ -59,7 +73,7 @@ fun AppNavHost(
                 onStudyClick = { navController.navigate(Screen.ResourceDirectory.route) },
                 onQuizClick = { navController.navigate(Screen.QuizList.route) },
                 onProfileClick = { navController.navigate(Screen.Profile.route) },
-                onSessionClick = { /* Handle session detail */ }
+                onSessionClick = { navController.navigate(Screen.SessionManagement.route) }
             )
         }
 
@@ -86,6 +100,7 @@ fun AppNavHost(
             val state by viewModel.uiState.collectAsState()
             TutorsScreen(
                 state = state,
+                onSearchQueryChanged = { viewModel.onSearchQueryChanged(it) },
                 onTutorClick = { tutorId ->
                     navController.navigate(Screen.TutorProfile.createRoute(tutorId))
                 }

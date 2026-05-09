@@ -6,14 +6,14 @@ import com.scholarme.core.util.Result
 import com.scholarme.features.tutors.data.model.TutorDto
 import com.scholarme.features.tutors.data.TutorRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class TutorListState(
     val tutors: List<TutorDto> = emptyList(),
+    val filteredTutors: List<TutorDto> = emptyList(),
+    val searchQuery: String = "",
     val isLoading: Boolean = false,
     val error: String? = null
 )
@@ -37,6 +37,7 @@ class TutorViewModel @Inject constructor(
                 is Result.Success -> {
                     _uiState.value = _uiState.value.copy(
                         tutors = result.data.tutors,
+                        filteredTutors = result.data.tutors,
                         isLoading = false
                     )
                 }
@@ -51,5 +52,20 @@ class TutorViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun onSearchQueryChanged(query: String) {
+        val filtered = if (query.isEmpty()) {
+            _uiState.value.tutors
+        } else {
+            _uiState.value.tutors.filter {
+                it.fullName.contains(query, ignoreCase = true) ||
+                it.bio.contains(query, ignoreCase = true)
+            }
+        }
+        _uiState.value = _uiState.value.copy(
+            searchQuery = query,
+            filteredTutors = filtered
+        )
     }
 }

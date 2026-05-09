@@ -20,7 +20,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.scholarme.features.dashboard.domain.model.Session
 
 @Composable
@@ -161,7 +163,10 @@ fun SessionItem(session: Session, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
-                model = session.tutorAvatarUrl ?: "https://api.dicebear.com/7.x/avataaars/svg?seed=${session.tutorName}",
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(session.tutorAvatarUrl ?: "https://api.dicebear.com/7.x/avataaars/svg?seed=${session.tutorName}")
+                    .crossfade(true)
+                    .build(),
                 contentDescription = null,
                 modifier = Modifier
                     .size(56.dp)

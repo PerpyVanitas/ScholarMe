@@ -7,6 +7,7 @@ import com.scholarme.BuildConfig
 import com.scholarme.core.data.local.TokenManager
 import com.scholarme.core.data.remote.AuthInterceptor
 import com.scholarme.core.data.remote.NetworkErrorInterceptor
+import com.scholarme.core.data.remote.TelemetryInterceptor
 import com.scholarme.features.admin.data.remote.AdminApi
 import com.scholarme.features.auth.data.remote.AuthApi
 import com.scholarme.features.dashboard.data.remote.DashboardApi
@@ -61,9 +62,16 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideTelemetryInterceptor(): TelemetryInterceptor {
+        return TelemetryInterceptor()
+    }
+
+    @Provides
+    @Singleton
     fun provideOkHttpClient(
         authInterceptor: AuthInterceptor,
-        networkErrorInterceptor: NetworkErrorInterceptor
+        networkErrorInterceptor: NetworkErrorInterceptor,
+        telemetryInterceptor: TelemetryInterceptor
     ): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = if (BuildConfig.DEBUG) {
@@ -76,6 +84,7 @@ object NetworkModule {
         return OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
             .addInterceptor(networkErrorInterceptor)
+            .addInterceptor(telemetryInterceptor)
             .addInterceptor(loggingInterceptor)
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
