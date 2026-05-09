@@ -12,7 +12,7 @@ import androidx.navigation.compose.rememberNavController
 import com.scholarme.core.data.local.TokenManager
 import com.scholarme.core.navigation.AppNavHost
 import com.scholarme.core.navigation.Screen
-import com.scholarme.core.ui.theme.ScholarMeTheme
+import com.scholarme.core.theme.ScholarMeTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 

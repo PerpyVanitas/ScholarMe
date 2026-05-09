@@ -1,33 +1,25 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 package com.scholarme.features.tutors.ui
 
-
 import androidx.compose.foundation.layout.*
-
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.scholarme.features.tutors.data.TutorDto
+import com.scholarme.features.tutors.data.model.TutorDto
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TutorsScreen(
-    viewModel: TutorViewModel = hiltViewModel(),
+    state: TutorListState,
     onTutorClick: (String) -> Unit
 ) {
-    val state by viewModel.state.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -44,7 +36,6 @@ fun TutorsScreen(
                 .padding(padding)
                 .padding(horizontal = 16.dp)
         ) {
-            // Search Bar (Shadcn style)
             OutlinedTextField(
                 value = "",
                 onValueChange = {},
@@ -56,18 +47,26 @@ fun TutorsScreen(
             
             Spacer(modifier = Modifier.height(16.dp))
 
-            if (isLoading) {
+            if (state.isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             } else if (state.error != null) {
-                Text("Error: ${state.error}", color = MaterialTheme.colorScheme.error)
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Error: ${state.error}", color = MaterialTheme.colorScheme.error)
+                }
             } else {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(state.tutors) { tutor ->
                         TutorCard(tutor = tutor, onClick = { onTutorClick(tutor.id) })
+                    }
+                    
+                    if (state.tutors.isEmpty()) {
+                        item {
+                            Text("No tutors available", modifier = Modifier.padding(16.dp))
+                        }
                     }
                 }
             }

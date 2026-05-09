@@ -38,9 +38,10 @@ data class RegisterResponse(
 @Parcelize
 data class AuthCard(
     val id: String,
+    val cardId: String,
     val userId: String?,
     val userName: String?,
     val pin: String,
     val status: String,
-    val issuedAt: String
+    val createdAt: String
 ) : Parcelable

@@ -2,8 +2,8 @@ package com.scholarme.features.dashboard.data.mapper
 
 import com.scholarme.core.data.local.entity.DashboardStatsEntity
 import com.scholarme.core.data.local.entity.SessionEntity
-import com.scholarme.core.data.model.DashboardStats as DashboardStatsDto
-import com.scholarme.core.data.model.SessionDto
+import com.scholarme.features.dashboard.data.model.DashboardStats as DashboardStatsDto
+import com.scholarme.features.sessions.data.model.SessionDto
 import com.scholarme.features.dashboard.domain.model.DashboardStats
 import com.scholarme.features.dashboard.domain.model.Session
 

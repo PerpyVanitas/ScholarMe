@@ -34,10 +34,10 @@ class AuthRepository @Inject constructor(
                         
                         tokenManager.saveAccessToken(data.token)
                         tokenManager.saveUserInfo(
-                            userId = user.id,
-                            email = user.email,
-                            fullName = user.fullName,
-                            role = user.role
+                            userId = user.id ?: "",
+                            email = user.email ?: "",
+                            fullName = user.fullName ?: "",
+                            role = user.role ?: "learner"
                         )
                         Result.Success(user)
                     } else {
@@ -72,10 +72,10 @@ class AuthRepository @Inject constructor(
 
                         tokenManager.saveAccessToken(token)
                         tokenManager.saveUserInfo(
-                            userId = user.id,
-                            email = user.email,
-                            fullName = user.fullName,
-                            role = user.role
+                            userId = user.id ?: "",
+                            email = user.email ?: "",
+                            fullName = user.fullName ?: "",
+                            role = user.role ?: "learner"
                         )
                         Result.Success(user.id ?: "")
 

@@ -2,7 +2,7 @@ package com.scholarme.core.data.local.db
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.scholarme.core.data.model.StudySetItem
+import com.scholarme.features.quizzes.data.model.StudySetItem
 
 @Entity(tableName = "offline_study_sets")
 data class StudySetEntity(

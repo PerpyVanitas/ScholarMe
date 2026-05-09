@@ -5,24 +5,20 @@ import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
-import com.scholarme.core.data.local.TokenManager
 import com.scholarme.core.util.Result
 import com.scholarme.databinding.ActivityRegisterBinding
-import com.scholarme.features.auth.data.AuthRepository
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * Registration screen activity.
  * Handles new user account creation.
  */
+@AndroidEntryPoint
 class RegisterActivity : AppCompatActivity() {
     
     private lateinit var binding: ActivityRegisterBinding
     
-    private val viewModel: RegisterViewModel by viewModels {
-        RegisterViewModelFactory(
-            AuthRepository(TokenManager.getInstance(this))
-        )
-    }
+    private val viewModel: RegisterViewModel by viewModels()
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -3,6 +3,7 @@ plugins {
     kotlin("android")
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
+    id("kotlin-parcelize")
 }
 
 android {
@@ -87,6 +88,7 @@ dependencies {
     
     // Coil for image loading
     implementation("io.coil-kt:coil:2.5.0")
+    implementation("io.coil-kt:coil-compose:2.5.0")
     
     // Retrofit for HTTP
     implementation("com.squareup.retrofit2:retrofit:2.9.0")

@@ -10,13 +10,13 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.scholarme.core.util.Result
 import com.scholarme.features.admin.ui.*
 import com.scholarme.features.dashboard.ui.*
 import com.scholarme.features.profile.ui.*
 import com.scholarme.features.availability.ui.AvailabilityManagerScreen
-
-
 import com.scholarme.features.notifications.ui.NotificationsScreen
+import com.scholarme.features.notifications.ui.NotificationViewModel
 import com.scholarme.features.quizzes.ui.*
 import com.scholarme.features.resources.ui.ResourceDirectoryScreen
 import com.scholarme.features.resources.ui.ResourceViewerScreen
@@ -25,15 +25,19 @@ import com.scholarme.features.sessions.ui.SessionManagementScreen
 import com.scholarme.features.timesheet.ui.TimesheetScreen
 import com.scholarme.features.tutors.ui.TutorProfileScreen
 import com.scholarme.features.tutors.ui.TutorsScreen
+import com.scholarme.features.tutors.ui.TutorViewModel
 import com.scholarme.features.voting.ui.VotingScreen
+import com.scholarme.features.voting.ui.VotingViewModel
 import com.scholarme.features.gamification.ui.LeaderboardScreen
+import com.scholarme.features.gamification.ui.LeaderboardViewModel
 import com.scholarme.features.messaging.ui.MessagesListScreen
 import com.scholarme.features.messaging.ui.ActiveChatScreen
+import com.scholarme.features.messaging.ui.MessagingViewModel
 
 @Composable
 fun AppNavHost(
     navController: NavHostController,
-    startDestination: String = Screen.TutorsDirectory.route
+    startDestination: String = Screen.Dashboard.route
 ) {
     NavHost(
         navController = navController,
@@ -60,7 +64,7 @@ fun AppNavHost(
             val profileState by viewModel.profileState.collectAsState()
             
             ProfileScreen(
-                profileState = (profileState as? Result.Success)?.let { Result.Success(it.data) } ?: Result.Loading,
+                profileState = profileState,
                 onBackClick = { navController.popBackStack() },
                 onEditClick = { /* Handle edit */ },
                 onLogoutClick = {
@@ -73,10 +77,11 @@ fun AppNavHost(
         }
 
         // Tutors Flow
-
-
         composable(Screen.TutorsDirectory.route) {
+            val viewModel: TutorViewModel = hiltViewModel()
+            val state by viewModel.uiState.collectAsState()
             TutorsScreen(
+                state = state,
                 onTutorClick = { tutorId ->
                     navController.navigate(Screen.TutorProfile.createRoute(tutorId))
                 }
@@ -210,21 +215,22 @@ fun AppNavHost(
             }
             
             AnalyticsScreen(
-                analytics = analytics,
+                analytics = (analytics as? Result.Success)?.data,
                 onBackClick = { navController.popBackStack() }
             )
         }
 
         composable(Screen.AdminTimesheets.route) {
             val viewModel: AdminViewModel = hiltViewModel()
-            val timesheets by viewModel.timesheets.collectAsState()
+            val timesheetsState by viewModel.timesheets.collectAsState()
             
             LaunchedEffect(Unit) {
                 viewModel.fetchTimesheets()
             }
             
             AdminTimesheetScreen(
-                timesheets = timesheets,
+                timesheets = (timesheetsState as? Result.Success)?.data ?: emptyList(),
+                isLoading = timesheetsState is Result.Loading,
                 onApprove = { viewModel.approveTimesheet(it) },
                 onReject = { viewModel.rejectTimesheet(it) },
                 onBackClick = { navController.popBackStack() }
@@ -233,14 +239,14 @@ fun AppNavHost(
 
         composable(Screen.AdminCards.route) {
             val viewModel: AdminViewModel = hiltViewModel()
-            val cards by viewModel.cards.collectAsState()
+            val cardsState by viewModel.cards.collectAsState()
             
             LaunchedEffect(Unit) {
                 viewModel.fetchCards()
             }
             
             CardManagementScreen(
-                cards = cards,
+                cards = (cardsState as? Result.Success)?.data ?: emptyList(),
                 onIssueCard = { uid, cid, pin -> viewModel.issueCard(uid, cid, pin) },
                 onBackClick = { navController.popBackStack() }
             )
@@ -249,7 +255,6 @@ fun AppNavHost(
         composable(Screen.AdminScanner.route) {
             AdminScannerScreen(
                 onScanResult = { result ->
-                    // Expected format: scholarme_id:USER_ID:USER_NAME
                     val parts = result.split(":")
                     if (parts.size >= 3 && parts[0] == "scholarme_id") {
                         navController.navigate(Screen.UserAudit.createRoute(parts[1], parts[2])) {
@@ -262,7 +267,6 @@ fun AppNavHost(
         }
 
         composable(Screen.UserManagement.route) {
-
             UserManagementScreen(
                 onBackClick = { navController.popBackStack() },
                 onViewLogsClick = { userId, userName ->
@@ -281,7 +285,7 @@ fun AppNavHost(
             val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
             val userName = backStackEntry.arguments?.getString("userName") ?: "User"
             val viewModel: AdminViewModel = hiltViewModel()
-            val logs by viewModel.auditLogs.collectAsState()
+            val logsState by viewModel.auditLogs.collectAsState()
             
             LaunchedEffect(userId) {
                 viewModel.fetchAuditLogs(userId)
@@ -289,27 +293,46 @@ fun AppNavHost(
             
             UserAuditScreen(
                 userName = userName,
-                logs = logs,
+                logs = (logsState as? Result.Success)?.data ?: emptyList(),
                 onBackClick = { navController.popBackStack() }
             )
         }
 
         // Engagement Flow
         composable(Screen.Notifications.route) {
-            NotificationsScreen()
+            val viewModel: NotificationViewModel = hiltViewModel()
+            val state by viewModel.uiState.collectAsState()
+            NotificationsScreen(
+                state = state,
+                onBackClick = { navController.popBackStack() }
+            )
         }
         
         composable(Screen.Voting.route) {
-            VotingScreen()
+            val viewModel: VotingViewModel = hiltViewModel()
+            val state by viewModel.uiState.collectAsState()
+            VotingScreen(
+                state = state,
+                onBackClick = { navController.popBackStack() }
+            )
         }
         
         composable(Screen.Leaderboard.route) {
-            LeaderboardScreen()
+            val viewModel: LeaderboardViewModel = hiltViewModel()
+            val state by viewModel.uiState.collectAsState()
+            LeaderboardScreen(
+                leaderboard = (state as? Result.Success)?.data ?: emptyList(),
+                currentUserId = "", // Can be retrieved from TokenManager if needed
+                onBackClick = { navController.popBackStack() }
+            )
         }
         
         // Messaging Flow
         composable(Screen.MessagesList.route) {
+            val viewModel: MessagingViewModel = hiltViewModel()
+            val state by viewModel.uiState.collectAsState()
             MessagesListScreen(
+                state = state,
                 onNavigateToChat = { conversationId ->
                     navController.navigate(Screen.ActiveChat.createRoute(conversationId))
                 },
@@ -322,8 +345,17 @@ fun AppNavHost(
             arguments = listOf(navArgument("conversationId") { type = NavType.StringType })
         ) { backStackEntry ->
             val conversationId = backStackEntry.arguments?.getString("conversationId") ?: return@composable
+            val viewModel: MessagingViewModel = hiltViewModel()
+            val state by viewModel.chatState.collectAsState()
+            
+            LaunchedEffect(conversationId) {
+                viewModel.loadMessages(conversationId)
+            }
+            
             ActiveChatScreen(
                 conversationId = conversationId,
+                state = state,
+                onSendMessage = { viewModel.sendMessage(conversationId, it) },
                 onNavigateBack = { navController.popBackStack() }
             )
         }

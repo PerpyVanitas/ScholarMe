@@ -6,26 +6,22 @@ import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
-import com.scholarme.core.data.local.TokenManager
+import com.scholarme.MainActivity
 import com.scholarme.core.util.Result
 import com.scholarme.databinding.ActivityLoginBinding
-import com.scholarme.features.auth.data.AuthRepository
 import com.scholarme.features.auth.ui.register.RegisterActivity
-import com.scholarme.features.dashboard.ui.DashboardActivity
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * Login screen activity.
  * Handles user authentication with email and password.
  */
+@AndroidEntryPoint
 class LoginActivity : AppCompatActivity() {
     
     private lateinit var binding: ActivityLoginBinding
     
-    private val viewModel: LoginViewModel by viewModels {
-        LoginViewModelFactory(
-            AuthRepository(TokenManager.getInstance(this))
-        )
-    }
+    private val viewModel: LoginViewModel by viewModels()
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,8 +59,8 @@ class LoginActivity : AppCompatActivity() {
                     binding.progressBar.visibility = View.GONE
                     binding.btnLogin.isEnabled = true
                     
-                    // Navigate to dashboard
-                    val intent = Intent(this, DashboardActivity::class.java)
+                    // Navigate to MainActivity (Single Activity Entry)
+                    val intent = Intent(this, MainActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     startActivity(intent)
                     finish()

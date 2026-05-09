@@ -1,3 +1,4 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 package com.scholarme.features.messaging.ui
 
 import androidx.compose.foundation.background
@@ -14,42 +15,34 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.scholarme.features.messaging.data.MessageDto
+import com.scholarme.features.messaging.data.model.MessageDto
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActiveChatScreen(
     conversationId: String,
-    viewModel: MessagingViewModel = hiltViewModel(),
+    state: MessagingState,
+    onSendMessage: (String) -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    val messages by viewModel.activeMessages.collectAsState()
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
-    LaunchedEffect(conversationId) {
-        viewModel.loadMessages(conversationId)
-    }
-
-    LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(messages.size - 1)
+    LaunchedEffect(state.activeMessages.size) {
+        if (state.activeMessages.isNotEmpty()) {
+            listState.animateScrollToItem(state.activeMessages.size - 1)
         }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Chat") },
+                title = { Text("Chat", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                }
             )
         },
         bottomBar = {
@@ -69,16 +62,13 @@ fun ActiveChatScreen(
                         onValueChange = { inputText = it },
                         modifier = Modifier.weight(1f),
                         placeholder = { Text("Type a message...") },
-                        shape = RoundedCornerShape(24.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
+                        shape = RoundedCornerShape(24.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     IconButton(
                         onClick = {
                             if (inputText.isNotBlank()) {
-                                viewModel.sendMessage(conversationId, inputText)
+                                onSendMessage(inputText)
                                 inputText = ""
                             }
                         },
@@ -95,17 +85,31 @@ fun ActiveChatScreen(
             }
         }
     ) { padding ->
-        LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(messages) { message ->
-                MessageBubble(message = message, isMe = message.senderId == "me")
+        if (state.isLoading && state.activeMessages.isEmpty()) {
+            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 16.dp),
+                contentPadding = PaddingValues(vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(state.activeMessages) { message ->
+                    MessageBubble(message = message, isMe = message.senderId == "me")
+                }
+                
+                if (state.activeMessages.isEmpty() && !state.isLoading) {
+                    item {
+                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            Text("No messages yet", style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
             }
         }
     }

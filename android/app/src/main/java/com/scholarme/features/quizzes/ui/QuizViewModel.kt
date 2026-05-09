@@ -44,6 +44,7 @@ class QuizViewModel @Inject constructor(
                 is Result.Error -> {
                     _error.value = result.message
                 }
+                else -> {}
             }
             _isLoading.value = false
         }
@@ -60,6 +61,7 @@ class QuizViewModel @Inject constructor(
                 is Result.Error -> {
                     _error.value = result.message
                 }
+                else -> {}
             }
             _isLoading.value = false
         }

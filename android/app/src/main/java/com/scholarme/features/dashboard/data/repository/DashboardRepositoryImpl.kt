@@ -3,8 +3,7 @@ package com.scholarme.features.dashboard.data.repository
 import com.scholarme.core.data.local.TokenManager
 import com.scholarme.core.data.local.dao.DashboardDao
 import com.scholarme.features.dashboard.data.remote.DashboardApi
-import com.scholarme.core.network.NetworkResult
-import com.scholarme.core.network.toNetworkResultWithData
+import com.scholarme.core.util.Result
 import com.scholarme.features.dashboard.data.mapper.toDomain
 import com.scholarme.features.dashboard.data.mapper.toEntity
 import com.scholarme.features.dashboard.domain.model.DashboardStats
@@ -21,59 +20,47 @@ class DashboardRepositoryImpl @Inject constructor(
     private val dashboardDao: DashboardDao
 ) : DashboardRepository {
 
-    override fun getDashboardStats(): Flow<NetworkResult<DashboardStats>> = flow {
-        emit(NetworkResult.Loading())
+    override fun getDashboardStats(): Flow<Result<DashboardStats>> = flow {
+        emit(Result.Loading)
 
         try {
             val cached = dashboardDao.observeDashboardStats().firstOrNull()
             if (cached != null) {
-                emit(NetworkResult.Success(cached.toDomain()))
+                emit(Result.Success(cached.toDomain()))
             }
 
-            val remoteResponse = dashboardApi.getDashboardStats()
-            val remoteResult = remoteResponse.toNetworkResultWithData { it.data ?: com.scholarme.features.dashboard.data.model.DashboardStats() }
-
-            if (remoteResult is NetworkResult.Success) {
-                dashboardDao.insertDashboardStats(remoteResult.data.toEntity())
-                val fresh = dashboardDao.observeDashboardStats().firstOrNull()
-                if (fresh != null) {
-                    emit(NetworkResult.Success(fresh.toDomain()))
-                }
-            } else if (remoteResult is NetworkResult.Error && cached == null) {
-                emit(NetworkResult.Error(remoteResult.message, remoteResult.code, remoteResult.apiError, remoteResult.exception))
-            } else if (remoteResult is NetworkResult.Unauthorized) {
-                emit(NetworkResult.Unauthorized(remoteResult.message, remoteResult.exception))
+            val response = dashboardApi.getDashboardStats()
+            if (response.isSuccessful && response.body()?.success == true) {
+                val data = response.body()?.data ?: com.scholarme.features.dashboard.data.model.DashboardStats()
+                dashboardDao.insertDashboardStats(data.toEntity())
+                emit(Result.Success(data.toEntity().toDomain()))
+            } else if (cached == null) {
+                emit(Result.Error(response.body()?.error?.message ?: "Failed to fetch stats"))
             }
         } catch (e: Exception) {
-            emit(NetworkResult.Error(e.message ?: "Network error occurred", exception = e))
+            emit(Result.Error(e.message ?: "Network error occurred"))
         }
     }
 
-    override fun getUpcomingSessions(): Flow<NetworkResult<List<Session>>> = flow {
-        emit(NetworkResult.Loading())
+    override fun getUpcomingSessions(): Flow<Result<List<Session>>> = flow {
+        emit(Result.Loading)
 
         try {
             val cached = dashboardDao.observeUpcomingSessions().firstOrNull()
             if (!cached.isNullOrEmpty()) {
-                emit(NetworkResult.Success(cached.map { it.toDomain() }))
+                emit(Result.Success(cached.map { it.toDomain() }))
             }
 
-            val remoteResponse = dashboardApi.getUpcomingSessions()
-            val remoteResult = remoteResponse.toNetworkResultWithData { it.data?.sessions ?: emptyList() }
-
-            if (remoteResult is NetworkResult.Success) {
-                dashboardDao.updateSessions(remoteResult.data.map { it.toEntity() })
-                val fresh = dashboardDao.observeUpcomingSessions().firstOrNull()
-                if (fresh != null) {
-                    emit(NetworkResult.Success(fresh.map { it.toDomain() }))
-                }
-            } else if (remoteResult is NetworkResult.Error && cached.isNullOrEmpty()) {
-                emit(NetworkResult.Error(remoteResult.message, remoteResult.code, remoteResult.apiError, remoteResult.exception))
-            } else if (remoteResult is NetworkResult.Unauthorized) {
-                 emit(NetworkResult.Unauthorized(remoteResult.message, remoteResult.exception))
+            val response = dashboardApi.getUpcomingSessions()
+            if (response.isSuccessful && response.body()?.success == true) {
+                val sessions = response.body()?.data?.sessions ?: emptyList()
+                dashboardDao.updateSessions(sessions.map { it.toEntity() })
+                emit(Result.Success(sessions.map { it.toEntity().toDomain() }))
+            } else if (cached.isNullOrEmpty()) {
+                emit(Result.Error(response.body()?.error?.message ?: "Failed to fetch sessions"))
             }
         } catch (e: Exception) {
-            emit(NetworkResult.Error(e.message ?: "Network error occurred", exception = e))
+            emit(Result.Error(e.message ?: "Network error occurred"))
         }
     }
 

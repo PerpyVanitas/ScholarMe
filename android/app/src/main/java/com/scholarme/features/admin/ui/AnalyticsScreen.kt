@@ -14,7 +14,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -22,9 +21,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.scholarme.core.data.model.AdminAnalytics
-import com.scholarme.core.data.model.DataPoint
+import com.scholarme.features.admin.data.model.AdminAnalytics
+import com.scholarme.features.admin.data.model.DataPoint
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,7 +56,6 @@ fun AnalyticsScreen(
                 verticalArrangement = Arrangement.spacedBy(20.dp),
                 contentPadding = PaddingValues(vertical = 24.dp)
             ) {
-                // Key Metrics Row
                 item {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         MetricCard(
@@ -76,7 +73,6 @@ fun AnalyticsScreen(
                     }
                 }
 
-                // Growth Line Chart
                 item {
                     ChartCard(title = "User Growth (30 Days)", icon = Icons.Default.TrendingUp) {
                         LineChart(
@@ -86,14 +82,13 @@ fun AnalyticsScreen(
                     }
                 }
 
-                // Specialization Popularity Bar Chart
                 item {
                     ChartCard(title = "Top Specializations", icon = Icons.Default.TrendingUp) {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             analytics.topSpecializations.forEachIndexed { index, spec ->
                                 HorizontalBarItem(
                                     label = spec,
-                                    value = (100 - (index * 15)).toFloat() / 100f, // Simulated weight for polish
+                                    value = (100 - (index * 15)).toFloat() / 100f,
                                     color = when(index) {
                                         0 -> MaterialTheme.colorScheme.primary
                                         1 -> MaterialTheme.colorScheme.secondary
@@ -105,7 +100,6 @@ fun AnalyticsScreen(
                     }
                 }
 
-                // Success Rate Ring
                 item {
                     ChartCard(title = "Productivity Health", icon = Icons.Default.TrendingUp) {
                         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -177,7 +171,6 @@ fun LineChart(dataPoints: List<DataPoint>, modifier: Modifier = Modifier) {
             style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
         )
         
-        // Gradient fill
         val fillPath = Path().apply {
             addPath(path)
             lineTo(size.width, size.height)
@@ -195,7 +188,7 @@ fun LineChart(dataPoints: List<DataPoint>, modifier: Modifier = Modifier) {
 
 @Composable
 fun HorizontalBarItem(label: String, value: Float, color: Color) {
-    val animatedWidth by animateFloatAsState(targetValue = value, animationSpec = tween(1000))
+    val animatedWidth by animateFloatAsState(targetValue = value, animationSpec = tween(1000), label = "BarWidth")
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
@@ -220,7 +213,7 @@ fun HorizontalBarItem(label: String, value: Float, color: Color) {
 
 @Composable
 fun SuccessRing(percentage: Float, modifier: Modifier = Modifier) {
-    val animatedProgress by animateFloatAsState(targetValue = percentage, animationSpec = tween(1500))
+    val animatedProgress by animateFloatAsState(targetValue = percentage, animationSpec = tween(1500), label = "RingProgress")
     val primaryColor = MaterialTheme.colorScheme.primary
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.fillMaxSize()) {
