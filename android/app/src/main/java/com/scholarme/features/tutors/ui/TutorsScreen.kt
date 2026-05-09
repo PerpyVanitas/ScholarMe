@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.scholarme.features.tutors.data.model.TutorDto
 import com.scholarme.core.util.ui.ShimmerTutorCard
 

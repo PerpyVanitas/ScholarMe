@@ -60,7 +60,7 @@ class TutorViewModel @Inject constructor(
         } else {
             _uiState.value.tutors.filter {
                 it.fullName.contains(query, ignoreCase = true) ||
-                it.bio.contains(query, ignoreCase = true)
+                (it.bio?.contains(query, ignoreCase = true) == true)
             }
         }
         _uiState.value = _uiState.value.copy(
