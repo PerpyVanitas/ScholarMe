@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.scholarme.core.data.local.db.AppDatabase
 import com.scholarme.core.data.local.db.OfflineDao
+import com.scholarme.core.data.local.dao.DashboardDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -28,5 +29,10 @@ object DatabaseModule {
     @Provides
     fun provideOfflineDao(database: AppDatabase): OfflineDao {
         return database.offlineDao()
+    }
+
+    @Provides
+    fun provideDashboardDao(database: AppDatabase): DashboardDao {
+        return database.dashboardDao()
     }
 }

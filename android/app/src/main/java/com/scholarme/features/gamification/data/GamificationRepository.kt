@@ -31,7 +31,7 @@ class GamificationRepository @Inject constructor(
             try {
                 val response = gamificationApi.awardXp(mapOf("xpAmount" to xpAmount, "reason" to reason))
                 if (response.isSuccessful && response.body()?.success == true) {
-                    val data = response.body()?.data as? Map<String, Any>
+                    val data = response.body()?.data
                     if (data != null) {
                          val result = XpAwardResponse(
                              newXp = (data["newXp"] as? Double)?.toInt() ?: 0,

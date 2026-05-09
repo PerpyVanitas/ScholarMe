@@ -38,7 +38,7 @@ fun ActiveChatScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Chat", fontWeight = FontWeight.Bold) },
+                title = { Text("Chat: $conversationId", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,6 +28,11 @@ fun CardManagementScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Auth Card Management") },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = Color.White
@@ -107,6 +113,7 @@ fun IssueCardDialog(onDismiss: () -> Unit, onConfirm: (String, String, String) -
                 Text("Issue")
             }
         },
+        confirmButtonColor = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary).containerColor,
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text("Cancel")
