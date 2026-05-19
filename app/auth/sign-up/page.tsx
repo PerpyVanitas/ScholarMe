@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 
 function mapAuthError(msg: string): string {
   const m = msg.toLowerCase();
+  if (m.includes("phone number")) return msg;
   if (m.includes("already registered") || m.includes("already exists")) return "An account with this email already exists. Please sign in instead.";
   if (m.includes("invalid email")) return "Please enter a valid email address.";
   if (m.includes("password") && (m.includes("weak") || m.includes("short") || m.includes("least"))) return "Password must be at least 8 characters long.";

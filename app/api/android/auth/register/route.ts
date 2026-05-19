@@ -41,6 +41,26 @@ export async function POST(request: Request) {
     const requestedRole = (accountType || role || "learner").toLowerCase();
     const safeRole = requestedRole === "tutor" ? "tutor" : "learner";
 
+    // Check if phone number is already registered
+    if (phoneNumber) {
+      const { data: existingPhone } = await adminClient
+        .from("profiles")
+        .select("id")
+        .eq("phone_number", phoneNumber)
+        .maybeSingle();
+
+      if (existingPhone) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "This phone number is already registered. Please use a different number or sign in to your existing account.",
+            errorCode: "PHONE_ALREADY_EXISTS",
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // Resolve role ID from a public-registration allowlist.
     const { data: roleData } = await adminClient
       .from("roles")
