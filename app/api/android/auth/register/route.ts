@@ -33,38 +33,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabase = await createClient();
-
-    // Sign up with email/password
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-        },
-      },
-    });
-
-    if (signUpError) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: signUpError.message || "Registration failed",
-          errorCode: "SIGNUP_ERROR",
-        },
-        { status: 400 }
-      );
-    }
-
-    if (!data.user) {
-      return NextResponse.json(
-        { success: false, message: "Failed to create user" },
-        { status: 500 }
-      );
-    }
-
     const adminClient = createBareAdminClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -97,11 +65,44 @@ export async function POST(request: Request) {
       derivedLastName = parts.slice(1).join(" ") || "";
     }
 
+    // Sign up with admin client to bypass email confirmation and set metadata
+    const { data: userData, error: signUpError } = await adminClient.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: fullName || `${firstName} ${lastName}`,
+        first_name: derivedFirstName || null,
+        last_name: derivedLastName || null,
+        phone_number: phoneNumber || "",
+        role_id: roleId,
+        role_name: safeRole,
+      },
+    });
+
+    if (signUpError) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: signUpError.message || "Registration failed",
+          errorCode: "SIGNUP_ERROR",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!userData.user) {
+      return NextResponse.json(
+        { success: false, message: "Failed to create user" },
+        { status: 500 }
+      );
+    }
+
     // Create/update profile (upsert to avoid conflict with handle_new_user trigger)
     const { error: profileError } = await adminClient
       .from("profiles")
       .upsert({
-        id: data.user.id,
+        id: userData.user.id,
         email,
         full_name: fullName || `${firstName} ${lastName}`,
         first_name: derivedFirstName || null,
@@ -119,14 +120,29 @@ export async function POST(request: Request) {
       );
     }
 
+    // Sign in to retrieve a valid session token for the android client
+    const supabase = await createClient();
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (signInError) {
+      console.error("[Android Auth] Sign in error after registration:", signInError);
+      return NextResponse.json(
+        { success: false, message: "Registration succeeded but sign in failed" },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({
       success: true,
       message: "Registration successful",
       data: {
-        token: data.session?.access_token,
+        token: signInData.session?.access_token,
         user: {
-          id: data.user.id,
-          email: data.user.email,
+          id: userData.user.id,
+          email: userData.user.email,
           fullName: fullName || `${firstName} ${lastName}`,
           role: safeRole,
           isProfileComplete: false
