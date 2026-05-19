@@ -14,7 +14,8 @@ interface TutorDetailModalProps {
   onOpenChange: (open: boolean) => void;
   tutor: {
     id: string;
-    profile_id: string;
+    user_id: string;
+    profile_id?: string;
     bio: string | null;
     hourly_rate: number | null;
     years_experience: number | null;

@@ -9,7 +9,8 @@ export interface Specialization {
 
 export interface Tutor {
   id: string
-  profile_id: string
+  user_id: string
+  profile_id?: string
   bio: string | null
   rating: number
   total_ratings: number

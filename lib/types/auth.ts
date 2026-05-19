@@ -19,6 +19,7 @@ export interface Profile {
   birthdate?: string | null
   date_of_birth?: string | null
   membership_number?: string | null
+  bio?: string | null
   profile_completed?: boolean | null
   terms_accepted_at?: string | null
   created_at: string
