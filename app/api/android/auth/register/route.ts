@@ -26,7 +26,6 @@ export async function POST(request: Request) {
       );
     }
 
-
     if (password.length < 8) {
       return NextResponse.json(
         { success: false, message: "Password must be at least 8 characters" },
@@ -84,25 +83,33 @@ export async function POST(request: Request) {
     const roleId = roleData?.id;
 
     if (!roleId) {
-       return NextResponse.json(
+      return NextResponse.json(
         { success: false, message: "Invalid role specified" },
         { status: 400 }
       );
     }
 
-    // Create profile
+    let derivedFirstName = firstName || "";
+    let derivedLastName = lastName || "";
+    if (fullName && !derivedFirstName && !derivedLastName) {
+      const parts = fullName.trim().split(/\s+/);
+      derivedFirstName = parts[0] || "";
+      derivedLastName = parts.slice(1).join(" ") || "";
+    }
+
+    // Create/update profile (upsert to avoid conflict with handle_new_user trigger)
     const { error: profileError } = await adminClient
       .from("profiles")
-      .insert({
+      .upsert({
         id: data.user.id,
         email,
         full_name: fullName || `${firstName} ${lastName}`,
-        first_name: (firstName || (fullName ? fullName.split(' ')[0] : '')) || null,
-        last_name: (lastName || (fullName ? fullName.split(' ').slice(1).join(' ') : '')) || null,
+        first_name: derivedFirstName || null,
+        last_name: derivedLastName || null,
         phone_number: phoneNumber || "",
         role_id: roleId,
         profile_completed: false,
-      });
+      }, { onConflict: "id" });
 
     if (profileError) {
       console.error("[Android Auth] Profile creation error:", profileError);
