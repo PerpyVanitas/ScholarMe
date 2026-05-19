@@ -55,14 +55,23 @@ export async function POST(request: Request) {
       message: "Login successful",
       data: {
         token: data.session?.access_token,
+        userId: data.user.id,
+        email: data.user.email,
         user: {
           id: data.user.id,
+          userId: data.user.id,
           email: data.user.email,
           fullName: profile?.full_name || "",
+          firstName: profile?.first_name || null,
+          lastName: profile?.last_name || null,
           role: (profile?.roles as any)?.name || "learner",
+          accountType: (profile?.roles as any)?.name || "learner",
           avatarUrl: profile?.avatar_url || null,
+          phone: profile?.phone_number || null,
           phoneNumber: profile?.phone_number || null,
-          isProfileComplete: !!profile?.full_name
+          birthdate: profile?.birthdate || profile?.date_of_birth || null,
+          profileCompleted: !!profile?.profile_completed,
+          isProfileComplete: !!profile?.profile_completed
         },
       },
     });

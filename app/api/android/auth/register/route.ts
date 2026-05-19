@@ -130,6 +130,7 @@ export async function POST(request: Request) {
         phone_number: phoneNumber || "",
         role_id: roleId,
         profile_completed: false,
+        terms_accepted_at: new Date().toISOString(),
       }, { onConflict: "id" });
 
     if (profileError) {
@@ -138,6 +139,22 @@ export async function POST(request: Request) {
         { success: false, message: "Failed to create profile" },
         { status: 500 }
       );
+    }
+
+    // If tutor, automatically create a row in the tutors table
+    if (safeRole === "tutor") {
+      const { error: tutorError } = await adminClient
+        .from("tutors")
+        .insert({
+          user_id: userData.user.id,
+          rating: 0,
+          total_ratings: 0,
+          is_available: true,
+        });
+
+      if (tutorError) {
+        console.error("[Android Auth] Failed to create tutor record:", tutorError);
+      }
     }
 
     // Sign in to retrieve a valid session token for the android client
@@ -160,11 +177,20 @@ export async function POST(request: Request) {
       message: "Registration successful",
       data: {
         token: signInData.session?.access_token,
+        userId: userData.user.id,
+        email: userData.user.email,
         user: {
           id: userData.user.id,
+          userId: userData.user.id,
           email: userData.user.email,
           fullName: fullName || `${firstName} ${lastName}`,
+          firstName: derivedFirstName || null,
+          lastName: derivedLastName || null,
           role: safeRole,
+          accountType: safeRole,
+          phone: phoneNumber || null,
+          phoneNumber: phoneNumber || null,
+          profileCompleted: false,
           isProfileComplete: false
         },
       },

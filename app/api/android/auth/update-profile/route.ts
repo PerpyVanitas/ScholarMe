@@ -41,6 +41,8 @@ export async function PUT(request: Request) {
       full_name: `${firstName} ${lastName}`,
       phone_number: phoneNumber || null,
       birthdate: birthdate || null,
+      date_of_birth: birthdate || null,
+      bio: bio || null,
       profile_completed: true,
     };
 
@@ -48,7 +50,7 @@ export async function PUT(request: Request) {
       .from("profiles")
       .update(updateData)
       .eq("id", data.user.id)
-      .select()
+      .select("*, roles:roles!role_id(name)")
       .single();
 
     if (updateError) {
@@ -70,16 +72,52 @@ export async function PUT(request: Request) {
       }
     }
 
+    const roleName: string = Array.isArray(profile?.roles)
+      ? (profile.roles[0]?.name ?? "learner")
+      : ((profile?.roles as any)?.name ?? "learner");
+
+    // Fetch additional stats if tutor
+    let tutorStats = null;
+    if (roleName === "tutor") {
+      const { data: tutor } = await supabase
+        .from("tutors")
+        .select("*")
+        .eq("user_id", data.user.id)
+        .single();
+
+      if (tutor) {
+        tutorStats = {
+          rating: tutor.rating,
+          totalRatings: tutor.total_ratings,
+          yearsExperience: tutor.years_experience,
+          hourlyRate: tutor.hourly_rate,
+        };
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: "Profile updated successfully",
       data: {
+        id: profile.id,
+        userId: profile.id,
         firstName: profile.first_name,
         lastName: profile.last_name,
         fullName: profile.full_name,
+        email: profile.email,
+        phone: profile.phone_number,
         phoneNumber: profile.phone_number,
-        birthdate: profile.birthdate,
-        bio: bio || null,
+        birthdate: profile.birthdate || profile.date_of_birth || null,
+        avatarUrl: profile.avatar_url,
+        accountType: roleName,
+        role: roleName,
+        profileCompleted: profile.profile_completed,
+        isProfileComplete: profile.profile_completed,
+        bio: profile.bio || null,
+        totalXp: profile.total_xp || 0,
+        currentLevel: profile.current_level || 1,
+        tutorStats: tutorStats,
+        createdAt: profile.created_at
       },
     });
   } catch (error) {
