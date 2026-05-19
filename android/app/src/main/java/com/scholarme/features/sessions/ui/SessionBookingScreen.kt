@@ -17,9 +17,9 @@ fun SessionBookingScreen(
     onBookingComplete: () -> Unit
 ) {
     var selectedDate by remember { mutableStateOf("Select Date") }
-    var selectedTime by remember { mutableStateOf("Select Time") }
-    
+
     Scaffold(
+
         topBar = {
             TopAppBar(
                 title = { Text("Book Session") },

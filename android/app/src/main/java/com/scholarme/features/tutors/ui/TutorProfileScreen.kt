@@ -51,11 +51,11 @@ fun TutorProfileScreen(
 
             Button(
                 onClick = { onBookSessionClick(tutorId) },
-                modifier = Modifier.fillMaxWidth(),
-                size = ButtonDefaults.LargeButtonSize
+                modifier = Modifier.fillMaxWidth().height(56.dp)
             ) {
                 Text("Book a Session")
             }
+
         }
     }
 }

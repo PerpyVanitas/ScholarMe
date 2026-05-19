@@ -24,12 +24,28 @@ sealed class Screen(val route: String) {
     object QuizActive : Screen("quiz_active/{quizId}") {
         fun createRoute(quizId: String) = "quiz_active/$quizId"
     }
+    object QuizStudy : Screen("quiz_study/{quizId}") {
+        fun createRoute(quizId: String) = "quiz_study/$quizId"
+    }
+
 
     // Phase 3: Role-Specific
     object AvailabilityManager : Screen("availability")
     object Timesheet : Screen("timesheet")
     object AdminDashboard : Screen("admin")
     object UserManagement : Screen("user_management")
+    object AdminAnalytics : Screen("admin_analytics")
+    object AdminTimesheets : Screen("admin_timesheets")
+    object AdminCards : Screen("admin_cards")
+    object AdminScanner : Screen("admin_scanner")
+    object UserAudit : Screen("user_audit/{userId}/{userName}") {
+
+
+        fun createRoute(userId: String, userName: String) = "user_audit/$userId/$userName"
+    }
+
+
+
 
     // Phase 4: Engagement
     object Notifications : Screen("notifications")
@@ -39,4 +55,12 @@ sealed class Screen(val route: String) {
     object ActiveChat : Screen("chat/{conversationId}") {
         fun createRoute(conversationId: String) = "chat/$conversationId"
     }
+
+    // Phase 5: Authentication & Profile
+    object Login : Screen("login")
+    object Register : Screen("register")
+    object Profile : Screen("profile")
+    object UpdateProfile : Screen("update_profile")
+    object ChangePassword : Screen("change_password")
 }
+

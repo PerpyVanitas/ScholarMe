@@ -11,15 +11,21 @@ export async function POST(request: Request) {
       password,
       phoneNumber,
       accountType,
+      fullName,
+      role
     } = await request.json();
 
-    // Validate input
-    if (!firstName || !lastName || !email || !password || !phoneNumber) {
+    // Validate input (support both web and android formats)
+    const isWebFormat = firstName && lastName;
+    const isAndroidFormat = fullName;
+
+    if (!(isWebFormat || isAndroidFormat) || !email || !password) {
       return NextResponse.json(
-        { success: false, message: "All fields are required" },
+        { success: false, message: "Name, email and password are required" },
         { status: 400 }
       );
     }
+
 
     if (password.length < 8) {
       return NextResponse.json(
@@ -60,22 +66,39 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create profile
     const adminClient = createBareAdminClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
+    const requestedRole = (accountType || role || "learner").toLowerCase();
+    const safeRole = requestedRole === "tutor" ? "tutor" : "learner";
+
+    // Resolve role ID from a public-registration allowlist.
+    const { data: roleData } = await adminClient
+      .from("roles")
+      .select("id")
+      .eq("name", safeRole)
+      .single();
+
+    const roleId = roleData?.id;
+
+    if (!roleId) {
+       return NextResponse.json(
+        { success: false, message: "Invalid role specified" },
+        { status: 400 }
+      );
+    }
+
+    // Create profile
     const { error: profileError } = await adminClient
       .from("profiles")
       .insert({
         id: data.user.id,
         email,
-        first_name: firstName,
-        last_name: lastName,
-        full_name: `${firstName} ${lastName}`,
-        phone_number: phoneNumber,
-        role_id: accountType === "tutor" ? "tutor" : "learner",
+        full_name: fullName || `${firstName} ${lastName}`,
+        phone_number: phoneNumber || "",
+        role_id: roleId,
         profile_completed: false,
       });
 
@@ -91,11 +114,17 @@ export async function POST(request: Request) {
       success: true,
       message: "Registration successful",
       data: {
-        userId: data.user.id,
-        email: data.user.email,
-        requiresVerification: !data.user.confirmed_at,
+        token: data.session?.access_token,
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+          fullName: fullName || `${firstName} ${lastName}`,
+          role: safeRole,
+          isProfileComplete: false
+        },
       },
     });
+
   } catch (error) {
     console.error("[Android Auth] Registration error:", error);
     return NextResponse.json(

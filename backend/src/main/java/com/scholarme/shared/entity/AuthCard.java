@@ -26,13 +26,14 @@ public class AuthCard {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Builder.Default
     @Column(nullable = false)
     private String status = "active";
 
     @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "issued_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    @Column(name = "last_used_at")
-    private Instant lastUsedAt;
+    @Column(name = "revoked_at")
+    private Instant revokedAt;
 }

@@ -2,7 +2,8 @@ package com.scholarme.core.di
 
 import android.content.Context
 import androidx.room.Room
-import com.scholarme.core.data.local.AppDatabase
+import com.scholarme.core.data.local.db.AppDatabase
+import com.scholarme.core.data.local.db.OfflineDao
 import com.scholarme.core.data.local.dao.DashboardDao
 import dagger.Module
 import dagger.Provides
@@ -21,12 +22,16 @@ object DatabaseModule {
         return Room.databaseBuilder(
             context,
             AppDatabase::class.java,
-            "scholarme_database"
-        ).build()
+            "scholarme_db"
+        ).fallbackToDestructiveMigration().build()
     }
 
     @Provides
-    @Singleton
+    fun provideOfflineDao(database: AppDatabase): OfflineDao {
+        return database.offlineDao()
+    }
+
+    @Provides
     fun provideDashboardDao(database: AppDatabase): DashboardDao {
         return database.dashboardDao()
     }

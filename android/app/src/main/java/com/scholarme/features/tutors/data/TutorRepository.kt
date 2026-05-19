@@ -1,24 +1,47 @@
 package com.scholarme.features.tutors.data
 
-import com.scholarme.core.network.NetworkResult
-import com.scholarme.core.data.remote.ApiService
+import com.scholarme.features.tutors.data.model.*
+import com.scholarme.features.tutors.data.remote.TutorApi
+import com.scholarme.core.util.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-// Placeholder DTO
-data class TutorDto(val id: String, val name: String, val rating: Double)
-
 class TutorRepository @Inject constructor(
-    private val apiService: ApiService
+    private val tutorApi: TutorApi
 ) {
-    suspend fun getTutors(): NetworkResult<List<TutorDto>> {
+    suspend fun getTutors(
+        page: Int = 1,
+        limit: Int = 20,
+        search: String? = null,
+        specializationId: String? = null
+    ): Result<TutorListResponse> {
         return withContext(Dispatchers.IO) {
-            // Mock data for scaffolding
-            NetworkResult.Success(listOf(
-                TutorDto("1", "John Doe", 4.8),
-                TutorDto("2", "Jane Smith", 4.9)
-            ))
+            try {
+                val response = tutorApi.getTutors(page, limit, search, specializationId)
+                if (response.isSuccessful && response.body()?.success == true) {
+                    Result.Success(response.body()!!.data!!)
+                } else {
+                    Result.Error("Failed to fetch tutors")
+                }
+            } catch (e: Exception) {
+                Result.Error(e.message ?: "Network error occurred")
+            }
+        }
+    }
+
+    suspend fun getTutor(tutorId: String): Result<TutorDto> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = tutorApi.getTutor(tutorId)
+                if (response.isSuccessful && response.body()?.success == true) {
+                    Result.Success(response.body()!!.data!!)
+                } else {
+                    Result.Error("Failed to fetch tutor details")
+                }
+            } catch (e: Exception) {
+                Result.Error(e.message ?: "Network error occurred")
+            }
         }
     }
 }

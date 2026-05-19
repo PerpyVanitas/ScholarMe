@@ -2,7 +2,7 @@ package com.scholarme.features.dashboard.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.scholarme.features.dashboard.data.DashboardRepository
+import com.scholarme.features.dashboard.domain.repository.DashboardRepository
 
 class DashboardViewModelFactory(
     private val repository: DashboardRepository

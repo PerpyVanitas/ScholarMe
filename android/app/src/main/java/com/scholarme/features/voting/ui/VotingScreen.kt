@@ -1,80 +1,113 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 package com.scholarme.features.voting.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ThumbDown
 import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.scholarme.core.util.Result
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VotingScreen() {
+fun VotingScreen(
+    state: VotingListState,
+    onVote: (String, String) -> Unit,
+    onBackClick: () -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Community Polls", fontWeight = FontWeight.Bold) }
+                title = { Text("Community Polls", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                }
             )
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(3) {
-                PollCard(
-                    question = "Should we add a dark mode strictly for reading?",
-                    upvotes = 124,
-                    downvotes = 12
-                )
+        if (state.isLoading) {
+            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else if (state.error != null) {
+            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Text(state.error)
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(state.polls) { poll ->
+                    PollCard(
+                        question = poll.title,
+                        description = poll.description ?: "",
+                        options = poll.options,
+                        onOptionClick = { optionId -> onVote(poll.id, optionId) }
+                    )
+                }
+                
+                if (state.polls.isEmpty()) {
+                    item {
+                        Text("No active polls", modifier = Modifier.padding(16.dp))
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun PollCard(question: String, upvotes: Int, downvotes: Int) {
+fun PollCard(
+    question: String, 
+    description: String, 
+    options: List<com.scholarme.features.voting.data.model.PollOptionDto>,
+    onOptionClick: (String) -> Unit
+) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(question, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
+            Text(question, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            if (description.isNotEmpty()) {
+                Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             Spacer(modifier = Modifier.height(16.dp))
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Button(onClick = {}, shape = MaterialTheme.shapes.small, variant = "outline") {
-                    Icon(Icons.Default.ThumbUp, contentDescription = "Upvote", modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(upvotes.toString())
+            
+            options.forEach { option ->
+                OutlinedButton(
+                    onClick = { onOptionClick(option.id) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.small
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(option.text, modifier = Modifier.weight(1f))
+                        Badge(containerColor = MaterialTheme.colorScheme.primaryContainer) {
+                            Text("${option.voteCount}", style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
                 }
-                Button(onClick = {}, shape = MaterialTheme.shapes.small, variant = "outline") {
-                    Icon(Icons.Default.ThumbDown, contentDescription = "Downvote", modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(downvotes.toString())
-                }
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
-    }
-}
-
-// Helper extension matching the one in Sessions
-@Composable
-private fun Button(onClick: () -> Unit, modifier: Modifier = Modifier, variant: String = "primary", content: @Composable RowScope.() -> Unit) {
-    if (variant == "outline") {
-        OutlinedButton(onClick = onClick, modifier = modifier, shape = MaterialTheme.shapes.small, content = content)
-    } else {
-        androidx.compose.material3.Button(onClick = onClick, modifier = modifier, shape = MaterialTheme.shapes.small, content = content)
     }
 }

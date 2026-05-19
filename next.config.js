@@ -30,6 +30,14 @@ const securityHeaders = [
 const nextConfig = {
   // reactCompiler: true,  // Disabled — requires babel-plugin-react-compiler (not installed)
   poweredByHeader: false,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "hebbkx1anhila5yf.public.blob.vercel-storage.com",
+      },
+    ],
+  },
   async headers() {
     return [
       {

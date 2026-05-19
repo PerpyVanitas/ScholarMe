@@ -30,6 +30,8 @@ class TokenManager(context: Context) {
         private const val KEY_USER_EMAIL = "user_email"
         private const val KEY_USER_NAME = "user_name"
         private const val KEY_USER_ROLE = "user_role"
+        private const val KEY_EXPIRES_AT = "expires_at"
+
         
         @Volatile
         private var INSTANCE: TokenManager? = null
@@ -81,4 +83,24 @@ class TokenManager(context: Context) {
     fun clearAll() {
         prefs.edit().clear().apply()
     }
+
+    // New methods for session validation
+    fun saveTokenExpiry(expiresInSeconds: Long) {
+        val expiresAt = System.currentTimeMillis() + (expiresInSeconds * 1000)
+        prefs.edit().putLong(KEY_EXPIRES_AT, expiresAt).apply()
+    }
+
+    fun getTokenExpiresAt(): Long = prefs.getLong(KEY_EXPIRES_AT, 0)
+
+    fun isTokenExpired(): Boolean {
+        val expiresAt = getTokenExpiresAt()
+        if (expiresAt <= 0) return true
+        // Buffer of 5 minutes to be safe
+        return System.currentTimeMillis() > (expiresAt - 300_000)
+    }
+
+    fun canRefreshToken(): Boolean = getRefreshToken() != null
+
+    fun getToken(): String? = getAccessToken()
+
 }

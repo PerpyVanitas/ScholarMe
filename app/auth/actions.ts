@@ -23,7 +23,8 @@ export async function signUp(formData: FormData) {
   const fullName = `${firstName.trim()} ${lastName.trim()}`
   const phoneNumber = formData.get("phone_number") as string
   const dateOfBirth = formData.get("date_of_birth") as string
-  const selectedRole = (formData.get("role") as string) || "learner"
+  const requestedRole = (formData.get("role") as string) || "learner"
+  const selectedRole = requestedRole === "tutor" ? "tutor" : "learner"
 
   // Check if phone number is already registered
   if (phoneNumber) {

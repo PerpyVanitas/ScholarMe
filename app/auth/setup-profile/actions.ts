@@ -50,13 +50,13 @@ export async function updateProfile(data: {
     let { data: tutorRow } = await supabase
       .from("tutors")
       .select("id")
-      .eq("profile_id", user.id)
+      .eq("user_id", user.id)
       .maybeSingle()
 
     if (!tutorRow) {
       const { data: newTutor } = await supabase
         .from("tutors")
-        .insert({ profile_id: user.id })
+        .insert({ user_id: user.id })
         .select("id")
         .single()
       tutorRow = newTutor

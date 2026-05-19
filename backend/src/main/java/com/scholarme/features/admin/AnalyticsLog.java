@@ -16,11 +16,17 @@ public class AnalyticsLog {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "event_type", nullable = false)
-    private String eventType;
+    @Column(nullable = false)
+    private String action;
 
-    @Column(name = "event_data", columnDefinition = "jsonb")
-    private String eventData;
+    @Column(name = "entity_type")
+    private String entityType;
+
+    @Column(name = "entity_id")
+    private UUID entityId;
+
+    @Column(columnDefinition = "jsonb")
+    private String metadata;
 
     @Column(name = "user_id")
     private UUID userId;

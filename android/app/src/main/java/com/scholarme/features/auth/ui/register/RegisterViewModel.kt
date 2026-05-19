@@ -1,33 +1,35 @@
 package com.scholarme.features.auth.ui.register
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.scholarme.core.util.Result
 import com.scholarme.features.auth.data.AuthRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-/**
- * ViewModel for the Register screen.
- * Handles registration form state and user creation.
- */
-class RegisterViewModel(private val authRepository: AuthRepository) : ViewModel() {
+@HiltViewModel
+class RegisterViewModel @Inject constructor(
+    private val authRepository: AuthRepository
+) : ViewModel() {
     
-    private val _registerState = MutableLiveData<Result<String>?>()
-    val registerState: LiveData<Result<String>?> = _registerState
+    private val _registerState = MutableStateFlow<Result<String>?>(null)
+    val registerState: StateFlow<Result<String>?> = _registerState.asStateFlow()
     
-    private val _fullNameError = MutableLiveData<String?>()
-    val fullNameError: LiveData<String?> = _fullNameError
+    private val _fullNameError = MutableStateFlow<String?>(null)
+    val fullNameError: StateFlow<String?> = _fullNameError.asStateFlow()
     
-    private val _emailError = MutableLiveData<String?>()
-    val emailError: LiveData<String?> = _emailError
+    private val _emailError = MutableStateFlow<String?>(null)
+    val emailError: StateFlow<String?> = _emailError.asStateFlow()
     
-    private val _passwordError = MutableLiveData<String?>()
-    val passwordError: LiveData<String?> = _passwordError
+    private val _passwordError = MutableStateFlow<String?>(null)
+    val passwordError: StateFlow<String?> = _passwordError.asStateFlow()
     
-    private val _confirmPasswordError = MutableLiveData<String?>()
-    val confirmPasswordError: LiveData<String?> = _confirmPasswordError
+    private val _confirmPasswordError = MutableStateFlow<String?>(null)
+    val confirmPasswordError: StateFlow<String?> = _confirmPasswordError.asStateFlow()
     
     fun register(
         fullName: String,
@@ -36,14 +38,10 @@ class RegisterViewModel(private val authRepository: AuthRepository) : ViewModel(
         confirmPassword: String,
         role: String = "learner"
     ) {
-        // Validate inputs
         var hasError = false
         
         if (fullName.isBlank()) {
             _fullNameError.value = "Full name is required"
-            hasError = true
-        } else if (fullName.length < 2) {
-            _fullNameError.value = "Name must be at least 2 characters"
             hasError = true
         } else {
             _fullNameError.value = null
@@ -52,18 +50,12 @@ class RegisterViewModel(private val authRepository: AuthRepository) : ViewModel(
         if (email.isBlank()) {
             _emailError.value = "Email is required"
             hasError = true
-        } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            _emailError.value = "Invalid email format"
-            hasError = true
         } else {
             _emailError.value = null
         }
         
         if (password.isBlank()) {
             _passwordError.value = "Password is required"
-            hasError = true
-        } else if (password.length < 6) {
-            _passwordError.value = "Password must be at least 6 characters"
             hasError = true
         } else {
             _passwordError.value = null
@@ -78,7 +70,6 @@ class RegisterViewModel(private val authRepository: AuthRepository) : ViewModel(
         
         if (hasError) return
         
-        // Perform registration
         _registerState.value = Result.Loading
         
         viewModelScope.launch {

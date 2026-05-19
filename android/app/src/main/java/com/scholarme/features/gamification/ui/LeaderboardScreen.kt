@@ -3,174 +3,192 @@ package com.scholarme.features.gamification.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.scholarme.features.gamification.data.LeaderboardUserDto
+import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.scholarme.features.gamification.data.model.LeaderboardEntry
+import androidx.compose.ui.draw.rotate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LeaderboardScreen(
-    viewModel: LeaderboardViewModel = hiltViewModel()
+    leaderboard: List<LeaderboardEntry>,
+    currentUserId: String,
+    onBackClick: () -> Unit
 ) {
-    val leaderboard by viewModel.leaderboard.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Global Leaderboard") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface
-                )
+                title = { Text("Global Leaderboard", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(androidx.compose.material.icons.Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    Icon(
+                        Icons.Default.EmojiEvents, 
+                        contentDescription = null, 
+                        tint = Color(0xFFFFD700),
+                        modifier = Modifier.padding(end = 16.dp).size(28.dp)
+                    )
+                }
             )
         }
     ) { padding ->
-        if (isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            // Header Section
+            item {
+                LeaderboardHeader()
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 16.dp),
-                contentPadding = PaddingValues(vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                item {
-                    Text(
-                        text = "Rank up by completing sessions and quizzes!",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                }
 
-                itemsIndexed(leaderboard) { index, user ->
-                    LeaderboardCard(user = user, rank = index + 1)
-                }
+            items(leaderboard.size) { index ->
+                val entry = leaderboard[index]
+                LeaderboardItem(entry, isCurrentUser = entry.id == currentUserId)
             }
         }
     }
 }
 
 @Composable
-fun LeaderboardCard(user: LeaderboardUserDto, rank: Int) {
-    val isMe = user.id == "me" // Mock current user
-    
-    // Determine Theme Color based on mock string
-    val themeColor = when (user.profileThemeColor) {
-        "gold" -> Color(0xFFFFD700)
-        "purple" -> Color(0xFF9C27B0)
-        "ruby" -> Color(0xFFE91E63)
-        "emerald" -> Color(0xFF4CAF50)
-        else -> MaterialTheme.colorScheme.surfaceVariant
+fun LeaderboardHeader() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(180.dp)
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.surface)
+                )
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(
+                Icons.Default.EmojiEvents,
+                contentDescription = null,
+                tint = Color(0xFFFFD700),
+                modifier = Modifier.size(64.dp)
+            )
+            Text(
+                "ScholarMe Champions",
+                color = Color.White,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Black
+            )
+            Text(
+                "Keep studying to climb the ranks!",
+                color = Color.White.copy(alpha = 0.8f),
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+}
+
+@Composable
+fun LeaderboardItem(entry: LeaderboardEntry, isCurrentUser: Boolean) {
+    val rankColor = when (entry.rank) {
+        1 -> Color(0xFFFFD700) // Gold
+        2 -> Color(0xFFC0C0C0) // Silver
+        3 -> Color(0xFFCD7F32) // Bronze
+        else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isMe) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+            containerColor = if (isCurrentUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
         ),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isMe) 4.dp else 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isCurrentUser) 4.dp else 1.dp)
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+                .padding(16.dp)
+                .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Rank
-            Text(
-                text = "#$rank",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = if (rank <= 3) themeColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.width(36.dp)
-            )
-
-            // Avatar Placeholder
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(36.dp)
                     .clip(CircleShape)
-                    .background(themeColor.copy(alpha = 0.2f)),
+                    .background(rankColor),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = user.fullName.take(1).uppercase(),
-                    color = if (rank <= 3) themeColor else MaterialTheme.colorScheme.onSurface,
+                    text = entry.rank.toString(),
+                    color = if (entry.rank <= 3) Color.White else MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold
                 )
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(Modifier.width(16.dp))
 
-            // User Info
+            // Avatar
+            AsyncImage(
+                model = entry.avatarUrl ?: "https://api.dicebear.com/7.x/avataaars/svg?seed=${entry.fullName}",
+                contentDescription = null,
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentScale = ContentScale.Crop
+            )
+
+            Spacer(Modifier.width(16.dp))
+
+            // Name and Level
             Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = user.fullName,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = if (isMe) FontWeight.Bold else FontWeight.Medium
-                    )
-                    if (isMe) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Badge(containerColor = MaterialTheme.colorScheme.primary) {
-                            Text("YOU")
-                        }
-                    }
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.Star,
-                        contentDescription = "XP",
-                        modifier = Modifier.size(12.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "${user.totalXp} XP",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                Text(
+                    entry.fullName,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = 1
+                )
+                Text(
+                    "Level ${entry.currentLevel}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
 
-            // Level Badge
-            Surface(
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+            // XP
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    "${entry.totalXp} XP",
+                    fontWeight = FontWeight.Black,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                if (isCurrentUser) {
                     Text(
-                        text = "LVL",
+                        "YOU",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                    Text(
-                        text = "${user.currentLevel}",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Black,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }

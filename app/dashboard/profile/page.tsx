@@ -14,11 +14,12 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { 
   User, Mail, Phone, Calendar, Clock, Award, Edit2, Loader2, 
-  Key, Eye, EyeOff, Trash2, AlertTriangle, Camera, X
+  Key, Eye, EyeOff, Trash2, AlertTriangle, Camera, X, BookOpen, Star
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { updateProfile, UpdateProfileData, updateTutorInfo } from "./actions";
 import { useUser } from "@/lib/user-context";
+import { QrIdCard } from "@/features/auth/components/qr-id-card";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -39,6 +40,8 @@ export default function ProfilePage() {
   const [editPhone, setEditPhone] = useState("");
   const [editBirthdate, setEditBirthdate] = useState("");
   const [editMembershipNumber, setEditMembershipNumber] = useState("");
+  const [editDegreeProgram, setEditDegreeProgram] = useState("");
+  const [editYearLevel, setEditYearLevel] = useState("");
   const [editAvatarUrl, setEditAvatarUrl] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
@@ -104,7 +107,7 @@ export default function ProfilePage() {
           const { data: tutorInfo } = await supabase
             .from("tutors")
             .select("id, bio, hourly_rate, years_experience, tutor_specializations(specializations(id, name))")
-            .eq("profile_id", user.id)
+            .eq("user_id", user.id)
             .single();
 
           if (tutorInfo) {
@@ -150,6 +153,8 @@ export default function ProfilePage() {
     setEditPhone(profile.phone_number || "");
     setEditBirthdate(profile.birthdate || profile.date_of_birth || "");
     setEditMembershipNumber(profile.membership_number || "");
+    setEditDegreeProgram(profile.degree_program || "");
+    setEditYearLevel(profile.year_level?.toString() || "");
     // Set avatar URL - convert pathname to API route if needed
     if (profile.avatar_url?.startsWith("avatars/")) {
       setEditAvatarUrl(`/api/avatar?pathname=${encodeURIComponent(profile.avatar_url)}`);
@@ -281,6 +286,8 @@ export default function ProfilePage() {
       phone_number: editPhone.trim() || null,
       birthdate: editBirthdate || null,
       membership_number: isTutor ? editMembershipNumber.trim() || null : null,
+      degree_program: !isTutor ? editDegreeProgram.trim() || null : null,
+      year_level: !isTutor ? parseInt(editYearLevel) || null : null,
     };
 
     const result = await updateProfile(updateData);
@@ -296,6 +303,8 @@ export default function ProfilePage() {
         birthdate: updateData.birthdate,
         date_of_birth: updateData.birthdate,
         membership_number: updateData.membership_number,
+        degree_program: updateData.degree_program,
+        year_level: updateData.year_level,
       } : null);
       
       toast.success("Profile updated successfully");
@@ -442,225 +451,256 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      {/* Profile Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Profile Information</CardTitle>
-          <CardDescription>Your personal details and account information</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-              <User className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="text-sm font-medium">Full Name</p>
-                <p className="text-sm text-muted-foreground">{displayName}</p>
-              </div>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="lg:col-span-1">
+          <QrIdCard 
+            userId={profile.id!} 
+            userName={displayName} 
+            role={roleName} 
+          />
+        </div>
+        
+        <div className="lg:col-span-2 space-y-6">
+          {/* Profile Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Profile Information</CardTitle>
+              <CardDescription>Your personal details and account information</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                  <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium">Full Name</p>
+                    <p className="text-sm text-muted-foreground">{displayName}</p>
+                  </div>
+                </div>
 
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-              <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="text-sm font-medium">Email</p>
-                <p className="text-sm text-muted-foreground">{profile.email}</p>
-              </div>
-            </div>
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                  <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium">Email</p>
+                    <p className="text-sm text-muted-foreground">{profile.email}</p>
+                  </div>
+                </div>
 
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-              <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="text-sm font-medium">Phone Number</p>
-                <p className="text-sm text-muted-foreground">{profile.phone_number || "Not set"}</p>
-              </div>
-            </div>
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                  <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium">Phone Number</p>
+                    <p className="text-sm text-muted-foreground">{profile.phone_number || "Not set"}</p>
+                  </div>
+                </div>
 
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-              <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="text-sm font-medium">Birthday</p>
-                <p className="text-sm text-muted-foreground">
-                  {formatDate(profile.birthdate || profile.date_of_birth)}
-                </p>
-              </div>
-            </div>
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                  <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium">Birthday</p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatDate(profile.birthdate || profile.date_of_birth)}
+                    </p>
+                  </div>
+                </div>
 
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-              <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="text-sm font-medium">Member Since</p>
-                <p className="text-sm text-muted-foreground">{formatDate(profile.created_at)}</p>
-              </div>
-            </div>
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                  <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium">Member Since</p>
+                    <p className="text-sm text-muted-foreground">{formatDate(profile.created_at)}</p>
+                  </div>
+                </div>
 
-            {isTutor && (
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                <Award className="h-5 w-5 text-muted-foreground mt-0.5" />
+                {isTutor && (
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                    <Award className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium">Membership Number</p>
+                      <p className="text-sm text-muted-foreground">{profile.membership_number || "Not set"}</p>
+                    </div>
+                  </div>
+                )}
+
+                {!isTutor && (
+                  <>
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                      <BookOpen className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium">Degree Program</p>
+                        <p className="text-sm text-muted-foreground">{profile.degree_program || "Not set"}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                      <Star className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium">Year Level</p>
+                        <p className="text-sm text-muted-foreground">{profile.year_level || "Not set"}</p>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Tutor Settings */}
+          {isTutor && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
                 <div>
-                  <p className="text-sm font-medium">Membership Number</p>
-                  <p className="text-sm text-muted-foreground">{profile.membership_number || "Not set"}</p>
+                  <CardTitle className="flex items-center gap-2">
+                    <Award className="h-5 w-5" />
+                    Tutor Settings
+                  </CardTitle>
+                  <CardDescription>Manage your tutoring profile and specializations</CardDescription>
                 </div>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Tutor Settings */}
-      {isTutor && (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Award className="h-5 w-5" />
-                Tutor Settings
-              </CardTitle>
-              <CardDescription>Manage your tutoring profile and specializations</CardDescription>
-            </div>
-            <Button
-              onClick={() => setTutorSettingsOpen(true)}
-              variant="outline"
-              size="sm"
-              className="gap-2"
-            >
-              <Edit2 className="h-4 w-4" />
-              Edit
-            </Button>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Bio</p>
-              <p className="text-sm text-muted-foreground">{tutorBio || "Not set"}</p>
-            </div>
-            {hourlyRate && (
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Hourly Rate</p>
-                <p className="text-sm text-muted-foreground">${hourlyRate}/hour</p>
-              </div>
-            )}
-            {yearsExperience && (
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Years of Experience</p>
-                <p className="text-sm text-muted-foreground">{yearsExperience} years</p>
-              </div>
-            )}
-            {specializations.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Specializations</p>
-                <div className="flex flex-wrap gap-2">
-                  {specializations.map(spec => (
-                    <Badge key={spec.id} variant="secondary">
-                      {spec.name}
-                    </Badge>
-                  ))}
+                <Button
+                  onClick={() => setTutorSettingsOpen(true)}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Edit2 className="h-4 w-4" />
+                  Edit
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Bio</p>
+                  <p className="text-sm text-muted-foreground">{tutorBio || "Not set"}</p>
                 </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Password Change */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Key className="h-5 w-5" />
-            Change Password
-          </CardTitle>
-          <CardDescription>Update your account password</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="currentPassword">Current Password</Label>
-            <div className="relative">
-              <Input
-                id="currentPassword"
-                type={showPasswords ? "text" : "password"}
-                value={currentPassword}
-                onChange={e => setCurrentPassword(e.target.value)}
-                placeholder="Enter current password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPasswords(!showPasswords)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                {showPasswords ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="newPassword">New Password</Label>
-              <Input
-                id="newPassword"
-                type={showPasswords ? "text" : "password"}
-                value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
-                placeholder="Min. 8 characters"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm New Password</Label>
-              <Input
-                id="confirmPassword"
-                type={showPasswords ? "text" : "password"}
-                value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
-                placeholder="Repeat new password"
-              />
-            </div>
-          </div>
-
-          {newPassword && confirmPassword && newPassword !== confirmPassword && (
-            <p className="text-sm text-destructive">Passwords do not match</p>
+                {hourlyRate && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Hourly Rate</p>
+                    <p className="text-sm text-muted-foreground">${hourlyRate}/hour</p>
+                  </div>
+                )}
+                {yearsExperience && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Years of Experience</p>
+                    <p className="text-sm text-muted-foreground">{yearsExperience} years</p>
+                  </div>
+                )}
+                {specializations.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Specializations</p>
+                    <div className="flex flex-wrap gap-2">
+                      {specializations.map(spec => (
+                        <Badge key={spec.id} variant="secondary">
+                          {spec.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           )}
 
-          <Button
-            onClick={handleChangePassword}
-            disabled={changingPassword || !currentPassword || !newPassword || newPassword !== confirmPassword}
-          >
-            {changingPassword ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Updating...
-              </>
-            ) : (
-              "Update Password"
-            )}
-          </Button>
-        </CardContent>
-      </Card>
+          {/* Password Change */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Key className="h-5 w-5" />
+                Change Password
+              </CardTitle>
+              <CardDescription>Update your account password</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="currentPassword">Current Password</Label>
+                <div className="relative">
+                  <Input
+                    id="currentPassword"
+                    type={showPasswords ? "text" : "password"}
+                    value={currentPassword}
+                    onChange={e => setCurrentPassword(e.target.value)}
+                    placeholder="Enter current password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswords(!showPasswords)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPasswords ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
 
-      {/* Danger Zone */}
-      <Card className="border-destructive/30">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-destructive">
-            <AlertTriangle className="h-5 w-5" />
-            Danger Zone
-          </CardTitle>
-          <CardDescription>Irreversible actions for your account</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button
-            variant="destructive"
-            onClick={handleDeleteAccount}
-            disabled={deleting}
-          >
-            {deleting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Deleting...
-              </>
-            ) : (
-              <>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Account
-              </>
-            )}
-          </Button>
-        </CardContent>
-      </Card>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword">New Password</Label>
+                  <Input
+                    id="newPassword"
+                    type={showPasswords ? "text" : "password"}
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    placeholder="Min. 8 characters"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type={showPasswords ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    placeholder="Repeat new password"
+                  />
+                </div>
+              </div>
+
+              {newPassword && confirmPassword && newPassword !== confirmPassword && (
+                <p className="text-sm text-destructive">Passwords do not match</p>
+              )}
+
+              <Button
+                onClick={handleChangePassword}
+                disabled={changingPassword || !currentPassword || !newPassword || newPassword !== confirmPassword}
+              >
+                {changingPassword ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  "Update Password"
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Danger Zone */}
+          <Card className="border-destructive/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="h-5 w-5" />
+                Danger Zone
+              </CardTitle>
+              <CardDescription>Irreversible actions for your account</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+              >
+                {deleting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Account
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       {/* Edit Profile Modal */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
@@ -775,6 +815,30 @@ export default function ProfilePage() {
                 />
               </div>
             )}
+
+            {!isTutor && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="editDegreeProgram">Degree Program</Label>
+                  <Input
+                    id="editDegreeProgram"
+                    value={editDegreeProgram}
+                    onChange={e => setEditDegreeProgram(e.target.value)}
+                    placeholder="e.g. BS Computer Science"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="editYearLevel">Year Level</Label>
+                  <Input
+                    id="editYearLevel"
+                    type="number"
+                    value={editYearLevel}
+                    onChange={e => setEditYearLevel(e.target.value)}
+                    placeholder="e.g. 1"
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           <DialogFooter>
@@ -799,23 +863,20 @@ export default function ProfilePage() {
       <Dialog open={tutorSettingsOpen} onOpenChange={setTutorSettingsOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Edit Tutor Settings</DialogTitle>
-            <DialogDescription>Update your tutoring profile information</DialogDescription>
+            <DialogTitle>Tutor Settings</DialogTitle>
+            <DialogDescription>Update your bio, rate, and specializations</DialogDescription>
           </DialogHeader>
-
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="tutorBio">Bio</Label>
               <textarea
                 id="tutorBio"
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 value={tutorBio}
                 onChange={e => setTutorBio(e.target.value)}
-                placeholder="Tell students about your teaching experience and approach..."
-                className="w-full min-h-[100px] p-2 border rounded-md border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                placeholder="Tell students about your expertise..."
               />
-              <p className="text-xs text-muted-foreground">Max 500 characters</p>
             </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
@@ -823,10 +884,8 @@ export default function ProfilePage() {
                   id="hourlyRate"
                   type="number"
                   value={hourlyRate || ""}
-                  onChange={e => setHourlyRate(e.target.value ? parseFloat(e.target.value) : null)}
-                  placeholder="25"
-                  min="0"
-                  step="0.01"
+                  onChange={e => setHourlyRate(e.target.value ? Number(e.target.value) : null)}
+                  placeholder="e.g. 50"
                 />
               </div>
               <div className="space-y-2">
@@ -835,40 +894,12 @@ export default function ProfilePage() {
                   id="yearsExperience"
                   type="number"
                   value={yearsExperience || ""}
-                  onChange={e => setYearsExperience(e.target.value ? parseInt(e.target.value) : null)}
-                  placeholder="5"
-                  min="0"
-                  step="1"
+                  onChange={e => setYearsExperience(e.target.value ? Number(e.target.value) : null)}
+                  placeholder="e.g. 5"
                 />
               </div>
             </div>
-
-            <div className="space-y-3">
-              <Label>Specializations</Label>
-              <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
-                {allSpecializations.map(spec => (
-                  <label key={spec.id} className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedSpecializations.includes(spec.id)}
-                      onChange={e => {
-                        if (e.target.checked) {
-                          setSelectedSpecializations([...selectedSpecializations, spec.id]);
-                        } else {
-                          setSelectedSpecializations(
-                            selectedSpecializations.filter(id => id !== spec.id)
-                          );
-                        }
-                      }}
-                      className="rounded border-input"
-                    />
-                    <span className="text-sm">{spec.name}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
           </div>
-
           <DialogFooter>
             <Button variant="outline" onClick={() => setTutorSettingsOpen(false)} disabled={savingTutor}>
               Cancel

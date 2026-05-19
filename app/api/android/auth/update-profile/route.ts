@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/create-client";
+import { createSupabaseForBearer } from "@/lib/supabase/bearer-client";
 import { NextResponse } from "next/server";
 
 export async function PUT(request: Request) {
@@ -13,7 +13,7 @@ export async function PUT(request: Request) {
     }
 
     const token = authHeader.substring(7);
-    const supabase = await createClient();
+    const supabase = createSupabaseForBearer(token);
 
     // Verify token and get user
     const { data, error: authError } = await supabase.auth.getUser(token);

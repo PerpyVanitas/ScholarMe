@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/create-client";
+import { createSupabaseForBearer } from "@/lib/supabase/bearer-client";
 import { NextResponse } from "next/server";
 
 // Simple in-memory rate limiting for password changes
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     }
 
     const token = authHeader.substring(7);
-    const supabase = await createClient();
+    const supabase = createSupabaseForBearer(token);
 
     // Verify token and get user
     const { data, error: authError } = await supabase.auth.getUser(token);

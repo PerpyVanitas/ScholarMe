@@ -35,7 +35,8 @@ fun QuizActiveScreen(
                 .padding(padding)
                 .padding(16.dp)
         ) {
-            LinearProgressIndicator(progress = { 0.25f }, modifier = Modifier.fillMaxWidth())
+            LinearProgressIndicator(progress = 0.25f, modifier = Modifier.fillMaxWidth())
+
             Spacer(modifier = Modifier.height(8.dp))
             Text("Question 1 of 4", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             

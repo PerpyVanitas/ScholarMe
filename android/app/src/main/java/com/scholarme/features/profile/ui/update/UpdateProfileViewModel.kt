@@ -1,55 +1,60 @@
 package com.scholarme.features.profile.ui.update
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.scholarme.core.data.model.UserProfile
-import com.scholarme.core.util.Result
 import com.scholarme.features.profile.data.ProfileRepository
+import com.scholarme.core.util.Result
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class UpdateProfileViewModel(private val repository: ProfileRepository) : ViewModel() {
-    
-    private val _currentProfile = MutableLiveData<Result<UserProfile>>()
-    val currentProfile: LiveData<Result<UserProfile>> = _currentProfile
-    
-    private val _updateState = MutableLiveData<Result<UserProfile>?>()
-    val updateState: LiveData<Result<UserProfile>?> = _updateState
-    
-    private val _fullNameError = MutableLiveData<String?>()
-    val fullNameError: LiveData<String?> = _fullNameError
-    
-    init {
-        loadCurrentProfile()
-    }
-    
-    private fun loadCurrentProfile() {
-        viewModelScope.launch {
-            _currentProfile.value = repository.getProfile()
-        }
-    }
-    
+@HiltViewModel
+class UpdateProfileViewModel @Inject constructor(
+    private val repository: ProfileRepository
+) : ViewModel() {
+
+    private val _updateResult = MutableStateFlow<Result<Unit>?>(null)
+    val updateResult: StateFlow<Result<Unit>?> = _updateResult
+
     fun updateProfile(
         fullName: String,
-        phone: String?,
-        bio: String?
+        phone: String,
+        bio: String,
+        degreeProgram: String?,
+        yearLevel: Int?,
+        hourlyRate: Double? = null,
+        yearsExperience: Int? = null
     ) {
-        // Validate
-        if (fullName.isBlank()) {
-            _fullNameError.value = "Full name is required"
-            return
-        }
-        _fullNameError.value = null
-        
-        _updateState.value = Result.Loading
-        
         viewModelScope.launch {
-            _updateState.value = repository.updateProfile(
-                fullName = fullName,
-                phone = phone,
-                bio = bio
+            _updateResult.value = Result.Loading
+            val result = repository.updateProfile(
+                fullName,
+                phone,
+                bio,
+                degreeProgram,
+                yearLevel,
+                hourlyRate,
+                yearsExperience
             )
+            _updateResult.value = when (result) {
+                is Result.Success -> Result.Success(Unit)
+                is Result.Error -> Result.Error(result.message)
+                is Result.Loading -> Result.Loading
+            }
+        }
+    }
+
+    fun uploadAvatar(filePart: okhttp3.MultipartBody.Part) {
+        viewModelScope.launch {
+            _updateResult.value = Result.Loading
+            val result = repository.uploadAvatar(filePart)
+            _updateResult.value = when (result) {
+                is Result.Success -> Result.Success(Unit)
+                is Result.Error -> Result.Error(result.message)
+                is Result.Loading -> Result.Loading
+            }
         }
     }
 }

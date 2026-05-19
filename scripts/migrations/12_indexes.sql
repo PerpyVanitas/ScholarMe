@@ -1,0 +1,11 @@
+CREATE INDEX IF NOT EXISTS idx_profiles_role_id ON public.profiles(role_id);
+CREATE INDEX IF NOT EXISTS idx_profiles_email ON public.profiles(email);
+CREATE INDEX IF NOT EXISTS idx_tutors_user_id ON public.tutors(user_id);
+CREATE INDEX IF NOT EXISTS idx_tutors_available ON public.tutors(is_available);
+CREATE INDEX IF NOT EXISTS idx_sessions_tutor_id ON public.sessions(tutor_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_learner_id ON public.sessions(learner_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_status ON public.sessions(status);
+CREATE INDEX IF NOT EXISTS idx_sessions_date ON public.sessions(scheduled_date);
+CREATE INDEX IF NOT EXISTS idx_messages_conversation ON public.messages(conversation_id);
+CREATE INDEX IF NOT EXISTS idx_conv_participants_profile ON public.conversation_participants(profile_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON public.notifications(user_id, is_read);

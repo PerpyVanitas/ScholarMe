@@ -2,28 +2,40 @@ package com.scholarme.features.dashboard.data.mapper
 
 import com.scholarme.core.data.local.entity.DashboardStatsEntity
 import com.scholarme.core.data.local.entity.SessionEntity
-import com.scholarme.core.data.model.DashboardStats as DashboardStatsDto
-import com.scholarme.core.data.model.SessionDto
+import com.scholarme.features.dashboard.data.model.DashboardStats as DashboardStatsDto
+import com.scholarme.features.sessions.data.model.SessionDto
 import com.scholarme.features.dashboard.domain.model.DashboardStats
 import com.scholarme.features.dashboard.domain.model.Session
 
 fun DashboardStatsDto.toEntity(): DashboardStatsEntity {
     return DashboardStatsEntity(
+        role = this.role,
+        totalUsers = this.totalUsers,
         totalSessions = this.totalSessions,
-        upcomingSessions = this.upcomingSessions,
+        activeTutors = this.activeTutors,
+        pendingSessions = this.pendingSessions,
         completedSessions = this.completedSessions,
-        totalStudySets = this.totalStudySets,
-        averageQuizScore = this.averageQuizScore
+        upcomingSessions = this.upcomingSessions,
+        rating = this.rating,
+        totalRatings = this.totalRatings,
+        totalXp = this.totalXp,
+        currentLevel = this.currentLevel
     )
 }
 
 fun DashboardStatsEntity.toDomain(): DashboardStats {
     return DashboardStats(
+        role = this.role,
+        totalUsers = this.totalUsers,
         totalSessions = this.totalSessions,
-        upcomingSessions = this.upcomingSessions,
+        activeTutors = this.activeTutors,
+        pendingSessions = this.pendingSessions,
         completedSessions = this.completedSessions,
-        totalStudySets = this.totalStudySets,
-        averageQuizScore = this.averageQuizScore
+        upcomingSessions = this.upcomingSessions,
+        rating = this.rating,
+        totalRatings = this.totalRatings,
+        totalXp = this.totalXp,
+        currentLevel = this.currentLevel
     )
 }
 
@@ -35,8 +47,8 @@ fun SessionDto.toEntity(): SessionEntity {
         tutorAvatarUrl = this.tutorAvatarUrl,
         learnerId = this.learnerId,
         learnerName = this.learnerName,
-        scheduledAt = this.scheduledAt,
-        durationMinutes = this.durationMinutes,
+        scheduledAt = "${this.scheduledDate} ${this.startTime}",
+        durationMinutes = 60,
         status = this.status,
         topic = this.topic,
         notes = this.notes,
@@ -55,16 +67,12 @@ fun SessionEntity.toDomain(): Session {
         tutorName = this.tutorName,
         tutorAvatarUrl = this.tutorAvatarUrl,
         learnerId = this.learnerId,
-        learnerName = this.learnerName,
         scheduledAt = this.scheduledAt,
-        durationMinutes = this.durationMinutes,
+        startTime = this.scheduledAt.split(" ").lastOrNull() ?: "",
+        endTime = "", // Can be calculated if needed
         status = this.status,
         topic = this.topic,
         notes = this.notes,
-        location = this.location,
-        specializationName = this.specializationName,
-        rating = this.rating,
-        feedback = this.feedback,
-        createdAt = this.createdAt
+        specializationName = this.specializationName
     )
 }

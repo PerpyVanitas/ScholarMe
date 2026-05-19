@@ -5,9 +5,23 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.scholarme.BuildConfig
 import com.scholarme.core.data.local.TokenManager
-import com.scholarme.core.data.remote.ApiService
 import com.scholarme.core.data.remote.AuthInterceptor
 import com.scholarme.core.data.remote.NetworkErrorInterceptor
+import com.scholarme.core.data.remote.TelemetryInterceptor
+import com.scholarme.features.admin.data.remote.AdminApi
+import com.scholarme.features.auth.data.remote.AuthApi
+import com.scholarme.features.dashboard.data.remote.DashboardApi
+import com.scholarme.features.gamification.data.remote.GamificationApi
+import com.scholarme.features.notifications.data.remote.NotificationApi
+import com.scholarme.features.profile.data.remote.ProfileApi
+import com.scholarme.features.quizzes.data.remote.QuizApi
+import com.scholarme.features.resources.data.remote.ResourceApi
+import com.scholarme.features.sessions.data.remote.SessionApi
+import com.scholarme.features.tutors.data.remote.TutorApi
+import com.scholarme.features.voting.data.remote.VotingApi
+import com.scholarme.features.messaging.data.remote.MessagingApi
+import com.scholarme.features.availability.data.remote.AvailabilityApi
+import com.scholarme.features.timesheet.data.remote.TimesheetApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,61 +34,46 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
-/**
- * Hilt Dependency Injection Module for Network Layer
- * 
- * Provides singleton instances of:
- * - Gson: JSON serialization with ISO 8601 date format
- * - OkHttpClient: HTTP client with auth, logging, and error interceptors
- * - Retrofit: Type-safe REST client configured for the backend API
- * - ApiService: Interface implementation for all API endpoints
- * 
- * All dependencies are scoped to SingletonComponent (application lifecycle).
- */
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    /** Gson configured for ISO 8601 date parsing (UTC format from backend) */
     @Provides
     @Singleton
     fun provideGson(): Gson = GsonBuilder()
         .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
         .create()
 
-    /** Provides singleton TokenManager for secure credential storage */
     @Provides
     @Singleton
     fun provideTokenManager(@ApplicationContext context: Context): TokenManager {
         return TokenManager.getInstance(context)
     }
 
-    /** Interceptor that attaches Bearer token to authenticated requests */
     @Provides
     @Singleton
     fun provideAuthInterceptor(tokenManager: TokenManager): AuthInterceptor {
         return AuthInterceptor(tokenManager)
     }
     
-    /** Interceptor with retry logic and user-friendly error messages */
     @Provides
     @Singleton
     fun provideNetworkErrorInterceptor(): NetworkErrorInterceptor {
         return NetworkErrorInterceptor()
     }
 
-    /**
-     * Configures OkHttpClient with:
-     * - Auth interceptor (adds JWT to headers)
-     * - Network error interceptor (retry logic)
-     * - Logging interceptor (debug builds only)
-     * - 30-second timeouts for all operations
-     */
+    @Provides
+    @Singleton
+    fun provideTelemetryInterceptor(): TelemetryInterceptor {
+        return TelemetryInterceptor()
+    }
+
     @Provides
     @Singleton
     fun provideOkHttpClient(
         authInterceptor: AuthInterceptor,
-        networkErrorInterceptor: NetworkErrorInterceptor
+        networkErrorInterceptor: NetworkErrorInterceptor,
+        telemetryInterceptor: TelemetryInterceptor
     ): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = if (BuildConfig.DEBUG) {
@@ -87,6 +86,7 @@ object NetworkModule {
         return OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
             .addInterceptor(networkErrorInterceptor)
+            .addInterceptor(telemetryInterceptor)
             .addInterceptor(loggingInterceptor)
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
@@ -95,7 +95,6 @@ object NetworkModule {
             .build()
     }
 
-    /** Retrofit instance configured with base URL from BuildConfig */
     @Provides
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
@@ -106,10 +105,20 @@ object NetworkModule {
             .build()
     }
 
-    /** Creates type-safe API interface implementation */
-    @Provides
-    @Singleton
-    fun provideApiService(retrofit: Retrofit): ApiService {
-        return retrofit.create(ApiService::class.java)
-    }
+    // Vertically Sliced API Interfaces
+    
+    @Provides @Singleton fun provideAuthApi(retrofit: Retrofit): AuthApi = retrofit.create(AuthApi::class.java)
+    @Provides @Singleton fun provideProfileApi(retrofit: Retrofit): ProfileApi = retrofit.create(ProfileApi::class.java)
+    @Provides @Singleton fun provideDashboardApi(retrofit: Retrofit): DashboardApi = retrofit.create(DashboardApi::class.java)
+    @Provides @Singleton fun provideTutorApi(retrofit: Retrofit): TutorApi = retrofit.create(TutorApi::class.java)
+    @Provides @Singleton fun provideSessionApi(retrofit: Retrofit): SessionApi = retrofit.create(SessionApi::class.java)
+    @Provides @Singleton fun provideResourceApi(retrofit: Retrofit): ResourceApi = retrofit.create(ResourceApi::class.java)
+    @Provides @Singleton fun provideAdminApi(retrofit: Retrofit): AdminApi = retrofit.create(AdminApi::class.java)
+    @Provides @Singleton fun provideGamificationApi(retrofit: Retrofit): GamificationApi = retrofit.create(GamificationApi::class.java)
+    @Provides @Singleton fun provideQuizApi(retrofit: Retrofit): QuizApi = retrofit.create(QuizApi::class.java)
+    @Provides @Singleton fun provideNotificationApi(retrofit: Retrofit): NotificationApi = retrofit.create(NotificationApi::class.java)
+    @Provides @Singleton fun provideVotingApi(retrofit: Retrofit): VotingApi = retrofit.create(VotingApi::class.java)
+    @Provides @Singleton fun provideMessagingApi(retrofit: Retrofit): MessagingApi = retrofit.create(MessagingApi::class.java)
+    @Provides @Singleton fun provideAvailabilityApi(retrofit: Retrofit): AvailabilityApi = retrofit.create(AvailabilityApi::class.java)
+    @Provides @Singleton fun provideTimesheetApi(retrofit: Retrofit): TimesheetApi = retrofit.create(TimesheetApi::class.java)
 }

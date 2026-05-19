@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/create-client";
+import { createSupabaseForBearer } from "@/lib/supabase/bearer-client";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     const token = authHeader.substring(7);
 
     // Create client with the token
-    const supabase = await createClient();
+    const supabase = createSupabaseForBearer(token);
 
     // Verify token and get user
     const { data, error } = await supabase.auth.getUser(token);
@@ -27,10 +27,10 @@ export async function GET(request: Request) {
       );
     }
 
-    // Fetch complete profile
+    // Fetch complete profile with role name
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("*")
+      .select("*, roles:roles!role_id(name)")
       .eq("id", data.user.id)
       .single();
 
@@ -41,9 +41,13 @@ export async function GET(request: Request) {
       );
     }
 
+    const roleName: string = Array.isArray(profile?.roles)
+      ? (profile.roles[0]?.name ?? "learner")
+      : ((profile?.roles as any)?.name ?? "learner");
+
     // Fetch additional stats if tutor
     let tutorStats = null;
-    if (profile.role_id === "tutor") {
+    if (roleName === "tutor") {
       const { data: tutor } = await supabase
         .from("tutors")
         .select("*")
@@ -71,7 +75,7 @@ export async function GET(request: Request) {
         phoneNumber: profile.phone_number,
         birthdate: profile.birthdate,
         avatarUrl: profile.avatar_url,
-        accountType: profile.role_id,
+        accountType: roleName,
         profileCompleted: profile.profile_completed,
         createdAt: profile.created_at,
         tutorStats: tutorStats,

@@ -28,8 +28,12 @@ public class Notification {
     @Column(columnDefinition = "TEXT")
     private String message;
 
+    @Builder.Default
     @Column(name = "is_read")
     private Boolean isRead = false;
+
+    @Column
+    private String link;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

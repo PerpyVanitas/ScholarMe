@@ -42,9 +42,9 @@ class SessionValidator @Inject constructor(
      * Uses 5-minute buffer for proactive refresh.
      */
     fun isTokenValid(): Boolean {
-        val token = tokenManager.getAccessToken() ?: return false
         return !tokenManager.isTokenExpired()
     }
+
 
     /**
      * Checks if token needs refresh (is expired or about to expire).

@@ -65,12 +65,12 @@ public class AdminService {
     }
 
     public List<AnalyticsLogDto> getAnalytics(String type, int page, int size) {
-        return analyticsRepository.findByEventType(type, PageRequest.of(page, size))
+        return analyticsRepository.findByAction(type, PageRequest.of(page, size))
                 .stream()
                 .map(log -> AnalyticsLogDto.builder()
                         .id(log.getId().toString())
-                        .eventType(log.getEventType())
-                        .eventData(log.getEventData())
+                        .eventType(log.getAction())
+                        .eventData(log.getMetadata())
                         .createdAt(log.getCreatedAt().toString())
                         .build())
                 .collect(Collectors.toList());

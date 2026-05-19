@@ -7,41 +7,42 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-val PrimaryLight = Color(0xFF0F172A)
-val PrimaryDark = Color(0xFFF8FAFC)
-val BackgroundLight = Color(0xFFF8FAFC)
-val BackgroundDark = Color(0xFF0F172A)
-val SurfaceLight = Color(0xFFFFFFFF)
-val SurfaceDark = Color(0xFF1E293B)
-val TextLight = Color(0xFF0F172A)
-val TextDark = Color(0xFFF8FAFC)
-val MutedLight = Color(0xFF64748B)
-val MutedDark = Color(0xFF94A3B8)
-val BorderLight = Color(0xFFE2E8F0)
-val BorderDark = Color(0xFF334155)
+// ScholarMe Industry Standard Palette (Web Aligned)
+val Blue600 = Color(0xFF2563EB)
+val Blue700 = Color(0xFF1D4ED8)
+val Slate50 = Color(0xFFF8FAFC)
+val Slate100 = Color(0xFFF1F5F9)
+val Slate200 = Color(0xFFE2E8F0)
+val Slate600 = Color(0xFF475569)
+val Slate900 = Color(0xFF0F172A)
+val Slate950 = Color(0xFF020617)
 
 private val LightColorScheme = lightColorScheme(
-    primary = PrimaryLight,
-    onPrimary = SurfaceLight,
-    background = BackgroundLight,
-    onBackground = TextLight,
-    surface = SurfaceLight,
-    onSurface = TextLight,
-    surfaceVariant = BorderLight,
-    onSurfaceVariant = MutedLight,
-    outline = BorderLight
+    primary = Blue600,
+    onPrimary = Color.White,
+    secondary = Blue700,
+    onSecondary = Color.White,
+    background = Color.White,
+    onBackground = Slate900,
+    surface = Color.White,
+    onSurface = Slate900,
+    surfaceVariant = Slate50,
+    onSurfaceVariant = Slate600,
+    outline = Slate200
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = PrimaryDark,
-    onPrimary = SurfaceDark,
-    background = BackgroundDark,
-    onBackground = TextDark,
-    surface = SurfaceDark,
-    onSurface = TextDark,
-    surfaceVariant = BorderDark,
-    onSurfaceVariant = MutedDark,
-    outline = BorderDark
+    primary = Blue600,
+    onPrimary = Color.White,
+    secondary = Blue700,
+    onSecondary = Color.White,
+    background = Slate950,
+    onBackground = Slate50,
+    surface = Slate900,
+    onSurface = Slate50,
+    surfaceVariant = Slate950,
+    onSurfaceVariant = Slate100.copy(alpha = 0.7f),
+    outline = Slate900
 )
 
 @Composable
@@ -53,7 +54,6 @@ fun ScholarMeTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        // Typography and shapes can be customized here to match web Shadcn
         content = content
     )
 }

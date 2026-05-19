@@ -1,65 +1,28 @@
 package com.scholarme.features.profile.ui.change_password
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.scholarme.core.util.Result
 import com.scholarme.features.profile.data.ProfileRepository
+import com.scholarme.core.util.Result
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ChangePasswordViewModel(private val repository: ProfileRepository) : ViewModel() {
-    
-    private val _changePasswordState = MutableLiveData<Result<Unit>?>()
-    val changePasswordState: LiveData<Result<Unit>?> = _changePasswordState
-    
-    private val _currentPasswordError = MutableLiveData<String?>()
-    val currentPasswordError: LiveData<String?> = _currentPasswordError
-    
-    private val _newPasswordError = MutableLiveData<String?>()
-    val newPasswordError: LiveData<String?> = _newPasswordError
-    
-    private val _confirmPasswordError = MutableLiveData<String?>()
-    val confirmPasswordError: LiveData<String?> = _confirmPasswordError
-    
-    fun changePassword(
-        currentPassword: String,
-        newPassword: String,
-        confirmPassword: String
-    ) {
-        // Validate inputs
-        var hasError = false
-        
-        if (currentPassword.isBlank()) {
-            _currentPasswordError.value = "Current password is required"
-            hasError = true
-        } else {
-            _currentPasswordError.value = null
-        }
-        
-        if (newPassword.isBlank()) {
-            _newPasswordError.value = "New password is required"
-            hasError = true
-        } else if (newPassword.length < 6) {
-            _newPasswordError.value = "Password must be at least 6 characters"
-            hasError = true
-        } else {
-            _newPasswordError.value = null
-        }
-        
-        if (confirmPassword != newPassword) {
-            _confirmPasswordError.value = "Passwords do not match"
-            hasError = true
-        } else {
-            _confirmPasswordError.value = null
-        }
-        
-        if (hasError) return
-        
-        _changePasswordState.value = Result.Loading
-        
+@HiltViewModel
+class ChangePasswordViewModel @Inject constructor(
+    private val repository: ProfileRepository
+) : ViewModel() {
+
+    private val _changeResult = MutableStateFlow<Result<Unit>?>(null)
+    val changeResult: StateFlow<Result<Unit>?> = _changeResult
+
+    fun changePassword(current: String, new: String) {
         viewModelScope.launch {
-            _changePasswordState.value = repository.changePassword(currentPassword, newPassword)
+            _changeResult.value = Result.Loading
+            val result = repository.changePassword(current, new)
+            _changeResult.value = result
         }
     }
 }

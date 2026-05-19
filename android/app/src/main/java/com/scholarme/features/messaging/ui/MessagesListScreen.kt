@@ -1,3 +1,4 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 package com.scholarme.features.messaging.ui
 
 import androidx.compose.foundation.clickable
@@ -7,39 +8,43 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.scholarme.features.messaging.data.ConversationDto
+import com.scholarme.features.messaging.data.model.ConversationDto
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MessagesListScreen(
-    viewModel: MessagingViewModel = hiltViewModel(),
-    onNavigateToChat: (String) -> Unit
+    state: MessagingState,
+    onNavigateToChat: (String) -> Unit,
+    onBackClick: () -> Unit
 ) {
-    val conversations by viewModel.conversations.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Messages") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface
-                )
+                title = { Text("Messages", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                }
             )
         }
     ) { padding ->
-        if (isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        if (state.isLoading) {
+            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
-        } else if (conversations.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        } else if (state.error != null) {
+            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Text("Error: ${state.error}", color = MaterialTheme.colorScheme.error)
+            }
+        } else if (state.conversations.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Text("No conversations yet", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         } else {
@@ -48,7 +53,7 @@ fun MessagesListScreen(
                     .fillMaxSize()
                     .padding(padding)
             ) {
-                items(conversations) { conversation ->
+                items(state.conversations) { conversation ->
                     ConversationItem(
                         conversation = conversation,
                         onClick = { onNavigateToChat(conversation.id) }
@@ -72,7 +77,6 @@ fun ConversationItem(
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Mock Avatar
         Surface(
             modifier = Modifier.size(48.dp),
             shape = MaterialTheme.shapes.medium,
@@ -90,16 +94,11 @@ fun ConversationItem(
         Spacer(modifier = Modifier.width(16.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = conversation.title,
-                    fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
+            Text(
+                text = conversation.title,
+                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.bodyLarge
+            )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = conversation.lastMessage ?: "Started a conversation",

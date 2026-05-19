@@ -9,6 +9,8 @@ export interface UpdateProfileData {
   phone_number: string | null;
   birthdate: string | null;
   membership_number?: string | null;
+  degree_program?: string | null;
+  year_level?: number | null;
 }
 
 export async function updateProfile(data: UpdateProfileData) {
@@ -30,6 +32,8 @@ export async function updateProfile(data: UpdateProfileData) {
       birthdate: data.birthdate,
       date_of_birth: data.birthdate,
       membership_number: data.membership_number,
+      degree_program: data.degree_program,
+      year_level: data.year_level,
     })
     .eq("id", user.id);
 

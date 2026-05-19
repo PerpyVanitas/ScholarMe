@@ -3,7 +3,8 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, BookOpen, Users, CheckCircle2, Clock, ArrowRight } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Calendar, BookOpen, Users, CheckCircle2, Clock, ArrowRight, Star, Trophy } from "lucide-react";
 import { SESSION_STATUS_COLORS } from "@/lib/constants";
 import type { Profile, Session } from "@/lib/types";
 
@@ -28,6 +29,37 @@ export function LearnerDashboard({ profile, upcomingSessions, stats }: LearnerDa
           Here is an overview of your tutoring journey.
         </p>
       </div>
+
+      {/* Gamification Progress Card */}
+      <Card className="border-primary/20 bg-primary/[0.02]">
+        <CardContent className="p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                <Trophy className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold uppercase tracking-wider text-primary">Level {profile.current_level || 1}</span>
+                  <Badge variant="secondary" className="text-[10px] h-5">Rank: {profile.total_xp && profile.total_xp > 5000 ? "Scholar" : "Learner"}</Badge>
+                </div>
+                <h2 className="text-xl font-bold text-foreground">Academy Progress</h2>
+              </div>
+            </div>
+            <div className="flex flex-col sm:items-end">
+              <span className="text-sm font-medium text-foreground">{profile.total_xp || 0} Total XP</span>
+              <span className="text-xs text-muted-foreground">{1000 - ((profile.total_xp || 0) % 1000)} XP to Level {(profile.current_level || 1) + 1}</span>
+            </div>
+          </div>
+          <div className="mt-4 space-y-2">
+            <Progress value={((profile.total_xp || 0) % 1000) / 10} className="h-2" />
+            <div className="flex justify-between text-[10px] font-medium text-muted-foreground uppercase tracking-tighter">
+              <span>Current: Level {profile.current_level || 1}</span>
+              <span>Next: Level {(profile.current_level || 1) + 1}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard
