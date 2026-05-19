@@ -25,24 +25,43 @@ export async function PUT(request: Request) {
       );
     }
 
-    const { firstName, lastName, phoneNumber, birthdate, bio } = await request.json();
+    const body = await request.json();
+    const firstName = body.firstName;
+    const lastName = body.lastName;
+    const fullName = body.fullName;
+    const phoneNumber = body.phoneNumber || body.phone;
+    const birthdate = body.birthdate;
+    const bio = body.bio;
+    const degreeProgram = body.degreeProgram;
+    const yearLevel = body.yearLevel;
+    const hourlyRate = body.hourlyRate;
+    const yearsExperience = body.yearsExperience;
 
-    // Validate input
-    if (!firstName || !lastName) {
+    let derivedFirstName = firstName || "";
+    let derivedLastName = lastName || "";
+    if (fullName && !derivedFirstName && !derivedLastName) {
+      const parts = fullName.trim().split(/\s+/);
+      derivedFirstName = parts[0] || "";
+      derivedLastName = parts.slice(1).join(" ") || "";
+    }
+
+    if (!derivedFirstName) {
       return NextResponse.json(
-        { success: false, message: "First name and last name are required" },
+        { success: false, message: "First name is required" },
         { status: 400 }
       );
     }
 
     const updateData: any = {
-      first_name: firstName,
-      last_name: lastName,
-      full_name: `${firstName} ${lastName}`,
+      first_name: derivedFirstName,
+      last_name: derivedLastName || null,
+      full_name: fullName || `${derivedFirstName} ${derivedLastName}`.trim(),
       phone_number: phoneNumber || null,
       birthdate: birthdate || null,
       date_of_birth: birthdate || null,
       bio: bio || null,
+      degree_program: degreeProgram || null,
+      year_level: yearLevel !== undefined && yearLevel !== null ? Number(yearLevel) : null,
       profile_completed: true,
     };
 
@@ -61,20 +80,31 @@ export async function PUT(request: Request) {
       );
     }
 
-    // Update bio in tutors table if provided
-    if (bio) {
-      const { error: tutorError } = await supabase
-        .from("tutors")
-        .update({ bio })
-        .eq("user_id", data.user.id);
-      if (tutorError) {
-        console.error("[Android Auth] Tutor bio update error:", tutorError);
-      }
-    }
-
     const roleName: string = Array.isArray(profile?.roles)
       ? (profile.roles[0]?.name ?? "learner")
       : ((profile?.roles as any)?.name ?? "learner");
+
+    // Update tutor details if the user is a tutor
+    if (roleName === "tutor") {
+      const tutorUpdateData: any = {};
+      if (bio !== undefined) tutorUpdateData.bio = bio || null;
+      if (hourlyRate !== undefined && hourlyRate !== null) {
+        tutorUpdateData.hourly_rate = Number(hourlyRate);
+      }
+      if (yearsExperience !== undefined && yearsExperience !== null) {
+        tutorUpdateData.years_experience = Number(yearsExperience);
+      }
+
+      if (Object.keys(tutorUpdateData).length > 0) {
+        const { error: tutorError } = await supabase
+          .from("tutors")
+          .update(tutorUpdateData)
+          .eq("user_id", data.user.id);
+        if (tutorError) {
+          console.error("[Android Auth] Tutor details update error:", tutorError);
+        }
+      }
+    }
 
     // Fetch additional stats if tutor
     let tutorStats = null;
@@ -95,6 +125,15 @@ export async function PUT(request: Request) {
       }
     }
 
+    // Helper function to format avatar url
+    const formatAvatarUrl = (url: string | null | undefined): string | null => {
+      if (!url) return null;
+      if (url.startsWith("data:") || url.startsWith("http")) return url;
+      const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "localhost:3000";
+      const proto = request.headers.get("x-forwarded-proto") || "http";
+      return `${proto}://${host}/api/avatar?pathname=${encodeURIComponent(url)}`;
+    };
+
     return NextResponse.json({
       success: true,
       message: "Profile updated successfully",
@@ -108,7 +147,7 @@ export async function PUT(request: Request) {
         phone: profile.phone_number,
         phoneNumber: profile.phone_number,
         birthdate: profile.birthdate || profile.date_of_birth || null,
-        avatarUrl: profile.avatar_url,
+        avatarUrl: formatAvatarUrl(profile.avatar_url),
         accountType: roleName,
         role: roleName,
         profileCompleted: profile.profile_completed,

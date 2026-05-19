@@ -71,30 +71,52 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Upload to Vercel Blob (private store)
-    const ext = file.name.split(".").pop() || "jpg";
-    const filename = `avatars/${authData.user.id}/avatar-${Date.now()}.${ext}`;
+    // Upload to Vercel Blob (private store) or fallback to base64
+    let pathname = "";
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      try {
+        const ext = file.name.split(".").pop() || "jpg";
+        const filename = `avatars/${authData.user.id}/avatar-${Date.now()}.${ext}`;
+        const blob = await put(filename, file, {
+          access: "private",
+        });
+        pathname = blob.pathname;
+      } catch (err) {
+        console.error("Vercel Blob upload failed, falling back to base64:", err);
+      }
+    }
 
-    const blob = await put(filename, file, {
-      access: "private",
-    });
+    if (!pathname) {
+      const buffer = Buffer.from(await file.arrayBuffer());
+      pathname = `data:${file.type};base64,${buffer.toString("base64")}`;
+    }
 
     // Update profile
     const { error: updateError } = await supabase
       .from("profiles")
-      .update({ avatar_url: blob.pathname })
+      .update({ avatar_url: pathname })
       .eq("id", authData.user.id);
 
     if (updateError) {
-      await del(blob.pathname).catch(() => {});
+      if (pathname.startsWith("avatars/")) {
+        await del(pathname).catch(() => {});
+      }
       throw updateError;
     }
+
+    // Helper function to format avatar url for Android
+    const formatAvatarUrl = (url: string): string => {
+      if (url.startsWith("data:") || url.startsWith("http")) return url;
+      const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "localhost:3000";
+      const proto = request.headers.get("x-forwarded-proto") || "http";
+      return `${proto}://${host}/api/avatar?pathname=${encodeURIComponent(url)}`;
+    };
 
     return NextResponse.json({
       success: true,
       data: {
-        avatarUrl: blob.pathname,
-        url: blob.url // Although private, return for reference if needed
+        avatarUrl: formatAvatarUrl(pathname),
+        url: pathname
       }
     });
   } catch (error) {

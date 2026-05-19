@@ -11,6 +11,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Missing pathname" }, { status: 400 });
     }
 
+    // Intercept and serve base64 data URIs directly
+    if (pathname.startsWith("data:image/")) {
+      const matches = pathname.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
+      if (matches && matches[1] && matches[2]) {
+        const contentType = matches[1];
+        const base64Data = matches[2];
+        const buffer = Buffer.from(base64Data, "base64");
+        return new NextResponse(buffer, {
+          headers: {
+            "Content-Type": contentType,
+            "Cache-Control": "private, max-age=3600",
+          },
+        });
+      }
+    }
+
     const result = await get(pathname, {
       access: "private",
       ifNoneMatch: request.headers.get("if-none-match") ?? undefined,
@@ -94,28 +110,41 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Upload to Vercel Blob (private store)
-    const ext = file.name.split(".").pop() || "jpg";
-    const filename = `avatars/${user.id}/avatar-${Date.now()}.${ext}`;
+    // Upload to Vercel Blob (private store) or fallback to base64
+    let pathname = "";
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      try {
+        const ext = file.name.split(".").pop() || "jpg";
+        const filename = `avatars/${user.id}/avatar-${Date.now()}.${ext}`;
+        const blob = await put(filename, file, {
+          access: "private",
+        });
+        pathname = blob.pathname;
+      } catch (err) {
+        console.error("Vercel Blob upload failed, falling back to base64:", err);
+      }
+    }
 
-    const blob = await put(filename, file, {
-      access: "private",
-    });
+    if (!pathname) {
+      const buffer = Buffer.from(await file.arrayBuffer());
+      pathname = `data:${file.type};base64,${buffer.toString("base64")}`;
+    }
 
     // Update profile with new avatar pathname (not URL for private blobs)
     const { error: updateError } = await supabase
       .from("profiles")
-      .update({ avatar_url: blob.pathname })
+      .update({ avatar_url: pathname })
       .eq("id", user.id);
 
     if (updateError) {
-      // Try to clean up the blob if profile update fails
-      await del(blob.pathname).catch(() => {});
+      if (pathname.startsWith("avatars/")) {
+        await del(pathname).catch(() => {});
+      }
       return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
     }
 
     // Return the pathname for the client to use with the GET route
-    return NextResponse.json({ pathname: blob.pathname });
+    return NextResponse.json({ pathname });
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });

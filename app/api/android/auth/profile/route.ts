@@ -64,6 +64,15 @@ export async function GET(request: Request) {
       }
     }
 
+    // Helper function to format avatar url
+    const formatAvatarUrl = (url: string | null | undefined): string | null => {
+      if (!url) return null;
+      if (url.startsWith("data:") || url.startsWith("http")) return url;
+      const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "localhost:3000";
+      const proto = request.headers.get("x-forwarded-proto") || "http";
+      return `${proto}://${host}/api/avatar?pathname=${encodeURIComponent(url)}`;
+    };
+
     return NextResponse.json({
       success: true,
       data: {
@@ -74,7 +83,7 @@ export async function GET(request: Request) {
         email: profile.email,
         phoneNumber: profile.phone_number,
         birthdate: profile.birthdate,
-        avatarUrl: profile.avatar_url,
+        avatarUrl: formatAvatarUrl(profile.avatar_url),
         accountType: roleName,
         profileCompleted: profile.profile_completed,
         createdAt: profile.created_at,
