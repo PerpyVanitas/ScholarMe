@@ -69,9 +69,20 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
 
         // 3. Attempt to heal database by inserting the missing profile row
+        const fullNameStr = user.user_metadata?.full_name || (fallbackRole === "administrator" ? "System Admin" : user.email?.split("@")[0] || "User");
+        let derivedFirstName = user.user_metadata?.first_name || "";
+        let derivedLastName = user.user_metadata?.last_name || "";
+        if (!derivedFirstName && !derivedLastName) {
+          const parts = fullNameStr.trim().split(/\s+/);
+          derivedFirstName = parts[0] || "";
+          derivedLastName = parts.slice(1).join(" ") || "";
+        }
+
         const newProfileData = {
           id: user.id,
-          full_name: user.user_metadata?.full_name || (fallbackRole === "administrator" ? "System Admin" : user.email?.split("@")[0] || "User"),
+          full_name: fullNameStr,
+          first_name: derivedFirstName || null,
+          last_name: derivedLastName || null,
           email: user.email || "",
           role_id: roleId,
           profile_completed: false,

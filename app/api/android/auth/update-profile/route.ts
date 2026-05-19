@@ -44,11 +44,6 @@ export async function PUT(request: Request) {
       profile_completed: true,
     };
 
-    // Add bio if user is a tutor
-    if (bio) {
-      updateData.bio = bio;
-    }
-
     const { data: profile, error: updateError } = await supabase
       .from("profiles")
       .update(updateData)
@@ -64,6 +59,17 @@ export async function PUT(request: Request) {
       );
     }
 
+    // Update bio in tutors table if provided
+    if (bio) {
+      const { error: tutorError } = await supabase
+        .from("tutors")
+        .update({ bio })
+        .eq("user_id", data.user.id);
+      if (tutorError) {
+        console.error("[Android Auth] Tutor bio update error:", tutorError);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: "Profile updated successfully",
@@ -73,6 +79,7 @@ export async function PUT(request: Request) {
         fullName: profile.full_name,
         phoneNumber: profile.phone_number,
         birthdate: profile.birthdate,
+        bio: bio || null,
       },
     });
   } catch (error) {

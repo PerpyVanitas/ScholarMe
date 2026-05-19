@@ -97,6 +97,8 @@ export async function POST(request: Request) {
         id: data.user.id,
         email,
         full_name: fullName || `${firstName} ${lastName}`,
+        first_name: (firstName || (fullName ? fullName.split(' ')[0] : '')) || null,
+        last_name: (lastName || (fullName ? fullName.split(' ').slice(1).join(' ') : '')) || null,
         phone_number: phoneNumber || "",
         role_id: roleId,
         profile_completed: false,
