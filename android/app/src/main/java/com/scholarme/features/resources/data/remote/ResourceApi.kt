@@ -6,22 +6,23 @@ import retrofit2.Response
 import retrofit2.http.*
 
 interface ResourceApi {
-    @GET("repositories")
+    @GET("resources/repositories")
     suspend fun getRepositories(
-        @Query("page") page: Int = 1,
-        @Query("limit") limit: Int = 20,
-        @Query("search") search: String? = null
-    ): Response<ApiResponse<RepositoryListResponse>>
-    
-    @GET("repositories/{id}")
-    suspend fun getRepository(
-        @Path("id") repoId: String
-    ): Response<ApiResponse<RepositoryDto>>
-    
-    @GET("repositories/{id}/resources")
-    suspend fun getResources(
-        @Path("id") repoId: String,
-        @Query("page") page: Int = 1,
-        @Query("limit") limit: Int = 50
-    ): Response<ApiResponse<ResourceListResponse>>
+        @Query("search") search: String? = null,
+        @Query("accessRole") accessRole: String? = null
+    ): Response<ApiResponse<List<RepositoryDto>>>
+
+    @GET("resources/repositories/{id}/files")
+    suspend fun getRepositoryFiles(
+        @Path("id") repositoryId: String
+    ): Response<ApiResponse<List<ResourceDto>>>
+
+    @Multipart
+    @POST("resources/upload")
+    suspend fun uploadResource(
+        @Part("repositoryId") repositoryId: okhttp3.RequestBody,
+        @Part("title") title: okhttp3.RequestBody,
+        @Part("description") description: okhttp3.RequestBody?,
+        @Part file: okhttp3.MultipartBody.Part
+    ): Response<ApiResponse<ResourceDto>>
 }

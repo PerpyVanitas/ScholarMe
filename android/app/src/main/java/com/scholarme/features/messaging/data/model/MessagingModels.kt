@@ -19,3 +19,12 @@ data class ConversationDto(
     val unreadCount: Int = 0,
     val avatarUrl: String? = null
 )
+
+data class ConversationsResponse(
+    val conversations: List<ConversationDto> = emptyList()
+)
+
+data class MessagesResponse(
+    val conversationId: String,
+    val messages: List<MessageDto> = emptyList()
+)

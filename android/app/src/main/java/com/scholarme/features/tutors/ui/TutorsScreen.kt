@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,12 +21,18 @@ import com.scholarme.core.util.ui.ShimmerTutorCard
 fun TutorsScreen(
     state: TutorListState,
     onSearchQueryChanged: (String) -> Unit,
-    onTutorClick: (String) -> Unit
+    onTutorClick: (String) -> Unit,
+    onBackClick: () -> Unit
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Find a Tutor", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(androidx.compose.material.icons.Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
@@ -70,7 +77,7 @@ fun TutorsScreen(
                     
                     if (state.filteredTutors.isEmpty()) {
                         item {
-                            Text("No tutors available", modifier = Modifier.padding(16.dp))
+                            EmptyState("No tutors available")
                         }
                     }
                 }
@@ -80,26 +87,13 @@ fun TutorsScreen(
 }
 
 @Composable
-fun TutorCard(tutor: TutorDto, onClick: () -> Unit) {
-    Card(
-        onClick = onClick,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant),
-        shape = MaterialTheme.shapes.medium,
-        modifier = Modifier.fillMaxWidth()
+fun EmptyState(message: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(32.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(tutor.fullName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text("Rating: ${tutor.rating} ⭐", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(
-                onClick = onClick,
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.small
-            ) {
-                Text("View Profile")
-            }
-        }
+        Text(message, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

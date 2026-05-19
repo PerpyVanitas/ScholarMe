@@ -27,7 +27,7 @@ export async function POST(req: Request) {
   const { data: tutor } = await supabase
     .from("tutors")
     .select("id")
-    .eq("profile_id", user.id)
+    .eq("user_id", user.id)
     .maybeSingle();
 
   if (!tutor) return NextResponse.json({ error: "Tutor profile not found" }, { status: 404 });

@@ -20,6 +20,8 @@ import com.scholarme.features.sessions.data.remote.SessionApi
 import com.scholarme.features.tutors.data.remote.TutorApi
 import com.scholarme.features.voting.data.remote.VotingApi
 import com.scholarme.features.messaging.data.remote.MessagingApi
+import com.scholarme.features.availability.data.remote.AvailabilityApi
+import com.scholarme.features.timesheet.data.remote.TimesheetApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -117,4 +119,6 @@ object NetworkModule {
     @Provides @Singleton fun provideNotificationApi(retrofit: Retrofit): NotificationApi = retrofit.create(NotificationApi::class.java)
     @Provides @Singleton fun provideVotingApi(retrofit: Retrofit): VotingApi = retrofit.create(VotingApi::class.java)
     @Provides @Singleton fun provideMessagingApi(retrofit: Retrofit): MessagingApi = retrofit.create(MessagingApi::class.java)
+    @Provides @Singleton fun provideAvailabilityApi(retrofit: Retrofit): AvailabilityApi = retrofit.create(AvailabilityApi::class.java)
+    @Provides @Singleton fun provideTimesheetApi(retrofit: Retrofit): TimesheetApi = retrofit.create(TimesheetApi::class.java)
 }

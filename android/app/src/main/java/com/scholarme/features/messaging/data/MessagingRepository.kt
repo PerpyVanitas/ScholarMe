@@ -15,7 +15,7 @@ class MessagingRepository @Inject constructor(
             try {
                 val response = messagingApi.getConversations()
                 if (response.isSuccessful && response.body()?.success == true) {
-                    Result.Success(response.body()?.data ?: emptyList())
+                    Result.Success(response.body()?.data?.conversations ?: emptyList())
                 } else {
                     Result.Error("Failed to fetch conversations")
                 }
@@ -30,7 +30,7 @@ class MessagingRepository @Inject constructor(
             try {
                 val response = messagingApi.getMessages(conversationId)
                 if (response.isSuccessful && response.body()?.success == true) {
-                    Result.Success(response.body()?.data ?: emptyList())
+                    Result.Success(response.body()?.data?.messages ?: emptyList())
                 } else {
                     Result.Error("Failed to fetch messages")
                 }

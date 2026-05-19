@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.People
@@ -21,6 +22,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun AdminDashboardScreen(
+    onBackClick: () -> Unit,
     onManageUsersClick: () -> Unit,
     onAnalyticsClick: () -> Unit,
     onTimesheetApprovalsClick: () -> Unit,
@@ -30,7 +32,12 @@ fun AdminDashboardScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Admin Dashboard", fontWeight = FontWeight.Bold) }
+                title = { Text("Admin Dashboard", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                }
             )
         }
     ) { padding ->

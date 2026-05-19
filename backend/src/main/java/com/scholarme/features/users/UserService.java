@@ -57,12 +57,7 @@ public class UserService {
     }
 
     public void registerDeviceToken(UUID userId, DeviceTokenRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        user.setDeviceToken(request.getToken());
-        user.setDeviceType(request.getDeviceType());
-        userRepository.save(user);
+        System.out.println("Registering device token for user " + userId + ": " + request.getToken());
     }
 
     private UserProfileDto toDto(User user) {

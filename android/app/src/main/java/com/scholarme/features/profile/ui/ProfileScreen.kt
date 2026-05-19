@@ -29,6 +29,7 @@ fun ProfileScreen(
     profileState: Result<ProfileDto>,
     onBackClick: () -> Unit,
     onEditClick: () -> Unit,
+    onChangePasswordClick: () -> Unit,
     onLogoutClick: () -> Unit
 ) {
     Scaffold(
@@ -64,6 +65,7 @@ fun ProfileScreen(
                 ProfileContent(
                     modifier = Modifier.padding(padding),
                     profile = profile,
+                    onChangePasswordClick = onChangePasswordClick,
                     onLogoutClick = onLogoutClick
                 )
             }
@@ -75,6 +77,7 @@ fun ProfileScreen(
 fun ProfileContent(
     modifier: Modifier = Modifier,
     profile: ProfileDto,
+    onChangePasswordClick: () -> Unit,
     onLogoutClick: () -> Unit
 ) {
     LazyColumn(
@@ -165,17 +168,32 @@ fun ProfileContent(
             }
         }
 
-        // Logout Button
+        // Actions Section
         item {
-            Button(
-                onClick = onLogoutClick,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Icon(Icons.Default.Logout, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text("Logout Account", fontWeight = FontWeight.Bold)
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedButton(
+                    onClick = onChangePasswordClick,
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Icon(Icons.Default.Lock, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Change Password", fontWeight = FontWeight.Bold)
+                }
+
+                Button(
+                    onClick = onLogoutClick,
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Icon(Icons.Default.Logout, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Logout Account", fontWeight = FontWeight.Bold)
+                }
             }
         }
     }

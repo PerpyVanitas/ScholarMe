@@ -156,7 +156,7 @@ export default function ResourcesPage() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
-    let uid = user?.id
+    const uid = user?.id
     let userRole: UserRole = "learner"
 
     if (uid) {

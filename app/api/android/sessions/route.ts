@@ -1,5 +1,15 @@
-import { createClient } from "@/lib/supabase/create-client";
+import { createSupabaseForBearer } from "@/lib/supabase/bearer-client";
 import { NextResponse } from "next/server";
+import { z } from "zod";
+
+const bookSessionSchema = z.object({
+  tutorId: z.string().uuid("Invalid tutor ID format"),
+  scheduledDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
+  startTime: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, "Start time must be in HH:mm format"),
+  endTime: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, "End time must be in HH:mm format"),
+  specializationId: z.string().uuid("Invalid specialization ID format").nullable().optional(),
+  notes: z.string().max(500, "Notes cannot exceed 500 characters").nullable().optional(),
+});
 
 function getBearerToken(request: Request): string | null {
   const h = request.headers.get("authorization");
@@ -17,7 +27,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const supabase = await createClient();
+    const supabase = createSupabaseForBearer(token);
     const { data: authData, error: authError } = await supabase.auth.getUser(token);
     if (authError || !authData.user) {
       return NextResponse.json(
@@ -108,7 +118,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabase = await createClient();
+    const supabase = createSupabaseForBearer(token);
     const { data: authData, error: authError } = await supabase.auth.getUser(token);
     if (authError || !authData.user) {
       return NextResponse.json(
@@ -118,14 +128,15 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { tutorId, scheduledDate, startTime, endTime, specializationId, notes } = body;
-
-    if (!tutorId || !scheduledDate || !startTime || !endTime) {
+    const result = bookSessionSchema.safeParse(body);
+    if (!result.success) {
       return NextResponse.json(
-        { success: false, error: { code: "VALIDATION_ERROR", message: "tutorId, scheduledDate, startTime, endTime are required" } },
+        { success: false, error: { code: "VALIDATION_ERROR", message: result.error.errors[0].message } },
         { status: 400 }
       );
     }
+
+    const { tutorId, scheduledDate, startTime, endTime, specializationId, notes } = result.data;
 
     const { data: session, error } = await supabase
       .from("sessions")

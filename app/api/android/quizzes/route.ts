@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createSupabaseForBearer } from "@/lib/supabase/bearer-client";
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,8 +8,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: { code: 'AUTH-001', message: 'Missing authorization token' } }, { status: 401 });
     }
 
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const token = authHeader.substring(7);
+    const supabase = createSupabaseForBearer(token);
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
       return NextResponse.json({ success: false, error: { code: 'AUTH-002', message: 'Invalid or expired token' } }, { status: 401 });
     }

@@ -35,35 +35,42 @@ export async function GET(request: Request) {
     const { data: tutors, count, error } = await query;
     if (error) throw error;
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        tutors: (tutors ?? []).map((t: any) => ({
-          id: t.id,
-          userId: t.user_id,
-          fullName: t.profiles?.full_name ?? "",
-          email: t.profiles?.email ?? "",
-          avatarUrl: t.profiles?.avatar_url ?? null,
-          bio: t.bio ?? null,
-          rating: t.rating ?? 0,
-          totalRatings: t.total_ratings ?? 0,
-          hourlyRate: t.hourly_rate ?? null,
-          experienceYears: t.years_experience ?? null,
-          isAvailable: t.is_available ?? true,
-          specializations: (t.tutor_specializations ?? []).map((ts: any) => ({
-            id: ts.specializations?.id,
-            name: ts.specializations?.name,
-            description: ts.specializations?.description,
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          tutors: (tutors ?? []).map((t: any) => ({
+            id: t.id,
+            userId: t.user_id,
+            fullName: t.profiles?.full_name ?? "",
+            email: t.profiles?.email ?? "",
+            avatarUrl: t.profiles?.avatar_url ?? null,
+            bio: t.bio ?? null,
+            rating: t.rating ?? 0,
+            totalRatings: t.total_ratings ?? 0,
+            hourlyRate: t.hourly_rate ?? null,
+            experienceYears: t.years_experience ?? null,
+            isAvailable: t.is_available ?? true,
+            specializations: (t.tutor_specializations ?? []).map((ts: any) => ({
+              id: ts.specializations?.id,
+              name: ts.specializations?.name,
+              description: ts.specializations?.description,
+            })),
           })),
-        })),
-        pagination: {
-          page,
-          limit,
-          total: count ?? 0,
-          pages: Math.ceil((count ?? 0) / limit),
+          pagination: {
+            page,
+            limit,
+            total: count ?? 0,
+            pages: Math.ceil((count ?? 0) / limit),
+          },
         },
       },
-    });
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60"
+        }
+      }
+    );
   } catch (error) {
     console.error("[Android Tutors] GET error:", error);
     return NextResponse.json(

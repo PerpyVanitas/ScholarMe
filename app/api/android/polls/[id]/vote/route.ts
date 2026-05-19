@@ -1,5 +1,12 @@
-import { createClient } from "@/lib/supabase/create-client";
+import { createSupabaseForBearer } from "@/lib/supabase/bearer-client";
 import { NextResponse } from "next/server";
+import { z } from "zod";
+
+const pollIdSchema = z.string().uuid("Invalid poll ID format");
+
+const castVoteSchema = z.object({
+  optionId: z.string().uuid("optionId must be a valid UUID"),
+});
 
 function getBearerToken(request: Request): string | null {
   const h = request.headers.get("authorization");
@@ -13,17 +20,39 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
+    
+    // Validate route parameter ID
+    const pathParse = pollIdSchema.safeParse(id);
+    if (!pathParse.success) {
+      return NextResponse.json({
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: pathParse.error.errors[0].message,
+        }
+      }, { status: 400 });
+    }
+
     const token = getBearerToken(request);
     if (!token) return NextResponse.json({ success: false, error: { code: "UNAUTHORIZED", message: "Missing token" } }, { status: 401 });
 
-    const supabase = await createClient();
+    const supabase = createSupabaseForBearer(token);
     const { data: authData, error: authError } = await supabase.auth.getUser(token);
     if (authError || !authData.user) return NextResponse.json({ success: false, error: { code: "INVALID_TOKEN", message: "Invalid token" } }, { status: 401 });
 
-    const { optionId } = await request.json();
-    if (!optionId) {
-      return NextResponse.json({ success: false, error: { code: "VALIDATION_ERROR", message: "optionId is required" } }, { status: 400 });
+    const body = await request.json().catch(() => ({}));
+    const bodyParse = castVoteSchema.safeParse(body);
+    if (!bodyParse.success) {
+      return NextResponse.json({
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: bodyParse.error.errors[0].message,
+        }
+      }, { status: 400 });
     }
+
+    const { optionId } = bodyParse.data;
 
     // Verify poll is active
     const { data: poll } = await supabase

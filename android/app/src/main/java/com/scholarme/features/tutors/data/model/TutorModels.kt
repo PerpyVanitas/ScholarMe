@@ -9,9 +9,8 @@ data class TutorDto(
     val email: String,
     @SerializedName("avatarUrl") val avatarUrl: String? = null,
     val bio: String? = null,
-    @SerializedName("degreeProgram") val degreeProgram: String? = null,
-    val rating: Double? = null,
-    @SerializedName("totalSessions") val totalSessions: Int? = null,
+    @SerializedName("rating") val rating: Double? = null,
+    @SerializedName("totalRatings") val totalRatings: Int? = null,
     @SerializedName("hourlyRate") val hourlyRate: Double? = null,
     @SerializedName("experienceYears") val experienceYears: Int? = null,
     @SerializedName("isAvailable") val isAvailable: Boolean = true,
@@ -22,8 +21,7 @@ data class TutorDto(
 data class SpecializationDto(
     val id: String,
     val name: String,
-    val description: String? = null,
-    val category: String? = null
+    val description: String? = null
 )
 
 data class AvailabilityDto(

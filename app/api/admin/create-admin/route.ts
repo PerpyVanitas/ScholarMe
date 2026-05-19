@@ -22,8 +22,9 @@ export async function POST(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
-    const isAdmin = Array.isArray(callerProfile?.roles) && 
-      callerProfile.roles.some((role: any) => role.name === "administrator");
+    const isAdmin = Array.isArray(callerProfile?.roles)
+      ? callerProfile.roles.some((role: any) => role.name === "administrator")
+      : (callerProfile?.roles as any)?.name === "administrator";
     
     if (callerError || !isAdmin) {
       return NextResponse.json(

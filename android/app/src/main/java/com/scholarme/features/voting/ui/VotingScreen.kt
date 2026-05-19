@@ -20,6 +20,7 @@ import com.scholarme.core.util.Result
 @Composable
 fun VotingScreen(
     state: VotingListState,
+    onVote: (String, String) -> Unit,
     onBackClick: () -> Unit
 ) {
     Scaffold(
@@ -53,8 +54,9 @@ fun VotingScreen(
                 items(state.polls) { poll ->
                     PollCard(
                         question = poll.title,
-                        description = poll.description,
-                        options = poll.options.map { "${it.text} (${it.voteCount})" }
+                        description = poll.description ?: "",
+                        options = poll.options,
+                        onOptionClick = { optionId -> onVote(poll.id, optionId) }
                     )
                 }
                 
@@ -69,7 +71,12 @@ fun VotingScreen(
 }
 
 @Composable
-fun PollCard(question: String, description: String, options: List<String>) {
+fun PollCard(
+    question: String, 
+    description: String, 
+    options: List<com.scholarme.features.voting.data.model.PollOptionDto>,
+    onOptionClick: (String) -> Unit
+) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant),
@@ -84,11 +91,20 @@ fun PollCard(question: String, description: String, options: List<String>) {
             
             options.forEach { option ->
                 OutlinedButton(
-                    onClick = {},
+                    onClick = { onOptionClick(option.id) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.small
                 ) {
-                    Text(option)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(option.text, modifier = Modifier.weight(1f))
+                        Badge(containerColor = MaterialTheme.colorScheme.primaryContainer) {
+                            Text("${option.voteCount}", style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
             }

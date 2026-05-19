@@ -17,6 +17,8 @@ import com.scholarme.features.dashboard.domain.model.Session
 import com.scholarme.features.admin.ui.*
 import com.scholarme.features.dashboard.ui.*
 import com.scholarme.features.profile.ui.*
+import com.scholarme.features.profile.ui.update.*
+import com.scholarme.features.profile.ui.change_password.*
 import com.scholarme.features.auth.ui.login.*
 import com.scholarme.features.auth.ui.register.*
 import com.scholarme.features.availability.ui.AvailabilityManagerScreen
@@ -65,14 +67,21 @@ fun AppNavHost(
         composable(Screen.Dashboard.route) {
             val viewModel: DashboardViewModel = hiltViewModel()
             val userName by viewModel.userName.collectAsState()
+            val userRole by viewModel.userRole.collectAsState()
+            val statsState by viewModel.stats.collectAsState()
             val sessionsState by viewModel.sessions.collectAsState()
             
             DashboardScreen(
                 userName = userName,
-                sessions = (sessionsState as? Result.Success)?.data ?: emptyList(),
+                userRole = userRole,
+                statsResult = statsState,
+                sessionsResult = sessionsState,
                 onStudyClick = { navController.navigate(Screen.ResourceDirectory.route) },
                 onQuizClick = { navController.navigate(Screen.QuizList.route) },
                 onProfileClick = { navController.navigate(Screen.Profile.route) },
+                onManageUsersClick = { navController.navigate(Screen.UserManagement.route) },
+                onAnalyticsClick = { navController.navigate(Screen.AdminAnalytics.route) },
+                onScannerClick = { navController.navigate(Screen.AdminScanner.route) },
                 onSessionClick = { navController.navigate(Screen.SessionManagement.route) }
             )
         }
@@ -84,13 +93,51 @@ fun AppNavHost(
             ProfileScreen(
                 profileState = profileState,
                 onBackClick = { navController.popBackStack() },
-                onEditClick = { /* Handle edit */ },
+                onEditClick = { navController.navigate(Screen.UpdateProfile.route) },
+                onChangePasswordClick = { navController.navigate(Screen.ChangePassword.route) },
                 onLogoutClick = {
                     viewModel.logout()
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0)
                     }
                 }
+            )
+        }
+
+        composable(Screen.UpdateProfile.route) {
+            val viewModel: UpdateProfileViewModel = hiltViewModel()
+            val profileViewModel: ProfileViewModel = hiltViewModel()
+            val profileState by profileViewModel.profileState.collectAsState()
+            val profile = (profileState as? Result.Success)?.data
+            val updateResult by viewModel.updateResult.collectAsState()
+
+            UpdateProfileScreen(
+                currentAvatarUrl = profile?.avatarUrl,
+                currentFullName = profile?.fullName ?: "",
+                currentPhone = profile?.phone ?: "",
+                currentBio = profile?.bio ?: "",
+                currentDegreeProgram = profile?.degreeProgram,
+                currentYearLevel = profile?.yearLevel,
+                currentHourlyRate = profile?.hourlyRate,
+                currentYearsExperience = profile?.yearsExperience,
+                userRole = profile?.role ?: "learner",
+                updateResult = updateResult,
+                onBackClick = { navController.popBackStack() },
+                onSaveClick = { name, phone, bio, degree, year, rate, exp -> 
+                    viewModel.updateProfile(name, phone, bio, degree, year, rate, exp) 
+                },
+                onAvatarSelected = { viewModel.uploadAvatar(it) }
+            )
+        }
+
+        composable(Screen.ChangePassword.route) {
+            val viewModel: ChangePasswordViewModel = hiltViewModel()
+            val changeResult by viewModel.changeResult.collectAsState()
+
+            ChangePasswordScreen(
+                changeResult = changeResult,
+                onBackClick = { navController.popBackStack() },
+                onSubmit = { current, new -> viewModel.changePassword(current, new) }
             )
         }
 
@@ -103,7 +150,8 @@ fun AppNavHost(
                 onSearchQueryChanged = { viewModel.onSearchQueryChanged(it) },
                 onTutorClick = { tutorId ->
                     navController.navigate(Screen.TutorProfile.createRoute(tutorId))
-                }
+                },
+                onBackClick = { navController.popBackStack() }
             )
         }
         
@@ -146,7 +194,12 @@ fun AppNavHost(
 
         // Resources Flow
         composable(Screen.ResourceDirectory.route) {
+            val dashboardViewModel: DashboardViewModel = hiltViewModel()
+            val userRole by dashboardViewModel.userRole.collectAsState()
+            
             ResourceDirectoryScreen(
+                userRole = userRole,
+                onBackClick = { navController.popBackStack() },
                 onRepositoryClick = { repoId ->
                     navController.navigate(Screen.ResourceViewer.createRoute(repoId))
                 }
@@ -159,6 +212,7 @@ fun AppNavHost(
         ) { backStackEntry ->
             val repoId = backStackEntry.arguments?.getString("repoId") ?: return@composable
             ResourceViewerScreen(
+                repositoryId = repoId,
                 repoName = "Repository #$repoId",
                 onBackClick = { navController.popBackStack() }
             )
@@ -172,7 +226,8 @@ fun AppNavHost(
                 },
                 onStudyQuiz = { quizId ->
                     navController.navigate(Screen.QuizStudy.createRoute(quizId))
-                }
+                },
+                onBackClick = { navController.popBackStack() }
             )
         }
         
@@ -208,15 +263,20 @@ fun AppNavHost(
 
         // Role-Specific & Admin Flow
         composable(Screen.AvailabilityManager.route) {
-            AvailabilityManagerScreen()
+            AvailabilityManagerScreen(
+                onBackClick = { navController.popBackStack() }
+            )
         }
         
         composable(Screen.Timesheet.route) {
-            TimesheetScreen()
+            TimesheetScreen(
+                onBackClick = { navController.popBackStack() }
+            )
         }
         
         composable(Screen.AdminDashboard.route) {
             AdminDashboardScreen(
+                onBackClick = { navController.popBackStack() },
                 onManageUsersClick = { navController.navigate(Screen.UserManagement.route) },
                 onAnalyticsClick = { navController.navigate(Screen.AdminAnalytics.route) },
                 onTimesheetApprovalsClick = { navController.navigate(Screen.AdminTimesheets.route) },
@@ -267,6 +327,7 @@ fun AppNavHost(
             CardManagementScreen(
                 cards = (cardsState as? Result.Success)?.data ?: emptyList(),
                 onIssueCard = { uid, cid, pin -> viewModel.issueCard(uid, cid, pin) },
+                onRevokeCard = { viewModel.revokeCard(it) },
                 onBackClick = { navController.popBackStack() }
             )
         }
@@ -330,8 +391,10 @@ fun AppNavHost(
         composable(Screen.Voting.route) {
             val viewModel: VotingViewModel = hiltViewModel()
             val state by viewModel.uiState.collectAsState()
+            
             VotingScreen(
                 state = state,
+                onVote = { pollId, optionId -> viewModel.castVote(pollId, optionId) },
                 onBackClick = { navController.popBackStack() }
             )
         }

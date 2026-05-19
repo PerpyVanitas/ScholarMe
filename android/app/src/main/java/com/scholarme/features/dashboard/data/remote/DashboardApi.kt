@@ -13,6 +13,6 @@ interface DashboardApi {
     
     @GET("sessions")
     suspend fun getUpcomingSessions(
-        @Query("status") status: String = "PENDING"
+        @Query("status") status: String = "pending"
     ): Response<ApiResponse<SessionListResponse>>
 }

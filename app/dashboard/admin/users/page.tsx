@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -123,7 +124,8 @@ function getInitials(name: string | null | undefined) {
     .slice(0, 2);
 }
 
-export default function AdminUsersPage() {
+function AdminUsersContent() {
+  const searchParams = useSearchParams();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -162,22 +164,32 @@ export default function AdminUsersPage() {
       .from("profiles")
       .select("*, roles(name)")
       .order("created_at", { ascending: false });
+    
     setProfiles(data || []);
+    
+    // Check for userId in query params to auto-open logs
+    const userId = searchParams.get("userId");
+    if (userId && data) {
+      const p = data.find(u => u.id === userId);
+      if (p) {
+        // Need to define openLogs inside or before use
+        setLogsUser(p);
+        setLogsOpen(true);
+        setLogsLoading(true);
+        const res = await fetch(`/api/admin/users/${p.id}/logs`);
+        if (res.ok) {
+          const logData = await res.json();
+          setLogs(logData.logs || []);
+        }
+        setLogsLoading(false);
+      }
+    }
     setLoading(false);
   }
 
   useEffect(() => {
     loadProfiles();
-  }, []);
-
-  const filtered = profiles.filter((p) => {
-    const nameMatch =
-      !search ||
-      p.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-      p.email?.toLowerCase().includes(search.toLowerCase());
-    const roleMatch = roleFilter === "all" || (Array.isArray(p.roles) && p.roles.length > 0 && p.roles[0].name === roleFilter);
-    return nameMatch && roleMatch;
-  });
+  }, [searchParams]);
 
   async function handleCreateUser() {
     if (!newEmail || !newPassword || !newName) {
@@ -281,6 +293,15 @@ export default function AdminUsersPage() {
     }
     setLogsLoading(false);
   }
+
+  const filtered = profiles.filter((p) => {
+    const nameMatch =
+      !search ||
+      p.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+      p.email?.toLowerCase().includes(search.toLowerCase());
+    const roleMatch = roleFilter === "all" || (Array.isArray(p.roles) && p.roles.length > 0 && p.roles[0].name === roleFilter);
+    return nameMatch && roleMatch;
+  });
 
   if (loading) {
     return (
@@ -571,6 +592,18 @@ export default function AdminUsersPage() {
         </SheetContent>
       </Sheet>
     </div>
+  );
+}
+
+export default function AdminUsersPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    }>
+      <AdminUsersContent />
+    </Suspense>
   );
 }
 

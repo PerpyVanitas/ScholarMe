@@ -87,15 +87,17 @@ export default function HomePage() {
             <a href="#community" className="text-sm hover:text-blue-600 transition">Community</a>
             <a href="#how" className="text-sm hover:text-blue-600 transition">How It Works</a>
             <a href="#tutors" className="text-sm hover:text-blue-600 transition">Tutors</a>
-            <ThemeToggle />
           </div>
 
-          <Link 
-            href={isLoggedIn ? '/dashboard' : '/auth/login'}
-            className="hidden md:inline text-sm font-medium hover:text-blue-600 transition"
-          >
-            {isLoggedIn ? 'Dashboard' : 'Sign in'}
-          </Link>
+          <div className="hidden md:flex items-center gap-3">
+            <ThemeToggle />
+            <Link 
+              href={isLoggedIn ? '/dashboard' : '/auth/login'}
+              className="text-sm font-medium hover:text-blue-600 transition"
+            >
+              {isLoggedIn ? 'Dashboard' : 'Sign in'}
+            </Link>
+          </div>
         </div>
 
         {/* Mobile Menu */}
@@ -182,7 +184,7 @@ export default function HomePage() {
       </section>
 
       {/* Community Gallery */}
-      <section id="community" className="py-20 px-6 bg-slate-50 dark:bg-slate-900/50">
+      <section id="community" className="py-20 px-6 bg-blue-50/40 dark:bg-blue-900/10">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-bold mb-4">Our Community</h2>
@@ -239,7 +241,7 @@ export default function HomePage() {
       </section>
 
       {/* Stats */}
-      <section className="py-20 px-6 bg-slate-50 dark:bg-slate-900/50 border-y border-slate-200 dark:border-slate-800">
+      <section className="py-20 px-6 bg-blue-50/40 dark:bg-blue-900/10 border-y border-border">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-4 gap-8">
             {[
@@ -272,7 +274,7 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 dark:border-slate-800 py-12 px-6 bg-slate-50 dark:bg-slate-900/50">
+      <footer className="border-t border-border py-12 px-6 bg-blue-50/40 dark:bg-blue-900/10">
         <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-2 mb-4">

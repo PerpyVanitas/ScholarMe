@@ -20,6 +20,7 @@ import com.scholarme.features.auth.data.model.AuthCard
 fun CardManagementScreen(
     cards: List<AuthCard>,
     onIssueCard: (String, String, String) -> Unit,
+    onRevokeCard: (String) -> Unit,
     onBackClick: () -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
@@ -56,7 +57,7 @@ fun CardManagementScreen(
             ) {
                 items(cards.size) { index ->
                     val card = cards[index]
-                    AuthCardItem(card)
+                    AuthCardItem(card, onRevokeCard)
                 }
             }
         }
@@ -74,7 +75,7 @@ fun CardManagementScreen(
 }
 
 @Composable
-fun AuthCardItem(card: AuthCard) {
+fun AuthCardItem(card: AuthCard, onRevoke: (String) -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -87,7 +88,17 @@ fun AuthCardItem(card: AuthCard) {
                 Text("ID: ${card.cardId}", style = MaterialTheme.typography.bodySmall)
                 Text("Issued: ${card.createdAt.take(10)}", style = MaterialTheme.typography.bodySmall)
             }
-            StatusBadge(card.status)
+            Column(horizontalAlignment = Alignment.End) {
+                StatusBadge(card.status)
+                if (card.status != "revoked") {
+                    TextButton(
+                        onClick = { onRevoke(card.cardId) },
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("Revoke", style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+            }
         }
     }
 }

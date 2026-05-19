@@ -51,7 +51,9 @@ class ProfileRepository @Inject constructor(
         phone: String?,
         bio: String?,
         degreeProgram: String? = null,
-        yearLevel: Int? = null
+        yearLevel: Int? = null,
+        hourlyRate: Double? = null,
+        yearsExperience: Int? = null
     ): Result<UserProfile> {
         return withContext(Dispatchers.IO) {
             try {
@@ -62,7 +64,9 @@ class ProfileRepository @Inject constructor(
                     phone = phone,
                     bio = bio,
                     degreeProgram = degreeProgram,
-                    yearLevel = yearLevel
+                    yearLevel = yearLevel,
+                    hourlyRate = hourlyRate,
+                    yearsExperience = yearsExperience
                 )
                 
                 val response = profileApi.updateProfile(request)
@@ -106,6 +110,24 @@ class ProfileRepository @Inject constructor(
                 } else {
                     val errorMsg = response.body()?.error?.message ?: "Failed to change password"
                     Result.Error(errorMsg)
+                }
+            } catch (e: Exception) {
+                Result.Error(e.message ?: "Network error occurred")
+            }
+        }
+    }
+
+    suspend fun uploadAvatar(filePart: okhttp3.MultipartBody.Part): Result<String> {
+        return withContext(Dispatchers.IO) {
+            try {
+                if (!tokenManager.isLoggedIn()) return@withContext Result.Error("Not authenticated")
+                
+                val response = profileApi.uploadAvatar(filePart)
+                if (response.isSuccessful && response.body()?.success == true) {
+                    val pathname = response.body()?.data?.get("avatarUrl") ?: ""
+                    Result.Success(pathname)
+                } else {
+                    Result.Error(response.body()?.error?.message ?: "Upload failed")
                 }
             } catch (e: Exception) {
                 Result.Error(e.message ?: "Network error occurred")

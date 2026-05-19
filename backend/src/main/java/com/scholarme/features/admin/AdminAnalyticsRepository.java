@@ -10,6 +10,6 @@ import java.util.UUID;
 
 @Repository
 public interface AdminAnalyticsRepository extends JpaRepository<AnalyticsLog, UUID> {
-    @Query("SELECT a FROM AnalyticsLog a WHERE (:eventType IS NULL OR a.eventType = :eventType) ORDER BY a.createdAt DESC")
-    List<AnalyticsLog> findByEventType(String eventType, Pageable pageable);
+    @Query("SELECT a FROM AnalyticsLog a WHERE (:action IS NULL OR a.action = :action) ORDER BY a.createdAt DESC")
+    List<AnalyticsLog> findByAction(String action, Pageable pageable);
 }

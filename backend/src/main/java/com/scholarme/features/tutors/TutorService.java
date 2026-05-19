@@ -60,7 +60,7 @@ public class TutorService {
                 .bio(tutor.getUser().getBio())
                 .rating(tutor.getRating().doubleValue())
                 .totalRatings(tutor.getTotalRatings())
-                .totalSessions(tutor.getTotalSessions())
+                .totalSessions(0)
                 .isAvailable(tutor.getIsAvailable())
                 .build();
     }

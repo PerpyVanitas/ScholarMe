@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { 
   User, Mail, Phone, Calendar, Clock, Award, Edit2, Loader2, 
-  Key, Eye, EyeOff, Trash2, AlertTriangle, Camera, X
+  Key, Eye, EyeOff, Trash2, AlertTriangle, Camera, X, BookOpen, Star
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { updateProfile, UpdateProfileData, updateTutorInfo } from "./actions";
@@ -40,6 +40,8 @@ export default function ProfilePage() {
   const [editPhone, setEditPhone] = useState("");
   const [editBirthdate, setEditBirthdate] = useState("");
   const [editMembershipNumber, setEditMembershipNumber] = useState("");
+  const [editDegreeProgram, setEditDegreeProgram] = useState("");
+  const [editYearLevel, setEditYearLevel] = useState("");
   const [editAvatarUrl, setEditAvatarUrl] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
@@ -105,7 +107,7 @@ export default function ProfilePage() {
           const { data: tutorInfo } = await supabase
             .from("tutors")
             .select("id, bio, hourly_rate, years_experience, tutor_specializations(specializations(id, name))")
-            .eq("profile_id", user.id)
+            .eq("user_id", user.id)
             .single();
 
           if (tutorInfo) {
@@ -151,6 +153,8 @@ export default function ProfilePage() {
     setEditPhone(profile.phone_number || "");
     setEditBirthdate(profile.birthdate || profile.date_of_birth || "");
     setEditMembershipNumber(profile.membership_number || "");
+    setEditDegreeProgram(profile.degree_program || "");
+    setEditYearLevel(profile.year_level?.toString() || "");
     // Set avatar URL - convert pathname to API route if needed
     if (profile.avatar_url?.startsWith("avatars/")) {
       setEditAvatarUrl(`/api/avatar?pathname=${encodeURIComponent(profile.avatar_url)}`);
@@ -282,6 +286,8 @@ export default function ProfilePage() {
       phone_number: editPhone.trim() || null,
       birthdate: editBirthdate || null,
       membership_number: isTutor ? editMembershipNumber.trim() || null : null,
+      degree_program: !isTutor ? editDegreeProgram.trim() || null : null,
+      year_level: !isTutor ? parseInt(editYearLevel) || null : null,
     };
 
     const result = await updateProfile(updateData);
@@ -297,6 +303,8 @@ export default function ProfilePage() {
         birthdate: updateData.birthdate,
         date_of_birth: updateData.birthdate,
         membership_number: updateData.membership_number,
+        degree_program: updateData.degree_program,
+        year_level: updateData.year_level,
       } : null);
       
       toast.success("Profile updated successfully");
@@ -511,6 +519,25 @@ export default function ProfilePage() {
                       <p className="text-sm text-muted-foreground">{profile.membership_number || "Not set"}</p>
                     </div>
                   </div>
+                )}
+
+                {!isTutor && (
+                  <>
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                      <BookOpen className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium">Degree Program</p>
+                        <p className="text-sm text-muted-foreground">{profile.degree_program || "Not set"}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                      <Star className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium">Year Level</p>
+                        <p className="text-sm text-muted-foreground">{profile.year_level || "Not set"}</p>
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
             </CardContent>
@@ -787,6 +814,30 @@ export default function ProfilePage() {
                   placeholder="Enter membership number"
                 />
               </div>
+            )}
+
+            {!isTutor && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="editDegreeProgram">Degree Program</Label>
+                  <Input
+                    id="editDegreeProgram"
+                    value={editDegreeProgram}
+                    onChange={e => setEditDegreeProgram(e.target.value)}
+                    placeholder="e.g. BS Computer Science"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="editYearLevel">Year Level</Label>
+                  <Input
+                    id="editYearLevel"
+                    type="number"
+                    value={editYearLevel}
+                    onChange={e => setEditYearLevel(e.target.value)}
+                    placeholder="e.g. 1"
+                  />
+                </div>
+              </>
             )}
           </div>
 

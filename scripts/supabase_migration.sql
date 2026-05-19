@@ -37,21 +37,27 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   total_xp integer DEFAULT 0 NOT NULL,
   current_level integer DEFAULT 1 NOT NULL,
   profile_theme_color text DEFAULT 'default',
+  degree_program text,
+  year_level integer,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "profiles_select_own" ON public.profiles
+DROP POLICY IF EXISTS "profiles_select_own" ON public.profiles;
+CREATE POLICY "profiles_select_own" ON public.profiles
   FOR SELECT USING (auth.uid() = id);
 
-CREATE POLICY IF NOT EXISTS "profiles_update_own" ON public.profiles
+DROP POLICY IF EXISTS "profiles_update_own" ON public.profiles;
+CREATE POLICY "profiles_update_own" ON public.profiles
   FOR UPDATE USING (auth.uid() = id);
 
-CREATE POLICY IF NOT EXISTS "profiles_insert_own" ON public.profiles
+DROP POLICY IF EXISTS "profiles_insert_own" ON public.profiles;
+CREATE POLICY "profiles_insert_own" ON public.profiles
   FOR INSERT WITH CHECK (auth.uid() = id);
 
-CREATE POLICY IF NOT EXISTS "profiles_admin_select_all" ON public.profiles
+DROP POLICY IF EXISTS "profiles_admin_select_all" ON public.profiles;
+CREATE POLICY "profiles_admin_select_all" ON public.profiles
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM public.profiles p
@@ -60,7 +66,8 @@ CREATE POLICY IF NOT EXISTS "profiles_admin_select_all" ON public.profiles
     )
   );
 
-CREATE POLICY IF NOT EXISTS "profiles_admin_update_all" ON public.profiles
+DROP POLICY IF EXISTS "profiles_admin_update_all" ON public.profiles;
+CREATE POLICY "profiles_admin_update_all" ON public.profiles
   FOR UPDATE USING (
     EXISTS (
       SELECT 1 FROM public.profiles p
@@ -69,7 +76,8 @@ CREATE POLICY IF NOT EXISTS "profiles_admin_update_all" ON public.profiles
     )
   );
 
-CREATE POLICY IF NOT EXISTS "profiles_public_read_for_tutors" ON public.profiles
+DROP POLICY IF EXISTS "profiles_public_read_for_tutors" ON public.profiles;
+CREATE POLICY "profiles_public_read_for_tutors" ON public.profiles
   FOR SELECT USING (
     EXISTS (SELECT 1 FROM public.tutors WHERE user_id = profiles.id)
   );
@@ -124,7 +132,8 @@ CREATE TABLE IF NOT EXISTS public.auth_cards (
 
 ALTER TABLE public.auth_cards ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "auth_cards_admin_all" ON public.auth_cards
+DROP POLICY IF EXISTS "auth_cards_admin_all" ON public.auth_cards;
+CREATE POLICY "auth_cards_admin_all" ON public.auth_cards
   FOR ALL USING (
     EXISTS (
       SELECT 1 FROM public.profiles p
@@ -178,14 +187,20 @@ ALTER TABLE public.tutor_specializations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tutor_availability ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.specializations ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "tutors_public_read" ON public.tutors FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "tutors_own_write" ON public.tutors FOR ALL USING (user_id = auth.uid());
-CREATE POLICY IF NOT EXISTS "tutor_spec_public_read" ON public.tutor_specializations FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "tutor_avail_public_read" ON public.tutor_availability FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "tutor_avail_own_write" ON public.tutor_availability FOR ALL USING (
+DROP POLICY IF EXISTS "tutors_public_read" ON public.tutors;
+CREATE POLICY "tutors_public_read" ON public.tutors FOR SELECT USING (true);
+DROP POLICY IF EXISTS "tutors_own_write" ON public.tutors;
+CREATE POLICY "tutors_own_write" ON public.tutors FOR ALL USING (user_id = auth.uid());
+DROP POLICY IF EXISTS "tutor_spec_public_read" ON public.tutor_specializations;
+CREATE POLICY "tutor_spec_public_read" ON public.tutor_specializations FOR SELECT USING (true);
+DROP POLICY IF EXISTS "tutor_avail_public_read" ON public.tutor_availability;
+CREATE POLICY "tutor_avail_public_read" ON public.tutor_availability FOR SELECT USING (true);
+DROP POLICY IF EXISTS "tutor_avail_own_write" ON public.tutor_availability;
+CREATE POLICY "tutor_avail_own_write" ON public.tutor_availability FOR ALL USING (
   EXISTS (SELECT 1 FROM public.tutors WHERE id = tutor_id AND user_id = auth.uid())
 );
-CREATE POLICY IF NOT EXISTS "specializations_public_read" ON public.specializations FOR SELECT USING (true);
+DROP POLICY IF EXISTS "specializations_public_read" ON public.specializations;
+CREATE POLICY "specializations_public_read" ON public.specializations FOR SELECT USING (true);
 
 
 ================================================================================
@@ -210,23 +225,28 @@ CREATE TABLE IF NOT EXISTS public.sessions (
 
 ALTER TABLE public.sessions ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "sessions_learner_select" ON public.sessions
+DROP POLICY IF EXISTS "sessions_learner_select" ON public.sessions;
+CREATE POLICY "sessions_learner_select" ON public.sessions
   FOR SELECT USING (learner_id = auth.uid());
 
-CREATE POLICY IF NOT EXISTS "sessions_learner_insert" ON public.sessions
+DROP POLICY IF EXISTS "sessions_learner_insert" ON public.sessions;
+CREATE POLICY "sessions_learner_insert" ON public.sessions
   FOR INSERT WITH CHECK (learner_id = auth.uid());
 
-CREATE POLICY IF NOT EXISTS "sessions_tutor_select" ON public.sessions
+DROP POLICY IF EXISTS "sessions_tutor_select" ON public.sessions;
+CREATE POLICY "sessions_tutor_select" ON public.sessions
   FOR SELECT USING (
     EXISTS (SELECT 1 FROM public.tutors WHERE id = tutor_id AND user_id = auth.uid())
   );
 
-CREATE POLICY IF NOT EXISTS "sessions_tutor_update" ON public.sessions
+DROP POLICY IF EXISTS "sessions_tutor_update" ON public.sessions;
+CREATE POLICY "sessions_tutor_update" ON public.sessions
   FOR UPDATE USING (
     EXISTS (SELECT 1 FROM public.tutors WHERE id = tutor_id AND user_id = auth.uid())
   );
 
-CREATE POLICY IF NOT EXISTS "sessions_admin_all" ON public.sessions
+DROP POLICY IF EXISTS "sessions_admin_all" ON public.sessions;
+CREATE POLICY "sessions_admin_all" ON public.sessions
   FOR ALL USING (
     EXISTS (
       SELECT 1 FROM public.profiles p
@@ -275,17 +295,22 @@ ALTER TABLE public.polls ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.poll_options ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_votes ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "polls_public_read" ON public.polls FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "polls_admin_write" ON public.polls FOR INSERT WITH CHECK (
+DROP POLICY IF EXISTS "polls_public_read" ON public.polls;
+CREATE POLICY "polls_public_read" ON public.polls FOR SELECT USING (true);
+DROP POLICY IF EXISTS "polls_admin_write" ON public.polls;
+CREATE POLICY "polls_admin_write" ON public.polls FOR INSERT WITH CHECK (
   EXISTS (
     SELECT 1 FROM public.profiles p JOIN public.roles r ON p.role_id = r.id
     WHERE p.id = auth.uid() AND r.name = 'administrator'
   )
 );
-CREATE POLICY IF NOT EXISTS "poll_options_public_read" ON public.poll_options FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "user_votes_insert_own" ON public.user_votes
+DROP POLICY IF EXISTS "poll_options_public_read" ON public.poll_options;
+CREATE POLICY "poll_options_public_read" ON public.poll_options FOR SELECT USING (true);
+DROP POLICY IF EXISTS "user_votes_insert_own" ON public.user_votes;
+CREATE POLICY "user_votes_insert_own" ON public.user_votes
   FOR INSERT WITH CHECK (user_id = auth.uid());
-CREATE POLICY IF NOT EXISTS "user_votes_public_count" ON public.user_votes
+DROP POLICY IF EXISTS "user_votes_public_count" ON public.user_votes;
+CREATE POLICY "user_votes_public_count" ON public.user_votes
   FOR SELECT USING (true);
 
 CREATE INDEX IF NOT EXISTS idx_polls_status ON public.polls(status);
@@ -326,7 +351,8 @@ ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.conversation_participants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "conversations_participant_read" ON public.conversations
+DROP POLICY IF EXISTS "conversations_participant_read" ON public.conversations;
+CREATE POLICY "conversations_participant_read" ON public.conversations
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM public.conversation_participants
@@ -334,10 +360,12 @@ CREATE POLICY IF NOT EXISTS "conversations_participant_read" ON public.conversat
     )
   );
 
-CREATE POLICY IF NOT EXISTS "conversations_insert" ON public.conversations
+DROP POLICY IF EXISTS "conversations_insert" ON public.conversations;
+CREATE POLICY "conversations_insert" ON public.conversations
   FOR INSERT WITH CHECK (true);
 
-CREATE POLICY IF NOT EXISTS "participants_read" ON public.conversation_participants
+DROP POLICY IF EXISTS "participants_read" ON public.conversation_participants;
+CREATE POLICY "participants_read" ON public.conversation_participants
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM public.conversation_participants AS cp
@@ -346,7 +374,8 @@ CREATE POLICY IF NOT EXISTS "participants_read" ON public.conversation_participa
     )
   );
 
-CREATE POLICY IF NOT EXISTS "participants_insert" ON public.conversation_participants
+DROP POLICY IF EXISTS "participants_insert" ON public.conversation_participants;
+CREATE POLICY "participants_insert" ON public.conversation_participants
   FOR INSERT WITH CHECK (
     profile_id = auth.uid() OR
     EXISTS (
@@ -356,10 +385,12 @@ CREATE POLICY IF NOT EXISTS "participants_insert" ON public.conversation_partici
     )
   );
 
-CREATE POLICY IF NOT EXISTS "participants_update_own" ON public.conversation_participants
+DROP POLICY IF EXISTS "participants_update_own" ON public.conversation_participants;
+CREATE POLICY "participants_update_own" ON public.conversation_participants
   FOR UPDATE USING (profile_id = auth.uid());
 
-CREATE POLICY IF NOT EXISTS "messages_read" ON public.messages
+DROP POLICY IF EXISTS "messages_read" ON public.messages;
+CREATE POLICY "messages_read" ON public.messages
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM public.conversation_participants
@@ -367,7 +398,8 @@ CREATE POLICY IF NOT EXISTS "messages_read" ON public.messages
     )
   );
 
-CREATE POLICY IF NOT EXISTS "messages_insert" ON public.messages
+DROP POLICY IF EXISTS "messages_insert" ON public.messages;
+CREATE POLICY "messages_insert" ON public.messages
   FOR INSERT WITH CHECK (
     sender_id = auth.uid() AND
     EXISTS (
@@ -409,7 +441,8 @@ CREATE TABLE IF NOT EXISTS public.notifications (
 
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "notifications_own" ON public.notifications
+DROP POLICY IF EXISTS "notifications_own" ON public.notifications;
+CREATE POLICY "notifications_own" ON public.notifications
   FOR ALL USING (user_id = auth.uid());
 
 
@@ -432,10 +465,12 @@ CREATE TABLE IF NOT EXISTS public.xp_logs (
 
 ALTER TABLE public.xp_logs ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "xp_logs_own_read" ON public.xp_logs
+DROP POLICY IF EXISTS "xp_logs_own_read" ON public.xp_logs;
+CREATE POLICY "xp_logs_own_read" ON public.xp_logs
   FOR SELECT USING (auth.uid() = profile_id);
 
-CREATE POLICY IF NOT EXISTS "xp_logs_insert_any" ON public.xp_logs
+DROP POLICY IF EXISTS "xp_logs_insert_any" ON public.xp_logs;
+CREATE POLICY "xp_logs_insert_any" ON public.xp_logs
   FOR INSERT WITH CHECK (true);
 
 CREATE OR REPLACE FUNCTION update_profile_level()
@@ -471,7 +506,8 @@ CREATE TABLE IF NOT EXISTS public.device_tokens (
 
 ALTER TABLE public.device_tokens ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "device_tokens_own" ON public.device_tokens
+DROP POLICY IF EXISTS "device_tokens_own" ON public.device_tokens;
+CREATE POLICY "device_tokens_own" ON public.device_tokens
   FOR ALL USING (user_id = auth.uid());
 
 
@@ -481,35 +517,37 @@ STEP 10 — REPOSITORIES AND RESOURCES
 
 CREATE TABLE IF NOT EXISTS public.repositories (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
-  tutor_id uuid REFERENCES public.tutors(id) ON DELETE SET NULL,
-  name text NOT NULL,
+  owner_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  title text NOT NULL,
   description text,
-  is_public boolean DEFAULT false,
-  created_at timestamptz DEFAULT now()
+  access_role text NOT NULL DEFAULT 'all' CHECK (access_role IN ('all', 'tutor', 'admin')),
+  created_at timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS public.resources (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  repository_id uuid REFERENCES public.repositories(id) ON DELETE CASCADE,
+  repository_id uuid NOT NULL REFERENCES public.repositories(id) ON DELETE CASCADE,
   title text NOT NULL,
   description text,
-  file_url text,
+  url text NOT NULL,
   file_type text,
-  file_size integer,
-  created_at timestamptz DEFAULT now()
+  uploaded_by uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now()
 );
 
 ALTER TABLE public.repositories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.resources ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "repositories_own_or_public" ON public.repositories
+DROP POLICY IF EXISTS "repositories_own_or_public" ON public.repositories;
+CREATE POLICY "repositories_own_or_public" ON public.repositories
   FOR SELECT USING (owner_id = auth.uid() OR is_public = true);
 
-CREATE POLICY IF NOT EXISTS "repositories_own_write" ON public.repositories
+DROP POLICY IF EXISTS "repositories_own_write" ON public.repositories;
+CREATE POLICY "repositories_own_write" ON public.repositories
   FOR ALL USING (owner_id = auth.uid());
 
-CREATE POLICY IF NOT EXISTS "resources_repo_access" ON public.resources
+DROP POLICY IF EXISTS "resources_repo_access" ON public.resources;
+CREATE POLICY "resources_repo_access" ON public.resources
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM public.repositories r
@@ -535,7 +573,8 @@ CREATE TABLE IF NOT EXISTS public.analytics_logs (
 
 ALTER TABLE public.analytics_logs ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "analytics_admin_read" ON public.analytics_logs
+DROP POLICY IF EXISTS "analytics_admin_read" ON public.analytics_logs;
+CREATE POLICY "analytics_admin_read" ON public.analytics_logs
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM public.profiles p JOIN public.roles r ON p.role_id = r.id
@@ -543,7 +582,8 @@ CREATE POLICY IF NOT EXISTS "analytics_admin_read" ON public.analytics_logs
     )
   );
 
-CREATE POLICY IF NOT EXISTS "analytics_own_insert" ON public.analytics_logs
+DROP POLICY IF EXISTS "analytics_own_insert" ON public.analytics_logs;
+CREATE POLICY "analytics_own_insert" ON public.analytics_logs
   FOR INSERT WITH CHECK (user_id = auth.uid());
 
 

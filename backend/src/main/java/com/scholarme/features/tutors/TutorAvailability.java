@@ -29,6 +29,7 @@ public class TutorAvailability {
     @Column(name = "end_time", nullable = false)
     private LocalTime endTime;
 
+    @Builder.Default
     @Column(name = "is_available")
     private Boolean isAvailable = true;
 }

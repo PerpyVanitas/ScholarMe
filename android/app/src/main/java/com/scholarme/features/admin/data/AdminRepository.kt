@@ -130,4 +130,34 @@ class AdminRepository @Inject constructor(
             }
         }
     }
+
+    suspend fun revokeCard(cardId: String): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = adminApi.revokeCard(cardId)
+                if (response.isSuccessful && response.body()?.success == true) {
+                    Result.Success(Unit)
+                } else {
+                    Result.Error("Failed to revoke card")
+                }
+            } catch (e: Exception) {
+                Result.Error(e.message ?: "Network error occurred")
+            }
+        }
+    }
+
+    suspend fun updateUserRole(userId: String, newRole: String): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = adminApi.updateUserRole(userId, mapOf("role" to newRole))
+                if (response.isSuccessful && response.body()?.success == true) {
+                    Result.Success(Unit)
+                } else {
+                    Result.Error("Failed to update user role")
+                }
+            } catch (e: Exception) {
+                Result.Error(e.message ?: "Network error occurred")
+            }
+        }
+    }
 }

@@ -7,7 +7,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,7 +36,7 @@ fun LeaderboardScreen(
                 title = { Text("Global Leaderboard", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Back", modifier = Modifier.rotate(270f))
+                        Icon(androidx.compose.material.icons.Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {

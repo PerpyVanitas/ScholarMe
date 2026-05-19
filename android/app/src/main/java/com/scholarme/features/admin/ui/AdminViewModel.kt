@@ -78,4 +78,25 @@ class AdminViewModel @Inject constructor(
             fetchCards()
         }
     }
+
+    fun revokeCard(cardId: String) {
+        viewModelScope.launch {
+            repository.revokeCard(cardId)
+            fetchCards()
+        }
+    }
+
+    fun updateUserRole(userId: String, newRole: String) {
+        viewModelScope.launch {
+            repository.updateUserRole(userId, newRole)
+            fetchUsers()
+        }
+    }
+
+    private fun fetchUsers() {
+        viewModelScope.launch {
+            // This would update a _users StateFlow if I added it
+            repository.getUsers()
+        }
+    }
 }

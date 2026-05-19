@@ -28,7 +28,7 @@ interface AdminApi {
     @GET("admin/cards")
     suspend fun getAdminCards(): Response<ApiResponse<List<AuthCard>>>
 
-    @POST("admin/cards/issue")
+    @POST("admin/cards")
     suspend fun issueCard(
         @Body request: Map<String, String>
     ): Response<ApiResponse<Unit>>
@@ -40,4 +40,15 @@ interface AdminApi {
         @Query("role") role: String? = null,
         @Query("search") search: String? = null
     ): Response<ApiResponse<List<UserProfile>>>
+
+    @POST("admin/cards/{id}/revoke")
+    suspend fun revokeCard(
+        @Path("id") id: String
+    ): Response<ApiResponse<Unit>>
+
+    @PATCH("admin/users/{id}/role")
+    suspend fun updateUserRole(
+        @Path("id") id: String,
+        @Body role: Map<String, String>
+    ): Response<ApiResponse<Unit>>
 }

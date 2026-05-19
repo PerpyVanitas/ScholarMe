@@ -1,0 +1,57 @@
+name: ScholarMe CI
+
+on:
+  push:
+    branches: [ main, master, dev ]
+  pull_request:
+    branches: [ main, master, dev ]
+
+jobs:
+  # 1. Next.js Web Validation
+  web-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-on: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Next.js Build
+        run: npm run build
+
+  # 2. Spring Boot Backend Unit Tests
+  backend-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+      - name: Run Spring Boot Tests
+        run: |
+          cd backend
+          chmod +x mvnw
+          ./mvnw test
+
+  # 3. Android Mobile Unit Tests
+  android-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+      - name: Run Android JVM Tests
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew test

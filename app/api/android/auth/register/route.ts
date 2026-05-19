@@ -71,11 +71,14 @@ export async function POST(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Resolve role ID from role name
+    const requestedRole = (accountType || role || "learner").toLowerCase();
+    const safeRole = requestedRole === "tutor" ? "tutor" : "learner";
+
+    // Resolve role ID from a public-registration allowlist.
     const { data: roleData } = await adminClient
       .from("roles")
       .select("id")
-      .eq("name", (accountType || role || "learner").toLowerCase())
+      .eq("name", safeRole)
       .single();
 
     const roleId = roleData?.id;
@@ -116,7 +119,7 @@ export async function POST(request: Request) {
           id: data.user.id,
           email: data.user.email,
           fullName: fullName || `${firstName} ${lastName}`,
-          role: (accountType || role || "learner").toLowerCase(),
+          role: safeRole,
           isProfileComplete: false
         },
       },

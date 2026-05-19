@@ -24,4 +24,13 @@ interface ProfileApi {
         @Path("id") userId: String,
         @Body request: Map<String, String>
     ): Response<ApiResponse<Map<String, String>>>
+
+    @Multipart
+    @POST("avatar")
+    suspend fun uploadAvatar(
+        @Part file: okhttp3.MultipartBody.Part
+    ): Response<ApiResponse<Map<String, String>>>
+
+    @DELETE("avatar")
+    suspend fun deleteAvatar(): Response<ApiResponse<Unit>>
 }

@@ -4,32 +4,23 @@ import com.google.gson.annotations.SerializedName
 
 data class RepositoryDto(
     val id: String,
+    @SerializedName("ownerId") val ownerId: String,
     val title: String,
     val description: String? = null,
-    val visibility: String = "private",
-    @SerializedName("ownerId") val ownerId: String,
+    @SerializedName("accessRole") val accessRole: String,
+    @SerializedName("createdAt") val createdAt: String,
     @SerializedName("ownerName") val ownerName: String? = null,
-    @SerializedName("resourceCount") val resourceCount: Long = 0,
-    @SerializedName("createdAt") val createdAt: String? = null,
-    @SerializedName("updatedAt") val updatedAt: String? = null
+    @SerializedName("itemCount") val itemCount: Int = 0
 )
 
 data class ResourceDto(
     val id: String,
+    @SerializedName("repositoryId") val repositoryId: String,
     val title: String,
     val description: String? = null,
-    val url: String? = null,
+    val url: String,
     @SerializedName("fileType") val fileType: String? = null,
-    @SerializedName("fileSize") val fileSize: Long? = null,
-    @SerializedName("uploadedById") val uploadedById: String? = null,
-    @SerializedName("uploadedByName") val uploadedByName: String? = null,
-    @SerializedName("createdAt") val createdAt: String? = null
-)
-
-data class RepositoryListResponse(
-    val repositories: List<RepositoryDto>
-)
-
-data class ResourceListResponse(
-    val resources: List<ResourceDto>
+    @SerializedName("uploadedBy") val uploadedBy: String,
+    @SerializedName("createdAt") val createdAt: String,
+    @SerializedName("uploaderName") val uploaderName: String? = null
 )

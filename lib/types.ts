@@ -19,6 +19,10 @@ export interface Profile {
   birthdate?: string | null
   date_of_birth?: string | null
   membership_number?: string | null
+  degree_program?: string | null
+  year_level?: number | null
+  total_xp?: number
+  current_level?: number
   profile_completed?: boolean | null
   terms_accepted_at?: string | null
   created_at: string

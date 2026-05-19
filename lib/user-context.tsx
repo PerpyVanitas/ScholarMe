@@ -32,16 +32,16 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setIsAuthenticated(true);
       const { data: p } = await supabase
         .from("profiles")
-        .select("id, email, full_name, first_name, last_name, avatar_url, phone_number, birthdate, date_of_birth, membership_number, role_id, created_at, roles(id, name)")
+        .select("id, email, full_name, first_name, last_name, avatar_url, phone_number, birthdate, date_of_birth, membership_number, degree_program, year_level, total_xp, current_level, role_id, created_at, roles(id, name)")
         .eq("id", user.id)
         .maybeSingle();
 
       if (p) {
         setProfile({
           ...p,
-          roles: Array.isArray(p.roles) ? p.roles : undefined,
+          roles: Array.isArray(p.roles) ? p.roles : p.roles ? [p.roles as any] : undefined,
         } as Profile);
-        const roleName = Array.isArray(p.roles) && p.roles.length > 0 ? p.roles[0].name : "learner";
+        const roleName = Array.isArray(p.roles) ? (p.roles[0]?.name ?? "learner") : ((p.roles as any)?.name ?? "learner");
         setRole(roleName as UserRole);
       } else {
         // Profile not found, create a fallback
@@ -70,16 +70,16 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const { role: demoRole, userId: demoUserId } = getDemoUserFromCookie("learner");
       const { data: demoProfile } = await supabase
         .from("profiles")
-        .select("id, email, full_name, avatar_url, role_id, created_at, roles(id, name)")
+        .select("id, email, full_name, avatar_url, degree_program, year_level, total_xp, current_level, role_id, created_at, roles(id, name)")
         .eq("id", demoUserId)
         .maybeSingle();
 
       if (demoProfile) {
         setProfile({
           ...demoProfile,
-          roles: Array.isArray(demoProfile.roles) ? demoProfile.roles : undefined,
+          roles: Array.isArray(demoProfile.roles) ? demoProfile.roles : demoProfile.roles ? [demoProfile.roles as any] : undefined,
         } as Profile);
-        const roleName = Array.isArray(demoProfile.roles) && demoProfile.roles.length > 0 ? demoProfile.roles[0].name : demoRole;
+        const roleName = Array.isArray(demoProfile.roles) ? (demoProfile.roles[0]?.name ?? demoRole) : ((demoProfile.roles as any)?.name ?? demoRole);
         setRole(roleName as UserRole);
       } else {
         const demoInfo = DEMO_USERS[demoRole as keyof typeof DEMO_USERS] || DEMO_USERS.learner;

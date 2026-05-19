@@ -53,10 +53,12 @@ A high-performance academic management ecosystem built with **Next.js**, **Supab
 
 | Layer | Technology |
 | :--- | :--- |
-| **Backend / API** | [Next.js API Routes](https://nextjs.org) (Serverless, TypeScript) |
+| **Backend Services** | [Spring Boot](https://spring.io/projects/spring-boot) (Java 17, JPA, Spring Security) |
+| **Serverless API** | [Next.js API Routes](https://nextjs.org) (Serverless, TypeScript) |
 | **BaaS / Database** | [Supabase](https://supabase.com) (PostgreSQL, Auth, Realtime, Storage) |
 | **Web Frontend** | [Next.js](https://nextjs.org) (React 19, App Router, Tailwind CSS v4) |
 | **Android Mobile** | [Kotlin](https://kotlinlang.org) + [Jetpack Compose](https://developer.android.com/compose) |
+| **Testing Suite** | [JUnit 5](https://junit.org) + [Mockito](https://site.mockito.org) + [Coroutines Test](https://github.com/Kotlin/kotlinx.coroutines/tree/master/kotlinx-coroutines-test) |
 | **Real-Time** | [Supabase Realtime](https://supabase.com/realtime) (PostgreSQL Changes, Broadcast) |
 | **Push Alerts** | [Firebase Cloud Messaging (FCM)](https://firebase.google.com/docs/cloud-messaging) |
 | **Styling** | [shadcn/ui](https://ui.shadcn.com) + [Lucide Icons](https://lucide.dev) |
@@ -154,6 +156,18 @@ Our flagship mobile client provides the full ScholarMe experience with an emphas
 
 ### React Native / Expo (Legacy)
 Located in `mobile/`, this client is maintained for cross-platform prototyping.
+
+---
+
+## 🛡️ Enterprise Standards & Testing
+
+ScholarMe enforces enterprise-grade security and reliability standards:
+* **Request Sanitization**: Next.js route inputs are validated using `zod` schemas to prevent injection attacks and illegal database states.
+* **Response Caching**: Volatile, read-heavy directories (e.g. leaderboard and tutors) implement a 5-minute CDN and browser HTTP cache window using `Cache-Control` header structures.
+* **Automated Quality Verification**:
+  * **Next.js Web Suite**: Compile and build using `npm run build`.
+  * **Spring Boot Backend**: Execute the JUnit/Mockito test suite via `mvnw test` inside `/backend`.
+  * **Android Mobile Suite**: Execute Compose and Coroutine Unit tests via `gradlew test` inside `/android`.
 
 ---
 

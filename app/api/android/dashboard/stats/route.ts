@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/create-client";
+import { createSupabaseForBearer } from "@/lib/supabase/bearer-client";
 import { createAdminClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
 
@@ -18,7 +18,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const supabase = await createClient();
+    const supabase = createSupabaseForBearer(token);
     const { data: authData, error: authError } = await supabase.auth.getUser(token);
     if (authError || !authData.user) {
       return NextResponse.json(

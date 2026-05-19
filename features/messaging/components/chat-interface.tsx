@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send, MessageSquare, Search } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import type { Conversation, Message, Profile } from "@/lib/types";
+import type { Conversation, ConversationMessage, Message, Profile } from "@/lib/types";
 
 interface ChatInterfaceProps {
   initialConversations: Conversation[];
@@ -26,6 +26,14 @@ export function ChatInterface({ initialConversations, currentUserId }: ChatInter
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const activeConversation = conversations.find((c) => c.id === activeConversationId);
+
+  const toConversationMessage = (message: Message): ConversationMessage => ({
+    id: message.id,
+    conversation_id: message.conversation_id,
+    sender_id: message.sender_id,
+    content: message.content,
+    created_at: message.created_at,
+  });
 
   // Helper to get the "other" user's profile in a 1-on-1 chat
   const getOtherParticipant = (conv: Conversation): Profile | null => {
@@ -66,12 +74,14 @@ export function ChatInterface({ initialConversations, currentUserId }: ChatInter
           'postgres_changes',
           { event: 'INSERT', schema: 'public', table: 'messages' },
           async (payload) => {
+            const insertedMessage = payload.new as Message;
+
             // Update the conversation list to show the latest message
             setConversations(prev => prev.map(conv => {
-              if (conv.id === payload.new.conversation_id) {
+              if (conv.id === insertedMessage.conversation_id) {
                 return {
                   ...conv,
-                  messages: [payload.new, ...(conv.messages || [])],
+                  messages: [toConversationMessage(insertedMessage), ...(conv.messages || [])],
                   updated_at: new Date().toISOString()
                 };
               }
@@ -79,9 +89,9 @@ export function ChatInterface({ initialConversations, currentUserId }: ChatInter
             }).sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()));
 
             // If it's for the active chat, handled by active channel or we can just append here
-            if (payload.new.conversation_id === activeConversationId) {
+            if (insertedMessage.conversation_id === activeConversationId) {
                // Profile fetch logic (simplified for global)
-               setMessages(prev => [...prev, payload.new as Message]);
+               setMessages(prev => [...prev, insertedMessage]);
             }
           }
         )

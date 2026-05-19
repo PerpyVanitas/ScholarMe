@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/create-client";
+import { createSupabaseForBearer } from "@/lib/supabase/bearer-client";
 import { NextResponse } from "next/server";
 
 function getBearerToken(request: Request): string | null {
@@ -7,7 +7,7 @@ function getBearerToken(request: Request): string | null {
 }
 
 async function getAuthUser(token: string) {
-  const supabase = await createClient();
+  const supabase = createSupabaseForBearer(token);
   const { data, error } = await supabase.auth.getUser(token);
   return { supabase, user: error ? null : data.user };
 }
