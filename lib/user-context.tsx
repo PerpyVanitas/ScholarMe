@@ -179,7 +179,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth state changes
     const supabase = createClient();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any) => {
       if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") {
         loadUserData();
       }

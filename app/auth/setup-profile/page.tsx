@@ -97,7 +97,7 @@ export default function SetupProfilePage() {
               .select("specialization_id")
               .eq("tutor_id", tutorRow.id)
             if (tutorSpecs) {
-              setSelectedSpecs(tutorSpecs.map(s => s.specialization_id))
+              setSelectedSpecs(tutorSpecs.map((s: any) => s.specialization_id))
             }
           }
         }
@@ -153,9 +153,9 @@ export default function SetupProfilePage() {
   }
 
   function toggleSpec(specId: string) {
-    setSelectedSpecs(prev =>
+    setSelectedSpecs((prev: string[]) =>
       prev.includes(specId)
-        ? prev.filter(id => id !== specId)
+        ? prev.filter((id: string) => id !== specId)
         : [...prev, specId]
     )
   }
@@ -214,7 +214,7 @@ export default function SetupProfilePage() {
             await supabase
               .from("tutor_specializations")
               .insert(
-                selectedSpecs.map(specId => ({
+                selectedSpecs.map((specId: string) => ({
                   tutor_id: tutorRow!.id,
                   specialization_id: specId,
                 }))
@@ -298,7 +298,7 @@ export default function SetupProfilePage() {
               <Input
                 id="firstName"
                 value={firstName}
-                onChange={e => setFirstName(e.target.value)}
+                onChange={(e: any) => setFirstName(e.target.value)}
                 placeholder="Juan"
               />
             </div>
@@ -307,7 +307,7 @@ export default function SetupProfilePage() {
               <Input
                 id="lastName"
                 value={lastName}
-                onChange={e => setLastName(e.target.value)}
+                onChange={(e: any) => setLastName(e.target.value)}
                 placeholder="Dela Cruz"
               />
             </div>
@@ -320,7 +320,7 @@ export default function SetupProfilePage() {
               id="birthdate"
               type="date"
               value={birthdate}
-              onChange={e => setBirthdate(e.target.value)}
+              onChange={(e: any) => setBirthdate(e.target.value)}
             />
           </div>
 
@@ -332,7 +332,7 @@ export default function SetupProfilePage() {
                 <Input
                   id="membershipNumber"
                   value={membershipNumber}
-                  onChange={e => setMembershipNumber(e.target.value)}
+                  onChange={(e: any) => setMembershipNumber(e.target.value)}
                   placeholder="e.g. TM-2025-001"
                 />
               </div>
@@ -341,7 +341,7 @@ export default function SetupProfilePage() {
                 <Label>Specializations</Label>
                 <p className="text-xs text-muted-foreground">Select the subjects you can tutor</p>
                 <div className="flex flex-wrap gap-2 pt-1">
-                  {specializations.map(spec => {
+                  {specializations.map((spec: any) => {
                     const isSelected = selectedSpecs.includes(spec.id)
                     return (
                       <button
