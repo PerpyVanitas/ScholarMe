@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextRequest, NextResponse } from "next/server"
+import { STUDY_SET_DETAIL_SELECT } from "@/lib/study-sets/db"
 
 export async function GET(
   request: NextRequest,
@@ -12,11 +13,7 @@ export async function GET(
 
     const { data, error } = await supabase
       .from("study_sets")
-      .select(`
-        *,
-        study_set_items(*),
-        profiles:user_id(full_name, avatar_url)
-      `)
+      .select(STUDY_SET_DETAIL_SELECT)
       .eq("id", id)
       .single()
 

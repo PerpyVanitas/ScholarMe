@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       .from("quiz_attempts")
       .select(`
         *,
-        study_sets(title, type)
+        study_sets(title, type:generation_mode)
       `)
       .eq("user_id", user.id)
       .order("completed_at", { ascending: false })

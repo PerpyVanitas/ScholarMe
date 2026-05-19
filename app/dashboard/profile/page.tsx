@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { updateProfile, UpdateProfileData, updateTutorInfo } from "./actions";
 import { useUser } from "@/lib/user-context";
 import { QrIdCard } from "@/features/auth/components/qr-id-card";
+import { getRoleName } from "@/lib/utils/roles";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -126,10 +127,11 @@ export default function ProfilePage() {
         setRoleName(fallbackRole);
       } else {
         setProfile(data);
-        if (data.roles?.name) setRoleName(data.roles.name);
+        const loadedRole = getRoleName(data);
+        setRoleName(loadedRole);
 
         // Load tutor data and specializations if tutor
-        if (data.roles?.name === "tutor") {
+        if (loadedRole === "tutor") {
           // Load all available specializations
           const { data: allSpecs } = await supabase
             .from("specializations")

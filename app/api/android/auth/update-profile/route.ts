@@ -1,5 +1,7 @@
 import { createSupabaseForBearer } from "@/lib/supabase/bearer-client";
 import { NextResponse } from "next/server";
+import { birthdateFields } from "@/lib/profiles/db";
+import { getRoleName } from "@/lib/utils/roles";
 
 export async function PUT(request: Request) {
   try {
@@ -57,8 +59,7 @@ export async function PUT(request: Request) {
       last_name: derivedLastName || null,
       full_name: fullName || `${derivedFirstName} ${derivedLastName}`.trim(),
       phone_number: phoneNumber || null,
-      birthdate: birthdate || null,
-      date_of_birth: birthdate || null,
+      ...birthdateFields(birthdate || null),
       bio: bio || null,
       degree_program: degreeProgram || null,
       year_level: yearLevel !== undefined && yearLevel !== null ? Number(yearLevel) : null,
@@ -69,7 +70,7 @@ export async function PUT(request: Request) {
       .from("profiles")
       .update(updateData)
       .eq("id", data.user.id)
-      .select("*, roles:roles!role_id(name)")
+      .select("*, roles(name)")
       .single();
 
     if (updateError) {
@@ -80,9 +81,7 @@ export async function PUT(request: Request) {
       );
     }
 
-    const roleName: string = Array.isArray(profile?.roles)
-      ? (profile.roles[0]?.name ?? "learner")
-      : ((profile?.roles as any)?.name ?? "learner");
+    const roleName = getRoleName(profile);
 
     // Update tutor details if the user is a tutor
     if (roleName === "tutor") {

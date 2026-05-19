@@ -1,5 +1,6 @@
 import { createSupabaseForBearer } from "@/lib/supabase/bearer-client";
 import { NextResponse } from "next/server";
+import { getRoleName } from "@/lib/utils/roles";
 
 export async function GET(request: Request) {
   try {
@@ -30,7 +31,7 @@ export async function GET(request: Request) {
     // Fetch complete profile with role name
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("*, roles:roles!role_id(name)")
+      .select("*, roles(name)")
       .eq("id", data.user.id)
       .single();
 
@@ -41,9 +42,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const roleName: string = Array.isArray(profile?.roles)
-      ? (profile.roles[0]?.name ?? "learner")
-      : ((profile?.roles as any)?.name ?? "learner");
+    const roleName = getRoleName(profile);
 
     // Fetch additional stats if tutor
     let tutorStats = null;
@@ -82,7 +81,7 @@ export async function GET(request: Request) {
         fullName: profile.full_name,
         email: profile.email,
         phoneNumber: profile.phone_number,
-        birthdate: profile.birthdate,
+        birthdate: profile.birthdate || profile.date_of_birth || null,
         avatarUrl: formatAvatarUrl(profile.avatar_url),
         accountType: roleName,
         profileCompleted: profile.profile_completed,

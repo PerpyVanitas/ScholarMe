@@ -2,6 +2,7 @@
 
 import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
+import { birthdateFields, resolveRoleId } from "@/lib/profiles/db"
 
 export async function loginWithEmail(formData: FormData) {
   const supabase = await createClient()
@@ -23,7 +24,8 @@ export async function signUp(formData: FormData) {
   const fullName = `${firstName.trim()} ${lastName.trim()}`
   const phoneNumber = formData.get("phone_number") as string
   const dateOfBirth = formData.get("date_of_birth") as string
-  const selectedRole = (formData.get("role") as string) || "learner"
+  const requestedRole = (formData.get("role") as string) || "learner"
+  const selectedRole = requestedRole === "tutor" ? "tutor" : "learner"
 
   // Check if phone number is already registered
   if (phoneNumber) {
@@ -38,11 +40,7 @@ export async function signUp(formData: FormData) {
     }
   }
 
-  const { data: roleRow } = await supabase
-    .from("roles")
-    .select("id")
-    .eq("name", selectedRole)
-    .single()
+  const roleId = await resolveRoleId(adminClient, selectedRole)
 
   const { data: created, error: createError } = await adminClient.auth.admin.createUser({
     email,
@@ -54,14 +52,14 @@ export async function signUp(formData: FormData) {
       last_name: lastName.trim(),
       phone_number: phoneNumber,
       date_of_birth: dateOfBirth,
-      role_id: roleRow?.id,
+      role_id: roleId,
       role_name: selectedRole,
     },
   })
   if (createError) return { error: createError.message }
 
   if (created?.user) {
-    await adminClient
+    const { error: profileError } = await adminClient
       .from("profiles")
       .upsert({
         id: created.user.id,
@@ -70,11 +68,12 @@ export async function signUp(formData: FormData) {
         last_name: lastName.trim(),
         email,
         phone_number: phoneNumber,
-        date_of_birth: dateOfBirth ? new Date(dateOfBirth).toISOString().split('T')[0] : null,
-        birthdate: dateOfBirth ? new Date(dateOfBirth).toISOString().split('T')[0] : null,
-        role_id: roleRow?.id || null,
+        ...birthdateFields(dateOfBirth || null),
+        role_id: roleId,
         terms_accepted_at: new Date().toISOString(),
       }, { onConflict: "id" })
+
+    if (profileError) return { error: profileError.message }
   }
 
   const { error: signInError } = await supabase.auth.signInWithPassword({

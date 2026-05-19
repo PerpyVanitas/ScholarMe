@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { birthdateFields, resolveRoleId } from "@/lib/profiles/db";
 
 export interface UpdateProfileData {
   first_name: string;
@@ -32,22 +33,13 @@ export async function updateProfile(data: UpdateProfileData) {
   let roleId = existingProfile?.role_id;
 
   if (!roleId) {
-    // Determine role from metadata or email
     let fallbackRole = "learner";
     if (user.email === "admin@scholarme.org" || user.user_metadata?.role_name === "administrator" || user.user_metadata?.role === "administrator") {
       fallbackRole = "administrator";
     } else if (user.user_metadata?.role_name === "tutor" || user.user_metadata?.role === "tutor") {
       fallbackRole = "tutor";
     }
-
-    const { data: roleRow } = await supabase
-      .from("roles")
-      .select("id")
-      .eq("name", fallbackRole)
-      .maybeSingle();
-    if (roleRow) {
-      roleId = roleRow.id;
-    }
+    roleId = await resolveRoleId(supabase, fallbackRole);
   }
 
   const { error } = await supabase
@@ -59,8 +51,7 @@ export async function updateProfile(data: UpdateProfileData) {
       last_name: data.last_name,
       full_name: `${data.first_name} ${data.last_name}`.trim(),
       phone_number: data.phone_number,
-      birthdate: data.birthdate,
-      date_of_birth: data.birthdate,
+      ...birthdateFields(data.birthdate),
       membership_number: data.membership_number,
       degree_program: data.degree_program,
       year_level: data.year_level,

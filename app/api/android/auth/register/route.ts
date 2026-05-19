@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/create-client";
 import { createClient as createBareAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { resolveRoleId } from "@/lib/profiles/db";
 
 export async function POST(request: Request) {
   try {
@@ -61,16 +62,10 @@ export async function POST(request: Request) {
       }
     }
 
-    // Resolve role ID from a public-registration allowlist.
-    const { data: roleData } = await adminClient
-      .from("roles")
-      .select("id")
-      .eq("name", safeRole)
-      .single();
-
-    const roleId = roleData?.id;
-
-    if (!roleId) {
+    let roleId: string;
+    try {
+      roleId = await resolveRoleId(adminClient, safeRole);
+    } catch {
       return NextResponse.json(
         { success: false, message: "Invalid role specified" },
         { status: 400 }

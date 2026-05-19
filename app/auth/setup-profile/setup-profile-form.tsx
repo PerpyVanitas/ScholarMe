@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { GraduationCap, Camera, Loader2, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
+import { birthdateFields } from "@/lib/profiles/db"
 
 interface Specialization {
   id: string
@@ -120,7 +121,7 @@ export function SetupProfileForm({
           first_name: firstName.trim(),
           last_name: lastName.trim(),
           full_name: `${firstName.trim()} ${lastName.trim()}`,
-          birthdate: birthdate || null,
+          ...birthdateFields(birthdate || null),
           avatar_url: avatarPathname || null,
           membership_number: isTutor ? membershipNumber.trim() || null : null,
           profile_completed: true,

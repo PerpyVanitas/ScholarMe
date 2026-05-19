@@ -2,6 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { birthdateFields } from "@/lib/profiles/db"
+import { getRoleName } from "@/lib/utils/roles"
 
 export async function updateProfile(data: {
   firstName: string
@@ -26,7 +28,7 @@ export async function updateProfile(data: {
     .eq("id", user.id)
     .single()
 
-  const roleName = Array.isArray(profile?.roles) ? profile.roles[0]?.name : (profile?.roles as any)?.name
+  const roleName = profile ? getRoleName(profile as Parameters<typeof getRoleName>[0]) : "learner"
   const isTutor = roleName === "tutor"
 
   // Update profile
@@ -36,7 +38,7 @@ export async function updateProfile(data: {
       first_name: data.firstName.trim(),
       last_name: data.lastName.trim(),
       full_name: `${data.firstName.trim()} ${data.lastName.trim()}`,
-      birthdate: data.birthdate || null,
+      ...birthdateFields(data.birthdate),
       avatar_url: data.avatarPathname || null,
       membership_number: isTutor ? (data.membershipNumber?.trim() || null) : null,
       profile_completed: true,

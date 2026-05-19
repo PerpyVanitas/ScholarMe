@@ -189,6 +189,11 @@ DROP POLICY IF EXISTS "tutors_own_write" ON public.tutors;
 CREATE POLICY "tutors_own_write" ON public.tutors FOR ALL USING (user_id = auth.uid());
 DROP POLICY IF EXISTS "tutor_spec_public_read" ON public.tutor_specializations;
 CREATE POLICY "tutor_spec_public_read" ON public.tutor_specializations FOR SELECT USING (true);
+DROP POLICY IF EXISTS "tutor_spec_own_write" ON public.tutor_specializations;
+CREATE POLICY "tutor_spec_own_write" ON public.tutor_specializations
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM public.tutors t WHERE t.id = tutor_id AND t.user_id = auth.uid())
+  );
 DROP POLICY IF EXISTS "tutor_avail_public_read" ON public.tutor_availability;
 CREATE POLICY "tutor_avail_public_read" ON public.tutor_availability FOR SELECT USING (true);
 DROP POLICY IF EXISTS "tutor_avail_own_write" ON public.tutor_availability;
@@ -401,6 +406,13 @@ CREATE POLICY "polls_admin_write" ON public.polls FOR INSERT WITH CHECK (
 );
 DROP POLICY IF EXISTS "poll_options_public_read" ON public.poll_options;
 CREATE POLICY "poll_options_public_read" ON public.poll_options FOR SELECT USING (true);
+DROP POLICY IF EXISTS "poll_options_admin_write" ON public.poll_options;
+CREATE POLICY "poll_options_admin_write" ON public.poll_options FOR INSERT WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM public.profiles p JOIN public.roles r ON p.role_id = r.id
+    WHERE p.id = auth.uid() AND r.name = 'administrator'
+  )
+);
 DROP POLICY IF EXISTS "user_votes_insert_own" ON public.user_votes;
 CREATE POLICY "user_votes_insert_own" ON public.user_votes
   FOR INSERT WITH CHECK (user_id = auth.uid());
@@ -690,6 +702,15 @@ CREATE POLICY "resources_repo_access" ON public.resources
       SELECT 1 FROM public.repositories r
       WHERE r.id = resources.repository_id
         AND (r.owner_id = auth.uid() OR r.access_role = 'all')
+    )
+  );
+DROP POLICY IF EXISTS "resources_repo_owner_insert" ON public.resources;
+CREATE POLICY "resources_repo_owner_insert" ON public.resources
+  FOR INSERT WITH CHECK (
+    uploaded_by = auth.uid()
+    AND EXISTS (
+      SELECT 1 FROM public.repositories r
+      WHERE r.id = resources.repository_id AND r.owner_id = auth.uid()
     )
   );
 

@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import { createClient } from "@/lib/supabase/client";
 import type { Profile, UserRole } from "@/lib/types";
 import { DEMO_USERS, getDemoUserFromCookie } from "@/lib/demo";
+import { resolveRoleId } from "@/lib/profiles/db";
 
 interface UserContextType {
   profile: Profile | null;
@@ -53,19 +54,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
           fallbackRole = "tutor";
         }
 
-        // 2. Fetch the matching role ID from the database
-        let roleId: string | null = null;
+        let roleId: string;
         try {
-          const { data: roleRow } = await supabase
-            .from("roles")
-            .select("id")
-            .eq("name", fallbackRole)
-            .maybeSingle();
-          if (roleRow) {
-            roleId = roleRow.id;
-          }
+          roleId = await resolveRoleId(supabase, fallbackRole);
         } catch (e) {
           console.error("Failed to fetch role ID for fallback role:", e);
+          roleId = "";
         }
 
         // 3. Attempt to heal database by inserting the missing profile row
@@ -84,12 +78,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
           first_name: derivedFirstName || null,
           last_name: derivedLastName || null,
           email: user.email || "",
-          role_id: roleId,
+          role_id: roleId || undefined,
           profile_completed: false,
         };
 
         let healedProfile: Profile | null = null;
         try {
+          if (!roleId) throw new Error("Missing role_id for profile heal");
           const { data: insertedProfile } = await supabase
             .from("profiles")
             .insert(newProfileData)

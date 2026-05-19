@@ -3,6 +3,12 @@
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import type { StudySet, StudySetItem, QuizAttempt } from "./types"
+import {
+  buildStudySetInsert,
+  buildStudySetItemInsert,
+  STUDY_SET_LIST_SELECT,
+  STUDY_SET_DETAIL_SELECT,
+} from "@/lib/study-sets/db"
 
 // ============================================
 // Study Set CRUD Operations
@@ -25,15 +31,7 @@ export async function createStudySet(data: {
 
   const { data: studySet, error } = await supabase
     .from("study_sets")
-    .insert({
-      user_id: user.id,
-      title: data.title,
-      description: data.description || null,
-      type: data.type,
-      is_public: data.is_public,
-      source_type: data.source_type,
-      source_resource_id: data.source_resource_id || null,
-    })
+    .insert(buildStudySetInsert(user.id, data))
     .select()
     .single()
 
@@ -55,11 +53,7 @@ export async function getMyStudySets() {
 
   const { data, error } = await supabase
     .from("study_sets")
-    .select(`
-      *,
-      study_set_items(count),
-      profiles:user_id(full_name, avatar_url)
-    `)
+    .select(STUDY_SET_LIST_SELECT)
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
 
@@ -75,11 +69,7 @@ export async function getPublicStudySets() {
 
   const { data, error } = await supabase
     .from("study_sets")
-    .select(`
-      *,
-      study_set_items(count),
-      profiles:user_id(full_name, avatar_url)
-    `)
+    .select(STUDY_SET_LIST_SELECT)
     .eq("is_public", true)
     .order("created_at", { ascending: false })
 
@@ -96,11 +86,7 @@ export async function getStudySetById(id: string) {
 
   const { data, error } = await supabase
     .from("study_sets")
-    .select(`
-      *,
-      study_set_items(*),
-      profiles:user_id(full_name, avatar_url)
-    `)
+    .select(STUDY_SET_DETAIL_SELECT)
     .eq("id", id)
     .single()
 
@@ -161,11 +147,9 @@ export async function addStudySetItems(studySetId: string, items: Omit<StudySetI
     return { error: "Access denied" }
   }
 
-  const itemsWithSetId = items.map((item, index) => ({
-    ...item,
-    study_set_id: studySetId,
-    order_index: index,
-  }))
+  const itemsWithSetId = items.map((item, index) =>
+    buildStudySetItemInsert(studySetId, item, index)
+  )
 
   const { data, error } = await supabase
     .from("study_set_items")
@@ -269,7 +253,7 @@ export async function getMyQuizAttempts(studySetId?: string) {
     .from("quiz_attempts")
     .select(`
       *,
-      study_sets(title, type)
+      study_sets(title, type:generation_mode)
     `)
     .eq("user_id", user.id)
     .order("completed_at", { ascending: false })

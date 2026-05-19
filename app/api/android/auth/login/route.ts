@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
+import { getRoleName } from "@/lib/utils/roles";
 
 export async function POST(request: Request) {
   try {
@@ -46,9 +47,19 @@ export async function POST(request: Request) {
       .eq("id", data.user.id)
       .single();
 
-    if (profileError) {
-        console.error("Profile fetch error:", profileError);
+    if (profileError || !profile) {
+      console.error("Profile fetch error:", profileError);
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Account exists but profile is missing. Please contact support.",
+          errorCode: "PROFILE_NOT_FOUND",
+        },
+        { status: 500 }
+      );
     }
+
+    const roleName = getRoleName(profile);
 
     return NextResponse.json({
       success: true,
@@ -61,11 +72,11 @@ export async function POST(request: Request) {
           id: data.user.id,
           userId: data.user.id,
           email: data.user.email,
-          fullName: profile?.full_name || "",
-          firstName: profile?.first_name || null,
-          lastName: profile?.last_name || null,
-          role: (profile?.roles as any)?.name || "learner",
-          accountType: (profile?.roles as any)?.name || "learner",
+          fullName: profile.full_name || "",
+          firstName: profile.first_name || null,
+          lastName: profile.last_name || null,
+          role: roleName,
+          accountType: roleName,
           avatarUrl: profile?.avatar_url || null,
           phone: profile?.phone_number || null,
           phoneNumber: profile?.phone_number || null,

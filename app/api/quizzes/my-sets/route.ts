@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { STUDY_SET_LIST_SELECT } from "@/lib/study-sets/db"
 
 export async function GET() {
   try {
@@ -12,10 +13,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from("study_sets")
-      .select(`
-        *,
-        study_set_items(count)
-      `)
+      .select(STUDY_SET_LIST_SELECT)
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
 
