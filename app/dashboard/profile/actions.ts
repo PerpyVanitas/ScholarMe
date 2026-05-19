@@ -89,7 +89,7 @@ export async function updateTutorInfo(data: UpdateTutorData) {
   const { data: existingTutor } = await supabase
     .from("tutors")
     .select("id")
-    .eq("profile_id", user.id)
+    .eq("user_id", user.id)
     .maybeSingle();
 
   let tutorId = existingTutor?.id;
@@ -99,7 +99,7 @@ export async function updateTutorInfo(data: UpdateTutorData) {
     const { data: newTutor, error: createError } = await supabase
       .from("tutors")
       .insert({
-        profile_id: user.id,
+        user_id: user.id,
         bio: data.bio,
         hourly_rate: data.hourly_rate,
         years_experience: data.years_experience,

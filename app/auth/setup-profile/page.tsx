@@ -88,7 +88,7 @@ export default function SetupProfilePage() {
           const { data: tutorRow } = await supabase
             .from("tutors")
             .select("id")
-            .eq("profile_id", user.id)
+            .eq("user_id", user.id)
             .single()
 
           if (tutorRow) {
@@ -191,13 +191,13 @@ export default function SetupProfilePage() {
         let { data: tutorRow } = await supabase
           .from("tutors")
           .select("id")
-          .eq("profile_id", userId)
+          .eq("user_id", userId)
           .single()
 
         if (!tutorRow) {
           const { data: newTutor } = await supabase
             .from("tutors")
-            .insert({ profile_id: userId })
+            .insert({ user_id: userId })
             .select("id")
             .single()
           tutorRow = newTutor

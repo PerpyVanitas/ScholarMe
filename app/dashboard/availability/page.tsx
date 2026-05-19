@@ -36,11 +36,23 @@ export default function AvailabilityPage() {
       // Support demo mode - use seeded tutor profile ID
       const userId = user?.id || DEMO_USERS.tutor.profileId;
 
-      const { data: tutorData } = await supabase
+      let { data: tutorData } = await supabase
         .from("tutors")
         .select("*")
         .eq("user_id", userId)
         .maybeSingle();
+
+      // Auto-heal missing tutor profile row in the database
+      if (!tutorData && user) {
+        const { data: newTutor } = await supabase
+          .from("tutors")
+          .insert({ user_id: userId })
+          .select("*")
+          .maybeSingle();
+        if (newTutor) {
+          tutorData = newTutor;
+        }
+      }
 
       if (tutorData) {
         setTutor(tutorData);

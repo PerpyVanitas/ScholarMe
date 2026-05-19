@@ -133,13 +133,13 @@ export function SetupProfileForm({
         let { data: tutorRow } = await supabase
           .from("tutors")
           .select("id")
-          .eq("profile_id", userId)
+          .eq("user_id", userId)
           .single()
 
         if (!tutorRow) {
           const { data: newTutor } = await supabase
             .from("tutors")
-            .insert({ profile_id: userId })
+            .insert({ user_id: userId })
             .select("id")
             .single()
           tutorRow = newTutor

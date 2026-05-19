@@ -66,11 +66,23 @@ export default function DashboardView() {
           }
         } else if (role === "tutor") {
           const userId = isAuthenticated && profile ? profile.id : getDemoProfileId("tutor")
-          const { data: tutor } = await supabase
+          let { data: tutor } = await supabase
             .from("tutors")
             .select("*")
             .eq("user_id", userId)
             .maybeSingle()
+
+          // Auto-heal missing tutor profile row in the database
+          if (!tutor && isAuthenticated && profile) {
+            const { data: newTutor } = await supabase
+              .from("tutors")
+              .insert({ user_id: userId })
+              .select("*")
+              .maybeSingle()
+            if (newTutor) {
+              tutor = newTutor
+            }
+          }
 
           const tutorId = tutor?.id || getDemoTutorId("tutor") || "none"
           const { data: sessions } = await supabase
