@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       message: n.message,
       type: n.type,
       time: n.created_at,
-      read: n.read
+      read: n.is_read
     }));
 
     return NextResponse.json({ success: true, data: formattedNotifications });

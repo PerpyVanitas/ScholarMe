@@ -836,7 +836,7 @@ CREATE TABLE IF NOT EXISTS public.quiz_attempts (
   user_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   study_set_id uuid NOT NULL REFERENCES public.study_sets(id) ON DELETE CASCADE,
   score numeric,
-  total_items integer NOT NULL,
+  total_items integer NOT NULL DEFAULT 0,
   answers jsonb,
   completed_at timestamptz,
   created_at timestamptz DEFAULT now(),

@@ -11,7 +11,7 @@ export async function GET(
     
     const { data: studySet, error } = await supabase
       .from("study_sets")
-      .select("id, title, description, study_set_items(id, term, definition)")
+      .select("id, title, description, study_set_items(id, term:prompt, definition:answer)")
       .eq("id", id)
       .single();
 
