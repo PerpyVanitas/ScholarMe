@@ -43,13 +43,31 @@ ALTER TABLE public.profiles ALTER COLUMN current_level SET NOT NULL;
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
+-- Helper functions for RLS policies to prevent infinite recursion
+CREATE OR REPLACE FUNCTION public.has_role(user_id uuid, allowed_roles text[])
+RETURNS boolean AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.profiles p
+    JOIN public.roles r ON p.role_id = r.id
+    WHERE p.id = user_id AND r.name = ANY(allowed_roles)
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+CREATE OR REPLACE FUNCTION public.is_admin(user_id uuid)
+RETURNS boolean AS $$
+BEGIN
+  RETURN public.has_role(user_id, ARRAY['administrator']);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
 DROP POLICY IF EXISTS "profiles_select_all" ON public.profiles;
 CREATE POLICY "profiles_select_all" ON public.profiles
   FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "profiles_select_own" ON public.profiles;
-CREATE POLICY "profiles_select_own" ON public.profiles
-  FOR SELECT USING (auth.uid() = id);
+DROP POLICY IF EXISTS "profiles_admin_select_all" ON public.profiles;
 
 DROP POLICY IF EXISTS "profiles_update_own" ON public.profiles;
 CREATE POLICY "profiles_update_own" ON public.profiles
@@ -59,25 +77,9 @@ DROP POLICY IF EXISTS "profiles_insert_own" ON public.profiles;
 CREATE POLICY "profiles_insert_own" ON public.profiles
   FOR INSERT WITH CHECK (auth.uid() = id);
 
-DROP POLICY IF EXISTS "profiles_admin_select_all" ON public.profiles;
-CREATE POLICY "profiles_admin_select_all" ON public.profiles
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles p
-      JOIN public.roles r ON p.role_id = r.id
-      WHERE p.id = auth.uid() AND r.name = 'administrator'
-    )
-  );
-
 DROP POLICY IF EXISTS "profiles_admin_update_all" ON public.profiles;
 CREATE POLICY "profiles_admin_update_all" ON public.profiles
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles p
-      JOIN public.roles r ON p.role_id = r.id
-      WHERE p.id = auth.uid() AND r.name = 'administrator'
-    )
-  );
+  FOR UPDATE USING (public.is_admin(auth.uid()));
 
 ALTER TABLE public.roles DISABLE ROW LEVEL SECURITY;
 
@@ -116,13 +118,7 @@ ALTER TABLE public.auth_cards ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "auth_cards_admin_all" ON public.auth_cards;
 CREATE POLICY "auth_cards_admin_all" ON public.auth_cards
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles p
-      JOIN public.roles r ON p.role_id = r.id
-      WHERE p.id = auth.uid() AND r.name = 'administrator'
-    )
-  );
+  FOR ALL USING (public.is_admin(auth.uid()));
 
 CREATE TABLE IF NOT EXISTS public.specializations (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -271,13 +267,7 @@ CREATE POLICY "sessions_tutor_update" ON public.sessions
 
 DROP POLICY IF EXISTS "sessions_admin_all" ON public.sessions;
 CREATE POLICY "sessions_admin_all" ON public.sessions
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles p
-      JOIN public.roles r ON p.role_id = r.id
-      WHERE p.id = auth.uid() AND r.name = 'administrator'
-    )
-  );
+  FOR ALL USING (public.is_admin(auth.uid()));
 
 CREATE TABLE IF NOT EXISTS public.session_ratings (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -306,10 +296,7 @@ CREATE POLICY "ratings_select_all" ON public.session_ratings
 
 DROP POLICY IF EXISTS "ratings_admin_all" ON public.session_ratings;
 CREATE POLICY "ratings_admin_all" ON public.session_ratings FOR ALL USING (
-  EXISTS (
-    SELECT 1 FROM public.profiles p JOIN public.roles r ON p.role_id = r.id
-    WHERE p.id = auth.uid() AND r.name = 'administrator'
-  )
+  public.is_admin(auth.uid())
 );
 
 CREATE TABLE IF NOT EXISTS public.timesheets (
@@ -344,12 +331,7 @@ CREATE POLICY "timesheets_update_own" ON public.timesheets
 
 DROP POLICY IF EXISTS "timesheets_select_admin" ON public.timesheets;
 CREATE POLICY "timesheets_select_admin" ON public.timesheets
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles p JOIN public.roles r ON p.role_id = r.id
-      WHERE p.id = auth.uid() AND r.name = 'administrator'
-    )
-  );
+  FOR SELECT USING (public.is_admin(auth.uid()));
 
 CREATE TABLE IF NOT EXISTS public.polls (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -403,19 +385,13 @@ DROP POLICY IF EXISTS "polls_public_read" ON public.polls;
 CREATE POLICY "polls_public_read" ON public.polls FOR SELECT USING (true);
 DROP POLICY IF EXISTS "polls_admin_write" ON public.polls;
 CREATE POLICY "polls_admin_write" ON public.polls FOR INSERT WITH CHECK (
-  EXISTS (
-    SELECT 1 FROM public.profiles p JOIN public.roles r ON p.role_id = r.id
-    WHERE p.id = auth.uid() AND r.name = 'administrator'
-  )
+  public.is_admin(auth.uid())
 );
 DROP POLICY IF EXISTS "poll_options_public_read" ON public.poll_options;
 CREATE POLICY "poll_options_public_read" ON public.poll_options FOR SELECT USING (true);
 DROP POLICY IF EXISTS "poll_options_admin_write" ON public.poll_options;
 CREATE POLICY "poll_options_admin_write" ON public.poll_options FOR INSERT WITH CHECK (
-  EXISTS (
-    SELECT 1 FROM public.profiles p JOIN public.roles r ON p.role_id = r.id
-    WHERE p.id = auth.uid() AND r.name = 'administrator'
-  )
+  public.is_admin(auth.uid())
 );
 DROP POLICY IF EXISTS "user_votes_insert_own" ON public.user_votes;
 CREATE POLICY "user_votes_insert_own" ON public.user_votes
@@ -691,6 +667,7 @@ ALTER TABLE public.resources ADD CONSTRAINT resources_uploaded_by_fkey FOREIGN K
 ALTER TABLE public.repositories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.resources ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "repositories_read_by_access" ON public.repositories;
 DROP POLICY IF EXISTS "repositories_own_or_public" ON public.repositories;
 CREATE POLICY "repositories_read_by_access" ON public.repositories
   FOR SELECT USING (
@@ -698,19 +675,11 @@ CREATE POLICY "repositories_read_by_access" ON public.repositories
     OR access_role = 'all'
     OR (
       access_role = 'tutor'
-      AND EXISTS (
-        SELECT 1 FROM public.profiles p
-        JOIN public.roles r ON p.role_id = r.id
-        WHERE p.id = auth.uid() AND r.name IN ('tutor', 'administrator')
-      )
+      AND public.has_role(auth.uid(), ARRAY['tutor', 'administrator'])
     )
     OR (
       access_role = 'admin'
-      AND EXISTS (
-        SELECT 1 FROM public.profiles p
-        JOIN public.roles r ON p.role_id = r.id
-        WHERE p.id = auth.uid() AND r.name = 'administrator'
-      )
+      AND public.is_admin(auth.uid())
     )
   );
 
@@ -718,6 +687,7 @@ DROP POLICY IF EXISTS "repositories_own_write" ON public.repositories;
 CREATE POLICY "repositories_own_write" ON public.repositories
   FOR ALL USING (owner_id = auth.uid());
 
+DROP POLICY IF EXISTS "resources_read_by_repo_access" ON public.resources;
 DROP POLICY IF EXISTS "resources_repo_access" ON public.resources;
 CREATE POLICY "resources_read_by_repo_access" ON public.resources
   FOR SELECT USING (
@@ -729,19 +699,11 @@ CREATE POLICY "resources_read_by_repo_access" ON public.resources
           OR r.access_role = 'all'
           OR (
             r.access_role = 'tutor'
-            AND EXISTS (
-              SELECT 1 FROM public.profiles p
-              JOIN public.roles ro ON p.role_id = ro.id
-              WHERE p.id = auth.uid() AND ro.name IN ('tutor', 'administrator')
-            )
+            AND public.has_role(auth.uid(), ARRAY['tutor', 'administrator'])
           )
           OR (
             r.access_role = 'admin'
-            AND EXISTS (
-              SELECT 1 FROM public.profiles p
-              JOIN public.roles ro ON p.role_id = ro.id
-              WHERE p.id = auth.uid() AND ro.name = 'administrator'
-            )
+            AND public.is_admin(auth.uid())
           )
         )
     )
@@ -782,12 +744,7 @@ ALTER TABLE public.analytics_logs ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "analytics_admin_read" ON public.analytics_logs;
 CREATE POLICY "analytics_admin_read" ON public.analytics_logs
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles p JOIN public.roles r ON p.role_id = r.id
-      WHERE p.id = auth.uid() AND r.name = 'administrator'
-    )
-  );
+  FOR SELECT USING (public.is_admin(auth.uid()));
 
 DROP POLICY IF EXISTS "analytics_own_insert" ON public.analytics_logs;
 CREATE POLICY "analytics_own_insert" ON public.analytics_logs
