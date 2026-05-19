@@ -1,22 +1,21 @@
 CREATE TABLE IF NOT EXISTS public.repositories (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
-  tutor_id uuid REFERENCES public.tutors(id) ON DELETE SET NULL,
-  name text NOT NULL,
+  owner_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  title text NOT NULL,
   description text,
-  is_public boolean DEFAULT false,
-  created_at timestamptz DEFAULT now()
+  access_role text NOT NULL DEFAULT 'all' CHECK (access_role IN ('all', 'tutor', 'admin')),
+  created_at timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS public.resources (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  repository_id uuid REFERENCES public.repositories(id) ON DELETE CASCADE,
+  repository_id uuid NOT NULL REFERENCES public.repositories(id) ON DELETE CASCADE,
   title text NOT NULL,
   description text,
-  file_url text,
+  url text NOT NULL,
   file_type text,
-  file_size integer,
-  created_at timestamptz DEFAULT now()
+  uploaded_by uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now()
 );
 
 ALTER TABLE public.repositories ENABLE ROW LEVEL SECURITY;

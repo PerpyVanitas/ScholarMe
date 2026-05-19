@@ -45,7 +45,7 @@ CREATE POLICY "sessions_select_learner" ON sessions
 CREATE POLICY "sessions_select_tutor" ON sessions
   FOR SELECT USING (
     EXISTS (
-      SELECT 1 FROM tutors t WHERE t.id = sessions.tutor_id AND t.profile_id = auth.uid()
+      SELECT 1 FROM tutors t WHERE t.id = sessions.tutor_id AND t.user_id = auth.uid()
     )
   );
 
@@ -66,7 +66,7 @@ CREATE POLICY "sessions_insert_learner" ON sessions
 CREATE POLICY "sessions_update_staff" ON sessions
   FOR UPDATE USING (
     auth.uid() = learner_id OR
-    EXISTS (SELECT 1 FROM tutors t WHERE t.id = sessions.tutor_id AND t.profile_id = auth.uid()) OR
+    EXISTS (SELECT 1 FROM tutors t WHERE t.id = sessions.tutor_id AND t.user_id = auth.uid()) OR
     EXISTS (SELECT 1 FROM profiles p JOIN roles r ON p.role_id = r.id WHERE p.id = auth.uid() AND r.name = 'administrator')
   );
 

@@ -475,7 +475,7 @@ ALTER TABLE public.resources ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "repositories_own_or_public" ON public.repositories;
 CREATE POLICY "repositories_own_or_public" ON public.repositories
-  FOR SELECT USING (owner_id = auth.uid() OR is_public = true);
+  FOR SELECT USING (owner_id = auth.uid() OR access_role = 'all');
 
 DROP POLICY IF EXISTS "repositories_own_write" ON public.repositories;
 CREATE POLICY "repositories_own_write" ON public.repositories
@@ -487,7 +487,7 @@ CREATE POLICY "resources_repo_access" ON public.resources
     EXISTS (
       SELECT 1 FROM public.repositories r
       WHERE r.id = resources.repository_id
-        AND (r.owner_id = auth.uid() OR r.is_public = true)
+        AND (r.owner_id = auth.uid() OR r.access_role = 'all')
     )
   );
 
