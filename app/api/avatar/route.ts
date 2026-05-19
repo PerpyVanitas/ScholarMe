@@ -1,6 +1,8 @@
-import { put, del, get } from "@vercel/blob";
+import { get } from "@vercel/blob";
 import { createClient } from "@/lib/supabase/server";
 import { type NextRequest, NextResponse } from "next/server";
+import { ensureProfileRow } from "@/lib/profiles/db";
+import { deleteStoredAvatar, uploadAvatarForUser } from "@/lib/profiles/avatar-upload";
 
 // GET /api/avatar - Serve private avatar image
 export async function GET(request: NextRequest) {
@@ -36,7 +38,6 @@ export async function GET(request: NextRequest) {
       return new NextResponse("Not found", { status: 404 });
     }
 
-    // Blob hasn't changed — tell the browser to use its cached copy
     if (result.statusCode === 304) {
       return new NextResponse(null, {
         status: 304,
@@ -77,7 +78,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    // Validate file type
     const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
@@ -86,7 +86,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       return NextResponse.json(
         { error: "File too large. Maximum size is 5MB." },
@@ -94,60 +93,48 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get current profile to delete old avatar if exists
+    const ensured = await ensureProfileRow(supabase, user);
+    if (!ensured.ok) {
+      return NextResponse.json({ error: ensured.error }, { status: 500 });
+    }
+
     const { data: profile } = await supabase
       .from("profiles")
       .select("avatar_url")
       .eq("id", user.id)
       .single();
 
-    // Delete old blob if it exists and is a pathname (private blob)
-    if (profile?.avatar_url?.startsWith("avatars/")) {
-      try {
-        await del(profile.avatar_url);
-      } catch {
-        // Ignore deletion errors for old avatars
-      }
+    await deleteStoredAvatar(profile?.avatar_url);
+
+    let pathname: string;
+    try {
+      pathname = await uploadAvatarForUser(supabase, user.id, file);
+    } catch (uploadErr) {
+      const message = uploadErr instanceof Error ? uploadErr.message : "Upload failed";
+      return NextResponse.json({ error: message }, { status: 500 });
     }
 
-    // Upload to Vercel Blob (private store) or fallback to base64
-    let pathname = "";
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
-      try {
-        const ext = file.name.split(".").pop() || "jpg";
-        const filename = `avatars/${user.id}/avatar-${Date.now()}.${ext}`;
-        const blob = await put(filename, file, {
-          access: "private",
-        });
-        pathname = blob.pathname;
-      } catch (err) {
-        console.error("Vercel Blob upload failed, falling back to base64:", err);
-      }
-    }
-
-    if (!pathname) {
-      const buffer = Buffer.from(await file.arrayBuffer());
-      pathname = `data:${file.type};base64,${buffer.toString("base64")}`;
-    }
-
-    // Update profile with new avatar pathname (not URL for private blobs)
-    const { error: updateError } = await supabase
+    const { data: updated, error: updateError } = await supabase
       .from("profiles")
       .update({ avatar_url: pathname })
-      .eq("id", user.id);
+      .eq("id", user.id)
+      .select("id")
+      .maybeSingle();
 
     if (updateError) {
-      if (pathname.startsWith("avatars/")) {
-        await del(pathname).catch(() => {});
-      }
-      return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
+      await deleteStoredAvatar(pathname);
+      return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
 
-    // Return the pathname for the client to use with the GET route
+    if (!updated) {
+      return NextResponse.json({ error: "Profile row could not be updated" }, { status: 500 });
+    }
+
     return NextResponse.json({ pathname });
   } catch (error) {
     console.error("Upload error:", error);
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Upload failed";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -161,29 +148,32 @@ export async function DELETE() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get current profile
+    const ensured = await ensureProfileRow(supabase, user);
+    if (!ensured.ok) {
+      return NextResponse.json({ error: ensured.error }, { status: 500 });
+    }
+
     const { data: profile } = await supabase
       .from("profiles")
       .select("avatar_url")
       .eq("id", user.id)
       .single();
 
-    if (profile?.avatar_url?.startsWith("avatars/")) {
-      try {
-        await del(profile.avatar_url);
-      } catch {
-        // Ignore deletion errors
-      }
-    }
+    await deleteStoredAvatar(profile?.avatar_url);
 
-    // Clear avatar_url in profile
-    const { error: updateError } = await supabase
+    const { data: updated, error: updateError } = await supabase
       .from("profiles")
       .update({ avatar_url: null })
-      .eq("id", user.id);
+      .eq("id", user.id)
+      .select("id")
+      .maybeSingle();
 
     if (updateError) {
-      return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
+      return NextResponse.json({ error: updateError.message }, { status: 500 });
+    }
+
+    if (!updated) {
+      return NextResponse.json({ error: "Profile row could not be updated" }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });

@@ -14,6 +14,7 @@ import { GraduationCap, Camera, Loader2, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 import { getRoleName } from "@/lib/utils/roles"
 import { birthdateFields } from "@/lib/profiles/db"
+import { ensureProfile, ensureTutor } from "@/app/dashboard/profile/actions"
 
 interface Specialization {
   id: string
@@ -225,10 +226,34 @@ export default function SetupProfilePage() {
         }
       }
 
+      await ensureTutor()
+
       toast.success("Profile setup complete!")
       window.location.href = "/dashboard"
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save profile")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleSkip() {
+    if (!userId) return
+    setSaving(true)
+    try {
+      const profileResult = await ensureProfile()
+      if (!profileResult.success) {
+        throw new Error(profileResult.error || "Could not save profile")
+      }
+      if (isTutor) {
+        const tutorResult = await ensureTutor()
+        if (!tutorResult.success) {
+          throw new Error(tutorResult.error || "Could not create tutor record")
+        }
+      }
+      window.location.href = "/dashboard"
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not continue")
     } finally {
       setSaving(false)
     }
@@ -384,12 +409,11 @@ export default function SetupProfilePage() {
 
           <button
             type="button"
-            onClick={() => {
-      window.location.href = "/dashboard"
-            }}
-            className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+            onClick={handleSkip}
+            disabled={saving}
+            className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
           >
-            Skip for now
+            Skip for now — finish later in Profile
           </button>
         </CardContent>
       </Card>

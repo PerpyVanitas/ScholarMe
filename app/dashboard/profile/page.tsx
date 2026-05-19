@@ -17,7 +17,7 @@ import {
   Key, Eye, EyeOff, Trash2, AlertTriangle, Camera, X, BookOpen, Star
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { updateProfile, UpdateProfileData, updateTutorInfo } from "./actions";
+import { updateProfile, UpdateProfileData, updateTutorInfo, ensureProfile } from "./actions";
 import { useUser } from "@/lib/user-context";
 import { QrIdCard } from "@/features/auth/components/qr-id-card";
 import { getRoleName } from "@/lib/utils/roles";
@@ -84,8 +84,22 @@ export default function ProfilePage() {
         .maybeSingle();
 
       if (error || !data) {
-        console.warn("Profile fetch returned error or no data, using fallback:", error);
-        
+        console.warn("Profile fetch returned error or no data, healing:", error);
+        const heal = await ensureProfile();
+        if (heal.success) {
+          const { data: healed } = await supabase
+            .from("profiles")
+            .select("*, roles(name)")
+            .eq("id", user.id)
+            .maybeSingle();
+          if (healed) {
+            setProfile(healed);
+            setRoleName(getRoleName(healed));
+            setLoading(false);
+            return;
+          }
+        }
+
         let fallbackRole = "learner";
         if (user.email === "admin@scholarme.org" || user.user_metadata?.role_name === "administrator" || user.user_metadata?.role === "administrator") {
           fallbackRole = "administrator";
@@ -346,6 +360,7 @@ export default function ProfilePage() {
       
       toast.success("Profile updated successfully");
       setEditOpen(false);
+      await refreshProfile();
     } else {
       toast.error(result.error || "Failed to update profile");
     }
@@ -420,8 +435,14 @@ export default function ProfilePage() {
   // Get display URL for avatar (handles private blob pathnames)
   const getAvatarDisplayUrl = (avatarUrl: string | null | undefined) => {
     if (!avatarUrl) return undefined;
+    if (avatarUrl.startsWith("http://") || avatarUrl.startsWith("https://")) {
+      return avatarUrl;
+    }
     if (avatarUrl.startsWith("avatars/")) {
       return `/api/avatar?pathname=${encodeURIComponent(avatarUrl)}`;
+    }
+    if (avatarUrl.startsWith("data:")) {
+      return avatarUrl;
     }
     return avatarUrl;
   };

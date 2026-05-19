@@ -9,6 +9,7 @@ import { AdminDashboard } from "@/components/dashboard/admin-dashboard"
 import { TutorDashboard } from "@/components/dashboard/tutor-dashboard"
 import { LearnerDashboard } from "@/components/dashboard/learner-dashboard"
 import type { Session, Tutor } from "@/lib/types"
+import { ensureTutor } from "@/app/dashboard/profile/actions"
 
 interface DashboardData {
   adminStats?: {
@@ -66,23 +67,16 @@ export default function DashboardView() {
           }
         } else if (role === "tutor") {
           const userId = isAuthenticated && profile ? profile.id : getDemoProfileId("tutor")
+
+          if (isAuthenticated && profile) {
+            await ensureTutor()
+          }
+
           let { data: tutor } = await supabase
             .from("tutors")
             .select("*")
             .eq("user_id", userId)
             .maybeSingle()
-
-          // Auto-heal missing tutor profile row in the database
-          if (!tutor && isAuthenticated && profile) {
-            const { data: newTutor } = await supabase
-              .from("tutors")
-              .insert({ user_id: userId })
-              .select("*")
-              .maybeSingle()
-            if (newTutor) {
-              tutor = newTutor
-            }
-          }
 
           const tutorId = tutor?.id || getDemoTutorId("tutor") || "none"
           const { data: sessions } = await supabase

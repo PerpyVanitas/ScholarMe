@@ -39,6 +39,8 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import type { UserRole } from "@/lib/types"
+import { getRoleName } from "@/lib/utils/roles"
+import { ensureTutor } from "@/app/dashboard/profile/actions"
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const MAX_FILE_SIZE = 50 * 1024 * 1024
@@ -162,11 +164,14 @@ export default function ResourcesPage() {
     if (uid) {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("roles(*)")
+        .select("roles(name)")
         .eq("id", uid)
         .maybeSingle()
-      if (Array.isArray(profile?.roles) && profile.roles.length > 0) {
-        userRole = (profile.roles[0].name || "learner") as UserRole
+      if (profile) {
+        userRole = getRoleName(profile as Parameters<typeof getRoleName>[0]) as UserRole
+      }
+      if (userRole === "tutor") {
+        await ensureTutor()
       }
     }
 
@@ -333,7 +338,9 @@ export default function ResourcesPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Resources</h1>
           <p className="text-sm text-muted-foreground">
-            Browse and download study materials organized in repositories.
+            {canManage
+              ? "Create repositories, upload files, and share with learners or other tutors."
+              : "Browse and download study materials organized in repositories."}
           </p>
         </div>
         {canManage && (

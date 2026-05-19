@@ -53,7 +53,7 @@ CREATE POLICY "profiles_select_own" ON public.profiles
 
 DROP POLICY IF EXISTS "profiles_update_own" ON public.profiles;
 CREATE POLICY "profiles_update_own" ON public.profiles
-  FOR UPDATE USING (auth.uid() = id);
+  FOR UPDATE USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
 
 DROP POLICY IF EXISTS "profiles_insert_own" ON public.profiles;
 CREATE POLICY "profiles_insert_own" ON public.profiles
@@ -186,7 +186,11 @@ ALTER TABLE public.specializations ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "tutors_public_read" ON public.tutors;
 CREATE POLICY "tutors_public_read" ON public.tutors FOR SELECT USING (true);
 DROP POLICY IF EXISTS "tutors_own_write" ON public.tutors;
-CREATE POLICY "tutors_own_write" ON public.tutors FOR ALL USING (user_id = auth.uid());
+CREATE POLICY "tutors_own_write" ON public.tutors
+  FOR ALL USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+DROP POLICY IF EXISTS "tutors_insert_own" ON public.tutors;
+CREATE POLICY "tutors_insert_own" ON public.tutors
+  FOR INSERT WITH CHECK (user_id = auth.uid());
 DROP POLICY IF EXISTS "tutor_spec_public_read" ON public.tutor_specializations;
 CREATE POLICY "tutor_spec_public_read" ON public.tutor_specializations FOR SELECT USING (true);
 DROP POLICY IF EXISTS "tutor_spec_own_write" ON public.tutor_specializations;
@@ -688,20 +692,58 @@ ALTER TABLE public.repositories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.resources ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "repositories_own_or_public" ON public.repositories;
-CREATE POLICY "repositories_own_or_public" ON public.repositories
-  FOR SELECT USING (owner_id = auth.uid() OR access_role = 'all');
+CREATE POLICY "repositories_read_by_access" ON public.repositories
+  FOR SELECT USING (
+    owner_id = auth.uid()
+    OR access_role = 'all'
+    OR (
+      access_role = 'tutor'
+      AND EXISTS (
+        SELECT 1 FROM public.profiles p
+        JOIN public.roles r ON p.role_id = r.id
+        WHERE p.id = auth.uid() AND r.name IN ('tutor', 'administrator')
+      )
+    )
+    OR (
+      access_role = 'admin'
+      AND EXISTS (
+        SELECT 1 FROM public.profiles p
+        JOIN public.roles r ON p.role_id = r.id
+        WHERE p.id = auth.uid() AND r.name = 'administrator'
+      )
+    )
+  );
 
 DROP POLICY IF EXISTS "repositories_own_write" ON public.repositories;
 CREATE POLICY "repositories_own_write" ON public.repositories
   FOR ALL USING (owner_id = auth.uid());
 
 DROP POLICY IF EXISTS "resources_repo_access" ON public.resources;
-CREATE POLICY "resources_repo_access" ON public.resources
+CREATE POLICY "resources_read_by_repo_access" ON public.resources
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM public.repositories r
       WHERE r.id = resources.repository_id
-        AND (r.owner_id = auth.uid() OR r.access_role = 'all')
+        AND (
+          r.owner_id = auth.uid()
+          OR r.access_role = 'all'
+          OR (
+            r.access_role = 'tutor'
+            AND EXISTS (
+              SELECT 1 FROM public.profiles p
+              JOIN public.roles ro ON p.role_id = ro.id
+              WHERE p.id = auth.uid() AND ro.name IN ('tutor', 'administrator')
+            )
+          )
+          OR (
+            r.access_role = 'admin'
+            AND EXISTS (
+              SELECT 1 FROM public.profiles p
+              JOIN public.roles ro ON p.role_id = ro.id
+              WHERE p.id = auth.uid() AND ro.name = 'administrator'
+            )
+          )
+        )
     )
   );
 DROP POLICY IF EXISTS "resources_repo_owner_insert" ON public.resources;
@@ -709,6 +751,15 @@ CREATE POLICY "resources_repo_owner_insert" ON public.resources
   FOR INSERT WITH CHECK (
     uploaded_by = auth.uid()
     AND EXISTS (
+      SELECT 1 FROM public.repositories r
+      WHERE r.id = resources.repository_id AND r.owner_id = auth.uid()
+    )
+  );
+DROP POLICY IF EXISTS "resources_owner_or_uploader_delete" ON public.resources;
+CREATE POLICY "resources_owner_or_uploader_delete" ON public.resources
+  FOR DELETE USING (
+    uploaded_by = auth.uid()
+    OR EXISTS (
       SELECT 1 FROM public.repositories r
       WHERE r.id = resources.repository_id AND r.owner_id = auth.uid()
     )
