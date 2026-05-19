@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Read migration SQL file
-    const migrationPath = path.join(process.cwd(), 'scripts', 'supabase_migration.sql');
+    const migrationPath = path.join(process.cwd(), 'MIGRATION_CLEAN.sql');
     const migrationSQL = fs.readFileSync(migrationPath, 'utf-8');
 
     // Parse statements

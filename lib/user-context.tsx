@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import { createClient } from "@/lib/supabase/client";
 import type { Profile, UserRole } from "@/lib/types";
 import { DEMO_USERS, getDemoUserFromCookie } from "@/lib/demo";
+import { resolveRoleId } from "@/lib/profiles/db";
 
 interface UserContextType {
   profile: Profile | null;
@@ -53,32 +54,37 @@ export function UserProvider({ children }: { children: ReactNode }) {
           fallbackRole = "tutor";
         }
 
-        // 2. Fetch the matching role ID from the database
-        let roleId: string | null = null;
+        let roleId: string;
         try {
-          const { data: roleRow } = await supabase
-            .from("roles")
-            .select("id")
-            .eq("name", fallbackRole)
-            .maybeSingle();
-          if (roleRow) {
-            roleId = roleRow.id;
-          }
+          roleId = await resolveRoleId(supabase, fallbackRole);
         } catch (e) {
           console.error("Failed to fetch role ID for fallback role:", e);
+          roleId = "";
         }
 
         // 3. Attempt to heal database by inserting the missing profile row
+        const fullNameStr = user.user_metadata?.full_name || (fallbackRole === "administrator" ? "System Admin" : user.email?.split("@")[0] || "User");
+        let derivedFirstName = user.user_metadata?.first_name || "";
+        let derivedLastName = user.user_metadata?.last_name || "";
+        if (!derivedFirstName && !derivedLastName) {
+          const parts = fullNameStr.trim().split(/\s+/);
+          derivedFirstName = parts[0] || "";
+          derivedLastName = parts.slice(1).join(" ") || "";
+        }
+
         const newProfileData = {
           id: user.id,
-          full_name: user.user_metadata?.full_name || (fallbackRole === "administrator" ? "System Admin" : user.email?.split("@")[0] || "User"),
+          full_name: fullNameStr,
+          first_name: derivedFirstName || null,
+          last_name: derivedLastName || null,
           email: user.email || "",
-          role_id: roleId,
+          role_id: roleId || undefined,
           profile_completed: false,
         };
 
         let healedProfile: Profile | null = null;
         try {
+          if (!roleId) throw new Error("Missing role_id for profile heal");
           const { data: insertedProfile } = await supabase
             .from("profiles")
             .insert(newProfileData)
@@ -168,7 +174,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth state changes
     const supabase = createClient();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any) => {
       if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") {
         loadUserData();
       }

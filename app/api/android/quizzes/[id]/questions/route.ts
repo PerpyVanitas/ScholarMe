@@ -23,7 +23,7 @@ export async function GET(
     // Verify the study set exists and is accessible (owned by user or is public)
     const { data: studySet, error: setError } = await supabase
       .from('study_sets')
-      .select('id, title, type, is_public, owner_id')
+      .select('id, title, type:generation_mode, is_public, owner_id')
       .eq('id', studySetId)
       .single();
 

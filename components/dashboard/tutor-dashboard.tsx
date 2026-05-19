@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Star, Clock, CheckCircle2, FolderOpen, ArrowRight, AlertCircle, LogIn, LogOut, Timer } from "lucide-react";
+import { Calendar, Star, Clock, CheckCircle2, FolderOpen, ArrowRight, LogIn, LogOut, Timer, UserCircle } from "lucide-react";
 import { SESSION_STATUS_COLORS } from "@/lib/constants";
 import { toast } from "sonner";
 import type { Profile, Session, Tutor } from "@/lib/types";
@@ -46,6 +46,10 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
   }, [tutor, checkClockStatus]);
 
   async function handleClock(action: "clock_in" | "clock_out") {
+    if (!tutor) {
+      toast.error("Open Profile to finish tutor setup before clocking in.");
+      return;
+    }
     setClockLoading(true);
     try {
       const res = await fetch("/api/timesheets", {
@@ -62,33 +66,38 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
     }
   }
 
-  if (!tutor) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-4 py-16">
-        <div className="rounded-full bg-warning/10 p-4">
-          <AlertCircle className="h-8 w-8 text-warning-foreground" />
-        </div>
-        <h2 className="text-lg font-semibold text-foreground">Tutor Profile Not Set Up</h2>
-        <p className="max-w-md text-center text-sm text-muted-foreground">
-          Your tutor profile has not been created yet. Please contact your administrator to set up your tutor profile.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-6">
+      {!tutor && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-medium text-foreground">Finish your tutor setup</p>
+              <p className="text-sm text-muted-foreground">
+                You can use the app now. Add bio, specializations, and availability anytime from Profile.
+              </p>
+            </div>
+            <Button asChild size="sm">
+              <Link href="/dashboard/profile">
+                <UserCircle className="mr-2 h-4 w-4" />
+                Complete profile
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Welcome back, {profile?.full_name || "Tutor"}
         </h1>
         <p className="text-muted-foreground">
-          Manage your sessions and availability.
+          Manage your sessions, resources, and availability.
         </p>
       </div>
 
       {/* Clock In / Out */}
-      {clockCheckDone && (
+      {tutor && clockCheckDone && (
         <Card className="border-border/60">
           <CardContent className="flex items-center justify-between p-4">
             <div className="flex items-center gap-3">

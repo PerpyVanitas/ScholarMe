@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { GraduationCap, Camera, Loader2, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
+import { birthdateFields } from "@/lib/profiles/db"
 
 interface Specialization {
   id: string
@@ -99,9 +100,9 @@ export function SetupProfileForm({
   }
 
   function toggleSpec(specId: string) {
-    setSelectedSpecs(prev =>
+    setSelectedSpecs((prev: string[]) =>
       prev.includes(specId)
-        ? prev.filter(id => id !== specId)
+        ? prev.filter((id: string) => id !== specId)
         : [...prev, specId]
     )
   }
@@ -120,7 +121,7 @@ export function SetupProfileForm({
           first_name: firstName.trim(),
           last_name: lastName.trim(),
           full_name: `${firstName.trim()} ${lastName.trim()}`,
-          birthdate: birthdate || null,
+          ...birthdateFields(birthdate || null),
           avatar_url: avatarPathname || null,
           membership_number: isTutor ? membershipNumber.trim() || null : null,
           profile_completed: true,
@@ -133,13 +134,13 @@ export function SetupProfileForm({
         let { data: tutorRow } = await supabase
           .from("tutors")
           .select("id")
-          .eq("profile_id", userId)
+          .eq("user_id", userId)
           .single()
 
         if (!tutorRow) {
           const { data: newTutor } = await supabase
             .from("tutors")
-            .insert({ profile_id: userId })
+            .insert({ user_id: userId })
             .select("id")
             .single()
           tutorRow = newTutor
@@ -155,7 +156,7 @@ export function SetupProfileForm({
             await supabase
               .from("tutor_specializations")
               .insert(
-                selectedSpecs.map(specId => ({
+                selectedSpecs.map((specId: string) => ({
                   tutor_id: tutorRow!.id,
                   specialization_id: specId,
                 }))
@@ -229,7 +230,7 @@ export function SetupProfileForm({
               <Input
                 id="firstName"
                 value={firstName}
-                onChange={e => setFirstName(e.target.value)}
+                onChange={(e: any) => setFirstName(e.target.value)}
                 placeholder="Juan"
               />
             </div>
@@ -238,7 +239,7 @@ export function SetupProfileForm({
               <Input
                 id="lastName"
                 value={lastName}
-                onChange={e => setLastName(e.target.value)}
+                onChange={(e: any) => setLastName(e.target.value)}
                 placeholder="Dela Cruz"
               />
             </div>
@@ -250,7 +251,7 @@ export function SetupProfileForm({
               id="birthdate"
               type="date"
               value={birthdate}
-              onChange={e => setBirthdate(e.target.value)}
+              onChange={(e: any) => setBirthdate(e.target.value)}
             />
           </div>
 
@@ -261,7 +262,7 @@ export function SetupProfileForm({
                 <Input
                   id="membershipNumber"
                   value={membershipNumber}
-                  onChange={e => setMembershipNumber(e.target.value)}
+                  onChange={(e: any) => setMembershipNumber(e.target.value)}
                   placeholder="e.g. TM-2025-001"
                 />
               </div>
@@ -270,7 +271,7 @@ export function SetupProfileForm({
                 <Label>Specializations</Label>
                 <p className="text-xs text-muted-foreground">Select the subjects you can tutor</p>
                 <div className="flex flex-wrap gap-2 pt-1">
-                  {specializations.map(spec => {
+                  {specializations.map((spec: any) => {
                     const isSelected = selectedSpecs.includes(spec.id)
                     return (
                       <button

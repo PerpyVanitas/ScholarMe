@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
         id,
         title,
         description,
-        type,
+        type:generation_mode,
         is_public,
         created_at,
         study_set_items(count),
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       ownerAvatarUrl: s.profiles?.avatar_url ?? null,
     }));
 
-    return NextResponse.json({ success: true, data: { studySets: sets } });
+    return NextResponse.json({ success: true, data: sets });
   } catch (err) {
     console.error('[Quizzes API] Unexpected error:', err);
     return NextResponse.json({ success: false, error: { code: 'SYSTEM-001', message: 'Internal server error' } }, { status: 500 });

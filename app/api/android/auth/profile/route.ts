@@ -1,5 +1,6 @@
 import { createSupabaseForBearer } from "@/lib/supabase/bearer-client";
 import { NextResponse } from "next/server";
+import { getRoleName } from "@/lib/utils/roles";
 
 export async function GET(request: Request) {
   try {
@@ -30,7 +31,7 @@ export async function GET(request: Request) {
     // Fetch complete profile with role name
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("*, roles:roles!role_id(name)")
+      .select("*, roles(name)")
       .eq("id", data.user.id)
       .single();
 
@@ -41,9 +42,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const roleName: string = Array.isArray(profile?.roles)
-      ? (profile.roles[0]?.name ?? "learner")
-      : ((profile?.roles as any)?.name ?? "learner");
+    const roleName = getRoleName(profile);
 
     // Fetch additional stats if tutor
     let tutorStats = null;
@@ -64,6 +63,15 @@ export async function GET(request: Request) {
       }
     }
 
+    // Helper function to format avatar url
+    const formatAvatarUrl = (url: string | null | undefined): string | null => {
+      if (!url) return null;
+      if (url.startsWith("data:") || url.startsWith("http")) return url;
+      const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "localhost:3000";
+      const proto = request.headers.get("x-forwarded-proto") || "http";
+      return `${proto}://${host}/api/avatar?pathname=${encodeURIComponent(url)}`;
+    };
+
     return NextResponse.json({
       success: true,
       data: {
@@ -73,8 +81,8 @@ export async function GET(request: Request) {
         fullName: profile.full_name,
         email: profile.email,
         phoneNumber: profile.phone_number,
-        birthdate: profile.birthdate,
-        avatarUrl: profile.avatar_url,
+        birthdate: profile.birthdate || profile.date_of_birth || null,
+        avatarUrl: formatAvatarUrl(profile.avatar_url),
         accountType: roleName,
         profileCompleted: profile.profile_completed,
         createdAt: profile.created_at,

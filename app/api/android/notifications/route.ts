@@ -29,13 +29,13 @@ export async function GET(request: NextRequest) {
        return NextResponse.json({ success: true, data: [] });
     }
 
-    const formattedNotifications = (notifications ?? []).map(n => ({
+    const formattedNotifications = (notifications ?? []).map((n: any) => ({
       id: n.id,
       title: n.title,
       message: n.message,
       type: n.type,
       time: n.created_at,
-      read: n.read
+      read: n.is_read
     }));
 
     return NextResponse.json({ success: true, data: formattedNotifications });

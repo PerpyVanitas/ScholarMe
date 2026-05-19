@@ -18,7 +18,7 @@ async function runMigrations() {
     console.log('✓ Connected');
 
     // Read migration file
-    const migrationPath = path.join(__dirname, 'supabase_migration.sql');
+    const migrationPath = path.join(__dirname, '../MIGRATION_CLEAN.sql');
     const migrationSQL = fs.readFileSync(migrationPath, 'utf-8');
 
     // Parse statements - handle both regular statements and function definitions

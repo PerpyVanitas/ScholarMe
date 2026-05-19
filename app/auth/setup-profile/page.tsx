@@ -12,6 +12,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { GraduationCap, Camera, Loader2, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
+import { getRoleName } from "@/lib/utils/roles"
+import { birthdateFields } from "@/lib/profiles/db"
+import { ensureProfile, ensureTutor } from "@/app/dashboard/profile/actions"
 
 interface Specialization {
   id: string
@@ -55,17 +58,17 @@ export default function SetupProfilePage() {
       // Get profile with role
       const { data: profile } = await supabase
         .from("profiles")
-        .select("*, roles(*)")
+        .select("*, roles(name)")
         .eq("id", user.id)
         .single()
 
       if (profile) {
         setFirstName(profile.first_name || "")
         setLastName(profile.last_name || "")
-        setBirthdate(profile.birthdate || "")
+        setBirthdate(profile.birthdate || profile.date_of_birth || "")
         setMembershipNumber(profile.membership_number || "")
         setAvatarUrl(profile.avatar_url || null)
-        if (profile.roles?.name) setRoleName(profile.roles.name)
+        setRoleName(getRoleName(profile))
 
         // If profile already completed, go to dashboard
         if (profile.profile_completed) {
@@ -88,7 +91,7 @@ export default function SetupProfilePage() {
           const { data: tutorRow } = await supabase
             .from("tutors")
             .select("id")
-            .eq("profile_id", user.id)
+            .eq("user_id", user.id)
             .single()
 
           if (tutorRow) {
@@ -97,7 +100,7 @@ export default function SetupProfilePage() {
               .select("specialization_id")
               .eq("tutor_id", tutorRow.id)
             if (tutorSpecs) {
-              setSelectedSpecs(tutorSpecs.map(s => s.specialization_id))
+              setSelectedSpecs(tutorSpecs.map((s: any) => s.specialization_id))
             }
           }
         }
@@ -153,9 +156,9 @@ export default function SetupProfilePage() {
   }
 
   function toggleSpec(specId: string) {
-    setSelectedSpecs(prev =>
+    setSelectedSpecs((prev: string[]) =>
       prev.includes(specId)
-        ? prev.filter(id => id !== specId)
+        ? prev.filter((id: string) => id !== specId)
         : [...prev, specId]
     )
   }
@@ -176,7 +179,7 @@ export default function SetupProfilePage() {
           first_name: firstName.trim(),
           last_name: lastName.trim(),
           full_name: `${firstName.trim()} ${lastName.trim()}`,
-          birthdate: birthdate || null,
+          ...birthdateFields(birthdate || null),
           avatar_url: avatarPathname || null, // Store the actual Blob pathname
           membership_number: isTutor ? membershipNumber.trim() || null : null,
           profile_completed: true,
@@ -191,13 +194,13 @@ export default function SetupProfilePage() {
         let { data: tutorRow } = await supabase
           .from("tutors")
           .select("id")
-          .eq("profile_id", userId)
+          .eq("user_id", userId)
           .single()
 
         if (!tutorRow) {
           const { data: newTutor } = await supabase
             .from("tutors")
-            .insert({ profile_id: userId })
+            .insert({ user_id: userId })
             .select("id")
             .single()
           tutorRow = newTutor
@@ -214,7 +217,7 @@ export default function SetupProfilePage() {
             await supabase
               .from("tutor_specializations")
               .insert(
-                selectedSpecs.map(specId => ({
+                selectedSpecs.map((specId: string) => ({
                   tutor_id: tutorRow!.id,
                   specialization_id: specId,
                 }))
@@ -223,10 +226,34 @@ export default function SetupProfilePage() {
         }
       }
 
+      await ensureTutor()
+
       toast.success("Profile setup complete!")
       window.location.href = "/dashboard"
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save profile")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleSkip() {
+    if (!userId) return
+    setSaving(true)
+    try {
+      const profileResult = await ensureProfile()
+      if (!profileResult.success) {
+        throw new Error(profileResult.error || "Could not save profile")
+      }
+      if (isTutor) {
+        const tutorResult = await ensureTutor()
+        if (!tutorResult.success) {
+          throw new Error(tutorResult.error || "Could not create tutor record")
+        }
+      }
+      window.location.href = "/dashboard"
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not continue")
     } finally {
       setSaving(false)
     }
@@ -298,7 +325,7 @@ export default function SetupProfilePage() {
               <Input
                 id="firstName"
                 value={firstName}
-                onChange={e => setFirstName(e.target.value)}
+                onChange={(e: any) => setFirstName(e.target.value)}
                 placeholder="Juan"
               />
             </div>
@@ -307,7 +334,7 @@ export default function SetupProfilePage() {
               <Input
                 id="lastName"
                 value={lastName}
-                onChange={e => setLastName(e.target.value)}
+                onChange={(e: any) => setLastName(e.target.value)}
                 placeholder="Dela Cruz"
               />
             </div>
@@ -320,7 +347,7 @@ export default function SetupProfilePage() {
               id="birthdate"
               type="date"
               value={birthdate}
-              onChange={e => setBirthdate(e.target.value)}
+              onChange={(e: any) => setBirthdate(e.target.value)}
             />
           </div>
 
@@ -332,7 +359,7 @@ export default function SetupProfilePage() {
                 <Input
                   id="membershipNumber"
                   value={membershipNumber}
-                  onChange={e => setMembershipNumber(e.target.value)}
+                  onChange={(e: any) => setMembershipNumber(e.target.value)}
                   placeholder="e.g. TM-2025-001"
                 />
               </div>
@@ -341,7 +368,7 @@ export default function SetupProfilePage() {
                 <Label>Specializations</Label>
                 <p className="text-xs text-muted-foreground">Select the subjects you can tutor</p>
                 <div className="flex flex-wrap gap-2 pt-1">
-                  {specializations.map(spec => {
+                  {specializations.map((spec: any) => {
                     const isSelected = selectedSpecs.includes(spec.id)
                     return (
                       <button
@@ -382,12 +409,11 @@ export default function SetupProfilePage() {
 
           <button
             type="button"
-            onClick={() => {
-      window.location.href = "/dashboard"
-            }}
-            className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+            onClick={handleSkip}
+            disabled={saving}
+            className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
           >
-            Skip for now
+            Skip for now — finish later in Profile
           </button>
         </CardContent>
       </Card>

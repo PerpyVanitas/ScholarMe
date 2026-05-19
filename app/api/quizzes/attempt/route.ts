@@ -19,9 +19,10 @@ export async function POST(request: NextRequest) {
         user_id: user.id,
         study_set_id,
         score,
-        total_questions,
+        total_items: total_questions || body.total_items || 0,
+        total_questions: total_questions || body.total_items || 0,
         answers,
-        time_spent_seconds,
+        time_spent_seconds: time_spent_seconds || 0,
         completed_at: new Date().toISOString(),
       })
       .select()
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest) {
       .from("quiz_attempts")
       .select(`
         *,
-        study_sets(title, type)
+        study_sets(title, type:generation_mode)
       `)
       .eq("user_id", user.id)
       .order("completed_at", { ascending: false })

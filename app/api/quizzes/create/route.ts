@@ -1,5 +1,9 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextRequest, NextResponse } from "next/server"
+import {
+  buildStudySetInsert,
+  buildStudySetItemInsert,
+} from "@/lib/study-sets/db"
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,14 +24,15 @@ export async function POST(request: NextRequest) {
     // Create study set
     const { data: studySet, error: setError } = await supabase
       .from("study_sets")
-      .insert({
-        user_id: user.id,
-        title: title.trim(),
-        description: description?.trim() || null,
-        type: type || "flashcard",
-        is_public: is_public || false,
-        source_type: source_type || "manual",
-      })
+      .insert(
+        buildStudySetInsert(user.id, {
+          title: title.trim(),
+          description: description?.trim() || null,
+          type,
+          is_public,
+          source_type,
+        })
+      )
       .select()
       .single()
 
@@ -37,14 +42,9 @@ export async function POST(request: NextRequest) {
 
     // Add items if provided
     if (items && items.length > 0) {
-      const itemsToInsert = items.map((item: any, index: number) => ({
-        study_set_id: studySet.id,
-        question: item.question,
-        answer: item.answer,
-        options: item.options || null,
-        item_type: item.item_type || "flashcard",
-        order_index: index,
-      }))
+      const itemsToInsert = items.map((item: any, index: number) =>
+        buildStudySetItemInsert(studySet.id, item, index)
+      )
 
       const { error: itemsError } = await supabase
         .from("study_set_items")

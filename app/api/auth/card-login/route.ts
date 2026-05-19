@@ -2,6 +2,7 @@
 import { createClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
 import { createErrorResponse, createSuccessResponse } from "@/lib/api-errors";
+import { normalizeRole } from "@/lib/utils/roles";
 
 export async function POST(request: Request) {
   try {
@@ -27,7 +28,7 @@ export async function POST(request: Request) {
     // Look up the card
     const { data: card, error: cardError } = await adminClient
       .from("auth_cards")
-      .select("*, profiles(*, roles(*))")
+      .select("*, profiles(*, roles(name))")
       .eq("card_id", cardId)
       .eq("status", "active")
       .single();
@@ -107,9 +108,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const userRole = Array.isArray(card.profiles?.roles) && card.profiles.roles.length > 0 
-      ? card.profiles.roles[0].name 
-      : "learner";
+    const profile = card.profiles as { roles?: unknown } | null | undefined;
+    const userRole = normalizeRole(profile?.roles as Parameters<typeof normalizeRole>[0])?.name ?? "learner";
     
     return NextResponse.json(
       createSuccessResponse({

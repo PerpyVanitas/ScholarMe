@@ -16,7 +16,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function executeMigration() {
   try {
-    const migrationFile = path.join(__dirname, 'supabase_migration.sql');
+    const migrationFile = path.join(__dirname, '../MIGRATION_CLEAN.sql');
     const sql = fs.readFileSync(migrationFile, 'utf-8');
     
     // Split by common SQL delimiters, but be careful with functions

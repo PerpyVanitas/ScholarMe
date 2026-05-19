@@ -10,11 +10,13 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Clock, Plus, Trash2, Loader2, Save, AlertCircle } from "lucide-react";
+import { Clock, Plus, Trash2, Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
 import { DEMO_USERS } from "@/lib/demo";
 import type { TutorAvailability, Tutor } from "@/lib/types";
 import { DAYS_OF_WEEK } from "@/lib/types";
+import { ensureTutor } from "@/app/dashboard/profile/actions";
 
 export default function AvailabilityPage() {
   const [tutor, setTutor] = useState<Tutor | null>(null);
@@ -36,7 +38,11 @@ export default function AvailabilityPage() {
       // Support demo mode - use seeded tutor profile ID
       const userId = user?.id || DEMO_USERS.tutor.profileId;
 
-      const { data: tutorData } = await supabase
+      if (user) {
+        await ensureTutor();
+      }
+
+      let { data: tutorData } = await supabase
         .from("tutors")
         .select("*")
         .eq("user_id", userId)
@@ -75,7 +81,7 @@ export default function AvailabilityPage() {
     if (error) {
       toast.error("Failed to add slot");
     } else if (data) {
-      setSlots((prev) => [...prev, data].sort((a, b) => a.day_of_week - b.day_of_week));
+      setSlots((prev: any) => [...prev, data].sort((a: any, b: any) => a.day_of_week - b.day_of_week));
       toast.success("Availability slot added");
     }
   }
@@ -85,7 +91,7 @@ export default function AvailabilityPage() {
     const { error } = await supabase.from("tutor_availability").delete().eq("id", id);
 
     if (!error) {
-      setSlots((prev) => prev.filter((s) => s.id !== id));
+      setSlots((prev: any) => prev.filter((s: any) => s.id !== id));
       toast.success("Slot removed");
     }
   }
@@ -118,13 +124,12 @@ export default function AvailabilityPage() {
   if (!tutor) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-16">
-        <div className="rounded-full bg-warning/10 p-4">
-          <AlertCircle className="h-8 w-8 text-warning-foreground" />
-        </div>
-        <h2 className="text-lg font-semibold text-foreground">Tutor Profile Not Found</h2>
         <p className="max-w-md text-center text-sm text-muted-foreground">
-          Your tutor profile has not been created yet. Please contact your administrator.
+          We could not load your tutor record yet. Open Profile to finish setup, then return here.
         </p>
+        <Button asChild>
+          <Link href="/dashboard/profile">Go to Profile</Link>
+        </Button>
       </div>
     );
   }
@@ -132,7 +137,7 @@ export default function AvailabilityPage() {
   const groupedSlots = DAYS_OF_WEEK.map((day, idx) => ({
     day,
     idx,
-    slots: slots.filter((s) => s.day_of_week === idx),
+    slots: slots.filter((s: any) => s.day_of_week === idx),
   }));
 
   return (
@@ -150,7 +155,7 @@ export default function AvailabilityPage() {
         <CardContent className="flex flex-col gap-3">
           <Textarea
             value={bio}
-            onChange={(e) => setBio(e.target.value)}
+            onChange={(e: any) => setBio(e.target.value)}
             placeholder="I specialize in making complex topics simple..."
             rows={3}
           />
@@ -187,11 +192,11 @@ export default function AvailabilityPage() {
             </div>
             <div className="flex flex-col gap-2">
               <Label>Start</Label>
-              <Input type="time" value={newStart} onChange={(e) => setNewStart(e.target.value)} />
+              <Input type="time" value={newStart} onChange={(e: any) => setNewStart(e.target.value)} />
             </div>
             <div className="flex flex-col gap-2">
               <Label>End</Label>
-              <Input type="time" value={newEnd} onChange={(e) => setNewEnd(e.target.value)} />
+              <Input type="time" value={newEnd} onChange={(e: any) => setNewEnd(e.target.value)} />
             </div>
             <Button onClick={addSlot}>
               <Plus className="mr-2 h-4 w-4" />
@@ -219,7 +224,7 @@ export default function AvailabilityPage() {
                   <div key={day} className="flex flex-col gap-2 rounded-lg border border-border/60 p-3 sm:flex-row sm:items-start sm:gap-4">
                     <span className="text-sm font-medium text-foreground sm:w-24 sm:pt-1">{day}</span>
                     <div className="flex flex-wrap gap-2">
-                      {daySlots.map((slot) => (
+                      {daySlots.map((slot: any) => (
                         <Badge
                           key={slot.id}
                           variant="secondary"

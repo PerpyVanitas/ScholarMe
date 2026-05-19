@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         title: "Level Up! 🎉",
         message: `Congratulations! You've reached Level ${newLevel}. Keep up the great work!`,
         type: "milestone",
-        read: false
+        is_read: false
       });
     }
 

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/create-client";
+import { ensureTutorRow } from "@/lib/tutors/db";
 
 export async function GET() {
   const supabase = await createClient();
@@ -23,14 +24,11 @@ export async function POST(req: Request) {
 
   const { action } = await req.json();
 
-  // Find the tutor record for this user
-  const { data: tutor } = await supabase
-    .from("tutors")
-    .select("id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (!tutor) return NextResponse.json({ error: "Tutor profile not found" }, { status: 404 });
+  const ensured = await ensureTutorRow(supabase, user);
+  if (!ensured.ok) {
+    return NextResponse.json({ error: ensured.error }, { status: 500 });
+  }
+  const tutor = { id: ensured.tutor.id };
 
   if (action === "clock_in") {
     // Check for an open entry (no clock_out)
