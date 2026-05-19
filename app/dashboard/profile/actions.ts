@@ -22,9 +22,39 @@ export async function updateProfile(data: UpdateProfileData) {
     return { success: false, error: "Not authenticated" };
   }
 
+  // Get existing profile to see if role_id is present
+  const { data: existingProfile } = await supabase
+    .from("profiles")
+    .select("role_id")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  let roleId = existingProfile?.role_id;
+
+  if (!roleId) {
+    // Determine role from metadata or email
+    let fallbackRole = "learner";
+    if (user.email === "admin@scholarme.org" || user.user_metadata?.role_name === "administrator" || user.user_metadata?.role === "administrator") {
+      fallbackRole = "administrator";
+    } else if (user.user_metadata?.role_name === "tutor" || user.user_metadata?.role === "tutor") {
+      fallbackRole = "tutor";
+    }
+
+    const { data: roleRow } = await supabase
+      .from("roles")
+      .select("id")
+      .eq("name", fallbackRole)
+      .maybeSingle();
+    if (roleRow) {
+      roleId = roleRow.id;
+    }
+  }
+
   const { error } = await supabase
     .from("profiles")
-    .update({
+    .upsert({
+      id: user.id,
+      email: user.email || "",
       first_name: data.first_name,
       last_name: data.last_name,
       full_name: `${data.first_name} ${data.last_name}`.trim(),
@@ -34,8 +64,9 @@ export async function updateProfile(data: UpdateProfileData) {
       membership_number: data.membership_number,
       degree_program: data.degree_program,
       year_level: data.year_level,
-    })
-    .eq("id", user.id);
+      role_id: roleId,
+      profile_completed: true,
+    });
 
   if (error) {
     console.error("Profile update error:", error);

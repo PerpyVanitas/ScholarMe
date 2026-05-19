@@ -80,15 +80,51 @@ export default function ProfilePage() {
         .from("profiles")
         .select("*, roles(name)")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
-      if (error) {
-        toast.error("Failed to load profile");
-        setLoading(false);
-        return;
-      }
+      if (error || !data) {
+        console.warn("Profile fetch returned error or no data, using fallback:", error);
+        
+        let fallbackRole = "learner";
+        if (user.email === "admin@scholarme.org" || user.user_metadata?.role_name === "administrator" || user.user_metadata?.role === "administrator") {
+          fallbackRole = "administrator";
+        } else if (user.user_metadata?.role_name === "tutor" || user.user_metadata?.role === "tutor") {
+          fallbackRole = "tutor";
+        }
 
-      if (data) {
+        const fullNameStr = user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
+        let derivedFirstName = user.user_metadata?.first_name || "";
+        let derivedLastName = user.user_metadata?.last_name || "";
+        if (!derivedFirstName && !derivedLastName) {
+          const parts = fullNameStr.trim().split(/\s+/);
+          derivedFirstName = parts[0] || "";
+          derivedLastName = parts.slice(1).join(" ") || "";
+        }
+
+        const fallbackProfile: any = {
+          id: user.id,
+          role_id: null,
+          full_name: fullNameStr,
+          first_name: derivedFirstName || null,
+          last_name: derivedLastName || null,
+          email: user.email || "",
+          avatar_url: null,
+          phone_number: null,
+          birthdate: null,
+          date_of_birth: null,
+          membership_number: null,
+          degree_program: null,
+          year_level: null,
+          total_xp: 0,
+          current_level: 1,
+          profile_completed: false,
+          created_at: user.created_at || new Date().toISOString(),
+          roles: { name: fallbackRole }
+        };
+
+        setProfile(fallbackProfile);
+        setRoleName(fallbackRole);
+      } else {
         setProfile(data);
         if (data.roles?.name) setRoleName(data.roles.name);
 
@@ -128,8 +164,7 @@ export default function ProfilePage() {
             }
           }
         }
-      }
-      setLoading(false);
+      }setLoading(false);
     }
 
     loadProfile();
