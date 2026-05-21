@@ -46,17 +46,18 @@ function getDesignationLabel(designation: HsDesignation | null | undefined): str
 
 /** Get badge styling based on designation */
 function getDesignationBadgeClass(designation: HsDesignation | null | undefined): string {
-  if (!designation) return "bg-black/60 hover:bg-black/60 text-[#FFD700] border border-[#FFD700]/30 text-[9px] font-bold px-2.5 py-0.5 whitespace-nowrap";
+  const base = "text-[9px] px-2.5 py-0.5 whitespace-normal break-words text-center leading-tight max-w-[180px]";
+  if (!designation) return `bg-black/60 hover:bg-black/60 text-[#FFD700] border border-[#FFD700]/30 font-bold ${base}`;
   switch (designation.designation) {
     case "esas_scholar":
-      return "bg-[#FFD700] hover:bg-[#FFD700] text-black border border-black text-[9px] font-black px-2.5 py-0.5 whitespace-nowrap";
+      return `bg-[#FFD700] hover:bg-[#FFD700] text-black border border-black font-black ${base}`;
     case "officer":
-      return "bg-gradient-to-r from-[#FFD700] to-[#FFA500] hover:from-[#FFD700] hover:to-[#FFA500] text-black border border-black/20 text-[9px] font-black px-2.5 py-0.5 whitespace-nowrap";
+      return `bg-gradient-to-r from-[#FFD700] to-[#FFA500] hover:from-[#FFD700] hover:to-[#FFA500] text-black border border-black/20 font-black ${base}`;
     case "administrator":
-      return "bg-gradient-to-r from-red-600 to-red-500 hover:from-red-600 hover:to-red-500 text-white border border-red-800/30 text-[9px] font-black px-2.5 py-0.5 whitespace-nowrap";
+      return `bg-gradient-to-r from-red-600 to-red-500 hover:from-red-600 hover:to-red-500 text-white border border-red-800/30 font-black ${base}`;
     case "member":
     default:
-      return "bg-black/60 hover:bg-black/60 text-[#FFD700] border border-[#FFD700]/30 text-[9px] font-bold px-2.5 py-0.5 whitespace-nowrap";
+      return `bg-black/60 hover:bg-black/60 text-[#FFD700] border border-[#FFD700]/30 font-bold ${base}`;
   }
 }
 

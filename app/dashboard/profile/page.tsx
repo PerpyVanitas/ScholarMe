@@ -524,7 +524,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="container max-w-4xl py-8 space-y-6">
+      <div className="container mx-auto max-w-4xl py-8 space-y-6">
         <Skeleton className="h-48 w-full" />
         <Skeleton className="h-64 w-full" />
       </div>
@@ -533,7 +533,7 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="container max-w-4xl py-8">
+      <div className="container mx-auto max-w-4xl py-8">
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
             Profile not found. Please try logging in again.
@@ -546,7 +546,7 @@ export default function ProfilePage() {
   const displayName = profile.full_name || `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || "User";
 
   return (
-    <div className="container max-w-4xl py-8 space-y-6">
+    <div className="container mx-auto max-w-4xl py-8 space-y-6">
       {/* Profile Header */}
       <Card>
         <CardContent className="pt-6">
