@@ -1,7 +1,21 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/create-client";
 
-export async function GET() {
+// Helper to fetch active timesheet collection period
+async function getActivePeriod(supabase: any) {
+  try {
+    const { data } = await supabase
+      .from("timesheet_periods")
+      .select("start_date, end_date")
+      .eq("is_active", true)
+      .maybeSingle();
+    return data || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function GET(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
@@ -13,14 +27,37 @@ export async function GET() {
     .eq("id", user.id)
     .single();
 
-  if ((profile?.roles as any)?.name !== "administrator") {
+  const roleName = Array.isArray(profile?.roles)
+    ? profile.roles[0]?.name
+    : (profile?.roles as any)?.name;
+  const isAdmin = roleName === "admin" || roleName === "administrator";
+
+  if (!profile || !isAdmin) {
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
 
-  const { data, error } = await supabase
+  const { searchParams } = new URL(req.url);
+  const startDateParam = searchParams.get("start_date");
+  const endDateParam = searchParams.get("end_date");
+
+  let query = supabase
     .from("timesheets")
-    .select("*, tutors(*, profiles(*))")
-    .order("clock_in", { ascending: false });
+    .select("*, tutors(*, profiles(*))");
+
+  if (startDateParam && endDateParam) {
+    query = query
+      .gte("clock_in", startDateParam)
+      .lte("clock_in", endDateParam);
+  } else {
+    const config = await getActivePeriod(supabase);
+    if (config && config.start_date && config.end_date) {
+      query = query
+        .gte("clock_in", config.start_date)
+        .lte("clock_in", config.end_date);
+    }
+  }
+
+  const { data, error } = await query.order("clock_in", { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);

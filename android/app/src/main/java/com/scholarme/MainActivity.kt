@@ -7,6 +7,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -41,11 +45,10 @@ class MainActivity : ComponentActivity() {
                 
                 // Top-level destinations for Bottom Nav
                 val bottomNavItems = listOf(
-                    BottomNavItem("Home", Screen.Dashboard.route, Icons.Default.Home),
-                    BottomNavItem("Tutors", Screen.TutorsDirectory.route, Icons.Default.Search),
-                    BottomNavItem("Schedule", Screen.SessionManagement.route, Icons.Default.CalendarMonth),
-                    BottomNavItem("Messages", Screen.MessagesList.route, Icons.Default.Chat),
-                    BottomNavItem("Profile", Screen.Profile.route, Icons.Default.Person)
+                    BottomNavItem("Dashboard", Screen.Dashboard.route, Icons.Default.Home),
+                    BottomNavItem("Members", Screen.UserManagement.route, Icons.Default.People),
+                    BottomNavItem("Scan ID", Screen.AdminScanner.route, Icons.Default.QrCodeScanner),
+                    BottomNavItem("My ID", Screen.Profile.route, Icons.Default.Badge)
                 )
 
                 // Screens where we SHOULD show the bottom nav

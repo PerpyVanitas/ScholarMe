@@ -80,7 +80,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create auth user
+    // Create auth user. The Postgres trigger 'on_auth_user_created' will automatically
+    // handle the atomic insertion into the public.profiles table.
     const { data: created, error: createError } = await adminClient.auth.admin.createUser({
       email,
       password,
@@ -95,26 +96,6 @@ export async function POST(request: NextRequest) {
     if (createError || !created?.user) {
       return NextResponse.json(
         createErrorResponse("SYSTEM_001_INTERNAL_ERROR", createError?.message || "Failed to create user"),
-        { status: 500 }
-      );
-    }
-
-    // Create profile with administrator role
-    const { error: profileError } = await adminClient
-      .from("profiles")
-      .upsert({
-        id: created.user.id,
-        full_name,
-        email,
-        role_id: roleRow.id,
-        terms_accepted_at: new Date().toISOString(),
-      }, { onConflict: "id" });
-
-    if (profileError) {
-      // Rollback: delete the auth user
-      await adminClient.auth.admin.deleteUser(created.user.id);
-      return NextResponse.json(
-        createErrorResponse("DB_001_DATA_INTEGRITY_ERROR", "Failed to create profile"),
         { status: 500 }
       );
     }

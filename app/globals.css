@@ -4,123 +4,111 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* ScholarMe Color Scheme - Professional Educational Platform */
-  /* Primary:   Deep Blue  — trust, authority        */
-  /* Secondary: Mid Blue   — supporting actions      */
-  /* Accent:    Warm Gold  — achievement, highlights */
-  /* Neutrals:  Cool Grays — backgrounds, borders    */
+  /* ScholarMe Color Scheme - Premium Warm Gold-Cream (Light Mode) */
+  /* Background: Premium warm cream background */
+  --background: #fbfaf7;
+  --foreground: #1e1d1a;
+  --card: #ffffff;
+  --card-foreground: #1e1d1a;
+  --popover: #ffffff;
+  --popover-foreground: #1e1d1a;
 
-  --background: oklch(0.99 0.002 255);
-  --foreground: oklch(0.12 0.02 255);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.12 0.02 255);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.12 0.02 255);
+  /* Primary: Deep Golden Bronze for high legibility on light background */
+  --primary: #8f680f;
+  --primary-foreground: #ffffff;
 
-  /* Primary: Deep Blue ~#2E5090 */
-  --primary: oklch(0.42 0.18 260);
-  --primary-foreground: oklch(0.99 0 0);
+  /* Secondary: Soft light warm gold/cream */
+  --secondary: #f5eedc;
+  --secondary-foreground: #4a3e25;
 
-  /* Secondary: Soft Periwinkle-Blue ~#6B8FD4 */
-  --secondary: oklch(0.60 0.12 258);
-  --secondary-foreground: oklch(0.99 0 0);
+  --muted: #f0ede6;
+  --muted-foreground: #787265;
 
-  --muted: oklch(0.94 0.01 255);
-  --muted-foreground: oklch(0.46 0.03 258);
+  /* Accent: Light warm gold tint for highlights/hovers */
+  --accent: #fdf6e2;
+  --accent-foreground: #8f680f;
 
-  /* Accent: Warm Gold ~#E8A020 */
-  --accent: oklch(0.65 0.18 70);
-  --accent-foreground: oklch(0.15 0.02 70);
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
 
-  --destructive: oklch(0.63 0.21 30);
-  --destructive-foreground: oklch(1 0 0);
+  --border: #e6e1d5;
+  --input: #e6e1d5;
+  --ring: #8f680f;
 
-  --border: oklch(0.91 0.01 255);
-  --input: oklch(0.96 0.01 255);
-  --ring: oklch(0.42 0.18 260);
-
-  /* Charts — blue family + gold accent */
-  --chart-1: oklch(0.42 0.18 260);
-  --chart-2: oklch(0.55 0.15 258);
-  --chart-3: oklch(0.65 0.18 70);
-  --chart-4: oklch(0.68 0.10 255);
-  --chart-5: oklch(0.34 0.14 265);
+  /* Charts — gold / warm family */
+  --chart-1: #8f680f;
+  --chart-2: #c59b27;
+  --chart-3: #6e6b64;
+  --chart-4: #e6e1d5;
+  --chart-5: #f0ede6;
 
   --radius: 0.625rem;
 
-  /* Sidebar — very light blue-tinted surface */
-  --sidebar: oklch(0.97 0.006 255);
-  --sidebar-foreground: oklch(0.12 0.02 255);
-  --sidebar-primary: oklch(0.42 0.18 260);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.90 0.04 260);
-  --sidebar-accent-foreground: oklch(0.38 0.16 260);
-  --sidebar-border: oklch(0.91 0.01 255);
-  --sidebar-ring: oklch(0.42 0.18 260);
+  /* Sidebar — warm off-white sidebar background */
+  --sidebar: #f5f2eb;
+  --sidebar-foreground: #1e1d1a;
+  --sidebar-primary: #8f680f;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e6e1d5;
+  --sidebar-accent-foreground: #8f680f;
+  --sidebar-border: #e6e1d5;
+  --sidebar-ring: #8f680f;
 
-  /* Semantic status — kept intentionally distinct */
-  --success: oklch(0.52 0.14 145);
-  --success-foreground: oklch(1 0 0);
+  --success: #15803d;
+  --success-foreground: #ffffff;
 
-  --warning: oklch(0.74 0.16 68);
-  --warning-foreground: oklch(0.15 0.02 65);
+  --warning: #b45309;
+  --warning-foreground: #ffffff;
 }
 
 .dark {
-  /* Dark mode — rich navy blue (NOT pitch black) */
-  /* Navy blue base ~#1A2744 with visible blue saturation */
+  /* Keep variables identical to preserve the premium dark theme in all mode toggles */
+  --background: #111111;
+  --foreground: #ffffff;
+  --card: #1a1a1a;
+  --card-foreground: #ffffff;
+  --popover: #1a1a1a;
+  --popover-foreground: #ffffff;
 
-  --background: oklch(0.26 0.05 255);
-  --foreground: oklch(0.95 0.01 240);
-  --card: oklch(0.30 0.055 255);
-  --card-foreground: oklch(0.95 0.01 240);
-  --popover: oklch(0.30 0.055 255);
-  --popover-foreground: oklch(0.95 0.01 240);
+  --primary: #FFD700;
+  --primary-foreground: #111111;
 
-  /* Primary: Bright blue for navy contrast */
-  --primary: oklch(0.62 0.20 260);
-  --primary-foreground: oklch(0.99 0 0);
+  --secondary: #2d2d2d;
+  --secondary-foreground: #ffffff;
 
-  /* Secondary: Lighter navy-blue */
-  --secondary: oklch(0.35 0.06 255);
-  --secondary-foreground: oklch(0.95 0.01 240);
+  --muted: #1a1a1a;
+  --muted-foreground: #a3a3a3;
 
-  --muted: oklch(0.32 0.05 255);
-  --muted-foreground: oklch(0.70 0.03 255);
+  --accent: #FFD700;
+  --accent-foreground: #111111;
 
-  /* Accent: Warm Gold — pops against navy */
-  --accent: oklch(0.72 0.18 72);
-  --accent-foreground: oklch(0.18 0.02 65);
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
 
-  --destructive: oklch(0.65 0.20 30);
-  --destructive-foreground: oklch(1 0 0);
+  --border: #2d2d2d;
+  --input: #2d2d2d;
+  --ring: #FFD700;
 
-  --border: oklch(0.36 0.05 255);
-  --input: oklch(0.32 0.05 255);
-  --ring: oklch(0.62 0.20 260);
+  --chart-1: #FFD700;
+  --chart-2: #2d2d2d;
+  --chart-3: #a3a3a3;
+  --chart-4: #4b5563;
+  --chart-5: #1a1a1a;
 
-  /* Charts — blue family + gold */
-  --chart-1: oklch(0.62 0.20 260);
-  --chart-2: oklch(0.72 0.14 258);
-  --chart-3: oklch(0.72 0.18 72);
-  --chart-4: oklch(0.80 0.09 255);
-  --chart-5: oklch(0.50 0.16 265);
+  --sidebar: #111111;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #FFD700;
+  --sidebar-primary-foreground: #111111;
+  --sidebar-accent: #1a1a1a;
+  --sidebar-accent-foreground: #FFD700;
+  --sidebar-border: #2d2d2d;
+  --sidebar-ring: #FFD700;
 
-  /* Sidebar — slightly darker navy than background */
-  --sidebar: oklch(0.22 0.05 255);
-  --sidebar-foreground: oklch(0.95 0.01 240);
-  --sidebar-primary: oklch(0.62 0.20 260);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.32 0.06 260);
-  --sidebar-accent-foreground: oklch(0.88 0.05 255);
-  --sidebar-border: oklch(0.34 0.05 255);
-  --sidebar-ring: oklch(0.62 0.20 260);
+  --success: #10b981;
+  --success-foreground: #111111;
 
-  --success: oklch(0.62 0.14 145);
-  --success-foreground: oklch(0.99 0 0);
-
-  --warning: oklch(0.78 0.16 68);
-  --warning-foreground: oklch(0.15 0.02 65);
+  --warning: #f59e0b;
+  --warning-foreground: #111111;
 }
 
 @theme inline {
@@ -167,6 +155,24 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+
+  /* Premium Micro-Animations keyframes and custom animation classes */
+  --animate-float: float 4s ease-in-out infinite;
+  --animate-fade-in-up: fadeInUp 0.8s ease-out forwards;
+  --animate-gold-glow: goldGlow 3s infinite alternate;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes goldGlow {
+    0% { box-shadow: 0 0 5px rgba(255, 215, 0, 0.1); }
+    100% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); border-color: rgba(255, 215, 0, 0.8); }
+  }
 }
 
 @layer base {
@@ -177,3 +183,75 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* =============================================
+   Print / PDF Export Styles
+   Applied when window.print() is called.
+   ============================================= */
+@media print {
+  /* Hide the entire sidebar and navigation */
+  [data-slot="sidebar"],
+  [data-sidebar="sidebar"],
+  nav,
+  header,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Force white background and black text for all cards */
+  body, html {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .dark body, .dark html {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* Remove shadow from cards in print */
+  [data-slot="card"] {
+    box-shadow: none !important;
+    border: 1px solid #d1d5db !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    break-inside: avoid;
+  }
+
+  /* Show all tabs content simultaneously for printing */
+  [role="tabpanel"] {
+    display: block !important;
+    opacity: 1 !important;
+  }
+
+  /* Progress bars: force color to print */
+  [data-slot="progress-indicator"] {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Page breaks between major sections */
+  .tab-section {
+    page-break-before: always;
+  }
+
+  /* Hall of fame record cards */
+  .record-card {
+    break-inside: avoid;
+  }
+
+  /* Expand main content to full width */
+  main, [data-slot="sidebar-inset"] {
+    margin: 0 !important;
+    padding: 1.5rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Footer always at the bottom */
+  @page {
+    margin: 1.5cm;
+    size: A4 portrait;
+  }
+}
+

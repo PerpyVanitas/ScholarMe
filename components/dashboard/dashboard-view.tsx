@@ -13,10 +13,10 @@ import { ensureTutor } from "@/app/dashboard/profile/actions"
 
 interface DashboardData {
   adminStats?: {
-    totalUsers: number
-    totalSessions: number
-    activeTutors: number
     pendingSessions: number
+    clockedInTutors: number
+    activeTutors: number
+    sessionsToday: number
   }
   recentSessions?: Session[]
   tutor?: Tutor | null
@@ -62,7 +62,7 @@ export default function DashboardView() {
             // Fallback to empty stats
           }
           if (!extra.adminStats) {
-            extra.adminStats = { totalUsers: 0, totalSessions: 0, activeTutors: 0, pendingSessions: 0 }
+            extra.adminStats = { pendingSessions: 0, clockedInTutors: 0, activeTutors: 0, sessionsToday: 0 }
             extra.recentSessions = []
           }
         } else if (role === "tutor") {
@@ -171,7 +171,7 @@ export default function DashboardView() {
     return (
       <AdminDashboard
         profile={profile}
-        stats={dashboardData.adminStats || { totalUsers: 0, totalSessions: 0, activeTutors: 0, pendingSessions: 0 }}
+        stats={dashboardData.adminStats || { pendingSessions: 0, clockedInTutors: 0, activeTutors: 0, sessionsToday: 0 }}
         recentSessions={dashboardData.recentSessions || []}
       />
     )

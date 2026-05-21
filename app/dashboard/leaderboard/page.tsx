@@ -47,7 +47,7 @@ export default function LeaderboardPage() {
 
   if (loading) {
     return (
-      <div className="container max-w-4xl py-8 space-y-6">
+      <div className="container mx-auto max-w-4xl py-8 space-y-6">
         <Skeleton className="h-20 w-full" />
         <Skeleton className="h-96 w-full" />
       </div>
@@ -55,7 +55,7 @@ export default function LeaderboardPage() {
   }
 
   return (
-    <div className="container max-w-4xl py-8 space-y-8">
+    <div className="container mx-auto max-w-4xl py-8 space-y-8">
       <div className="text-center space-y-2">
         <h1 className="text-4xl font-black tracking-tight flex items-center justify-center gap-3">
           <Trophy className="h-10 w-10 text-yellow-500" />

@@ -2,6 +2,18 @@
 
 export type UserRole = "administrator" | "tutor" | "learner"
 
+export type DesignationType = "member" | "esas_scholar" | "officer" | "administrator"
+
+export interface HsDesignation {
+  id: string
+  user_id: string
+  designation: DesignationType
+  position?: string | null
+  academic_year: string
+  is_current: boolean
+  created_at: string
+}
+
 export interface Role {
   id: string
   name: UserRole
@@ -26,8 +38,12 @@ export interface Profile {
   current_level?: number
   profile_completed?: boolean | null
   terms_accepted_at?: string | null
+  esas_scholar?: boolean
+  academic_year_joined?: string | null
+  unique_id_number?: string | null
   created_at: string
   roles?: Array<{ id: string; name: string }>
+  hs_designations?: HsDesignation[]
 }
 
 export interface AuthCard {

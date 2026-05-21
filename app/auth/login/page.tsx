@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { mapSupabaseErrorToCode, formatErrorForDisplay } from "@/lib/api-errors";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { LoginInactivityCheck } from "@/features/auth/components/login-inactivity-check";
+import { CardScanner } from "@/features/auth/components/card-scanner";
 
 export default function LoginPage() {
   const [emailLoading, setEmailLoading] = useState(false);
@@ -47,14 +48,9 @@ export default function LoginPage() {
     window.location.href = "/dashboard";
   }
 
-  async function handleCardLogin(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function handleCardLogin(cardId: string, pin: string) {
     setCardLoading(true);
     setCardError("");
-
-    const formData = new FormData(e.currentTarget);
-    const cardId = formData.get("card_id") as string;
-    const pin = formData.get("pin") as string;
 
     try {
       const res = await fetch("/api/auth/card-login", {
@@ -168,42 +164,12 @@ export default function LoginPage() {
                 </form>
               </TabsContent>
 
-              <TabsContent value="card">
-                <form onSubmit={handleCardLogin} className="flex flex-col gap-4">
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="card_id">Card ID</Label>
-                    <Input
-                      id="card_id"
-                      name="card_id"
-                      type="text"
-                      placeholder="Enter your card ID"
-                      required
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="pin">PIN</Label>
-                    <Input
-                      id="pin"
-                      name="pin"
-                      type="password"
-                      placeholder="Enter your PIN"
-                      required
-                      maxLength={6}
-                      inputMode="numeric"
-                    />
-                  </div>
-                  <ErrorAlert error={cardError} />
-                  <Button type="submit" className="w-full" disabled={cardLoading}>
-                    {cardLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Verifying...
-                      </>
-                    ) : (
-                      "Sign In with Card"
-                    )}
-                  </Button>
-                </form>
+              <TabsContent value="card" className="mt-4">
+                <CardScanner 
+                  onScanSuccess={handleCardLogin} 
+                  isProcessing={cardLoading} 
+                  error={cardError} 
+                />
               </TabsContent>
             </Tabs>
           </CardContent>

@@ -166,8 +166,8 @@ export default function SignUpPage() {
   })();
 
   const strengthLabel = ["", "Weak", "Fair", "Good", "Strong"][passwordStrength];
-  const strengthColor = ["", "bg-red-500", "bg-amber-400", "bg-blue-500", "bg-emerald-500"][passwordStrength];
-  const strengthTextColor = ["", "text-red-500", "text-amber-400", "text-blue-500", "text-emerald-500"][passwordStrength];
+  const strengthColor = ["", "bg-orange-500", "bg-amber-400", "bg-primary", "bg-emerald-500"][passwordStrength];
+  const strengthTextColor = ["", "text-orange-500", "text-amber-400", "text-primary", "text-emerald-500"][passwordStrength];
 
   return (
     <div className="flex min-h-screen">

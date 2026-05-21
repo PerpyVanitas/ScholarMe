@@ -124,7 +124,7 @@ fun UserAdminCard(
                     Text(email, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Surface(
-                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    color = androidx.compose.ui.graphics.Color(0xFFFFD700),
                     shape = MaterialTheme.shapes.small,
                     modifier = Modifier.clickable { showRoleDialog = true }
                 ) {
@@ -133,7 +133,7 @@ fun UserAdminCard(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                        color = androidx.compose.ui.graphics.Color.Black
                     )
                 }
             }

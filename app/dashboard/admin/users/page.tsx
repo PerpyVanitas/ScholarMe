@@ -72,9 +72,13 @@ import {
   Settings,
   LogIn,
   FileText,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Profile } from "@/lib/types";
+import { QrIdCard } from "@/features/auth/components/qr-id-card";
+import { HonorSocietyLogo } from "@/components/honsoc-logo";
 
 const roleColors: Record<string, string> = {
   administrator: "bg-warning/10 text-warning-foreground border-warning/30",
@@ -146,6 +150,9 @@ function AdminUsersContent() {
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editRole, setEditRole] = useState("");
+  const [editPassword, setEditPassword] = useState("");
+  const [showCreatePassword, setShowCreatePassword] = useState(false);
+  const [showEditPassword, setShowEditPassword] = useState(false);
 
   // Delete user
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -227,6 +234,8 @@ function AdminUsersContent() {
     setEditName(p.full_name || "");
     setEditEmail(p.email || "");
     setEditRole(Array.isArray(p.roles) && p.roles.length > 0 ? p.roles[0].name : "learner");
+    setEditPassword("");
+    setShowEditPassword(false);
     setEditOpen(true);
   }
 
@@ -241,6 +250,7 @@ function AdminUsersContent() {
         full_name: editName,
         email: editEmail !== editUser.email ? editEmail : undefined,
         role_name: editRole !== (Array.isArray(editUser.roles) && editUser.roles.length > 0 ? editUser.roles[0].name : "learner") ? editRole : undefined,
+        password: editPassword ? editPassword : undefined,
       }),
     });
     if (res.ok) {
@@ -294,6 +304,104 @@ function AdminUsersContent() {
     setLogsLoading(false);
   }
 
+  // QrIdCard / Card Management States
+  const [idCardOpen, setIdCardOpen] = useState(false);
+  const [idCardUser, setIdCardUser] = useState<Profile | null>(null);
+  const [cardDetails, setCardDetails] = useState<any>(null);
+  const [loadingCard, setLoadingCard] = useState(false);
+  const [pinInput, setPinInput] = useState("");
+  const [updatingCard, setUpdatingCard] = useState(false);
+
+  async function fetchCardDetails(userId: string) {
+    setLoadingCard(true);
+    setCardDetails(null);
+    setPinInput("");
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("auth_cards")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (data) {
+        setCardDetails(data);
+        setPinInput(data.pin || "");
+      }
+    } catch (err) {
+      console.error("Error fetching card", err);
+    } finally {
+      setLoadingCard(false);
+    }
+  }
+
+  const openPrintId = (profile: Profile) => {
+    setIdCardUser(profile);
+    setIdCardOpen(true);
+    fetchCardDetails(profile.id);
+  };
+
+  async function handleIssueCard() {
+    if (!idCardUser) return;
+    if (!idCardUser.unique_id_number) {
+      toast.error("User does not have a unique ID number generated yet.");
+      return;
+    }
+    setUpdatingCard(true);
+    try {
+      const res = await fetch("/api/admin/cards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: idCardUser.id,
+          card_id: idCardUser.unique_id_number,
+          pin: pinInput,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCardDetails(data);
+        toast.success("Card issued successfully!");
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Failed to issue card");
+      }
+    } catch (err) {
+      toast.error("Failed to issue card");
+    } finally {
+      setUpdatingCard(false);
+    }
+  }
+
+  async function handleToggleStatus() {
+    if (!cardDetails) return;
+    const newStatus = cardDetails.status === "active" ? "revoked" : "active";
+    setUpdatingCard(true);
+    try {
+      const res = await fetch("/api/admin/cards", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: cardDetails.id,
+          status: newStatus,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCardDetails(data);
+        toast.success(`Card ${newStatus} successfully!`);
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Failed to update card status");
+      }
+    } catch (err) {
+      toast.error("Failed to update status");
+    } finally {
+      setUpdatingCard(false);
+    }
+  }
+
+  // PIN update removed as cards are now automatically issued without manual PIN entry
+
   const filtered = profiles.filter((p) => {
     const nameMatch =
       !search ||
@@ -341,7 +449,22 @@ function AdminUsersContent() {
               </div>
               <div className="flex flex-col gap-2">
                 <Label>Password</Label>
-                <Input value={newPassword} onChange={(e) => setNewPassword(e.target.value)} type="password" placeholder="Minimum 6 characters" />
+                <div className="relative">
+                  <Input
+                    value={newPassword}
+                    onChange={(e: any) => setNewPassword(e.target.value)}
+                    type={showCreatePassword ? "text" : "password"}
+                    placeholder="Minimum 6 characters"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCreatePassword(!showCreatePassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showCreatePassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
               <div className="flex flex-col gap-2">
                 <Label>Role</Label>
@@ -413,7 +536,7 @@ function AdminUsersContent() {
                       </Badge>
                     </div>
                   </div>
-                  <UserActionsMenu profile={p} onEdit={openEdit} onDelete={openDelete} onLogs={openLogs} />
+                  <UserActionsMenu profile={p} onEdit={openEdit} onDelete={openDelete} onLogs={openLogs} onPrintId={openPrintId} />
                 </CardContent>
               </Card>
             ))}
@@ -453,7 +576,7 @@ function AdminUsersContent() {
                         {new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                       </TableCell>
                       <TableCell>
-                        <UserActionsMenu profile={p} onEdit={openEdit} onDelete={openDelete} onLogs={openLogs} />
+                        <UserActionsMenu profile={p} onEdit={openEdit} onDelete={openDelete} onLogs={openLogs} onPrintId={openPrintId} />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -490,6 +613,25 @@ function AdminUsersContent() {
                   <SelectItem value="administrator">Administrator</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label>New Password</Label>
+              <div className="relative">
+                <Input
+                  value={editPassword}
+                  onChange={(e: any) => setEditPassword(e.target.value)}
+                  type={showEditPassword ? "text" : "password"}
+                  placeholder="Leave blank to keep current password"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowEditPassword(!showEditPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showEditPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -591,6 +733,121 @@ function AdminUsersContent() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Print Preview & Card Management Dialog */}
+      <Dialog open={idCardOpen} onOpenChange={(open) => { setIdCardOpen(open); if (!open) setIdCardUser(null); }}>
+        <DialogContent className="sm:max-w-2xl bg-zinc-950 border-zinc-800 text-white p-6 outline-none relative">
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none flex items-center justify-center">
+            <HonorSocietyLogo variant="white" className="w-[500px] h-[500px]" />
+          </div>
+
+          <div className="flex flex-col md:flex-row items-stretch gap-6 relative z-10">
+          {/* Left panel: ID Card display */}
+          <div className="flex-1 flex flex-col items-center justify-center">
+            {idCardUser && (
+              <QrIdCard
+                profile={idCardUser}
+                role={Array.isArray(idCardUser.roles) && idCardUser.roles.length > 0 ? idCardUser.roles[0].name : "learner"}
+                showCompactPreview={false}
+                cardPin={cardDetails?.pin}
+              />
+            )}
+          </div>
+
+          {/* Vertical divider on desktop */}
+          <div className="hidden md:block w-px bg-zinc-800 self-stretch my-2"></div>
+
+          {/* Right panel: Card Management Actions */}
+          <div className="flex-1 flex flex-col justify-start space-y-4 text-left">
+            <div>
+              <DialogTitle className="text-xl font-bold tracking-widest text-[#FFD700] uppercase">
+                CARD SETTINGS
+              </DialogTitle>
+              <DialogDescription className="text-zinc-400 text-xs font-medium mt-1">
+                Configure local authentication options for {idCardUser?.full_name || "this user"}.
+              </DialogDescription>
+            </div>
+
+            <Separator className="bg-zinc-800" />
+
+            {loadingCard ? (
+              <div className="flex flex-col items-center justify-center py-12 flex-1">
+                <Loader2 className="h-6 w-6 text-[#FFD700] animate-spin" />
+                <span className="text-xs text-zinc-400 mt-2">Checking card records...</span>
+              </div>
+            ) : cardDetails ? (
+              // Card exists
+              <div className="space-y-4 flex-1 flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-zinc-400">Card Status:</span>
+                    <Badge
+                      variant="outline"
+                      className={
+                        cardDetails.status === "active"
+                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 font-bold uppercase text-[10px]"
+                          : "bg-rose-500/10 text-rose-400 border-rose-500/20 font-bold uppercase text-[10px]"
+                      }
+                    >
+                      {cardDetails.status}
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-zinc-400">Card ID:</span>
+                    <span className="font-mono text-xs text-zinc-200 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded">
+                      {cardDetails.card_id}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-4 mt-auto">
+                  <Button
+                    onClick={handleToggleStatus}
+                    disabled={updatingCard}
+                    variant="outline"
+                    className="w-full border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
+                  >
+                    {updatingCard ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : cardDetails.status === "active" ? (
+                      "Revoke/Deactivate Card"
+                    ) : (
+                      "Re-activate Card"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              // No card issued yet
+              <div className="space-y-4 flex-1 flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                    <p className="text-xs text-amber-500 font-medium leading-relaxed">
+                      No card has been issued to this user yet. You can issue a card immediately using their unique ID number: <strong className="font-mono text-zinc-200">{idCardUser?.unique_id_number || "HS-PENDING"}</strong>.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-4 mt-auto">
+                  <Button
+                    onClick={handleIssueCard}
+                    disabled={updatingCard || !idCardUser?.unique_id_number}
+                    className="w-full bg-[#FFD700] hover:bg-[#FFD700]/90 text-black font-semibold text-sm"
+                  >
+                    {updatingCard ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      "Issue New Card"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -613,11 +870,13 @@ function UserActionsMenu({
   onEdit,
   onDelete,
   onLogs,
+  onPrintId,
 }: {
   profile: Profile;
   onEdit: (p: Profile) => void;
   onDelete: (p: Profile) => void;
   onLogs: (p: Profile) => void;
+  onPrintId: (p: Profile) => void;
 }) {
   return (
     <DropdownMenu>
@@ -631,6 +890,10 @@ function UserActionsMenu({
         <DropdownMenuItem onClick={() => onEdit(profile)}>
           <Pencil className="mr-2 h-4 w-4" />
           Edit Details
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onPrintId(profile)}>
+          <FileText className="mr-2 h-4 w-4" />
+          Print/Download ID
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onLogs(profile)}>
           <History className="mr-2 h-4 w-4" />

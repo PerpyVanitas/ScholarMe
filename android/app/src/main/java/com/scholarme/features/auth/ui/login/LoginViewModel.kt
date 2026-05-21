@@ -58,4 +58,12 @@ class LoginViewModel @Inject constructor(
         _emailError.value = null
         _passwordError.value = null
     }
+
+    fun loginWithCard(cardId: String, pin: String) {
+        _loginState.value = Result.Loading
+        viewModelScope.launch {
+            val result = authRepository.loginWithCard(cardId, pin)
+            _loginState.value = result
+        }
+    }
 }

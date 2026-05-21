@@ -130,7 +130,10 @@ fun ProfileContent(
             AndroidQrIdCard(
                 userId = profile.id ?: "",
                 userName = profile.fullName ?: "",
-                role = profile.role ?: ""
+                role = profile.role ?: "MEMBER",
+                program = profile.degreeProgram ?: "N/A",
+                birthdate = profile.birthdate ?: "N/A",
+                avatarUrl = profile.avatarUrl
             )
         }
 
