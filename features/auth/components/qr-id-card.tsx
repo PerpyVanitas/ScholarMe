@@ -94,8 +94,14 @@ export function QrIdCard({ profile, role, showCompactPreview = true, designation
   const designationLabel = getDesignationLabel(currentDesignation);
   const designationBadgeClass = getDesignationBadgeClass(currentDesignation);
 
-  // Always show the CURRENT president, not the one from when the member joined
-  const currentAcademicYear = "2025-2026";
+  // Derive the current academic year dynamically from the current calendar date
+  // Pattern: Aug–Dec = 'YYYY-(YYYY+1)', Jan–Jul = '(YYYY-1)-YYYY'
+  const now = new Date();
+  const month = now.getMonth() + 1; // 1-indexed
+  const year = now.getFullYear();
+  const currentAcademicYear = month >= 8
+    ? `${year}-${year + 1}`
+    : `${year - 1}-${year}`;
   const presidentName = getPresidentName(currentAcademicYear);
   const formattedRole = designationLabel;
   

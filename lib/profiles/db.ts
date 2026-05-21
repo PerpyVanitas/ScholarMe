@@ -43,7 +43,6 @@ export async function resolveRoleId(
 
 function roleNameFromUser(user: User): string {
   if (
-    user.email === "admin@scholarme.org" ||
     user.user_metadata?.role_name === "administrator" ||
     user.user_metadata?.role === "administrator"
   ) {

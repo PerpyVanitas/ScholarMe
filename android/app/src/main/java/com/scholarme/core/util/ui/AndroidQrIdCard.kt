@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.scholarme.R
 import com.scholarme.core.util.QrGenerator
+import java.util.Calendar
 
 @Composable
 fun AndroidQrIdCard(
@@ -35,10 +36,17 @@ fun AndroidQrIdCard(
     userName: String,
     role: String,
     program: String = "BS INFORMATION TECHNOLOGY",
+    studentId: String = "N/A",
     birthdate: String = "N/A",
     avatarUrl: String? = null,
-    pin: String = ""
+    pin: String = "",
+    presidentName: String = "Honor Society President"
 ) {
+    // Compute academic year dynamically: Aug–Dec = Y/(Y+1), Jan–Jul = (Y-1)/Y
+    val cal = Calendar.getInstance()
+    val month = cal.get(Calendar.MONTH) + 1 // 1-indexed
+    val year = cal.get(Calendar.YEAR)
+    val academicYear = if (month >= 8) "$year-${year + 1}" else "${year - 1}-$year"
     var flipped by remember { mutableStateOf(false) }
     
     val rotation by animateFloatAsState(
@@ -78,6 +86,7 @@ fun AndroidQrIdCard(
                 userName = userName,
                 role = role,
                 program = program,
+                studentId = studentId,
                 birthdate = birthdate,
                 avatarUrl = avatarUrl,
                 modifier = Modifier.graphicsLayer { alpha = frontAlpha }
@@ -89,6 +98,8 @@ fun AndroidQrIdCard(
             CardBackSide(
                 userId = userId,
                 pin = pin,
+                presidentName = presidentName,
+                academicYear = academicYear,
                 modifier = Modifier.graphicsLayer {
                     alpha = backAlpha
                     rotationY = -180f // Counteract the container rotation so it's not mirrored
@@ -104,6 +115,7 @@ private fun CardFrontSide(
     userName: String,
     role: String,
     program: String,
+    studentId: String,
     birthdate: String,
     avatarUrl: String?,
     modifier: Modifier = Modifier
@@ -218,7 +230,7 @@ private fun CardFrontSide(
                         Divider(modifier = Modifier.padding(vertical = 8.dp), color = Color.White.copy(alpha = 0.05f))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text("STUDENT ID:", color = Color(0xFFA1A1AA), fontSize = 10.sp)
-                            Text("N/A", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            Text(studentId.uppercase(), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                         }
                         Divider(modifier = Modifier.padding(vertical = 8.dp), color = Color.White.copy(alpha = 0.05f))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -244,6 +256,8 @@ private fun CardFrontSide(
 private fun CardBackSide(
     userId: String,
     pin: String,
+    presidentName: String,
+    academicYear: String,
     modifier: Modifier = Modifier
 ) {
     val goldColor = Color(0xFFFFD700)
@@ -355,7 +369,7 @@ private fun CardBackSide(
                 Spacer(Modifier.height(24.dp))
                 
                 Text(
-                    "Aljane Faith Crisostomo",
+                    presidentName,
                     color = goldColor,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
@@ -374,7 +388,7 @@ private fun CardBackSide(
                 )
                 
                 Text(
-                    "AY 2025-2026",
+                    "AY $academicYear",
                     color = Color(0xFF71717A),
                     fontSize = 6.sp,
                     modifier = Modifier

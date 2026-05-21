@@ -111,8 +111,17 @@ private class QrAnalyzer(private val onQrScanned: (String) -> Unit) : ImageAnaly
             .build()
     )
     
+    private var lastScannedTime = 0L
+    private val DEBOUNCE_TIME_MS = 2000L
+    
     @androidx.camera.core.ExperimentalGetImage
     override fun analyze(imageProxy: ImageProxy) {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastScannedTime < DEBOUNCE_TIME_MS) {
+            imageProxy.close()
+            return
+        }
+
         val mediaImage = imageProxy.image
         if (mediaImage != null) {
             val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
@@ -120,6 +129,7 @@ private class QrAnalyzer(private val onQrScanned: (String) -> Unit) : ImageAnaly
                 .addOnSuccessListener { barcodes ->
                     for (barcode in barcodes) {
                         barcode.rawValue?.let { value ->
+                            lastScannedTime = System.currentTimeMillis()
                             onQrScanned(value)
                         }
                     }

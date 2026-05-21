@@ -36,10 +36,10 @@ export function LeaderboardTable({ profiles, currentUserId }: LeaderboardTablePr
 
   const getThemeClass = (theme: string | null) => {
     switch (theme) {
-      case 'gold': return "border-yellow-500/50 bg-yellow-500/5";
-      case 'purple': return "border-purple-500/50 bg-purple-500/5";
-      case 'ruby': return "border-amber-600/50 bg-amber-600/5 dark:border-[#FFD700]/30 dark:bg-[#FFD700]/5";
-      case 'emerald': return "border-green-500/50 bg-green-500/5";
+      case 'gold': return "border-yellow-500/50 bg-yellow-500/5 dark:border-yellow-500/30 dark:bg-yellow-500/10";
+      case 'purple': return "border-purple-500/50 bg-purple-500/5 dark:border-purple-500/30 dark:bg-purple-500/10";
+      case 'ruby': return "border-rose-600/50 bg-rose-600/5 dark:border-rose-500/30 dark:bg-rose-500/10";
+      case 'emerald': return "border-green-500/50 bg-green-500/5 dark:border-green-500/30 dark:bg-green-500/10";
       default: return "";
     }
   };
@@ -53,7 +53,7 @@ export function LeaderboardTable({ profiles, currentUserId }: LeaderboardTablePr
         return (
           <Card 
             key={profile.id} 
-            className={`transition-all hover:shadow-md ${isMe ? 'ring-2 ring-primary' : ''} ${getThemeClass(profile.profile_theme_color)}`}
+            className={`transition-all duration-300 hover:shadow-md hover:-translate-y-1 ${isMe ? 'ring-2 ring-primary' : ''} ${getThemeClass(profile.profile_theme_color)}`}
           >
             <CardContent className="p-4 flex items-center gap-4">
               <div className="flex items-center justify-center w-10">

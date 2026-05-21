@@ -26,10 +26,11 @@ export default async function AdminMessagesAuditPage() {
     .eq("id", user.id)
     .single();
 
-  const isSuperAdmin = profile?.email === "admin@scholarme.com" || profile?.email === "admin@scholarme.org";
+  const rawRole = profile?.roles;
+  const roleName = Array.isArray(rawRole) ? rawRole[0]?.name : (rawRole as any)?.name;
 
-  // Highest tier of control: Only visible to super admin email
-  if (!isSuperAdmin) {
+  // Gate: Only administrators can access the message audit page
+  if (roleName !== "administrator") {
     redirect("/dashboard/home");
   }
 

@@ -52,6 +52,42 @@ class AuthRepository @Inject constructor(
             }
         }
     }
+
+    suspend fun loginWithCard(cardId: String, pin: String): Result<UserProfile> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = authApi.cardLogin(CardLoginRequest(cardId, pin))
+                
+                if (response.isSuccessful && response.body()?.success == true) {
+                    val data = response.body()?.data
+                    if (data != null) {
+                        val user = UserProfile(
+                            id = data.user?.id ?: data.userId ?: "",
+                            email = data.user?.email ?: data.email ?: "",
+                            fullName = data.user?.fullName ?: data.profile?.fullName ?: "",
+                            role = data.user?.role ?: data.profile?.role ?: "learner"
+                        )
+                        
+                        tokenManager.saveAccessToken(data.token)
+                        tokenManager.saveUserInfo(
+                            userId = user.id ?: "",
+                            email = user.email ?: "",
+                            fullName = user.fullName ?: "",
+                            role = user.role ?: "learner"
+                        )
+                        Result.Success(user)
+                    } else {
+                        Result.Error("Invalid response from server")
+                    }
+                } else {
+                    val errorMsg = response.body()?.error?.message ?: "Card login failed"
+                    Result.Error(errorMsg)
+                }
+            } catch (e: Exception) {
+                Result.Error(e.message ?: "Network error occurred")
+            }
+        }
+    }
     
     suspend fun register(
         email: String,

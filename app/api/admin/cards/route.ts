@@ -2,12 +2,12 @@
 import { createClient } from "@/lib/supabase/create-client";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 
-/** Issue a new card to a user */
-export async function POST(request: Request) {
+async function requireAdmin() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user) return null;
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -19,12 +19,22 @@ export async function POST(request: Request) {
     ? profile.roles.some((role: any) => role.name === "administrator")
     : (profile?.roles as any)?.name === "administrator";
   
-  if (!isAdmin) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-  }
+  if (!isAdmin) return null;
+  return user;
+}
+
+function hashPin(pin: string) {
+  return crypto.createHash('sha256').update(pin).digest('hex');
+}
+
+/** Issue a new card to a user */
+export async function POST(request: Request) {
+  const user = await requireAdmin();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
 
   const { user_id, card_id } = await request.json();
-  const pin = crypto.randomUUID(); // Secure random token embedded in the QR Code
+  const rawPin = crypto.randomUUID(); // Secure random token embedded in the QR Code
+  const hashedPin = hashPin(rawPin);
 
   if (!user_id || !card_id) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -37,7 +47,7 @@ export async function POST(request: Request) {
 
   const { data, error } = await adminClient
     .from("auth_cards")
-    .insert({ user_id, card_id, pin })
+    .insert({ user_id, card_id, pin: hashedPin })
     .select()
     .single();
 
@@ -45,27 +55,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json(data, { status: 201 });
+  // We return the rawPin so the frontend can generate the QR code
+  return NextResponse.json({ ...data, pin: rawPin }, { status: 201 });
 }
 
 export async function PUT(request: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("roles(name)")
-    .eq("id", user.id)
-    .single();
-
-  const isAdmin = Array.isArray(profile?.roles)
-    ? profile.roles.some((role: any) => role.name === "administrator")
-    : (profile?.roles as any)?.name === "administrator";
-  
-  if (!isAdmin) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-  }
+  const user = await requireAdmin();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
 
   const { id, status, pin } = await request.json();
 
@@ -76,7 +72,7 @@ export async function PUT(request: Request) {
 
   const updateFields: any = {};
   if (status !== undefined) updateFields.status = status;
-  if (pin !== undefined) updateFields.pin = pin;
+  if (pin !== undefined) updateFields.pin = hashPin(pin);
 
   const { data, error } = await adminClient
     .from("auth_cards")

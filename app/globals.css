@@ -183,3 +183,75 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* =============================================
+   Print / PDF Export Styles
+   Applied when window.print() is called.
+   ============================================= */
+@media print {
+  /* Hide the entire sidebar and navigation */
+  [data-slot="sidebar"],
+  [data-sidebar="sidebar"],
+  nav,
+  header,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Force white background and black text for all cards */
+  body, html {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .dark body, .dark html {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* Remove shadow from cards in print */
+  [data-slot="card"] {
+    box-shadow: none !important;
+    border: 1px solid #d1d5db !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    break-inside: avoid;
+  }
+
+  /* Show all tabs content simultaneously for printing */
+  [role="tabpanel"] {
+    display: block !important;
+    opacity: 1 !important;
+  }
+
+  /* Progress bars: force color to print */
+  [data-slot="progress-indicator"] {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Page breaks between major sections */
+  .tab-section {
+    page-break-before: always;
+  }
+
+  /* Hall of fame record cards */
+  .record-card {
+    break-inside: avoid;
+  }
+
+  /* Expand main content to full width */
+  main, [data-slot="sidebar-inset"] {
+    margin: 0 !important;
+    padding: 1.5rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Footer always at the bottom */
+  @page {
+    margin: 1.5cm;
+    size: A4 portrait;
+  }
+}
+

@@ -44,6 +44,7 @@ import {
   Lightbulb,
   MessageSquare,
   LayoutDashboard,
+  Trophy,
 } from "lucide-react";
 import { signOut } from "@/app/auth/actions";
 import { HonorSocietyLogo } from "@/components/honsoc-logo";
@@ -54,11 +55,12 @@ interface AppSidebarProps {
   notificationCount: number;
 }
 
-function getNavItems(role: UserRole, email?: string) {
+function getNavItems(role: UserRole) {
   const shared = [
     { title: "Dashboard", href: "/dashboard/home", icon: LayoutDashboard },
     { title: "Messages", href: "/dashboard/messages", icon: MessageSquare },
     { title: "Voting", href: "/dashboard/voting", icon: Vote },
+    { title: "Leaderboard", href: "/dashboard/leaderboard", icon: Trophy },
     { title: "Notifications", href: "/dashboard/notifications", icon: Bell },
     { title: "Profile", href: "/dashboard/profile", icon: UserCircle },
   ];
@@ -84,12 +86,8 @@ function getNavItems(role: UserRole, email?: string) {
     { title: "Timesheets", href: "/dashboard/admin/timesheets", icon: Timer },
     { title: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
     { title: "Resources", href: "/dashboard/resources", icon: FolderOpen },
+    { title: "User Messages", href: "/dashboard/admin/messages", icon: MessageSquare },
   ];
-
-  const isSuperAdmin = email === "admin@scholarme.com" || email === "admin@scholarme.org";
-  if (isSuperAdmin) {
-    adminItems.push({ title: "User Messages", href: "/dashboard/admin/messages", icon: MessageSquare });
-  }
 
   const roleItems = {
     learner: learnerItems,
@@ -108,7 +106,7 @@ const roleLabels: Record<UserRole, string> = {
 
 export function AppSidebar({ profile, role, notificationCount }: AppSidebarProps) {
   const pathname = usePathname();
-  const { shared, roleSpecific } = getNavItems(role, profile?.email);
+  const { shared, roleSpecific } = getNavItems(role);
   const initials = profile?.full_name
     ? profile.full_name
         .split(" ")

@@ -458,11 +458,8 @@ RETURNS boolean
 SECURITY DEFINER
 SET search_path = public
 AS $$
-DECLARE
-  u_email text;
 BEGIN
-  SELECT email INTO u_email FROM public.profiles WHERE id = user_id;
-  RETURN u_email IN ('admin@scholarme.com', 'admin@scholarme.org');
+  RETURN public.is_admin(user_id);
 END;
 $$ LANGUAGE plpgsql;
 

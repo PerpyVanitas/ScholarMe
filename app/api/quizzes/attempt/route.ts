@@ -11,16 +11,42 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { study_set_id, score, total_questions, answers, time_spent_seconds } = body
+    // We ignore the 'score' and 'total_questions' passed by the client to prevent manipulation
+    const { study_set_id, answers, time_spent_seconds } = body
+
+    if (!study_set_id || !answers) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    }
+
+    // Fetch the correct answers from the database securely
+    const { data: studySetItems, error: fetchError } = await supabase
+      .from("study_set_items")
+      .select("id, answer")
+      .eq("study_set_id", study_set_id);
+
+    if (fetchError || !studySetItems) {
+      return NextResponse.json({ error: "Failed to validate answers" }, { status: 500 });
+    }
+
+    let calculatedScore = 0;
+    const totalItems = studySetItems.length;
+
+    // The client answers map is expected to be { [item_id]: "User's string answer" }
+    for (const item of studySetItems) {
+      const userAnswer = answers[item.id];
+      if (userAnswer && String(userAnswer).toLowerCase() === String(item.answer).toLowerCase()) {
+        calculatedScore += 1;
+      }
+    }
 
     const { data, error } = await supabase
       .from("quiz_attempts")
       .insert({
         user_id: user.id,
         study_set_id,
-        score,
-        total_items: total_questions || body.total_items || 0,
-        total_questions: total_questions || body.total_items || 0,
+        score: calculatedScore,
+        total_items: totalItems,
+        total_questions: totalItems,
         answers,
         time_spent_seconds: time_spent_seconds || 0,
         completed_at: new Date().toISOString(),

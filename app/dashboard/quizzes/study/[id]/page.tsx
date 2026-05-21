@@ -82,6 +82,9 @@ export default function StudyModePage({ params }: { params: Promise<{ id: string
   }
 
   function shuffleItems() {
+    if (Object.keys(answers).length > 0 && !confirm("Are you sure you want to shuffle? You will lose your current session progress.")) {
+      return;
+    }
     const shuffled = [...shuffledItems].sort(() => Math.random() - 0.5)
     setShuffledItems(shuffled)
     setCurrentIndex(0)
@@ -290,22 +293,40 @@ export default function StudyModePage({ params }: { params: Promise<{ id: string
           {studyMode === "flashcard" ? (
             // Flashcard Mode
             <div 
-              className="cursor-pointer min-h-[220px] flex flex-col items-center justify-center text-center"
+              className="cursor-pointer min-h-[220px] w-full"
+              style={{ perspective: "1000px" }}
               onClick={handleFlip}
             >
-              {!showAnswer ? (
-                <>
+              <div 
+                className="relative w-full h-full min-h-[220px] transition-transform duration-500 ease-in-out"
+                style={{ 
+                  transformStyle: "preserve-3d", 
+                  transform: showAnswer ? "rotateY(180deg)" : "rotateY(0deg)" 
+                }}
+              >
+                {/* Front (Question) */}
+                <div 
+                  className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-card"
+                  style={{ backfaceVisibility: "hidden" }}
+                >
                   <p className="text-xs uppercase tracking-wide text-muted-foreground mb-4">Question</p>
                   <p className="text-xl font-medium">{currentItem.question}</p>
                   <p className="text-sm text-muted-foreground mt-6">Click to reveal answer</p>
-                </>
-              ) : (
-                <>
+                </div>
+
+                {/* Back (Answer) */}
+                <div 
+                  className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-card"
+                  style={{ 
+                    backfaceVisibility: "hidden", 
+                    transform: "rotateY(180deg)" 
+                  }}
+                >
                   <p className="text-xs uppercase tracking-wide text-muted-foreground mb-4">Answer</p>
                   <p className="text-xl font-medium text-primary">{currentItem.answer}</p>
                   <p className="text-sm text-muted-foreground mt-6">Click to see question</p>
-                </>
-              )}
+                </div>
+              </div>
             </div>
           ) : (
             // Quiz Mode

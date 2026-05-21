@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
 import { Loader2, Camera, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { ErrorAlert } from "@/components/ui/error-alert";
 
 interface CardScannerProps {
@@ -65,9 +66,7 @@ export function CardScanner({ onScanSuccess, isProcessing, error }: CardScannerP
             }
           } catch (e) {
             console.error("QR Parse Error", e);
-            // If it fails to parse, we can restart the scanner or show an error
-            // For now, we'll let the parent handle the invalid login attempt if we passed invalid data,
-            // but since it's not our format, we'll just ignore or trigger a specific error.
+            toast.error("Invalid QR Code format. Please scan a valid ScholarMe ID card.");
           }
         },
         (errorMessage) => {

@@ -118,7 +118,7 @@ export default function ProfilePage() {
         }
 
         let fallbackRole = "learner";
-        if (user.email === "admin@scholarme.org" || user.user_metadata?.role_name === "administrator" || user.user_metadata?.role === "administrator") {
+        if (user.user_metadata?.role_name === "administrator" || user.user_metadata?.role === "administrator") {
           fallbackRole = "administrator";
         } else if (user.user_metadata?.role_name === "tutor" || user.user_metadata?.role === "tutor") {
           fallbackRole = "tutor";
