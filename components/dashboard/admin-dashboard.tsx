@@ -5,20 +5,20 @@ import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Users, Calendar, GraduationCap, Clock, ArrowRight, BarChart3, CreditCard } from "lucide-react"
+import { Users, Calendar, GraduationCap, Clock, ArrowRight, BarChart3, QrCode, ClipboardList } from "lucide-react"
 import { SESSION_STATUS_COLORS } from "@/lib/constants"
 import { AdminStatModal } from "@/components/dashboard/admin-stat-modal"
 import type { Profile, Session } from "@/lib/types"
 
-type StatType = "users" | "tutors" | "sessions" | "pending"
+type StatType = "clocked_in" | "tutors" | "today" | "pending"
 
 interface AdminDashboardProps {
   profile: Profile
   stats: {
-    totalUsers: number
-    totalSessions: number
-    activeTutors: number
     pendingSessions: number
+    clockedInTutors: number
+    activeTutors: number
+    sessionsToday: number
   }
   recentSessions: Session[]
 }
@@ -28,30 +28,30 @@ export function AdminDashboard({ profile, stats, recentSessions }: AdminDashboar
 
   const statCards: { type: StatType; value: number; label: string; icon: React.ReactNode; bg: string }[] = [
     {
-      type: "users",
-      value: stats.totalUsers,
-      label: "Total Users",
+      type: "clocked_in",
+      value: stats.clockedInTutors,
+      label: "Tutors Clocked In",
       icon: <Users className="h-5 w-5 text-primary" />,
       bg: "bg-primary/10",
     },
     {
       type: "tutors",
       value: stats.activeTutors,
-      label: "Active Tutors",
+      label: "Total Tutors",
       icon: <GraduationCap className="h-5 w-5 text-success" />,
       bg: "bg-success/10",
     },
     {
-      type: "sessions",
-      value: stats.totalSessions,
-      label: "Total Sessions",
+      type: "today",
+      value: stats.sessionsToday,
+      label: "Sessions Today",
       icon: <Calendar className="h-5 w-5 text-accent-foreground" />,
       bg: "bg-accent/30",
     },
     {
       type: "pending",
       value: stats.pendingSessions,
-      label: "Pending",
+      label: "Pending Sessions",
       icon: <Clock className="h-5 w-5 text-warning-foreground" />,
       bg: "bg-warning/10",
     },
@@ -89,7 +89,7 @@ export function AdminDashboard({ profile, stats, recentSessions }: AdminDashboar
       </div>
 
       <AdminStatModal
-        type={modalType || "users"}
+        type={modalType || "pending"}
         open={modalType !== null}
         onOpenChange={(open) => { if (!open) setModalType(null) }}
       />
@@ -162,13 +162,24 @@ export function AdminDashboard({ profile, stats, recentSessions }: AdminDashboar
               </Link>
             </Button>
             <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href="/dashboard/admin/cards" className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-success/10">
-                  <CreditCard className="h-4 w-4 text-success" />
+              <Link href="/dashboard/admin/scanner" className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-warning/15">
+                  <QrCode className="h-4 w-4 text-warning-foreground" />
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
-                  <span className="text-sm font-medium">Card Management</span>
-                  <span className="text-xs text-muted-foreground">Issue and revoke auth cards</span>
+                  <span className="text-sm font-medium">QR Scanner</span>
+                  <span className="text-xs text-muted-foreground">Scan and authenticate cards</span>
+                </div>
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="justify-start h-auto py-3">
+              <Link href="/dashboard/admin/timesheets" className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10">
+                  <ClipboardList className="h-4 w-4 text-amber-500" />
+                </div>
+                <div className="flex flex-col items-start gap-0.5">
+                  <span className="text-sm font-medium">Timesheets</span>
+                  <span className="text-xs text-muted-foreground">Review tutor hours & logs</span>
                 </div>
               </Link>
             </Button>

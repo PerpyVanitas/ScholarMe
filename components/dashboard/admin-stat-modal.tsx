@@ -15,24 +15,24 @@ import { Badge } from "@/components/ui/badge"
 import { Loader2, Users, GraduationCap, Calendar, Clock, Star } from "lucide-react"
 import { SESSION_STATUS_COLORS } from "@/lib/constants"
 
-type StatType = "users" | "tutors" | "sessions" | "pending"
+type StatType = "clocked_in" | "tutors" | "today" | "pending"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 const STAT_CONFIG: Record<StatType, { title: string; description: string; icon: React.ReactNode }> = {
-  users: {
-    title: "All Users",
-    description: "Every registered user in the system",
+  clocked_in: {
+    title: "Clocked In Tutors",
+    description: "Tutors currently clocked in and active",
     icon: <Users className="h-5 w-5 text-primary" />,
   },
   tutors: {
-    title: "Active Tutors",
-    description: "All registered tutors",
+    title: "Total Tutors",
+    description: "All registered tutors in the system",
     icon: <GraduationCap className="h-5 w-5 text-success" />,
   },
-  sessions: {
-    title: "All Sessions",
-    description: "Every tutoring session",
+  today: {
+    title: "Sessions Today",
+    description: "Tutoring sessions scheduled for today",
     icon: <Calendar className="h-5 w-5 text-accent-foreground" />,
   },
   pending: {
@@ -52,24 +52,29 @@ function getInitials(name?: string) {
     .slice(0, 2)
 }
 
-function UserRow({ user }: { user: Record<string, unknown> }) {
-  const profile = user as { id: string; full_name: string; email: string; avatar_url: string | null; roles?: { name: string } }
+function ClockedInRow({ item }: { item: any }) {
+  const clockInTime = new Date(item.clock_in).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  })
+  const t = item.tutors
+  const profile = t?.profiles
   return (
     <Link
-      href="/dashboard/admin/users"
+      href={`/dashboard/tutors/${t?.id}`}
       className="flex items-center gap-3 rounded-lg border border-border/60 p-3 transition-colors hover:bg-muted/50"
     >
       <Avatar className="h-9 w-9">
-        <AvatarImage src={profile.avatar_url || ""} alt={profile.full_name} />
-        <AvatarFallback className="text-xs">{getInitials(profile.full_name)}</AvatarFallback>
+        <AvatarImage src={profile?.avatar_url || ""} alt={profile?.full_name} />
+        <AvatarFallback className="text-xs">{getInitials(profile?.full_name)}</AvatarFallback>
       </Avatar>
       <div className="flex flex-col flex-1 min-w-0">
-        <span className="text-sm font-medium text-foreground truncate">{profile.full_name || "Unnamed"}</span>
-        <span className="text-xs text-muted-foreground truncate">{profile.email}</span>
+        <span className="text-sm font-medium text-foreground truncate">{profile?.full_name || "Unnamed"}</span>
+        <span className="text-xs text-muted-foreground truncate">
+          Clocked in at {clockInTime}
+        </span>
       </div>
-      {profile.roles?.name && (
-        <Badge variant="outline" className="capitalize shrink-0">{profile.roles.name}</Badge>
-      )}
+      <Badge variant="secondary" className="shrink-0">Active</Badge>
     </Link>
   )
 }
@@ -170,13 +175,13 @@ export function AdminStatModal({
             </div>
           ) : (
             <div className="flex flex-col gap-2 pb-2">
-              {(type === "users") && data.map((item: Record<string, unknown>) => (
-                <UserRow key={item.id as string} user={item} />
+              {(type === "clocked_in") && data.map((item: any) => (
+                <ClockedInRow key={item.id as string} item={item} />
               ))}
               {(type === "tutors") && data.map((item: Record<string, unknown>) => (
                 <TutorRow key={item.id as string} tutor={item} />
               ))}
-              {(type === "sessions" || type === "pending") && data.map((item: Record<string, unknown>) => (
+              {(type === "today" || type === "pending") && data.map((item: Record<string, unknown>) => (
                 <SessionRow key={item.id as string} session={item} />
               ))}
             </div>

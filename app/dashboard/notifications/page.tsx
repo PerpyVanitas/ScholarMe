@@ -2,11 +2,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Calendar, BookOpen, Settings, CheckCheck, Loader2 } from "lucide-react";
+import { Bell, Calendar, BookOpen, Settings, CheckCheck, Loader2, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { getDemoUserFromCookie } from "@/lib/demo";
 import type { Notification } from "@/lib/types";
@@ -15,12 +16,14 @@ const typeIcons: Record<string, React.ReactNode> = {
   session: <Calendar className="h-4 w-4" />,
   resource: <BookOpen className="h-4 w-4" />,
   system: <Settings className="h-4 w-4" />,
+  message: <MessageSquare className="h-4 w-4" />,
 };
 
 const typeColors: Record<string, string> = {
   session: "bg-primary/10 text-primary",
   resource: "bg-accent/30 text-accent-foreground",
   system: "bg-muted text-muted-foreground",
+  message: "bg-amber-500/10 text-amber-500",
 };
 
 export default function NotificationsPage() {
@@ -119,16 +122,11 @@ export default function NotificationsPage() {
         </Card>
       ) : (
         <div className="flex flex-col gap-2">
-          {notifications.map((notification) => (
-            <Card
-              key={notification.id}
-              className={`border-border/60 transition-colors ${
-                !notification.is_read ? "bg-primary/[0.03] border-primary/20" : ""
-              }`}
-            >
+          {notifications.map((notification) => {
+            const cardContent = (
               <CardContent className="flex items-start gap-3 p-4">
-                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${typeColors[notification.type]}`}>
-                  {typeIcons[notification.type]}
+                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${typeColors[notification.type] || "bg-muted text-muted-foreground"}`}>
+                  {typeIcons[notification.type] || <Bell className="h-4 w-4" />}
                 </div>
                 <div className="flex flex-1 flex-col gap-1">
                   <div className="flex items-center justify-between">
@@ -153,7 +151,11 @@ export default function NotificationsPage() {
                     </span>
                     {!notification.is_read && (
                       <button
-                        onClick={() => markAsRead(notification.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          markAsRead(notification.id);
+                        }}
                         className="text-xs text-primary hover:underline"
                       >
                         Mark as read
@@ -162,8 +164,33 @@ export default function NotificationsPage() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
-          ))}
+            );
+
+            const cardElement = (
+              <Card
+                className={`border-border/60 transition-colors ${
+                  !notification.is_read ? "bg-primary/[0.03] border-primary/20" : ""
+                } ${notification.link ? "hover:bg-muted/40 cursor-pointer" : ""}`}
+                onClick={() => {
+                  if (!notification.is_read) {
+                    markAsRead(notification.id);
+                  }
+                }}
+              >
+                {cardContent}
+              </Card>
+            );
+
+            if (notification.link) {
+              return (
+                <Link href={notification.link} key={notification.id} className="block no-underline">
+                  {cardElement}
+                </Link>
+              );
+            }
+
+            return <div key={notification.id}>{cardElement}</div>;
+          })}
         </div>
       )}
     </div>

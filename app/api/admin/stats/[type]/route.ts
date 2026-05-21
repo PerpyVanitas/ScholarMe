@@ -21,19 +21,31 @@ export async function GET(
     .eq("id", user.id)
     .single()
 
-  const isAdmin = Array.isArray(profile?.roles) && 
-    profile.roles.some((role: any) => role.name === "admin" || role.name === "administrator");
+  const roleName = Array.isArray(profile?.roles)
+    ? profile.roles[0]?.name
+    : (profile?.roles as any)?.name;
+  const isAdmin = roleName === "admin" || roleName === "administrator";
   
   if (!profile || !isAdmin) {
     return NextResponse.json({ error: "Access denied - admin only" }, { status: 403 })
   }
 
   try {
-    if (type === "users") {
+    if (type === "clocked_in") {
       const { data, error } = await supabase
-        .from("profiles")
-        .select("id, full_name, email, avatar_url, created_at, roles(name)")
-        .order("created_at", { ascending: false })
+        .from("timesheets")
+        .select(`
+          id, 
+          clock_in, 
+          tutors(
+            id, 
+            rating, 
+            profiles(id, full_name, email, avatar_url), 
+            tutor_specializations(specializations(name))
+          )
+        `)
+        .is("clock_out", null)
+        .order("clock_in", { ascending: false })
         .limit(50)
 
       if (error) throw error
@@ -51,10 +63,43 @@ export async function GET(
       return NextResponse.json(data || [])
     }
 
+    if (type === "today") {
+      const today = new Date().toISOString().split("T")[0];
+      const { data, error } = await supabase
+        .from("sessions")
+        .select(`
+          id, 
+          scheduled_date, 
+          start_time, 
+          end_time, 
+          status, 
+          notes, 
+          tutors(profiles(full_name)), 
+          learner_profile:profiles!learner_id(full_name), 
+          specializations(name)
+        `)
+        .eq("scheduled_date", today)
+        .order("start_time", { ascending: true })
+        .limit(50)
+
+      if (error) throw error
+      return NextResponse.json(data || [])
+    }
+
     if (type === "sessions") {
       const { data, error } = await supabase
         .from("sessions")
-        .select("id, scheduled_date, start_time, end_time, status, notes, tutor_id, learner_id, specialization_id")
+        .select(`
+          id, 
+          scheduled_date, 
+          start_time, 
+          end_time, 
+          status, 
+          notes, 
+          tutors(profiles(full_name)), 
+          learner_profile:profiles!learner_id(full_name), 
+          specializations(name)
+        `)
         .order("scheduled_date", { ascending: false })
         .limit(50)
 
@@ -65,7 +110,17 @@ export async function GET(
     if (type === "pending") {
       const { data, error } = await supabase
         .from("sessions")
-        .select("id, scheduled_date, start_time, end_time, status, notes, tutor_id, learner_id, specialization_id")
+        .select(`
+          id, 
+          scheduled_date, 
+          start_time, 
+          end_time, 
+          status, 
+          notes, 
+          tutors(profiles(full_name)), 
+          learner_profile:profiles!learner_id(full_name), 
+          specializations(name)
+        `)
         .eq("status", "pending")
         .order("scheduled_date", { ascending: false })
         .limit(50)

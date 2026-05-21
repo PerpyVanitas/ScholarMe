@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Loader2, Vote, CheckCircle2, Clock, Plus, BarChart3 } from "lucide-react";
+import { Loader2, Vote, CheckCircle2, Clock, Plus, BarChart3, History } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import type { Poll, PollOption } from "@/lib/types";
@@ -19,6 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,13 +38,15 @@ interface PollResultsData {
 
 export default function VotingPage() {
   const { role } = useUser();
-  const [polls, setPolls] = useState<Poll[]>([]);
+  const [activePolls, setActivePolls] = useState<Poll[]>([]);
+  const [closedPolls, setClosedPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPoll, setSelectedPoll] = useState<PollResultsData | null>(null);
   const [selectedOption, setSelectedOption] = useState<string>("");
   const [voting, setVoting] = useState(false);
   const [loadingResults, setLoadingResults] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
 
   const isAdmin = role === "administrator";
 
@@ -54,10 +57,18 @@ export default function VotingPage() {
   async function loadPolls() {
     setLoading(true);
     try {
-      const res = await fetch("/api/polls?status=active");
-      const data = await res.json();
-      if (data.success) {
-        setPolls(data.data.polls || []);
+      const [activeRes, closedRes] = await Promise.all([
+        fetch("/api/polls?status=active"),
+        fetch("/api/polls?status=closed")
+      ]);
+      const activeData = await activeRes.json();
+      const closedData = await closedRes.json();
+      
+      if (activeData.success) {
+        setActivePolls(activeData.data || []);
+      }
+      if (closedData.success) {
+        setClosedPolls(closedData.data || []);
       }
     } catch {
       toast.error("Failed to load polls");
@@ -68,6 +79,7 @@ export default function VotingPage() {
 
   async function loadPollResults(pollId: string) {
     setLoadingResults(true);
+    setShowDetailDialog(true);
     try {
       const res = await fetch(`/api/polls/${pollId}/results`);
       const data = await res.json();
@@ -77,6 +89,7 @@ export default function VotingPage() {
       }
     } catch {
       toast.error("Failed to load poll results");
+      setShowDetailDialog(false);
     } finally {
       setLoadingResults(false);
     }
@@ -97,6 +110,7 @@ export default function VotingPage() {
       if (data.success) {
         toast.success("Vote recorded successfully!");
         loadPollResults(selectedPoll.poll.id);
+        loadPolls();
       } else {
         toast.error(data.error?.message || "Failed to vote");
       }
@@ -133,80 +147,129 @@ export default function VotingPage() {
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Create New Poll</DialogTitle>
+                <DialogDescription>
+                  Create a poll for organization members to vote on
+                </DialogDescription>
+              </DialogHeader>
               <CreatePollForm onSuccess={() => { setShowCreateDialog(false); loadPolls(); }} />
             </DialogContent>
           </Dialog>
         )}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Polls List */}
+      <div className="space-y-6">
+        {/* Active Polls Header & Grid */}
         <div className="space-y-4">
           <h2 className="text-lg font-medium">Active Polls</h2>
-          {polls.length === 0 ? (
-            <Card>
+          {activePolls.length === 0 ? (
+            <Card className="border-border/60">
               <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                 <Vote className="h-12 w-12 text-muted-foreground/50 mb-4" />
                 <p className="text-muted-foreground">No active polls at the moment</p>
               </CardContent>
             </Card>
           ) : (
-            polls.map((poll) => (
-              <Card
-                key={poll.id}
-                className={`cursor-pointer transition-colors hover:border-primary/50 ${
-                  selectedPoll?.poll.id === poll.id ? "border-primary" : ""
-                }`}
-                onClick={() => loadPollResults(poll.id)}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-base">{poll.title}</CardTitle>
-                    <Badge variant="secondary" className="ml-2">
-                      <Clock className="h-3 w-3 mr-1" />
-                      {formatDistanceToNow(new Date(poll.end_date), { addSuffix: true })}
-                    </Badge>
-                  </div>
-                  {poll.description && (
-                    <CardDescription>{poll.description}</CardDescription>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span>{poll.poll_options?.length || 0} options</span>
-                    {poll.allow_multiple_votes && (
-                      <Badge variant="outline" className="text-xs">Multiple votes</Badge>
+            <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+              {activePolls.map((poll) => (
+                <Card
+                  key={poll.id}
+                  className="cursor-pointer transition-colors hover:border-primary/50 flex flex-col justify-between"
+                  onClick={() => loadPollResults(poll.id)}
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <CardTitle className="text-base truncate flex-1 pr-2">{poll.title}</CardTitle>
+                      <Badge variant="secondary" className="shrink-0">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {formatDistanceToNow(new Date(poll.end_date), { addSuffix: true })}
+                      </Badge>
+                    </div>
+                    {poll.description && (
+                      <CardDescription className="line-clamp-2 mt-1">{poll.description}</CardDescription>
                     )}
-                    {poll.is_anonymous && (
-                      <Badge variant="outline" className="text-xs">Anonymous</Badge>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>{poll.poll_options?.length || 0} options</span>
+                      {poll.allow_multiple_votes && (
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">Multiple</Badge>
+                      )}
+                      {poll.is_anonymous && (
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">Anonymous</Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
         </div>
 
-        {/* Poll Details & Voting */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-medium">
-            {selectedPoll ? "Cast Your Vote" : "Select a Poll"}
-          </h2>
-          
-          {loadingResults ? (
-            <Card>
-              <CardContent className="flex items-center justify-center py-12">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        {/* Poll History */}
+        <div className="space-y-4 pt-6 border-t border-border/40">
+          <div className="flex items-center gap-2">
+            <History className="h-5 w-5 text-muted-foreground" />
+            <h2 className="text-lg font-medium">Poll History</h2>
+          </div>
+          {closedPolls.length === 0 ? (
+            <Card className="border-border/60">
+              <CardContent className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground text-sm">
+                No historical polls found
               </CardContent>
             </Card>
+          ) : (
+            <Card className="border-border/60">
+              <CardContent className="p-0">
+                <div className="divide-y divide-border/60">
+                  {closedPolls.map((poll) => (
+                    <div
+                      key={poll.id}
+                      onClick={() => loadPollResults(poll.id)}
+                      className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                        <span className="font-medium text-foreground text-sm sm:text-base truncate">{poll.title}</span>
+                        <span className="text-xs text-muted-foreground truncate">
+                          {poll.description || "No description provided"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0 ml-4">
+                        <span className="text-xs text-muted-foreground hidden sm:inline">
+                          Ended {new Date(poll.end_date).toLocaleDateString()}
+                        </span>
+                        <Badge variant="secondary" className="text-xs font-normal">
+                          Closed
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+
+      {/* Poll Details Dialog */}
+      <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogTitle className="sr-only">
+            {selectedPoll?.poll?.title || "Poll Details"}
+          </DialogTitle>
+          {loadingResults ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
           ) : selectedPoll ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>{selectedPoll.poll.title}</CardTitle>
+            <>
+              <DialogHeader>
+                <h2 className="text-lg font-semibold text-foreground">{selectedPoll.poll.title}</h2>
                 {selectedPoll.poll.description && (
-                  <CardDescription>{selectedPoll.poll.description}</CardDescription>
+                  <DialogDescription className="text-sm mt-1">{selectedPoll.poll.description}</DialogDescription>
                 )}
-                <div className="flex items-center gap-2 pt-2">
+                <div className="flex flex-wrap items-center gap-2 pt-2">
                   <Badge variant="outline">
                     <BarChart3 className="h-3 w-3 mr-1" />
                     {selectedPoll.totalVotes} vote{selectedPoll.totalVotes !== 1 ? "s" : ""}
@@ -217,9 +280,15 @@ export default function VotingPage() {
                       You voted
                     </Badge>
                   )}
+                  {selectedPoll.poll.status === "closed" && (
+                    <Badge variant="destructive">
+                      Closed
+                    </Badge>
+                  )}
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
+              </DialogHeader>
+
+              <div className="space-y-4 py-4">
                 {selectedPoll.hasVoted || selectedPoll.poll.status === "closed" ? (
                   // Show results
                   <div className="space-y-3">
@@ -234,7 +303,7 @@ export default function VotingPage() {
                                 <CheckCircle2 className="h-3 w-3 inline ml-1 text-green-600" />
                               )}
                             </span>
-                            <span className="text-muted-foreground">
+                            <span className="text-muted-foreground text-xs">
                               {option.vote_count} ({option.percentage}%)
                             </span>
                           </div>
@@ -249,20 +318,22 @@ export default function VotingPage() {
                       .sort((a, b) => a.display_order - b.display_order)
                       .map((option) => (
                         <div key={option.id} className="flex items-center space-x-2 py-2">
-                          <RadioGroupItem value={option.id} id={option.id} />
-                          <Label htmlFor={option.id} className="flex-1 cursor-pointer">
+                          <RadioGroupItem value={option.id} id={`opt-${option.id}`} />
+                          <Label htmlFor={`opt-${option.id}`} className="flex-1 cursor-pointer text-sm">
                             {option.option_text}
                           </Label>
                         </div>
                       ))}
                   </RadioGroup>
                 )}
+              </div>
 
+              <DialogFooter className="gap-2 sm:gap-0">
                 {!selectedPoll.hasVoted && selectedPoll.poll.status === "active" && (
                   <Button
                     onClick={handleVote}
                     disabled={!selectedOption || voting}
-                    className="w-full"
+                    className="w-full sm:w-auto"
                   >
                     {voting ? (
                       <>
@@ -277,18 +348,14 @@ export default function VotingPage() {
                     )}
                   </Button>
                 )}
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                <BarChart3 className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                <p className="text-muted-foreground">Select a poll to view details and vote</p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
+                <Button variant="outline" onClick={() => setShowDetailDialog(false)} className="w-full sm:w-auto">
+                  Close
+                </Button>
+              </DialogFooter>
+            </>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -342,12 +409,6 @@ function CreatePollForm({ onSuccess }: { onSuccess: () => void }) {
 
   return (
     <>
-      <DialogHeader>
-        <DialogTitle>Create New Poll</DialogTitle>
-        <DialogDescription>
-          Create a poll for organization members to vote on
-        </DialogDescription>
-      </DialogHeader>
       <form onSubmit={handleCreate} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="title">Title</Label>

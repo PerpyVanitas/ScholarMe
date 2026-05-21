@@ -13,6 +13,9 @@ export interface UpdateProfileData {
   membership_number?: string | null;
   degree_program?: string | null;
   year_level?: number | null;
+  esas_scholar?: boolean;
+  academic_year_joined?: string | null;
+  unique_id_number?: string | null;
 }
 
 export async function updateProfile(data: UpdateProfileData) {
@@ -40,6 +43,9 @@ export async function updateProfile(data: UpdateProfileData) {
       membership_number: data.membership_number,
       degree_program: data.degree_program,
       year_level: data.year_level,
+      esas_scholar: data.esas_scholar,
+      academic_year_joined: data.academic_year_joined,
+      unique_id_number: data.unique_id_number,
       profile_completed: true,
     })
     .eq("id", user.id)

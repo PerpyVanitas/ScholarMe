@@ -133,8 +133,8 @@ export default function MigrationsPage() {
           </p>
         </div>
 
-        <Alert className="border-blue-200 bg-blue-50">
-          <Info className="h-4 w-4 text-blue-600" />
+        <Alert className="border-[#FFD700]/30 bg-zinc-900/50 text-slate-100">
+          <Info className="h-4 w-4 text-[#FFD700]" />
           <AlertTitle>Recommended: Manual Execution</AlertTitle>
           <AlertDescription>
             For production environments, execute migrations manually via the Supabase dashboard. This provides better visibility and control over the process.
@@ -161,7 +161,7 @@ export default function MigrationsPage() {
             <div className="space-y-2">
               <button
                 onClick={() => setShowFullSQL(!showFullSQL)}
-                className="text-sm text-blue-600 hover:underline"
+                className="text-sm text-[#FFD700] hover:text-yellow-400 hover:underline"
               >
                 {showFullSQL ? 'Hide' : 'Show'} SQL Preview
               </button>

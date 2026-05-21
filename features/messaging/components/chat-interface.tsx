@@ -6,16 +6,27 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Send, MessageSquare, Search } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Send, MessageSquare, Search, Plus, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import type { Conversation, ConversationMessage, Message, Profile } from "@/lib/types";
 
 interface ChatInterfaceProps {
   initialConversations: Conversation[];
   currentUserId: string;
+  isAdmin?: boolean;
 }
 
-export function ChatInterface({ initialConversations, currentUserId }: ChatInterfaceProps) {
+export function ChatInterface({ initialConversations, currentUserId, isAdmin = false }: ChatInterfaceProps) {
   const supabase = createClient();
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(
@@ -24,6 +35,12 @@ export function ChatInterface({ initialConversations, currentUserId }: ChatInter
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // New Chat States
+  const [users, setUsers] = useState<any[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [userSearch, setUserSearch] = useState("");
+  const [showNewChatDialog, setShowNewChatDialog] = useState(false);
 
   const activeConversation = conversations.find((c) => c.id === activeConversationId);
 
@@ -35,7 +52,30 @@ export function ChatInterface({ initialConversations, currentUserId }: ChatInter
     created_at: message.created_at,
   });
 
-  // Helper to get the "other" user's profile in a 1-on-1 chat
+  const getConversationDisplayInfo = (conv: Conversation) => {
+    const participants = conv.conversation_participants || [];
+    const isParticipant = participants.some(p => p.profile_id === currentUserId);
+    
+    if (isParticipant || !isAdmin) {
+      const otherPart = participants.find(p => p.profile_id !== currentUserId);
+      return {
+        title: conv.title || otherPart?.profiles?.full_name || "Unknown User",
+        avatarUrl: otherPart?.profiles?.avatar_url || "",
+        initial: otherPart?.profiles?.full_name?.charAt(0) || "?"
+      };
+    } else {
+      // Admin auditing message history between other users
+      const names = participants.map(p => p.profiles?.full_name || "Unknown").join(" & ");
+      const firstAvatar = participants[0]?.profiles?.avatar_url || "";
+      const initials = participants.map(p => p.profiles?.full_name?.charAt(0) || "?").join("");
+      return {
+        title: conv.title || names || "No Participants",
+        avatarUrl: firstAvatar,
+        initial: initials || "?"
+      };
+    }
+  };
+
   const getOtherParticipant = (conv: Conversation): Profile | null => {
     const participant = conv.conversation_participants?.find(
       (p) => p.profile_id !== currentUserId
@@ -43,7 +83,59 @@ export function ChatInterface({ initialConversations, currentUserId }: ChatInter
     return participant?.profiles || null;
   };
 
-  // 1. Fetch messages for the active conversation
+  const fetchUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const res = await fetch("/api/messages/users");
+      const data = await res.json();
+      if (data.success) {
+        setUsers(data.data || []);
+      } else {
+        toast.error(data.error || "Failed to load users");
+      }
+    } catch {
+      toast.error("Failed to load users");
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showNewChatDialog) {
+      fetchUsers();
+    }
+  }, [showNewChatDialog]);
+
+  const startNewConversation = async (participantId: string) => {
+    try {
+      const res = await fetch("/api/messages/conversations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ participantId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        const conv = data.conversation;
+        const exists = conversations.some(c => c.id === conv.id);
+        if (!exists) {
+          setConversations(prev => [conv, ...prev]);
+        }
+        setActiveConversationId(conv.id);
+        setShowNewChatDialog(false);
+        setUserSearch("");
+      } else {
+        toast.error(data.error || "Failed to start conversation");
+      }
+    } catch {
+      toast.error("Failed to start conversation");
+    }
+  };
+
+  const filteredUsers = users.filter(user => 
+    user.full_name?.toLowerCase().includes(userSearch.toLowerCase()) ||
+    user.email?.toLowerCase().includes(userSearch.toLowerCase())
+  );
+
   useEffect(() => {
     if (!activeConversationId) return;
 
@@ -65,43 +157,50 @@ export function ChatInterface({ initialConversations, currentUserId }: ChatInter
     fetchMessages();
   }, [activeConversationId, supabase]);
 
-    // 2. Set up Supabase Realtime subscription
-    useEffect(() => {
-      // Global channel to listen for ANY new message for this user's conversations
-      const globalChannel = supabase
-        .channel('global_chat_updates')
-        .on(
-          'postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'messages' },
-          async (payload) => {
-            const insertedMessage = payload.new as Message;
+  useEffect(() => {
+    const globalChannel = supabase
+      .channel('global_chat_updates')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages' },
+        async (payload) => {
+          const insertedMessage = payload.new as Message;
 
-            // Update the conversation list to show the latest message
-            setConversations(prev => prev.map(conv => {
-              if (conv.id === insertedMessage.conversation_id) {
-                return {
-                  ...conv,
-                  messages: [toConversationMessage(insertedMessage), ...(conv.messages || [])],
-                  updated_at: new Date().toISOString()
-                };
-              }
-              return conv;
-            }).sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()));
-
-            // If it's for the active chat, handled by active channel or we can just append here
-            if (insertedMessage.conversation_id === activeConversationId) {
-               // Profile fetch logic (simplified for global)
-               setMessages(prev => [...prev, insertedMessage]);
+          // Fetch message profiles if not present in payload
+          let fullyPopulatedMessage = { ...insertedMessage };
+          if (!insertedMessage.profiles) {
+            const { data } = await supabase
+              .from("profiles")
+              .select("id, full_name, avatar_url")
+              .eq("id", insertedMessage.sender_id)
+              .single();
+            if (data) {
+              fullyPopulatedMessage.profiles = data;
             }
           }
-        )
-        .subscribe();
 
-      return () => {
-        supabase.removeChannel(globalChannel);
-      };
-    }, [activeConversationId, supabase]);
+          setConversations(prev => prev.map(conv => {
+            if (conv.id === insertedMessage.conversation_id) {
+              return {
+                ...conv,
+                messages: [toConversationMessage(fullyPopulatedMessage), ...(conv.messages || [])],
+                updated_at: new Date().toISOString()
+              };
+            }
+            return conv;
+          }).sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()));
 
+          if (insertedMessage.conversation_id === activeConversationId) {
+             setMessages(prev => [...prev, fullyPopulatedMessage]);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(globalChannel);
+    };
+  }, [activeConversationId, supabase]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -125,7 +224,6 @@ export function ChatInterface({ initialConversations, currentUserId }: ChatInter
 
     if (error) {
       console.error("Error sending message:", error);
-      // Could show a toast here
     }
   };
 
@@ -133,8 +231,8 @@ export function ChatInterface({ initialConversations, currentUserId }: ChatInter
     <div className="flex h-full w-full bg-background divide-x">
       {/* Sidebar - Conversation List */}
       <div className="w-80 flex flex-col bg-muted/20">
-        <div className="p-4 border-b">
-          <div className="relative">
+        <div className="p-4 border-b flex items-center gap-2">
+          <div className="relative flex-1">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input 
               type="text" 
@@ -142,21 +240,87 @@ export function ChatInterface({ initialConversations, currentUserId }: ChatInter
               className="pl-9 bg-background"
             />
           </div>
+          <Dialog open={showNewChatDialog} onOpenChange={setShowNewChatDialog}>
+            <DialogTrigger asChild>
+              <Button size="icon" variant="outline" className="shrink-0" title="New Message">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>New Chat</DialogTitle>
+                <DialogDescription>
+                  Select a user to start a conversation.
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-4 py-2">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    type="text" 
+                    placeholder="Search users..." 
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    className="pl-9 bg-background"
+                  />
+                </div>
+
+                <ScrollArea className="h-[250px] pr-2">
+                  {loadingUsers ? (
+                    <div className="flex items-center justify-center h-40">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : filteredUsers.length === 0 ? (
+                    <div className="text-center py-10 text-muted-foreground text-sm">
+                      No users found
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-1">
+                      {filteredUsers.map((u) => (
+                        <button
+                          key={u.id}
+                          onClick={() => startNewConversation(u.id)}
+                          className="flex items-center gap-3 p-3 text-left rounded-md transition-colors hover:bg-muted"
+                        >
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={u.avatar_url || ""} />
+                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                              {u.full_name?.charAt(0) || "?"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm font-medium truncate">{u.full_name}</p>
+                              <Badge variant="secondary" className="text-[10px] font-normal shrink-0">
+                                {u.role}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
-        
+
         <ScrollArea className="flex-1">
           {conversations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
+            <div className="flex flex-col items-center justify-center h-40 text-muted-foreground p-4 text-center">
               <MessageSquare className="h-8 w-8 mb-2 opacity-50" />
               <p className="text-sm">No conversations yet</p>
             </div>
           ) : (
             <div className="flex flex-col">
               {conversations.map((conv) => {
-                const otherUser = getOtherParticipant(conv);
+                const displayInfo = getConversationDisplayInfo(conv);
                 const latestMessage = conv.messages?.[0];
                 const isActive = conv.id === activeConversationId;
-                
+                 
                 return (
                   <button
                     key={conv.id}
@@ -166,15 +330,15 @@ export function ChatInterface({ initialConversations, currentUserId }: ChatInter
                     }`}
                   >
                     <Avatar>
-                      <AvatarImage src={otherUser?.avatar_url || ""} />
+                      <AvatarImage src={displayInfo.avatarUrl || ""} />
                       <AvatarFallback className="bg-primary/10 text-primary">
-                        {otherUser?.full_name?.charAt(0) || "?"}
+                        {displayInfo.initial}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 overflow-hidden">
                       <div className="flex justify-between items-baseline mb-1">
                         <span className="font-medium text-sm truncate">
-                          {conv.title || otherUser?.full_name || "Unknown User"}
+                          {displayInfo.title}
                         </span>
                         {latestMessage && (
                           <span className="text-[10px] text-muted-foreground whitespace-nowrap ml-2">
@@ -202,12 +366,12 @@ export function ChatInterface({ initialConversations, currentUserId }: ChatInter
             <div className="h-16 flex items-center px-6 border-b">
               <Avatar className="h-8 w-8 mr-3">
                 <AvatarFallback className="bg-primary/10 text-primary">
-                  {getOtherParticipant(activeConversation)?.full_name?.charAt(0) || "?"}
+                  {getConversationDisplayInfo(activeConversation).initial}
                 </AvatarFallback>
               </Avatar>
               <div>
                 <h3 className="font-semibold text-sm">
-                  {activeConversation.title || getOtherParticipant(activeConversation)?.full_name || "Chat"}
+                  {getConversationDisplayInfo(activeConversation).title}
                 </h3>
               </div>
             </div>
@@ -217,19 +381,28 @@ export function ChatInterface({ initialConversations, currentUserId }: ChatInter
               <div className="flex flex-col gap-4">
                 {messages.map((msg) => {
                   const isMe = msg.sender_id === currentUserId;
+                  const showSenderName = !isMe && (isAdmin || (activeConversation?.conversation_participants?.length || 0) > 2);
+                  const senderName = msg.profiles?.full_name || "Unknown";
+
                   return (
-                    <div
-                      key={msg.id}
-                      className={`flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-4 py-3 text-sm ${
-                        isMe
-                          ? "ml-auto bg-primary text-primary-foreground"
-                          : "bg-muted"
-                      }`}
-                    >
-                      <span>{msg.content}</span>
-                      <span className={`text-[10px] ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
+                    <div key={msg.id} className={`flex flex-col gap-1 ${isMe ? "items-end" : "items-start"}`}>
+                      {showSenderName && (
+                        <span className="text-[10px] font-semibold text-muted-foreground px-1">
+                          {senderName}
+                        </span>
+                      )}
+                      <div
+                        className={`flex w-max max-w-[75%] flex-col gap-1 rounded-lg px-4 py-2 text-sm ${
+                          isMe
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted"
+                        }`}
+                      >
+                        <span>{msg.content}</span>
+                        <span className={`text-[9px] text-right ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                          {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
                     </div>
                   );
                 })}
@@ -255,7 +428,7 @@ export function ChatInterface({ initialConversations, currentUserId }: ChatInter
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
             <MessageSquare className="h-12 w-12 mb-4 opacity-20" />
-            <p>Select a conversation to start chatting</p>
+            <p>Select a conversation to start auditing chat history</p>
           </div>
         )}
       </div>

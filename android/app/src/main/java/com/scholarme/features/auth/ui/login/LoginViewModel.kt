@@ -58,4 +58,19 @@ class LoginViewModel @Inject constructor(
         _emailError.value = null
         _passwordError.value = null
     }
+
+    fun loginWithCardMock(cardId: String, pin: String) {
+        _loginState.value = Result.Loading
+        viewModelScope.launch {
+            // Mock a successful login after a short delay
+            kotlinx.coroutines.delay(1500)
+            val mockUser = UserProfile(
+                id = cardId,
+                email = "student@cit.edu",
+                fullName = "Member Student",
+                role = "learner"
+            )
+            _loginState.value = Result.Success(mockUser)
+        }
+    }
 }

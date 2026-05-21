@@ -38,7 +38,7 @@ export function LeaderboardTable({ profiles, currentUserId }: LeaderboardTablePr
     switch (theme) {
       case 'gold': return "border-yellow-500/50 bg-yellow-500/5";
       case 'purple': return "border-purple-500/50 bg-purple-500/5";
-      case 'ruby': return "border-red-500/50 bg-red-500/5";
+      case 'ruby': return "border-amber-600/50 bg-amber-600/5 dark:border-[#FFD700]/30 dark:bg-[#FFD700]/5";
       case 'emerald': return "border-green-500/50 bg-green-500/5";
       default: return "";
     }

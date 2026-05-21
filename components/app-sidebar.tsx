@@ -27,7 +27,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   GraduationCap,
-  LayoutDashboard,
   Users,
   Calendar,
   BookOpen,
@@ -43,8 +42,11 @@ import {
   Timer,
   Vote,
   Lightbulb,
+  MessageSquare,
+  LayoutDashboard,
 } from "lucide-react";
 import { signOut } from "@/app/auth/actions";
+import { HonorSocietyLogo } from "@/components/honsoc-logo";
 
 interface AppSidebarProps {
   profile: Profile;
@@ -52,9 +54,10 @@ interface AppSidebarProps {
   notificationCount: number;
 }
 
-function getNavItems(role: UserRole) {
+function getNavItems(role: UserRole, email?: string) {
   const shared = [
     { title: "Dashboard", href: "/dashboard/home", icon: LayoutDashboard },
+    { title: "Messages", href: "/dashboard/messages", icon: MessageSquare },
     { title: "Voting", href: "/dashboard/voting", icon: Vote },
     { title: "Notifications", href: "/dashboard/notifications", icon: Bell },
     { title: "Profile", href: "/dashboard/profile", icon: UserCircle },
@@ -77,12 +80,16 @@ function getNavItems(role: UserRole) {
 
   const adminItems = [
     { title: "Users", href: "/dashboard/admin/users", icon: Users },
-    { title: "Cards", href: "/dashboard/admin/cards", icon: CreditCard },
     { title: "All Sessions", href: "/dashboard/admin/sessions", icon: Calendar },
     { title: "Timesheets", href: "/dashboard/admin/timesheets", icon: Timer },
     { title: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
     { title: "Resources", href: "/dashboard/resources", icon: FolderOpen },
   ];
+
+  const isSuperAdmin = email === "admin@scholarme.com" || email === "admin@scholarme.org";
+  if (isSuperAdmin) {
+    adminItems.push({ title: "User Messages", href: "/dashboard/admin/messages", icon: MessageSquare });
+  }
 
   const roleItems = {
     learner: learnerItems,
@@ -101,7 +108,7 @@ const roleLabels: Record<UserRole, string> = {
 
 export function AppSidebar({ profile, role, notificationCount }: AppSidebarProps) {
   const pathname = usePathname();
-  const { shared, roleSpecific } = getNavItems(role);
+  const { shared, roleSpecific } = getNavItems(role, profile?.email);
   const initials = profile?.full_name
     ? profile.full_name
         .split(" ")
@@ -128,7 +135,7 @@ export function AppSidebar({ profile, role, notificationCount }: AppSidebarProps
             <SidebarMenuButton size="lg" asChild>
               <Link href="/dashboard/home">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                  <GraduationCap className="h-4 w-4 text-primary-foreground" />
+                  <HonorSocietyLogo variant="auto" className="h-6 w-6" />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
                   <span className="font-semibold">ScholarMe</span>

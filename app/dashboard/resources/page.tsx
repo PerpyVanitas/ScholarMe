@@ -36,6 +36,8 @@ import {
   Search,
   ChevronDown,
   ChevronRight,
+  Eye,
+  X,
 } from "lucide-react"
 import { toast } from "sonner"
 import type { UserRole } from "@/lib/types"
@@ -66,8 +68,8 @@ const ACCEPTED_MIME_TYPES = [
 ].join(",")
 
 const FILE_TYPES: Record<string, { label: string; icon: typeof FileText; color: string; extensions: string[] }> = {
-  pdf: { label: "PDF", icon: FileText, color: "text-red-500 bg-red-500/10", extensions: [".pdf"] },
-  document: { label: "Document", icon: FileText, color: "text-blue-500 bg-blue-500/10", extensions: [".doc", ".docx", ".txt", ".rtf"] },
+  pdf: { label: "PDF", icon: FileText, color: "text-amber-500 bg-amber-500/10", extensions: [".pdf"] },
+  document: { label: "Document", icon: FileText, color: "text-slate-400 bg-slate-400/10", extensions: [".doc", ".docx", ".txt", ".rtf"] },
   spreadsheet: { label: "Spreadsheet", icon: FileSpreadsheet, color: "text-green-500 bg-green-500/10", extensions: [".xls", ".xlsx", ".csv"] },
   presentation: { label: "Presentation", icon: Presentation, color: "text-orange-500 bg-orange-500/10", extensions: [".ppt", ".pptx"] },
   image: { label: "Image", icon: FileImage, color: "text-purple-500 bg-purple-500/10", extensions: [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"] },
@@ -119,7 +121,7 @@ interface RepoRow {
 const accessLabels: Record<string, string> = { all: "Everyone", tutor: "Tutors & Admins", admin: "Admins Only" }
 const accessBadge: Record<string, string> = {
   all: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30",
-  tutor: "bg-blue-500/10 text-blue-600 border-blue-500/30",
+  tutor: "bg-primary/10 text-primary border-primary/30",
   admin: "bg-amber-500/10 text-amber-600 border-amber-500/30",
 }
 
@@ -151,6 +153,10 @@ export default function ResourcesPage() {
   const [uploadFile, setUploadFile] = useState<globalThis.File | null>(null)
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Preview dialog states
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewResource, setPreviewResource] = useState<ResourceRow | null>(null)
 
   const canManage = role === "tutor" || role === "administrator"
 
@@ -601,6 +607,18 @@ export default function ResourcesPage() {
                                 </p>
                               </div>
                               <div className="flex items-center gap-1 shrink-0">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8 text-zinc-300 hover:text-white" 
+                                  onClick={() => {
+                                    setPreviewResource(resource)
+                                    setPreviewOpen(true)
+                                  }}
+                                  aria-label={`Preview ${resource.title}`}
+                                >
+                                  <Eye className="h-4 w-4 text-amber-500" />
+                                </Button>
                                 <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
                                   <a href={resource.url} target="_blank" rel="noopener noreferrer" aria-label={`Download ${resource.title}`}>
                                     <Download className="h-4 w-4" />
@@ -630,6 +648,146 @@ export default function ResourcesPage() {
           })}
         </div>
       )}
+
+      {/* Resource Preview Dialog */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent 
+          showCloseButton={false}
+          className="fixed inset-0 top-0 left-0 translate-x-0 translate-y-0 w-screen h-screen max-w-none m-0 p-0 rounded-none border-none bg-black/98 text-white flex flex-col z-50 duration-200"
+        >
+          {/* Top Bar */}
+          <div className="h-16 border-b border-zinc-800 bg-zinc-950 px-4 md:px-6 flex items-center justify-between shrink-0 select-none">
+            {/* Left side: Icon, title, uploader */}
+            <div className="flex items-center gap-3 min-w-0 flex-1 mr-4">
+              {previewResource && (
+                <>
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-zinc-900 border border-zinc-800">
+                    {(() => {
+                      const info = getTypeInfo(previewResource.file_type)
+                      const Icon = info.icon
+                      return <Icon className={`h-5 w-5 ${info.color.split(" ")[0]}`} />
+                    })()}
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="text-sm font-semibold text-zinc-100 truncate">
+                      {previewResource.title}
+                    </h2>
+                    <p className="text-[10px] text-zinc-400 truncate mt-0.5">
+                      Uploaded by {(previewResource.profiles as { full_name: string } | null)?.full_name || "Unknown"} on {new Date(previewResource.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Right side: Actions & Close */}
+            <div className="flex items-center gap-2 shrink-0">
+              {previewResource && (
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-9 text-zinc-300 hover:bg-zinc-900 hover:text-white"
+                  asChild
+                >
+                  <a href={previewResource.url} download target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                    <Download className="h-4 w-4 text-amber-500" />
+                    <span className="hidden sm:inline">Download</span>
+                  </a>
+                </Button>
+              )}
+              
+              <div className="w-px h-6 bg-zinc-800 mx-1 hidden sm:block"></div>
+
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-9 w-9 rounded-lg hover:bg-zinc-900 text-zinc-400 hover:text-white"
+                onClick={() => setPreviewOpen(false)}
+              >
+                <X className="h-5 w-5" />
+                <span className="sr-only">Close</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* Viewer Container */}
+          <div className="flex-1 w-full bg-zinc-950/40 p-4 md:p-8 flex items-center justify-center overflow-hidden">
+            {previewResource && renderPreviewContent(previewResource)}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
+function renderPreviewContent(resource: ResourceRow) {
+  const url = resource.url
+  const ext = "." + url.split(".").pop()?.toLowerCase().split("?")[0]
+  
+  if (resource.file_type === "image") {
+    return (
+      <div className="flex items-center justify-center w-full h-full max-h-[85vh] bg-zinc-950/20 overflow-auto rounded-lg border border-zinc-800/50">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img 
+          src={url} 
+          alt={resource.title} 
+          className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+        />
+      </div>
+    )
+  }
+  
+  if (resource.file_type === "video") {
+    return (
+      <div className="flex items-center justify-center w-full h-full max-h-[85vh] bg-black rounded-lg overflow-hidden border border-zinc-800/50">
+        <video 
+          src={url} 
+          controls 
+          className="w-full h-full max-h-[85vh] object-contain shadow-2xl"
+        />
+      </div>
+    )
+  }
+
+  // Office documents
+  const officeExtensions = [".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"]
+  if (officeExtensions.includes(ext) || resource.file_type === "presentation" || (resource.file_type === "spreadsheet" && ext !== ".csv")) {
+    const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`
+    return (
+      <iframe 
+        src={officeViewerUrl} 
+        className="w-full h-full min-h-[75vh] md:min-h-[80vh] border border-zinc-800 rounded-lg bg-zinc-950 shadow-2xl"
+        title={resource.title}
+        frameBorder="0"
+      />
+    )
+  }
+
+  // PDF or plain text
+  if (resource.file_type === "pdf" || ext === ".pdf" || ext === ".txt" || ext === ".csv") {
+    return (
+      <iframe 
+        src={url} 
+        className="w-full h-full min-h-[75vh] md:min-h-[80vh] border border-zinc-800 rounded-lg bg-white shadow-2xl"
+        title={resource.title}
+      />
+    )
+  }
+
+  // Fallback for other file types
+  return (
+    <div className="flex flex-col items-center justify-center py-16 px-4 text-center border border-dashed border-zinc-800/80 rounded-lg h-[50vh] max-w-lg bg-zinc-900/40">
+      <File className="h-12 w-12 text-zinc-500 mb-4" />
+      <h3 className="text-sm font-semibold text-zinc-300 mb-2">No preview available for this file type</h3>
+      <p className="text-xs text-zinc-500 mb-6 max-w-xs leading-relaxed">
+        This file format ({ext}) cannot be previewed in the browser. You can download it directly to view its contents.
+      </p>
+      <Button asChild size="sm" className="bg-[#FFD700] hover:bg-[#FFD700]/90 text-black font-semibold">
+        <a href={url} download target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+          <Download className="h-4 w-4" />
+          Download File
+        </a>
+      </Button>
     </div>
   )
 }

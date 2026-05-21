@@ -79,7 +79,7 @@ export async function PATCH(request: Request) {
   const admin = await getAdminUser(supabase);
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
 
-  const { user_id, full_name, email, role_name } = await request.json();
+  const { user_id, full_name, email, role_name, password } = await request.json();
   if (!user_id) return NextResponse.json({ error: "Missing user_id" }, { status: 400 });
 
   const adminClient = getAdminSupabase();
@@ -94,6 +94,12 @@ export async function PATCH(request: Request) {
     const { error } = await adminClient.auth.admin.updateUserById(user_id, { email });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     await adminClient.from("profiles").update({ email }).eq("id", user_id);
+  }
+
+  // Update password via auth admin
+  if (password) {
+    const { error } = await adminClient.auth.admin.updateUserById(user_id, { password });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
   // Update role
@@ -122,7 +128,7 @@ export async function PATCH(request: Request) {
     action: "user_edited",
     entity_type: "user",
     entity_id: user_id,
-    metadata: { full_name, email, role_name, edited_by: admin.email },
+    metadata: { full_name, email, role_name, password_changed: !!password, edited_by: admin.email },
   });
 
   return NextResponse.json({ success: true });

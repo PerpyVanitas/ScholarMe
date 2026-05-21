@@ -55,6 +55,8 @@ export function SetupProfileForm({
   const [birthdate, setBirthdate] = useState(initialBirthdate)
   const [membershipNumber, setMembershipNumber] = useState(initialMembershipNumber)
   const [selectedSpecs, setSelectedSpecs] = useState<string[]>(initialSelectedSpecs)
+  const [academicYearJoined, setAcademicYearJoined] = useState("2024-2025")
+  const [esasScholar, setEsasScholar] = useState(false)
 
   const isTutor = initialRoleName === "tutor"
 
@@ -112,6 +114,11 @@ export function SetupProfileForm({
       toast.error("First name and last name are required")
       return
     }
+    
+    if (!membershipNumber.trim()) {
+      toast.error("Student ID is required")
+      return
+    }
 
     setSaving(true)
     try {
@@ -123,7 +130,9 @@ export function SetupProfileForm({
           full_name: `${firstName.trim()} ${lastName.trim()}`,
           ...birthdateFields(birthdate || null),
           avatar_url: avatarPathname || null,
-          membership_number: isTutor ? membershipNumber.trim() || null : null,
+          membership_number: membershipNumber.trim(),
+          esas_scholar: isTutor ? esasScholar : false,
+          academic_year_joined: academicYearJoined,
           profile_completed: true,
         })
         .eq("id", userId)
@@ -255,16 +264,46 @@ export function SetupProfileForm({
             />
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="membershipNumber">Student ID Number *</Label>
+            <Input
+              id="membershipNumber"
+              value={membershipNumber}
+              onChange={(e: any) => setMembershipNumber(e.target.value)}
+              placeholder="e.g. 21-1234-567"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="academicYearJoined">Academic Year Joined Honor Society *</Label>
+            <select
+              id="academicYearJoined"
+              value={academicYearJoined}
+              onChange={(e) => setAcademicYearJoined(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <option value="2022-2023">2022-2023</option>
+              <option value="2023-2024">2023-2024</option>
+              <option value="2024-2025">2024-2025</option>
+              <option value="2025-2026">2025-2026</option>
+            </select>
+          </div>
+
           {isTutor && (
             <>
-              <div className="space-y-2">
-                <Label htmlFor="membershipNumber">Membership Number</Label>
-                <Input
-                  id="membershipNumber"
-                  value={membershipNumber}
-                  onChange={(e: any) => setMembershipNumber(e.target.value)}
-                  placeholder="e.g. TM-2025-001"
+
+              <div className="flex items-center gap-2 pt-1 pb-2">
+                <input
+                  type="checkbox"
+                  id="esasScholar"
+                  checked={esasScholar}
+                  onChange={(e) => setEsasScholar(e.target.checked)}
+                  className="h-4 w-4 rounded border-input text-primary focus:ring-primary bg-background"
                 />
+                <Label htmlFor="esasScholar" className="text-sm font-medium cursor-pointer">
+                  I am an ESAS Scholar
+                </Label>
               </div>
 
               <div className="space-y-2">
@@ -296,7 +335,7 @@ export function SetupProfileForm({
 
           <Button
             onClick={handleSave}
-            disabled={saving || !firstName.trim() || !lastName.trim()}
+            disabled={saving || !firstName.trim() || !lastName.trim() || !membershipNumber.trim()}
             className="w-full"
             size="lg"
           >

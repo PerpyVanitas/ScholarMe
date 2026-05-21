@@ -68,6 +68,8 @@ CREATE POLICY "profiles_select_all" ON public.profiles
 
 DROP POLICY IF EXISTS "profiles_select_own" ON public.profiles;
 DROP POLICY IF EXISTS "profiles_admin_select_all" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_public_read_for_tutors" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_read_all" ON public.profiles;
 
 DROP POLICY IF EXISTS "profiles_update_own" ON public.profiles;
 CREATE POLICY "profiles_update_own" ON public.profiles
@@ -438,13 +440,36 @@ ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.conversation_participants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 
+CREATE OR REPLACE FUNCTION public.is_conversation_member(conv_id uuid, user_id uuid)
+RETURNS boolean
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.conversation_participants
+    WHERE conversation_id = conv_id AND profile_id = user_id
+  );
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.is_super_admin(user_id uuid)
+RETURNS boolean
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  u_email text;
+BEGIN
+  SELECT email INTO u_email FROM public.profiles WHERE id = user_id;
+  RETURN u_email IN ('admin@scholarme.com', 'admin@scholarme.org');
+END;
+$$ LANGUAGE plpgsql;
+
 DROP POLICY IF EXISTS "conversations_participant_read" ON public.conversations;
 CREATE POLICY "conversations_participant_read" ON public.conversations
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.conversation_participants
-      WHERE conversation_id = conversations.id AND profile_id = auth.uid()
-    )
+    public.is_conversation_member(id, auth.uid()) OR public.is_super_admin(auth.uid())
   );
 
 DROP POLICY IF EXISTS "conversations_insert" ON public.conversations;
@@ -454,22 +479,15 @@ CREATE POLICY "conversations_insert" ON public.conversations
 DROP POLICY IF EXISTS "participants_read" ON public.conversation_participants;
 CREATE POLICY "participants_read" ON public.conversation_participants
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.conversation_participants AS cp
-      WHERE cp.conversation_id = conversation_participants.conversation_id
-        AND cp.profile_id = auth.uid()
-    )
+    public.is_conversation_member(conversation_id, auth.uid()) OR public.is_super_admin(auth.uid())
   );
 
 DROP POLICY IF EXISTS "participants_insert" ON public.conversation_participants;
 CREATE POLICY "participants_insert" ON public.conversation_participants
   FOR INSERT WITH CHECK (
     profile_id = auth.uid() OR
-    EXISTS (
-      SELECT 1 FROM public.conversation_participants
-      WHERE conversation_id = conversation_participants.conversation_id
-        AND profile_id = auth.uid()
-    )
+    public.is_conversation_member(conversation_id, auth.uid()) OR
+    public.is_super_admin(auth.uid())
   );
 
 DROP POLICY IF EXISTS "participants_update_own" ON public.conversation_participants;
@@ -479,20 +497,14 @@ CREATE POLICY "participants_update_own" ON public.conversation_participants
 DROP POLICY IF EXISTS "messages_read" ON public.messages;
 CREATE POLICY "messages_read" ON public.messages
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.conversation_participants
-      WHERE conversation_id = messages.conversation_id AND profile_id = auth.uid()
-    )
+    public.is_conversation_member(conversation_id, auth.uid()) OR public.is_super_admin(auth.uid())
   );
 
 DROP POLICY IF EXISTS "messages_insert" ON public.messages;
 CREATE POLICY "messages_insert" ON public.messages
   FOR INSERT WITH CHECK (
     sender_id = auth.uid() AND
-    EXISTS (
-      SELECT 1 FROM public.conversation_participants
-      WHERE conversation_id = messages.conversation_id AND profile_id = auth.uid()
-    )
+    (public.is_conversation_member(conversation_id, auth.uid()) OR public.is_super_admin(auth.uid()))
   );
 
 CREATE OR REPLACE FUNCTION update_conversation_timestamp()
@@ -540,13 +552,61 @@ BEGIN
     END LOOP;
 END $$;
 
-ALTER TABLE public.notifications ADD CONSTRAINT notifications_type_check CHECK (type IN ('session', 'system', 'resource'));
+ALTER TABLE public.notifications ADD CONSTRAINT notifications_type_check CHECK (type IN ('session', 'system', 'resource', 'message'));
 
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "notifications_own" ON public.notifications;
 CREATE POLICY "notifications_own" ON public.notifications
   FOR ALL USING (user_id = auth.uid());
+
+CREATE OR REPLACE FUNCTION public.handle_new_message_notification()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  sender_name text;
+  participant RECORD;
+BEGIN
+  -- Get the sender's full name
+  SELECT full_name INTO sender_name
+  FROM public.profiles
+  WHERE id = NEW.sender_id;
+
+  IF sender_name IS NULL THEN
+    sender_name := 'Someone';
+  END IF;
+
+  -- Find all participants in the conversation except the sender
+  FOR participant IN
+    SELECT profile_id
+    FROM public.conversation_participants
+    WHERE conversation_id = NEW.conversation_id AND profile_id <> NEW.sender_id
+  LOOP
+    -- Insert a notification for each participant
+    INSERT INTO public.notifications (user_id, title, message, type, link)
+    VALUES (
+      participant.profile_id,
+      'New Message from ' || sender_name,
+      CASE 
+        WHEN length(NEW.content) > 60 THEN substring(NEW.content from 1 for 57) || '...'
+        ELSE NEW.content
+      END,
+      'message',
+      '/dashboard/messages'
+    );
+  END LOOP;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trigger_handle_new_message_notification ON public.messages;
+CREATE TRIGGER trigger_handle_new_message_notification
+  AFTER INSERT ON public.messages
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_message_notification();
 
 CREATE TABLE IF NOT EXISTS public.xp_logs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1169,3 +1229,81 @@ CREATE INDEX IF NOT EXISTS idx_study_sets_user ON public.study_sets(user_id);
 CREATE INDEX IF NOT EXISTS idx_study_sets_owner ON public.study_sets(owner_id);
 CREATE INDEX IF NOT EXISTS idx_study_set_items_set ON public.study_set_items(study_set_id);
 CREATE INDEX IF NOT EXISTS idx_quiz_attempts_user ON public.quiz_attempts(user_id);
+
+CREATE TABLE IF NOT EXISTS public.timesheet_periods (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  start_date timestamptz NOT NULL,
+  end_date timestamptz NOT NULL,
+  is_active boolean NOT NULL DEFAULT false,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_active_period 
+ON public.timesheet_periods (is_active) 
+WHERE (is_active = true);
+
+ALTER TABLE public.timesheet_periods ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "timesheet_periods_read" ON public.timesheet_periods;
+CREATE POLICY "timesheet_periods_read" ON public.timesheet_periods
+  FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "timesheet_periods_admin" ON public.timesheet_periods;
+CREATE POLICY "timesheet_periods_admin" ON public.timesheet_periods
+  FOR ALL USING (public.is_admin(auth.uid()));
+
+-- Cebu Institute of Technology - University Honor Society ID card properties
+ALTER TABLE public.profiles 
+  ADD COLUMN IF NOT EXISTS esas_scholar boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS academic_year_joined text,
+  ADD COLUMN IF NOT EXISTS unique_id_number text UNIQUE;
+
+-- Automated generator for unique_id_number based on academic year and presidents' initials
+CREATE OR REPLACE FUNCTION public.generate_unique_id_number()
+RETURNS trigger AS $$
+DECLARE
+  prefix text;
+  next_seq integer;
+BEGIN
+  -- If academic_year_joined is NULL, clear unique ID and return
+  IF NEW.academic_year_joined IS NULL THEN
+    NEW.unique_id_number := NULL;
+    RETURN NEW;
+  END IF;
+
+  -- Only generate if it is not set yet or if academic_year_joined changed
+  IF NEW.unique_id_number IS NOT NULL AND (OLD.academic_year_joined = NEW.academic_year_joined OR OLD IS NULL) THEN
+    RETURN NEW;
+  END IF;
+
+  -- Determine president initials and short year suffix
+  IF NEW.academic_year_joined = '2022-2023' THEN
+    prefix := 'VAM-2223-';
+  ELSIF NEW.academic_year_joined = '2023-2024' THEN
+    prefix := 'JVN-2324-';
+  ELSIF NEW.academic_year_joined = '2024-2025' THEN
+    prefix := 'VWP-2425-';
+  ELSIF NEW.academic_year_joined = '2025-2026' THEN
+    prefix := 'AFC-2526-';
+  ELSE
+    prefix := 'HS-' || replace(NEW.academic_year_joined, '-', '') || '-';
+  END IF;
+
+  -- Find the next sequence number for this prefix
+  SELECT COALESCE(MAX(SUBSTRING(unique_id_number FROM '[0-9]+$')::integer), 0) + 1
+  INTO next_seq
+  FROM public.profiles
+  WHERE unique_id_number LIKE prefix || '%';
+
+  -- Format the unique code
+  NEW.unique_id_number := prefix || LPAD(next_seq::text, 3, '0');
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_generate_unique_id_number ON public.profiles;
+CREATE TRIGGER trigger_generate_unique_id_number
+  BEFORE INSERT OR UPDATE OF academic_year_joined ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.generate_unique_id_number();

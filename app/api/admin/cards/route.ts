@@ -23,9 +23,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  const { user_id, card_id, pin } = await request.json();
+  const { user_id, card_id } = await request.json();
+  const pin = crypto.randomUUID(); // Secure random token embedded in the QR Code
 
-  if (!user_id || !card_id || !pin) {
+  if (!user_id || !card_id) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
@@ -66,16 +67,20 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  const { id, status } = await request.json();
+  const { id, status, pin } = await request.json();
 
   const adminClient = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
+  const updateFields: any = {};
+  if (status !== undefined) updateFields.status = status;
+  if (pin !== undefined) updateFields.pin = pin;
+
   const { data, error } = await adminClient
     .from("auth_cards")
-    .update({ status })
+    .update(updateFields)
     .eq("id", id)
     .select()
     .single();

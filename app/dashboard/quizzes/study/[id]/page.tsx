@@ -338,7 +338,7 @@ export default function StudyModePage({ params }: { params: Promise<{ id: string
                       className={`flex items-center space-x-2 p-3 rounded-lg border hover:bg-muted/50 ${
                         showAnswer && option === currentItem.answer ? "border-green-500 bg-green-50 dark:bg-green-950/20" : ""
                       } ${
-                        showAnswer && selectedAnswer === option && option !== currentItem.answer ? "border-red-500 bg-red-50 dark:bg-red-950/20" : ""
+                        showAnswer && selectedAnswer === option && option !== currentItem.answer ? "border-orange-500 bg-orange-50 dark:bg-orange-950/20" : ""
                       }`}
                     >
                       <RadioGroupItem value={option} id={`option-${idx}`} />
@@ -347,7 +347,7 @@ export default function StudyModePage({ params }: { params: Promise<{ id: string
                         <CheckCircle className="h-5 w-5 text-green-500" />
                       )}
                       {showAnswer && selectedAnswer === option && option !== currentItem.answer && (
-                        <XCircle className="h-5 w-5 text-red-500" />
+                        <XCircle className="h-5 w-5 text-orange-500" />
                       )}
                     </div>
                   ))}

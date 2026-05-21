@@ -13,7 +13,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { GraduationCap, Camera, Loader2, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 import { getRoleName } from "@/lib/utils/roles"
-import { birthdateFields } from "@/lib/profiles/db"
 import { ensureProfile, ensureTutor } from "@/app/dashboard/profile/actions"
 
 interface Specialization {
@@ -37,7 +36,6 @@ export default function SetupProfilePage() {
   // Form fields
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
-  const [birthdate, setBirthdate] = useState("")
   const [membershipNumber, setMembershipNumber] = useState("")
   const [selectedSpecs, setSelectedSpecs] = useState<string[]>([])
 
@@ -65,7 +63,6 @@ export default function SetupProfilePage() {
       if (profile) {
         setFirstName(profile.first_name || "")
         setLastName(profile.last_name || "")
-        setBirthdate(profile.birthdate || profile.date_of_birth || "")
         setMembershipNumber(profile.membership_number || "")
         setAvatarUrl(profile.avatar_url || null)
         setRoleName(getRoleName(profile))
@@ -179,7 +176,6 @@ export default function SetupProfilePage() {
           first_name: firstName.trim(),
           last_name: lastName.trim(),
           full_name: `${firstName.trim()} ${lastName.trim()}`,
-          ...birthdateFields(birthdate || null),
           avatar_url: avatarPathname || null, // Store the actual Blob pathname
           membership_number: isTutor ? membershipNumber.trim() || null : null,
           profile_completed: true,
@@ -338,17 +334,6 @@ export default function SetupProfilePage() {
                 placeholder="Dela Cruz"
               />
             </div>
-          </div>
-
-          {/* Birthdate */}
-          <div className="space-y-2">
-            <Label htmlFor="birthdate">Birthdate</Label>
-            <Input
-              id="birthdate"
-              type="date"
-              value={birthdate}
-              onChange={(e: any) => setBirthdate(e.target.value)}
-            />
           </div>
 
           {/* Tutor-specific fields */}
