@@ -20,7 +20,7 @@ import {
 import { Calendar, Star, CheckCircle2, XCircle, Clock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { SESSION_STATUS_COLORS } from "@/lib/constants";
-import { DEMO_USERS, getDemoUserFromCookie } from "@/lib/demo";
+import { DEMO_USERS, getDemoUserFromCookie } from "@/scripts/demo";
 import type { Session, UserRole } from "@/lib/types";
 
 export default function SessionsPage() {

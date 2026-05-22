@@ -1,3 +1,6 @@
+/**
+ * MUST NEVER BE IMPORTED IN PRODUCTION CODE
+ */
 /** Demo mode config -- maps dev roles to seeded user data for unauthenticated previews. */
 
 import type { UserRole } from "@/lib/types"

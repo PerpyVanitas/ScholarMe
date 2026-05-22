@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Clock, Plus, Trash2, Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
-import { DEMO_USERS } from "@/lib/demo";
+import { DEMO_USERS } from "@/scripts/demo";
 import type { TutorAvailability, Tutor } from "@/lib/types";
 import { DAYS_OF_WEEK } from "@/lib/types";
 import { ensureTutor } from "@/app/dashboard/profile/actions";
