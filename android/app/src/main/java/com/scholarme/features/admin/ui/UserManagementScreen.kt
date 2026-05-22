@@ -188,5 +188,3 @@ fun UserAdminCard(
         )
     }
 }
-    }
-}

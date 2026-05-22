@@ -3,7 +3,6 @@ package com.scholarme.features.sessions;
 import com.scholarme.features.sessions.dto.*;
 import com.scholarme.shared.dto.ApiResponse;
 import com.scholarme.shared.entity.User;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -30,10 +29,13 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/v1/sessions")
-@RequiredArgsConstructor
 public class SessionController {
 
     private final SessionService sessionService;
+
+    public SessionController(SessionService sessionService) {
+        this.sessionService = sessionService;
+    }
 
     /**
      * Lists sessions for the authenticated user.

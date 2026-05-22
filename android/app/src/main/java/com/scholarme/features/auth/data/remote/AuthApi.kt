@@ -25,8 +25,3 @@ interface AuthApi {
     @POST("auth/logout")
     suspend fun logout(): Response<ApiResponse<Map<String, String>>>
 }
-    @POST("auth/refresh")
-    suspend fun refreshToken(
-        @Body request: RefreshRequest
-    ): Response<ApiResponse<LoginResponse>>
-}

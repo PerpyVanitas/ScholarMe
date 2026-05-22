@@ -1,11 +1,8 @@
 package com.scholarme.core.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.collectAsState
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -18,6 +15,11 @@ import androidx.compose.animation.core.tween
 import androidx.navigation.navArgument
 import com.scholarme.core.util.Result
 import com.scholarme.features.dashboard.domain.model.Session
+import com.scholarme.features.admin.data.model.AdminAnalytics
+import com.scholarme.features.admin.data.model.AdminTimesheet
+import com.scholarme.features.admin.data.model.AuditLogEntry
+import com.scholarme.features.auth.data.model.AuthCard
+import com.scholarme.features.profile.data.model.UserProfile
 import com.scholarme.features.admin.ui.*
 import com.scholarme.features.dashboard.ui.*
 import com.scholarme.features.profile.ui.*
@@ -112,7 +114,7 @@ fun AppNavHost(
             val viewModel: UpdateProfileViewModel = hiltViewModel()
             val profileViewModel: ProfileViewModel = hiltViewModel()
             val profileState by profileViewModel.profileState.collectAsStateWithLifecycle()
-            val profile = (profileState as? Result.Success)?.data
+            val profile = (profileState as? Result.Success<UserProfile>)?.data
             val updateResult by viewModel.updateResult.collectAsStateWithLifecycle()
 
             UpdateProfileScreen(
@@ -298,7 +300,7 @@ fun AppNavHost(
             }
             
             AnalyticsScreen(
-                analytics = (analytics as? Result.Success)?.data,
+                analytics = (analytics as? Result.Success<AdminAnalytics>)?.data,
                 onBackClick = { navController.popBackStack() }
             )
         }
@@ -312,7 +314,7 @@ fun AppNavHost(
             }
             
             AdminTimesheetScreen(
-                timesheets = (timesheetsState as? Result.Success)?.data ?: emptyList(),
+                timesheets = (timesheetsState as? Result.Success<List<AdminTimesheet>>)?.data ?: emptyList(),
                 isLoading = timesheetsState is Result.Loading,
                 onApprove = { viewModel.approveTimesheet(it) },
                 onReject = { viewModel.rejectTimesheet(it) },
@@ -329,7 +331,7 @@ fun AppNavHost(
             }
             
             CardManagementScreen(
-                cards = (cardsState as? Result.Success)?.data ?: emptyList(),
+                cards = (cardsState as? Result.Success<List<AuthCard>>)?.data ?: emptyList(),
                 onIssueCard = { uid, cid, pin -> viewModel.issueCard(uid, cid, pin) },
                 onRevokeCard = { viewModel.revokeCard(it) },
                 onBackClick = { navController.popBackStack() }
@@ -377,7 +379,7 @@ fun AppNavHost(
             
             UserAuditScreen(
                 userName = userName,
-                logs = (logsState as? Result.Success)?.data ?: emptyList(),
+                logs = (logsState as? Result.Success<List<AuditLogEntry>>)?.data ?: emptyList(),
                 onBackClick = { navController.popBackStack() }
             )
         }
@@ -407,7 +409,7 @@ fun AppNavHost(
             val viewModel: LeaderboardViewModel = hiltViewModel()
             val state by viewModel.uiState.collectAsStateWithLifecycle()
             LeaderboardScreen(
-                leaderboard = (state as? Result.Success)?.data ?: emptyList(),
+                leaderboard = (state as? Result.Success<List<LeaderboardEntry>>)?.data ?: emptyList(),
                 currentUserId = "", // Can be retrieved from TokenManager if needed
                 onBackClick = { navController.popBackStack() }
             )

@@ -1,0 +1,238 @@
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:dataBindingMergeDependencyArtifactsDebug UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:dataBindingGenBaseClassesDebug UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:kspDebugKotlin UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:buildKotlinToolingMetadata UP-TO-DATE
+> Task :app:dataBindingMergeDependencyArtifactsRelease UP-TO-DATE
+> Task :app:generateReleaseResValues UP-TO-DATE
+> Task :app:generateReleaseResources UP-TO-DATE
+> Task :app:mergeReleaseResources UP-TO-DATE
+> Task :app:packageReleaseResources UP-TO-DATE
+> Task :app:processReleaseNavigationResources UP-TO-DATE
+> Task :app:parseReleaseLocalResources UP-TO-DATE
+> Task :app:dataBindingGenBaseClassesRelease UP-TO-DATE
+> Task :app:generateReleaseBuildConfig UP-TO-DATE
+> Task :app:checkReleaseAarMetadata UP-TO-DATE
+> Task :app:compileReleaseNavigationResources UP-TO-DATE
+> Task :app:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :app:createReleaseCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksRelease UP-TO-DATE
+> Task :app:processReleaseMainManifest UP-TO-DATE
+> Task :app:processReleaseManifest UP-TO-DATE
+> Task :app:processReleaseManifestForPackage UP-TO-DATE
+> Task :app:processReleaseResources UP-TO-DATE
+> Task :app:kspReleaseKotlin UP-TO-DATE
+> Task :app:javaPreCompileRelease UP-TO-DATE
+> Task :app:preReleaseUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileReleaseUnitTest UP-TO-DATE
+
+> Task :app:compileReleaseKotlin
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:4:27 Unresolved reference: compose
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:6:27 Unresolved reference: compose
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:8:27 Unresolved reference: compose
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:10:27 Unresolved reference: compose
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:73:48 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:74:48 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:75:47 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:76:53 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:95:56 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:114:63 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:115:45 One type argument expected. Use 'Success<*>' if you don't want to pass type arguments
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:116:56 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:119:45 Unresolved reference: avatarUrl
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:120:44 Unresolved reference: fullName
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:121:41 Unresolved reference: phone
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:122:39 Unresolved reference: bio
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:123:49 Unresolved reference: degreeProgram
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:124:45 Unresolved reference: yearLevel
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:125:46 Unresolved reference: hourlyRate
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:126:51 Unresolved reference: yearsExperience
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:127:37 Unresolved reference: role
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:139:56 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:151:44 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:202:57 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:244:55 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:294:50 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:301:29 Type mismatch: inferred type is Any? but AdminAnalytics? was expected
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:301:44 One type argument expected. Use 'Success<*>' if you don't want to pass type arguments
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:308:57 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:315:30 Type mismatch: inferred type is Any? but List<AdminTimesheet>? was expected
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:315:30 Type mismatch: inferred type is Any but List<AdminTimesheet> was expected
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:315:51 One type argument expected. Use 'Success<*>' if you don't want to pass type arguments
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:325:47 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:332:25 Type mismatch: inferred type is Any? but List<AuthCard>? was expected
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:332:25 Type mismatch: inferred type is Any but List<AuthCard> was expected
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:332:41 One type argument expected. Use 'Success<*>' if you don't want to pass type arguments
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:372:50 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:380:24 Type mismatch: inferred type is Any? but List<AuditLogEntry>? was expected
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:380:24 Type mismatch: inferred type is Any but List<AuditLogEntry> was expected
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:380:39 One type argument expected. Use 'Success<*>' if you don't want to pass type arguments
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:388:44 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:397:44 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:408:44 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:410:31 Type mismatch: inferred type is Any? but List<LeaderboardEntry>? was expected
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:410:31 Type mismatch: inferred type is Any but List<LeaderboardEntry> was expected
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:410:42 One type argument expected. Use 'Success<*>' if you don't want to pass type arguments
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:419:44 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:435:46 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/auth/data/remote/AuthApi.kt:30:24 Unresolved reference: RefreshRequest
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/auth/ui/login/LoginScreen.kt:218:43 Unresolved reference: loginWithCardMock
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/auth/ui/login/LoginViewModel.kt:65:41 Unresolved reference: loginWithCard
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/availability/ui/AvailabilityManagerScreen.kt:8:27 Unresolved reference: compose
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/availability/ui/AvailabilityManagerScreen.kt:26:54 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/availability/ui/AvailabilityManagerScreen.kt:31:35 One type argument expected. Use 'Success<*>' if you don't want to pass type arguments
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/availability/ui/AvailabilityManagerScreen.kt:96:20 One type argument expected. Use 'Success<*>' if you don't want to pass type arguments
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/resources/ui/ResourceViewerScreen.kt:10:27 Unresolved reference: compose
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/resources/ui/ResourceViewerScreen.kt:12:27 Unresolved reference: compose
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/resources/ui/ResourceViewerScreen.kt:14:27 Unresolved reference: compose
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/resources/ui/ResourceViewerScreen.kt:16:27 Unresolved reference: compose
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/resources/ui/ResourceViewerScreen.kt:36:40 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/resources/ui/ResourceViewerScreen.kt:71:16 One type argument expected. Use 'Success<*>' if you don't want to pass type arguments
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/timesheet/ui/TimesheetScreen.kt:10:27 Unresolved reference: compose
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/timesheet/ui/TimesheetScreen.kt:25:46 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/timesheet/ui/TimesheetScreen.kt:26:38 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/timesheet/ui/TimesheetScreen.kt:27:42 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/timesheet/ui/TimesheetScreen.kt:30:25 Unresolved reference: it
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/timesheet/ui/TimesheetScreen.kt:127:75 Unresolved reference: clockInTime
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/timesheet/ui/TimesheetScreen.kt:127:117 Unresolved reference: clockInTime
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/timesheet/ui/TimesheetScreen.kt:127:141 Unresolved reference: clockOutTime
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/timesheet/ui/TimesheetScreen.kt:127:179 Unresolved reference: it
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/timesheet/ui/TimesheetScreen.kt:132:54 Unresolved reference: totalHours
+
+> Task :app:compileReleaseKotlin FAILED
+
+> Task :app:compileDebugKotlin
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:4:27 Unresolved reference: compose
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:6:27 Unresolved reference: compose
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:8:27 Unresolved reference: compose
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:10:27 Unresolved reference: compose
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:73:48 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:74:48 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:75:47 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:76:53 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:95:56 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:114:63 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:115:45 One type argument expected. Use 'Success<*>' if you don't want to pass type arguments
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:116:56 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:119:45 Unresolved reference: avatarUrl
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:120:44 Unresolved reference: fullName
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:121:41 Unresolved reference: phone
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:122:39 Unresolved reference: bio
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:123:49 Unresolved reference: degreeProgram
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:124:45 Unresolved reference: yearLevel
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:125:46 Unresolved reference: hourlyRate
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:126:51 Unresolved reference: yearsExperience
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:127:37 Unresolved reference: role
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:139:56 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:151:44 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:202:57 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:244:55 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:294:50 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:301:29 Type mismatch: inferred type is Any? but AdminAnalytics? was expected
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:301:44 One type argument expected. Use 'Success<*>' if you don't want to pass type arguments
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:308:57 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:315:30 Type mismatch: inferred type is Any? but List<AdminTimesheet>? was expected
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:315:30 Type mismatch: inferred type is Any but List<AdminTimesheet> was expected
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:315:51 One type argument expected. Use 'Success<*>' if you don't want to pass type arguments
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:325:47 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:332:25 Type mismatch: inferred type is Any? but List<AuthCard>? was expected
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:332:25 Type mismatch: inferred type is Any but List<AuthCard> was expected
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:332:41 One type argument expected. Use 'Success<*>' if you don't want to pass type arguments
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:372:50 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:380:24 Type mismatch: inferred type is Any? but List<AuditLogEntry>? was expected
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:380:24 Type mismatch: inferred type is Any but List<AuditLogEntry> was expected
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:380:39 One type argument expected. Use 'Success<*>' if you don't want to pass type arguments
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:388:44 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:397:44 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:408:44 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:410:31 Type mismatch: inferred type is Any? but List<LeaderboardEntry>? was expected
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:410:31 Type mismatch: inferred type is Any but List<LeaderboardEntry> was expected
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:410:42 One type argument expected. Use 'Success<*>' if you don't want to pass type arguments
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:419:44 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/core/navigation/AppNavHost.kt:435:46 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/auth/data/remote/AuthApi.kt:30:24 Unresolved reference: RefreshRequest
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/auth/ui/login/LoginScreen.kt:218:43 Unresolved reference: loginWithCardMock
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/availability/ui/AvailabilityManagerScreen.kt:8:27 Unresolved reference: compose
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/availability/ui/AvailabilityManagerScreen.kt:26:54 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/availability/ui/AvailabilityManagerScreen.kt:31:35 One type argument expected. Use 'Success<*>' if you don't want to pass type arguments
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/availability/ui/AvailabilityManagerScreen.kt:96:20 One type argument expected. Use 'Success<*>' if you don't want to pass type arguments
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/resources/ui/ResourceViewerScreen.kt:10:27 Unresolved reference: compose
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/resources/ui/ResourceViewerScreen.kt:12:27 Unresolved reference: compose
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/resources/ui/ResourceViewerScreen.kt:14:27 Unresolved reference: compose
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/resources/ui/ResourceViewerScreen.kt:16:27 Unresolved reference: compose
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/resources/ui/ResourceViewerScreen.kt:36:40 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/resources/ui/ResourceViewerScreen.kt:71:16 One type argument expected. Use 'Success<*>' if you don't want to pass type arguments
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/timesheet/ui/TimesheetScreen.kt:10:27 Unresolved reference: compose
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/timesheet/ui/TimesheetScreen.kt:25:46 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/timesheet/ui/TimesheetScreen.kt:26:38 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/timesheet/ui/TimesheetScreen.kt:27:42 Unresolved reference: collectAsStateWithLifecycle
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/timesheet/ui/TimesheetScreen.kt:30:25 Unresolved reference: it
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/timesheet/ui/TimesheetScreen.kt:127:75 Unresolved reference: clockInTime
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/timesheet/ui/TimesheetScreen.kt:127:117 Unresolved reference: clockInTime
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/timesheet/ui/TimesheetScreen.kt:127:141 Unresolved reference: clockOutTime
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/timesheet/ui/TimesheetScreen.kt:127:179 Unresolved reference: it
+e: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/app/src/main/java/com/scholarme/features/timesheet/ui/TimesheetScreen.kt:132:54 Unresolved reference: totalHours
+
+> Task :app:compileDebugKotlin FAILED
+
+[Incubating] Problems report is available at: file:///C:/Users/VAN%20WOODROE/Documents/ScholarMe/android/build/reports/problems/problems-report.html
+System.Management.Automation.RemoteException
+FAILURE: Build completed with 2 failures.
+System.Management.Automation.RemoteException
+1: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task ':app:compileReleaseKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+System.Management.Automation.RemoteException
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+==============================================================================
+System.Management.Automation.RemoteException
+2: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+System.Management.Automation.RemoteException
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+==============================================================================
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+System.Management.Automation.RemoteException
+BUILD FAILED in 12s
+45 actionable tasks: 2 executed, 43 up-to-date

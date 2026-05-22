@@ -214,8 +214,7 @@ fun LoginScreen(
                                 val json = JSONObject(scannedJson)
                                 val cardId = json.getString("cardId")
                                 val pin = json.getString("pin")
-                                // For now, mock the successful login since we don't have the API in Kotlin
-                                viewModel.loginWithCardMock(cardId, pin)
+                                viewModel.loginWithCard(cardId, pin)
                             } catch (e: Exception) {
                                 // Invalid QR Code
                             }
@@ -249,5 +248,4 @@ fun LoginScreen(
             }
         }
     }
-}
 }

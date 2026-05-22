@@ -1,9 +1,22 @@
 package com.scholarme.features.sessions.dto;
 
-import lombok.*;
 import java.util.List;
 
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class SessionListResponse {
     private List<SessionDto> sessions;
+
+    public SessionListResponse() {
+    }
+
+    public SessionListResponse(List<SessionDto> sessions) {
+        this.sessions = sessions;
+    }
+
+    public List<SessionDto> getSessions() {
+        return sessions;
+    }
+
+    public void setSessions(List<SessionDto> sessions) {
+        this.sessions = sessions;
+    }
 }

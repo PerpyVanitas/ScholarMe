@@ -28,7 +28,7 @@ fun AvailabilityManagerScreen(
     var isAvailable by remember { mutableStateOf(true) }
 
     LaunchedEffect(availabilityResult) {
-        if (availabilityResult is Result.Success) {
+        if (availabilityResult is Result.Success<*>) {
             localSlots = (availabilityResult as Result.Success<List<TimeSlotDto>>).data
         }
     }
@@ -93,7 +93,7 @@ fun AvailabilityManagerScreen(
                 is Result.Error -> {
                     Text(result.message, color = MaterialTheme.colorScheme.error)
                 }
-                is Result.Success -> {
+                is Result.Success<*> -> {
                     val days = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
                     
                     days.forEach { day ->
