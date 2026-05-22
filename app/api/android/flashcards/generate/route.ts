@@ -32,13 +32,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: { message: "Invalid token" } }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { title, topic, description = "", type = "flashcard", count = 5, is_public = false } = body;
-
-    if (!title || !topic) {
-      return NextResponse.json({ success: false, error: { message: "Title and topic are required" } }, { status: 400 });
-    }
-
     // 1. Generate items with Gemini
     const prompt = `
 Generate a study set about the following topic: "${topic}".

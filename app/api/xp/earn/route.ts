@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { XP_AWARDS } from "@/lib/utils/gamification";
+import { XP_AWARDS } from "@/lib/constants";
 
 export async function POST(req: Request) {
   try {
