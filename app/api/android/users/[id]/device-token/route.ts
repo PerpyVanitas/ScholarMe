@@ -17,7 +17,7 @@ export async function POST(
     
     if (!token) {
       return NextResponse.json(
-        createErrorResponse("AUTH_001_UNAUTHORIZED", "Missing token"),
+        createErrorResponse("AUTH_002_INVALID_TOKEN", "Missing token"),
         { status: 401 }
       );
     }

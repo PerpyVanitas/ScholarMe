@@ -9,6 +9,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.scholarme.R
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -88,11 +91,10 @@ fun LoginScreen(
                     color = Color(0xFFFFD700) // Gold
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            "HS",
-                            color = Color.Black,
-                            style = MaterialTheme.typography.displayMedium,
-                            fontWeight = FontWeight.Black
+                        Image(
+                            painter = painterResource(id = R.drawable.honsoc_logo_black),
+                            contentDescription = "Honor Society Logo",
+                            modifier = Modifier.size(64.dp)
                         )
                     }
                 }
