@@ -23,6 +23,7 @@ import coil.compose.AsyncImage
 import com.scholarme.features.profile.data.model.ProfileDto
 import com.scholarme.core.util.Result
 import com.scholarme.core.util.ui.AndroidQrIdCard
+import com.scholarme.features.gamification.ui.GamificationUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,9 +74,6 @@ fun ProfileScreen(
         }
     }
 }
-
-import com.scholarme.features.gamification.ui.GamificationUtils
-
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ProfileContent(

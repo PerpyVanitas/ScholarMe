@@ -11,14 +11,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.scholarme.features.gamification.data.GamificationRepository
 
 data class SessionListState(
     val sessions: List<SessionDto> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null
 )
-
-import com.scholarme.features.gamification.data.GamificationRepository
 
 @HiltViewModel
 class SessionViewModel @Inject constructor(
