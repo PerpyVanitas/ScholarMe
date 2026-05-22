@@ -27,6 +27,14 @@ import com.scholarme.core.theme.ScholarMeTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     
@@ -42,60 +50,110 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
+                val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+                val scope = rememberCoroutineScope()
                 
                 // Top-level destinations for Bottom Nav
                 val bottomNavItems = listOf(
                     BottomNavItem("Dashboard", Screen.Dashboard.route, Icons.Default.Home),
-                    BottomNavItem("Members", Screen.UserManagement.route, Icons.Default.People),
-                    BottomNavItem("Scan ID", Screen.AdminScanner.route, Icons.Default.QrCodeScanner),
-                    BottomNavItem("My ID", Screen.Profile.route, Icons.Default.Badge)
+                    BottomNavItem("Quizzes", Screen.QuizList.route, Icons.Default.Quiz),
+                    BottomNavItem("Flashcards", Screen.FlashcardList.route, Icons.Default.Style),
+                    BottomNavItem("Profile", Screen.Profile.route, Icons.Default.Person)
                 )
 
                 // Screens where we SHOULD show the bottom nav
                 val showBottomNav = currentDestination?.route in bottomNavItems.map { it.route }
 
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    bottomBar = {
-                        if (showBottomNav) {
-                            NavigationBar {
-                                bottomNavItems.forEach { item ->
-                                    val selected = currentDestination?.hierarchy?.any { it.route == item.route } == true
-                                    NavigationBarItem(
-                                        icon = { Icon(item.icon, contentDescription = item.label) },
-                                        label = { Text(item.label) },
-                                        selected = selected,
-                                        onClick = {
-                                            navController.navigate(item.route) {
-                                                popUpTo(navController.graph.findStartDestination().id) {
-                                                    saveState = true
+                ModalNavigationDrawer(
+                    drawerState = drawerState,
+                    drawerContent = {
+                        ModalDrawerSheet {
+                            Spacer(Modifier.height(16.dp))
+                            Text(
+                                "ScholarMe Menu",
+                                modifier = Modifier.padding(16.dp),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Divider()
+                            NavigationDrawerItem(
+                                label = { Text("Admin Dashboard") },
+                                selected = currentDestination?.route == Screen.AdminDashboard.route,
+                                onClick = {
+                                    scope.launch { drawerState.close() }
+                                    navController.navigate(Screen.AdminDashboard.route)
+                                }
+                            )
+                            NavigationDrawerItem(
+                                label = { Text("Gamification Leaderboard") },
+                                selected = currentDestination?.route == Screen.Leaderboard.route,
+                                onClick = {
+                                    scope.launch { drawerState.close() }
+                                    navController.navigate(Screen.Leaderboard.route)
+                                }
+                            )
+                            NavigationDrawerItem(
+                                label = { Text("Active Polls") },
+                                selected = currentDestination?.route == Screen.Voting.route,
+                                onClick = {
+                                    scope.launch { drawerState.close() }
+                                    navController.navigate(Screen.Voting.route)
+                                }
+                            )
+                            NavigationDrawerItem(
+                                label = { Text("Timesheets") },
+                                selected = currentDestination?.route == Screen.Timesheet.route,
+                                onClick = {
+                                    scope.launch { drawerState.close() }
+                                    navController.navigate(Screen.Timesheet.route)
+                                }
+                            )
+                        }
+                    }
+                ) {
+                    Scaffold(
+                        modifier = Modifier.fillMaxSize(),
+                        bottomBar = {
+                            if (showBottomNav) {
+                                NavigationBar {
+                                    bottomNavItems.forEach { item ->
+                                        val selected = currentDestination?.hierarchy?.any { it.route == item.route } == true
+                                        NavigationBarItem(
+                                            icon = { Icon(item.icon, contentDescription = item.label) },
+                                            label = { Text(item.label) },
+                                            selected = selected,
+                                            onClick = {
+                                                navController.navigate(item.route) {
+                                                    popUpTo(navController.graph.findStartDestination().id) {
+                                                        saveState = true
+                                                    }
+                                                    launchSingleTop = true
+                                                    restoreState = true
                                                 }
-                                                launchSingleTop = true
-                                                restoreState = true
                                             }
-                                        }
-                                    )
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
-                ) { innerPadding ->
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding),
-                        color = MaterialTheme.colorScheme.background
-                    ) {
-                        val startDestination = if (tokenManager.isLoggedIn()) {
-                            Screen.Dashboard.route
-                        } else {
-                            Screen.Login.route
+                    ) { innerPadding ->
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(innerPadding),
+                            color = MaterialTheme.colorScheme.background
+                        ) {
+                            val startDestination = if (tokenManager.isLoggedIn()) {
+                                Screen.Dashboard.route
+                            } else {
+                                Screen.Login.route
+                            }
+                            
+                            AppNavHost(
+                                navController = navController,
+                                startDestination = startDestination
+                            )
                         }
-                        
-                        AppNavHost(
-                            navController = navController,
-                            startDestination = startDestination
-                        )
                     }
                 }
             }

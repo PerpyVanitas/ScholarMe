@@ -1,11 +1,24 @@
+import { createSupabaseForBearer } from "@/lib/supabase/bearer-client";
+import { getRoleName } from "@/lib/utils/roles";
 import { createAdminClient } from "@/lib/supabase/create-client";
-import { validateAdmin } from "@/lib/auth-utils";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const { isAdmin } = await validateAdmin();
-    if (!isAdmin) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return NextResponse.json({ success: false, message: "Missing token" }, { status: 401 });
+    }
+    const token = authHeader.substring(7);
+    const authSupabase = createSupabaseForBearer(token);
+    const { data: { user }, error: userError } = await authSupabase.auth.getUser(token);
+    if (userError || !user) {
+      return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
+    }
+    const { data: profile } = await authSupabase.from("profiles").select("*, roles(name)").eq("id", user.id).single();
+    if (getRoleName(profile) !== "admin") {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 403 });
+    }
 
     const supabase = await createAdminClient();
 

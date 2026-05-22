@@ -117,12 +117,14 @@ fun ProfileContent(
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
-                Text(
-                    "Level ${profile.currentLevel ?: 1} • ${GamificationUtils.getLevelTitle(profile.currentLevel ?: 1)} • ${profile.totalXp ?: 0} XP",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold
-                )
+                if (profile.role?.lowercase() != "administrator") {
+                    Text(
+                        "Level ${profile.currentLevel ?: 1} • ${GamificationUtils.getLevelTitle(profile.currentLevel ?: 1)} • ${profile.totalXp ?: 0} XP",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
                 Surface(
                     color = MaterialTheme.colorScheme.primaryContainer,
                     shape = RoundedCornerShape(100.dp),
@@ -201,6 +203,12 @@ fun ProfileContent(
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     InfoRow(icon = Icons.Default.Email, label = "Email", value = profile.email ?: "No email")
                     InfoRow(icon = Icons.Default.Phone, label = "Phone", value = profile.phone ?: "Not set")
+                    if (!profile.studentId.isNullOrBlank()) {
+                        InfoRow(icon = Icons.Default.Badge, label = "Student ID", value = profile.studentId)
+                    }
+                    if (!profile.emergencyContact.isNullOrBlank()) {
+                        InfoRow(icon = Icons.Default.ContactEmergency, label = "Emergency Contact", value = profile.emergencyContact)
+                    }
                     InfoRow(icon = Icons.Default.Info, label = "Bio", value = profile.bio ?: "No bio provided")
                 }
             }

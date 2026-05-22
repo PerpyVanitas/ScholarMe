@@ -139,7 +139,7 @@ private fun CardFrontSide(
         ) {
             // Watermark Logo
             Image(
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                painter = painterResource(id = R.drawable.honsoc_logo_white),
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxSize()
@@ -154,7 +154,7 @@ private fun CardFrontSide(
                 // Header
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Image(
-                        painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                        painter = painterResource(id = R.drawable.honsoc_logo_white),
                         contentDescription = null,
                         modifier = Modifier.size(36.dp)
                     )
@@ -293,7 +293,7 @@ private fun CardBackSide(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
-                            painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                            painter = painterResource(id = R.drawable.honsoc_logo_white),
                             contentDescription = null,
                             modifier = Modifier.size(20.dp)
                         )
