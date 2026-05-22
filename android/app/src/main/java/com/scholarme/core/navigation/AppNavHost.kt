@@ -48,6 +48,16 @@ import com.scholarme.features.messaging.ui.ActiveChatScreen
 import com.scholarme.features.messaging.ui.MessagingViewModel
 import com.scholarme.features.gamification.data.model.LeaderboardEntry
 
+/**
+ * Main navigation host configuration for the ScholarMe Android application.
+ *
+ * Defines the navigation graph, routing rules, and entry points for all top-level features
+ * including the dashboard, authentication, profile management, administration, and messaging.
+ * Uses Jetpack Navigation Compose with Hilt for ViewModel injection.
+ *
+ * @param navController The central [NavHostController] managing navigation state.
+ * @param startDestination The initial route to display. Defaults to the Dashboard screen.
+ */
 @Composable
 fun AppNavHost(
     navController: NavHostController,

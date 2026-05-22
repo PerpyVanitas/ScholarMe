@@ -6,8 +6,12 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
 /**
- * Secure token storage using EncryptedSharedPreferences.
- * Handles Bearer token storage and retrieval for API authentication.
+ * Secure token storage using [EncryptedSharedPreferences].
+ *
+ * Handles Bearer token storage and retrieval for API authentication,
+ * as well as caching basic user profile information.
+ *
+ * @param context Application context used for initializing encrypted preferences.
  */
 class TokenManager(context: Context) {
     
