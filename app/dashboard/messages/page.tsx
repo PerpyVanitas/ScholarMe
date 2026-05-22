@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { ChatInterface } from "@/features/messaging/components/chat-interface";
+import { ErrorBoundary } from "@/components/error-boundary";
 import type { Conversation } from "@/lib/types";
 
 export const metadata = {
@@ -93,11 +94,13 @@ export default async function MessagesPage() {
       
       {/* Standard direct chat interface for own messages */}
       <div className="flex-1 bg-card rounded-lg border shadow-sm overflow-hidden min-h-[500px]">
-        <ChatInterface 
-          initialConversations={formattedConversations} 
-          currentUserId={user.id} 
-          isAdmin={isAdmin}
-        />
+        <ErrorBoundary>
+          <ChatInterface 
+            initialConversations={formattedConversations} 
+            currentUserId={user.id} 
+            isAdmin={isAdmin}
+          />
+        </ErrorBoundary>
       </div>
     </div>
   );

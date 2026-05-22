@@ -18,7 +18,9 @@ interface LeaderboardEntry {
   isCurrentUser: boolean;
 }
 
-export default function LeaderboardPage() {
+import { ErrorBoundary } from "@/components/error-boundary";
+
+function LeaderboardContent() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -139,4 +141,12 @@ export default function LeaderboardPage() {
       </Card>
     </div>
   );
+}
+
+export default function LeaderboardPage() {
+  return (
+    <ErrorBoundary>
+      <LeaderboardContent />
+    </ErrorBoundary>
+  )
 }

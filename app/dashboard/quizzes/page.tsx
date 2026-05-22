@@ -26,7 +26,9 @@ interface StudySet {
   profiles?: { full_name: string; avatar_url: string | null }
 }
 
-export default function QuizzesPage() {
+import { ErrorBoundary } from "@/components/error-boundary"
+
+function QuizzesContent() {
   const [activeTab, setActiveTab] = useState("my-sets")
   const [myStudySets, setMyStudySets] = useState<StudySet[]>([])
   const [sharedStudySets, setSharedStudySets] = useState<StudySet[]>([])
@@ -391,5 +393,13 @@ Q: The sun is a star A: true"
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+export default function QuizzesPage() {
+  return (
+    <ErrorBoundary>
+      <QuizzesContent />
+    </ErrorBoundary>
   )
 }
