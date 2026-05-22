@@ -13,12 +13,19 @@ CREATE TABLE IF NOT EXISTS public.semester_configs (
 );
 
 -- Ensure only one active semester at a time
-CREATE UNIQUE INDEX semester_configs_active_idx ON public.semester_configs (is_active) WHERE is_active = true;
+CREATE UNIQUE INDEX IF NOT EXISTS semester_configs_active_idx ON public.semester_configs (is_active) WHERE is_active = true;
 
 -- Enable RLS
 ALTER TABLE public.semester_configs ENABLE ROW LEVEL SECURITY;
 
 -- Policies for Semester Configs
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Admins can manage semester configs" ON public.semester_configs;
+    DROP POLICY IF EXISTS "Anyone can view active semester" ON public.semester_configs;
+EXCEPTION
+    WHEN undefined_object THEN null;
+END $$;
+
 CREATE POLICY "Admins can manage semester configs" 
     ON public.semester_configs 
     FOR ALL 
@@ -44,6 +51,8 @@ SET search_path = public
 AS $$
 DECLARE
     active_semester record;
+    active_year_start date;
+    active_year_end date;
     result json;
     compliance_data json;
     hall_of_fame json;
@@ -60,6 +69,15 @@ BEGIN
     IF active_semester IS NULL THEN
         RAISE EXCEPTION 'No active semester configured';
     END IF;
+
+    -- Calculate the academic year based on the active semester's start date
+    -- Academic year assumed to start August 1st.
+    IF EXTRACT(MONTH FROM active_semester.start_date) >= 8 THEN
+        active_year_start := make_date(EXTRACT(YEAR FROM active_semester.start_date)::int, 8, 1);
+    ELSE
+        active_year_start := make_date((EXTRACT(YEAR FROM active_semester.start_date) - 1)::int, 8, 1);
+    END IF;
+    active_year_end := active_year_start + interval '1 year' - interval '1 day';
 
     -- A. 90-Hour Compliance (Tutors only)
     -- 90 hours = 5400 minutes
@@ -88,18 +106,51 @@ BEGIN
     ) s_agg ON t.id = s_agg.tutor_id;
 
     -- B. Hall of Fame
-    -- Most Hours Served (Semester)
-    WITH semester_stats AS (
+    -- Most Hours Served (Week, Month, Semester, Year)
+    WITH week_stats AS (
+        SELECT tutor_id, SUM(duration_minutes) as total_mins
+        FROM public.sessions
+        WHERE status = 'completed' AND scheduled_date >= date_trunc('week', CURRENT_DATE)
+        GROUP BY tutor_id
+    ),
+    month_stats AS (
+        SELECT tutor_id, SUM(duration_minutes) as total_mins
+        FROM public.sessions
+        WHERE status = 'completed' AND scheduled_date >= date_trunc('month', CURRENT_DATE)
+        GROUP BY tutor_id
+    ),
+    semester_stats AS (
         SELECT tutor_id, SUM(duration_minutes) as total_mins, COUNT(DISTINCT learner_id) as unique_students, COUNT(*) as session_count
         FROM public.sessions
         WHERE status = 'completed' AND scheduled_date >= active_semester.start_date AND scheduled_date <= active_semester.end_date
         GROUP BY tutor_id
+    ),
+    year_stats AS (
+        SELECT tutor_id, SUM(duration_minutes) as total_mins
+        FROM public.sessions
+        WHERE status = 'completed' AND scheduled_date >= active_year_start AND scheduled_date <= active_year_end
+        GROUP BY tutor_id
     )
     SELECT json_build_object(
-        'most_hours', (
+        'most_hours_week', (
+            SELECT json_build_object('tutor_id', p.id, 'full_name', p.full_name, 'value', ws.total_mins)
+            FROM week_stats ws JOIN public.profiles p ON ws.tutor_id = p.id
+            ORDER BY ws.total_mins DESC NULLS LAST LIMIT 1
+        ),
+        'most_hours_month', (
+            SELECT json_build_object('tutor_id', p.id, 'full_name', p.full_name, 'value', ms.total_mins)
+            FROM month_stats ms JOIN public.profiles p ON ms.tutor_id = p.id
+            ORDER BY ms.total_mins DESC NULLS LAST LIMIT 1
+        ),
+        'most_hours_semester', (
             SELECT json_build_object('tutor_id', p.id, 'full_name', p.full_name, 'value', ss.total_mins)
             FROM semester_stats ss JOIN public.profiles p ON ss.tutor_id = p.id
             ORDER BY ss.total_mins DESC NULLS LAST LIMIT 1
+        ),
+        'most_hours_year', (
+            SELECT json_build_object('tutor_id', p.id, 'full_name', p.full_name, 'value', ys.total_mins)
+            FROM year_stats ys JOIN public.profiles p ON ys.tutor_id = p.id
+            ORDER BY ys.total_mins DESC NULLS LAST LIMIT 1
         ),
         'best_rating', (
             SELECT json_build_object('tutor_id', p.id, 'full_name', p.full_name, 'value', t.rating)

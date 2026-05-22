@@ -15,13 +15,23 @@ import {
 import { Progress } from "@/components/ui/progress";
 import {
   Users, Calendar, ShieldPlus, Loader2,
-  Trophy, Medal, Star, DownloadCloud, FileText
+  Trophy, Medal, Star, DownloadCloud, FileText,
+  Activity, Globe, Server, GraduationCap, BookOpen, CreditCard, Timer
 } from "lucide-react";
 import { toast } from "sonner";
 import {
   XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ComposedChart, Bar, Line, Legend,
+  PieChart, Pie, Cell, BarChart
 } from "recharts";
+
+const CHART_COLORS = [
+  "oklch(0.5 0.02 255)", // primary
+  "oklch(0.6 0.1 140)", // success
+  "oklch(0.65 0.15 40)", // destructive
+  "oklch(0.7 0.15 80)", // warning
+  "oklch(0.4 0.1 200)" // accent
+];
 
 interface AdvancedStats {
   semester: { id: string; name: string; start_date: string; end_date: string } | null;
@@ -35,12 +45,29 @@ interface AdvancedStats {
     progress_percentage: number;
   }[];
   hall_of_fame: {
-    most_hours: { tutor_id: string; full_name: string; value: number } | null;
+    most_hours_week: { tutor_id: string; full_name: string; value: number } | null;
+    most_hours_month: { tutor_id: string; full_name: string; value: number } | null;
+    most_hours_semester: { tutor_id: string; full_name: string; value: number } | null;
+    most_hours_year: { tutor_id: string; full_name: string; value: number } | null;
     best_rating: { tutor_id: string; full_name: string; value: number } | null;
     most_students: { tutor_id: string; full_name: string; value: number } | null;
     most_xp: { user_id: string; full_name: string; value: number } | null;
   };
   supply_demand: { subject_name: string; supply_count: number; demand_count: number }[];
+}
+
+interface GeneralStats {
+  totalUsers: number;
+  totalTutors: number;
+  totalSessions: number;
+  completedSessions: number;
+  pendingSessions: number;
+  totalRepositories: number;
+  totalCards: number;
+  avgRating: number;
+  dailyActiveUsers: number;
+  roleBreakdown: { name: string; value: number }[];
+  sessionsByStatus: { name: string; value: number }[];
 }
 
 type PageError =
@@ -50,6 +77,7 @@ type PageError =
 
 export default function AdminAnalyticsPage() {
   const [stats, setStats] = useState<AdvancedStats | null>(null);
+  const [generalStats, setGeneralStats] = useState<GeneralStats | null>(null);
   const [pageError, setPageError] = useState<PageError | null>(null);
   const [noSemester, setNoSemester] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -67,28 +95,47 @@ export default function AdminAnalyticsPage() {
 
   const printRef = useRef<HTMLDivElement>(null);
 
+  // Hall of Fame State
+  const [hofStartDate, setHofStartDate] = useState<string>("");
+  const [hofEndDate, setHofEndDate] = useState<string>("");
+  const [hofData, setHofData] = useState<any>(null);
+  const [hofLoading, setHofLoading] = useState(false);
+
   const loadStats = async () => {
     setLoading(true);
     setPageError(null);
     setNoSemester(false);
     try {
-      const res = await fetch("/api/admin/advanced-analytics");
-      const json = await res.json();
+      const [resAdv, resGen] = await Promise.all([
+        fetch("/api/admin/advanced-analytics"),
+        fetch("/api/admin/general-analytics")
+      ]);
+      const jsonAdv = await resAdv.json();
+      const jsonGen = await resGen.json();
 
-      if (json.migrationRequired) {
-        setPageError({ type: "migration", message: json.error });
+      if (jsonAdv.migrationRequired) {
+        setPageError({ type: "migration", message: jsonAdv.error });
         return;
       }
-      if (!res.ok) {
-        setPageError({ type: "rpc", message: json.error, hint: json.hint });
+      if (!resAdv.ok) {
+        setPageError({ type: "rpc", message: jsonAdv.error, hint: jsonAdv.hint });
         return;
       }
-      if (json.noSemester) {
+      if (jsonGen.success) {
+        setGeneralStats(jsonGen.data);
+      }
+      if (jsonAdv.noSemester) {
         setNoSemester(true);
-        setStats(json.data);
+        setStats(jsonAdv.data);
         return;
       }
-      setStats(json.data);
+      setStats(jsonAdv.data);
+      
+      // Initialize Hall of Fame dates to the active semester if it exists
+      if (jsonAdv.data?.semester) {
+        setHofStartDate(jsonAdv.data.semester.start_date);
+        setHofEndDate(jsonAdv.data.semester.end_date);
+      }
     } catch (e: any) {
       setPageError({ type: "generic", message: e.message ?? "Unknown error" });
     } finally {
@@ -96,9 +143,33 @@ export default function AdminAnalyticsPage() {
     }
   };
 
+  const loadHallOfFame = async () => {
+    if (!hofStartDate || !hofEndDate) return;
+    setHofLoading(true);
+    try {
+      const res = await fetch(`/api/admin/hall-of-fame?start_date=${hofStartDate}&end_date=${hofEndDate}`);
+      const json = await res.json();
+      if (json.success) {
+        setHofData(json.data);
+      } else {
+        toast.error(json.error || "Failed to load Hall of Fame records");
+      }
+    } catch (e) {
+      toast.error("An error occurred while loading Hall of Fame records.");
+    } finally {
+      setHofLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadStats();
   }, []);
+
+  useEffect(() => {
+    if (hofStartDate && hofEndDate) {
+      loadHallOfFame();
+    }
+  }, [hofStartDate, hofEndDate]);
 
   async function handleCreateAdmin(e: React.FormEvent) {
     e.preventDefault();
@@ -282,12 +353,102 @@ export default function AdminAnalyticsPage() {
         <p className="text-sm mt-1 text-gray-500">Generated on {new Date().toLocaleDateString()}</p>
       </div>
 
-      <Tabs defaultValue="compliance" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 print:hidden mb-4">
+      <Tabs defaultValue="general" className="w-full">
+        <TabsList className="grid w-full grid-cols-4 print:hidden mb-4">
+          <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="compliance">Scholar Compliance</TabsTrigger>
           <TabsTrigger value="records">Hall of Fame</TabsTrigger>
           <TabsTrigger value="system">System & Demand</TabsTrigger>
         </TabsList>
+        
+        <TabsContent value="general" className="flex flex-col gap-6 print:block">
+          {generalStats && (
+            <>
+              {/* Stat cards */}
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-2 mb-4">
+                <StatCard icon={<Users className="h-5 w-5 text-primary" />} label="Total Users" value={generalStats.totalUsers} />
+                <StatCard icon={<Activity className="h-5 w-5 text-success" />} label="Daily Active Users" value={generalStats.dailyActiveUsers} />
+              </div>
+
+              {/* Primary Stat cards */}
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <StatCard icon={<GraduationCap className="h-5 w-5 text-success" />} label="Active Tutors" value={generalStats.totalTutors} />
+                <StatCard icon={<Calendar className="h-5 w-5 text-primary" />} label="Total Sessions" value={generalStats.totalSessions} />
+                <StatCard icon={<BookOpen className="h-5 w-5 text-primary" />} label="Repositories" value={generalStats.totalRepositories} />
+                <StatCard icon={<CreditCard className="h-5 w-5 text-muted-foreground" />} label="Cards Issued" value={generalStats.totalCards} />
+              </div>
+
+              {/* Charts */}
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Role Distribution</CardTitle>
+                    <CardDescription>Breakdown of users by role</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {generalStats.roleBreakdown.length === 0 ? (
+                      <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">
+                        No role data found.
+                      </div>
+                    ) : (
+                      <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={generalStats.roleBreakdown}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={80}
+                              paddingAngle={5}
+                              dataKey="value"
+                            >
+                              {generalStats.roleBreakdown.map((_, i) => (
+                                <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                            <Legend />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Session Status Overview</CardTitle>
+                    <CardDescription>Breakdown of session statuses</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {generalStats.sessionsByStatus.length === 0 ? (
+                      <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">
+                        No session data found.
+                      </div>
+                    ) : (
+                      <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={generalStats.sessionsByStatus}>
+                            <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+                            <XAxis dataKey="name" className="text-xs" tick={{ fill: "oklch(0.5 0.02 255)" }} />
+                            <YAxis allowDecimals={false} className="text-xs" tick={{ fill: "oklch(0.5 0.02 255)" }} />
+                            <Tooltip />
+                            <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                              {generalStats.sessionsByStatus.map((_, i) => (
+                                <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </>
+          )}
+        </TabsContent>
         
         <TabsContent value="compliance" className="flex flex-col gap-6 print:block">
           {noSemester && (
@@ -361,16 +522,74 @@ export default function AdminAnalyticsPage() {
         </TabsContent>
 
         <TabsContent value="records" className="print:block">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 bg-muted/30 p-4 rounded-lg border">
+            <div>
+              <h3 className="font-semibold text-lg">Timeframe Aggregation</h3>
+              <p className="text-sm text-muted-foreground">Select a date range to calculate the Best Week, Best Month, and Overall Most Hours.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="grid gap-1">
+                <Label htmlFor="start_date" className="text-xs">Start Date</Label>
+                <Input type="date" id="start_date" value={hofStartDate} onChange={(e) => setHofStartDate(e.target.value)} className="w-[140px]" />
+              </div>
+              <span className="text-muted-foreground mt-4">-</span>
+              <div className="grid gap-1">
+                <Label htmlFor="end_date" className="text-xs">End Date</Label>
+                <Input type="date" id="end_date" value={hofEndDate} onChange={(e) => setHofEndDate(e.target.value)} className="w-[140px]" />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <Card className="border-yellow-500/30 bg-yellow-500/5 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-4 opacity-10"><Trophy className="w-32 h-32" /></div>
-              <CardHeader><CardTitle className="text-yellow-600 dark:text-yellow-500">Most Hours Served</CardTitle></CardHeader>
+              <div className="absolute top-0 right-0 p-4 opacity-10"><Timer className="w-32 h-32" /></div>
+              <CardHeader className="pb-2"><CardTitle className="text-yellow-600 dark:text-yellow-500 text-sm">Best Week</CardTitle></CardHeader>
               <CardContent>
-                <p className="text-3xl font-black">{stats.hall_of_fame.most_hours?.full_name || "N/A"}</p>
-                <p className="text-lg text-muted-foreground">{(stats.hall_of_fame.most_hours?.value ? stats.hall_of_fame.most_hours.value / 60 : 0).toFixed(1)} Hours</p>
+                {hofLoading ? (
+                  <Loader2 className="h-6 w-6 animate-spin text-yellow-600" />
+                ) : (
+                  <>
+                    <p className="text-2xl font-black">{hofData?.best_week?.full_name || "N/A"}</p>
+                    <p className="text-sm text-muted-foreground">{(hofData?.best_week?.value ? hofData.best_week.value / 60 : 0).toFixed(1)} Hours</p>
+                    {hofData?.best_week?.period_label && <p className="text-xs text-yellow-600 dark:text-yellow-500 mt-1 font-medium">{hofData.best_week.period_label}</p>}
+                  </>
+                )}
               </CardContent>
             </Card>
 
+            <Card className="border-yellow-500/30 bg-yellow-500/5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-10"><Timer className="w-32 h-32" /></div>
+              <CardHeader className="pb-2"><CardTitle className="text-yellow-600 dark:text-yellow-500 text-sm">Best Month</CardTitle></CardHeader>
+              <CardContent>
+                {hofLoading ? (
+                  <Loader2 className="h-6 w-6 animate-spin text-yellow-600" />
+                ) : (
+                  <>
+                    <p className="text-2xl font-black">{hofData?.best_month?.full_name || "N/A"}</p>
+                    <p className="text-sm text-muted-foreground">{(hofData?.best_month?.value ? hofData.best_month.value / 60 : 0).toFixed(1)} Hours</p>
+                    {hofData?.best_month?.period_label && <p className="text-xs text-yellow-600 dark:text-yellow-500 mt-1 font-medium">{hofData.best_month.period_label}</p>}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="border-yellow-500/30 bg-yellow-500/5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-10"><Trophy className="w-32 h-32" /></div>
+              <CardHeader className="pb-2"><CardTitle className="text-yellow-600 dark:text-yellow-500 text-sm">Most Hours (Overall Period)</CardTitle></CardHeader>
+              <CardContent>
+                {hofLoading ? (
+                  <Loader2 className="h-6 w-6 animate-spin text-yellow-600" />
+                ) : (
+                  <>
+                    <p className="text-2xl font-black">{hofData?.most_hours_overall?.full_name || "N/A"}</p>
+                    <p className="text-sm text-muted-foreground">{(hofData?.most_hours_overall?.value ? hofData.most_hours_overall.value / 60 : 0).toFixed(1)} Hours</p>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <Card className="border-blue-500/30 bg-blue-500/5 relative overflow-hidden">
               <div className="absolute top-0 right-0 p-4 opacity-10"><Star className="w-32 h-32" /></div>
               <CardHeader><CardTitle className="text-blue-600 dark:text-blue-400">Highest Rated Tutor</CardTitle></CardHeader>
@@ -431,5 +650,21 @@ export default function AdminAnalyticsPage() {
         <p>Confidential & Proprietary - ScholarMe Organization</p>
       </div>
     </div>
+  );
+}
+
+function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: number | string }) {
+  return (
+    <Card className="border-border/60">
+      <CardContent className="flex items-center gap-4 p-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+          {icon}
+        </div>
+        <div className="flex flex-col">
+          <span className="text-2xl font-bold text-foreground">{value}</span>
+          <span className="text-xs text-muted-foreground">{label}</span>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

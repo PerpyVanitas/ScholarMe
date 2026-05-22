@@ -41,6 +41,7 @@ export interface Profile {
   esas_scholar?: boolean
   academic_year_joined?: string | null
   unique_id_number?: string | null
+  is_card_issued?: boolean | null
   created_at: string
   roles?: Array<{ id: string; name: string }>
   hs_designations?: HsDesignation[]

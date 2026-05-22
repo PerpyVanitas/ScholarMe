@@ -54,11 +54,11 @@ export async function updateProfile(data: UpdateProfileData) {
 
   if (error) {
     console.error("Profile update error:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: error.message, details: error.details, hint: error.hint };
   }
 
   if (!updated) {
-    return { success: false, error: "Profile row could not be updated" };
+    return { success: false, error: "Profile row could not be updated (RLS or no rows matched)" };
   }
 
   revalidatePath("/dashboard/profile");

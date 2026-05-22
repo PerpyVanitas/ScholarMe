@@ -10,7 +10,7 @@ export async function GET() {
     }
 
     const { data, error } = await supabase
-      .from("timesheet_periods")
+      .from("semester_configs")
       .select("*")
       .order("start_date", { ascending: false });
 
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
 
     const adminClient = await createAdminClient();
     const { data, error } = await adminClient
-      .from("timesheet_periods")
+      .from("semester_configs")
       .insert({
         name,
         start_date: new Date(start_date).toISOString(),

@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.Alignment
@@ -22,7 +23,7 @@ fun AvailabilityManagerScreen(
     viewModel: AvailabilityViewModel = hiltViewModel(),
     onBackClick: () -> Unit
 ) {
-    val availabilityResult by viewModel.availability.collectAsState()
+    val availabilityResult by viewModel.availability.collectAsStateWithLifecycle()
     var localSlots by remember { mutableStateOf<List<TimeSlotDto>>(emptyList()) }
     var isAvailable by remember { mutableStateOf(true) }
 

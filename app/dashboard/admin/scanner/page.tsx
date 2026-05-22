@@ -30,8 +30,8 @@ export default function AdminScannerPage() {
     setTimeout(() => {
       const scanner = new Html5QrcodeScanner(
         "reader",
-        { 
-          fps: 10, 
+        {
+          fps: 10,
           qrbox: { width: 250, height: 250 },
           aspectRatio: 1.0
         },
@@ -50,14 +50,14 @@ export default function AdminScannerPage() {
       if (parts.length >= 3) {
         const userId = parts[1];
         const userName = parts[2];
-        
+
         setScanResult({ id: userId, name: userName });
-        
+
         if (scannerRef.current) {
           scannerRef.current.clear().catch(console.error);
           setIsScanning(false);
         }
-        
+
         toast.success(`Scanned: ${userName}`);
       }
     } else {

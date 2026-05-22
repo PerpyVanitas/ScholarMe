@@ -106,3 +106,6 @@ fun SessionCard(title: String, status: String, date: String) {
         }
     }
 }
+        }
+    }
+}
