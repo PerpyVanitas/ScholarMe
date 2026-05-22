@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseForBearer } from "@/lib/supabase/bearer-client";
 import { calculateLevel } from '@/lib/gamification-utils';
+import { XP_AWARDS } from '@/lib/constants';
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,11 +18,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { xpAmount, reason } = await request.json();
+    const { action, reason } = await request.json();
 
-    if (!xpAmount || typeof xpAmount !== 'number') {
-      return NextResponse.json({ success: false, error: 'Invalid XP amount' }, { status: 400 });
+    if (!action || !XP_AWARDS[action]) {
+      return NextResponse.json({ success: false, error: 'Invalid or missing action type' }, { status: 400 });
     }
+
+    const xpAmount = XP_AWARDS[action];
 
     // Get current XP
     const { data: profile, error: profileError } = await supabase
