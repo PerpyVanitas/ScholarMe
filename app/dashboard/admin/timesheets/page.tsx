@@ -71,106 +71,15 @@ export default function AdminTimesheetsPage() {
   const { data: periods, mutate: mutatePeriods, isLoading: periodsLoading } = useSWR<any[]>("/api/timesheets/periods", fetcher);
   const { data: entries, mutate: mutateEntries, isLoading } = useSWR<Timesheet[]>("/api/admin/timesheets", fetcher, { refreshInterval: 30000 });
 
-  const [search, setSearch] = useState("");
-  const [newPeriodName, setNewPeriodName] = useState("");
-  const [newPeriodStart, setNewPeriodStart] = useState("");
-  const [newPeriodEnd, setNewPeriodEnd] = useState("");
-  const [creatingPeriod, setCreatingPeriod] = useState(false);
-  const [togglingId, setTogglingId] = useState<string | null>(null);
-
   // Modal Details View
   const [detailPeriod, setDetailPeriod] = useState<any | null>(null);
+  const [search, setSearch] = useState("");
   const [modalSearch, setModalSearch] = useState("");
 
-  const { data: modalEntries, isLoading: modalEntriesLoading } = useSWR<Timesheet[]>(
+  const { data: modalEntries, isLoading: modalEntriesLoading } = useSWR<Timesheet[]>( 
     detailPeriod ? `/api/admin/timesheets?start_date=${detailPeriod.start_date}&end_date=${detailPeriod.end_date}` : null,
     fetcher
   );
-
-  async function handleCreatePeriod(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newPeriodName || !newPeriodStart || !newPeriodEnd) {
-      toast.error("Please fill in all period details.");
-      return;
-    }
-
-    setCreatingPeriod(true);
-    try {
-      const res = await fetch("/api/timesheets/periods", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: newPeriodName,
-          start_date: new Date(newPeriodStart).toISOString(),
-          end_date: new Date(newPeriodEnd).toISOString(),
-        }),
-      });
-
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "Failed to create period.");
-      }
-
-      toast.success("Semester collection period created!");
-      setNewPeriodName("");
-      setNewPeriodStart("");
-      setNewPeriodEnd("");
-      mutatePeriods();
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setCreatingPeriod(false);
-    }
-  }
-
-  async function handleToggleActivate(id: string, currentlyActive: boolean) {
-    setTogglingId(id);
-    try {
-      const res = await fetch(`/api/timesheets/periods/${id}/activate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          is_active: !currentlyActive,
-        }),
-      });
-
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "Failed to update period status.");
-      }
-
-      toast.success(!currentlyActive ? "Semester period activated!" : "Semester period deactivated!");
-      mutateConfig();
-      mutatePeriods();
-      mutateEntries();
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setTogglingId(null);
-    }
-  }
-
-  async function handleDeletePeriod(id: string) {
-    if (!confirm("Are you sure you want to delete this period? This action cannot be undone.")) return;
-
-    try {
-      const res = await fetch(`/api/timesheets/periods/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "Failed to delete period.");
-      }
-
-      toast.success("Semester period deleted.");
-      mutateConfig();
-      mutatePeriods();
-      mutateEntries();
-    } catch (err: any) {
-      toast.error(err.message);
-    }
-  }
 
   // Aggregate current period data per tutor
   const safeEntries = Array.isArray(entries) ? entries : [];
@@ -265,79 +174,16 @@ export default function AdminTimesheetsPage() {
           )}
         </div>
       </div>
-
-      {/* Collection Period Management Form */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Create Semester Period Form */}
-        <Card className="border-border/60 overflow-hidden relative lg:col-span-1">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-40 pointer-events-none" />
-          <CardHeader className="relative z-10">
-            <CardTitle className="text-base flex items-center gap-2">
-              <CalendarDays className="h-5 w-5 text-primary" />
-              Add Semester Period
-            </CardTitle>
-            <CardDescription>
-              Define a new academic period to track and collect timesheets.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="relative z-10">
-            <form onSubmit={handleCreatePeriod} className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="periodName" className="text-xs font-semibold text-muted-foreground">Semester Name</label>
-                <Input
-                  id="periodName"
-                  placeholder="e.g. Fall 2025 Semester"
-                  value={newPeriodName}
-                  onChange={(e) => setNewPeriodName(e.target.value)}
-                  disabled={creatingPeriod}
-                  className="bg-background"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="periodStart" className="text-xs font-semibold text-muted-foreground">Start Date</label>
-                <Input
-                  id="periodStart"
-                  type="date"
-                  value={newPeriodStart}
-                  onChange={(e) => setNewPeriodStart(e.target.value)}
-                  disabled={creatingPeriod}
-                  className="bg-background"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="periodEnd" className="text-xs font-semibold text-muted-foreground">End Date</label>
-                <Input
-                  id="periodEnd"
-                  type="date"
-                  value={newPeriodEnd}
-                  onChange={(e) => setNewPeriodEnd(e.target.value)}
-                  disabled={creatingPeriod}
-                  className="bg-background"
-                />
-              </div>
-              <Button type="submit" disabled={creatingPeriod} className="w-full gap-2">
-                {creatingPeriod ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  "Create Period"
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
+      <div className="grid grid-cols-1 gap-6">
         {/* Collection History List */}
-        <Card className="border-border/60 lg:col-span-2">
+        <Card className="border-border/60">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Timer className="h-5 w-5 text-primary" />
               Collection History
             </CardTitle>
             <CardDescription>
-              Toggle semester activity or inspect historical logs.
+              Inspect historical logs. Semester activity configurations are managed in the <strong className="text-foreground">Analytics</strong> tab.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -373,27 +219,6 @@ export default function AdminTimesheetsPage() {
                         <td className="py-3 text-right">
                           <div className="flex justify-end gap-2">
                             <Button
-                              onClick={() => handleToggleActivate(p.id, p.is_active)}
-                              variant="outline"
-                              size="sm"
-                              className="h-8 px-2.5 gap-1.5"
-                              disabled={togglingId === p.id}
-                            >
-                              {togglingId === p.id ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                              ) : p.is_active ? (
-                                <>
-                                  <Square className="h-3 w-3 fill-current" />
-                                  Deactivate
-                                </>
-                              ) : (
-                                <>
-                                  <Play className="h-3 w-3 fill-current" />
-                                  Activate
-                                </>
-                              )}
-                            </Button>
-                            <Button
                               onClick={() => setDetailPeriod(p)}
                               variant="outline"
                               size="sm"
@@ -401,14 +226,6 @@ export default function AdminTimesheetsPage() {
                             >
                               <Eye className="h-3.5 w-3.5" />
                               Inspect
-                            </Button>
-                            <Button
-                              onClick={() => handleDeletePeriod(p.id)}
-                              variant="outline"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-destructive border-destructive/20 hover:bg-destructive/10"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </div>
                         </td>

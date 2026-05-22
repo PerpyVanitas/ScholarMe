@@ -31,7 +31,7 @@ export async function DELETE(
 
     const adminClient = await createAdminClient();
     const { error } = await adminClient
-      .from("timesheet_periods")
+      .from("semester_configs")
       .delete()
       .eq("id", id);
 

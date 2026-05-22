@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -14,6 +15,11 @@ import androidx.compose.animation.core.tween
 import androidx.navigation.navArgument
 import com.scholarme.core.util.Result
 import com.scholarme.features.dashboard.domain.model.Session
+import com.scholarme.features.admin.data.model.AdminAnalytics
+import com.scholarme.features.admin.data.model.AdminTimesheet
+import com.scholarme.features.admin.data.model.AuditLogEntry
+import com.scholarme.features.auth.data.model.AuthCard
+import com.scholarme.features.profile.data.model.UserProfile
 import com.scholarme.features.admin.ui.*
 import com.scholarme.features.dashboard.ui.*
 import com.scholarme.features.profile.ui.*
@@ -66,10 +72,10 @@ fun AppNavHost(
         // Dashboard
         composable(Screen.Dashboard.route) {
             val viewModel: DashboardViewModel = hiltViewModel()
-            val userName by viewModel.userName.collectAsState()
-            val userRole by viewModel.userRole.collectAsState()
-            val statsState by viewModel.stats.collectAsState()
-            val sessionsState by viewModel.sessions.collectAsState()
+            val userName by viewModel.userName.collectAsStateWithLifecycle()
+            val userRole by viewModel.userRole.collectAsStateWithLifecycle()
+            val statsState by viewModel.stats.collectAsStateWithLifecycle()
+            val sessionsState by viewModel.sessions.collectAsStateWithLifecycle()
             
             DashboardScreen(
                 userName = userName,
@@ -88,7 +94,7 @@ fun AppNavHost(
 
         composable(Screen.Profile.route) {
             val viewModel: ProfileViewModel = hiltViewModel()
-            val profileState by viewModel.profileState.collectAsState()
+            val profileState by viewModel.profileState.collectAsStateWithLifecycle()
             
             ProfileScreen(
                 profileState = profileState,
@@ -107,9 +113,9 @@ fun AppNavHost(
         composable(Screen.UpdateProfile.route) {
             val viewModel: UpdateProfileViewModel = hiltViewModel()
             val profileViewModel: ProfileViewModel = hiltViewModel()
-            val profileState by profileViewModel.profileState.collectAsState()
-            val profile = (profileState as? Result.Success)?.data
-            val updateResult by viewModel.updateResult.collectAsState()
+            val profileState by profileViewModel.profileState.collectAsStateWithLifecycle()
+            val profile = (profileState as? Result.Success<UserProfile>)?.data
+            val updateResult by viewModel.updateResult.collectAsStateWithLifecycle()
 
             UpdateProfileScreen(
                 currentAvatarUrl = profile?.avatarUrl,
@@ -132,7 +138,7 @@ fun AppNavHost(
 
         composable(Screen.ChangePassword.route) {
             val viewModel: ChangePasswordViewModel = hiltViewModel()
-            val changeResult by viewModel.changeResult.collectAsState()
+            val changeResult by viewModel.changeResult.collectAsStateWithLifecycle()
 
             ChangePasswordScreen(
                 changeResult = changeResult,
@@ -144,7 +150,7 @@ fun AppNavHost(
         // Tutors Flow
         composable(Screen.TutorsDirectory.route) {
             val viewModel: TutorViewModel = hiltViewModel()
-            val state by viewModel.uiState.collectAsState()
+            val state by viewModel.uiState.collectAsStateWithLifecycle()
             TutorsScreen(
                 state = state,
                 onSearchQueryChanged = { viewModel.onSearchQueryChanged(it) },
@@ -195,7 +201,7 @@ fun AppNavHost(
         // Resources Flow
         composable(Screen.ResourceDirectory.route) {
             val dashboardViewModel: DashboardViewModel = hiltViewModel()
-            val userRole by dashboardViewModel.userRole.collectAsState()
+            val userRole by dashboardViewModel.userRole.collectAsStateWithLifecycle()
             
             ResourceDirectoryScreen(
                 userRole = userRole,
@@ -237,7 +243,7 @@ fun AppNavHost(
         ) { backStackEntry ->
             val quizId = backStackEntry.arguments?.getString("quizId") ?: return@composable
             val viewModel: QuizViewModel = hiltViewModel()
-            val studySet by viewModel.currentStudySet.collectAsState()
+            val studySet by viewModel.currentStudySet.collectAsStateWithLifecycle()
             
             LaunchedEffect(quizId) {
                 viewModel.fetchStudySet(quizId)
@@ -287,28 +293,28 @@ fun AppNavHost(
         
         composable(Screen.AdminAnalytics.route) {
             val viewModel: AdminViewModel = hiltViewModel()
-            val analytics by viewModel.analytics.collectAsState()
+            val analytics by viewModel.analytics.collectAsStateWithLifecycle()
             
             LaunchedEffect(Unit) {
                 viewModel.fetchAnalytics()
             }
             
             AnalyticsScreen(
-                analytics = (analytics as? Result.Success)?.data,
+                analytics = (analytics as? Result.Success<AdminAnalytics>)?.data,
                 onBackClick = { navController.popBackStack() }
             )
         }
 
         composable(Screen.AdminTimesheets.route) {
             val viewModel: AdminViewModel = hiltViewModel()
-            val timesheetsState by viewModel.timesheets.collectAsState()
+            val timesheetsState by viewModel.timesheets.collectAsStateWithLifecycle()
             
             LaunchedEffect(Unit) {
                 viewModel.fetchTimesheets()
             }
             
             AdminTimesheetScreen(
-                timesheets = (timesheetsState as? Result.Success)?.data ?: emptyList(),
+                timesheets = (timesheetsState as? Result.Success<List<AdminTimesheet>>)?.data ?: emptyList(),
                 isLoading = timesheetsState is Result.Loading,
                 onApprove = { viewModel.approveTimesheet(it) },
                 onReject = { viewModel.rejectTimesheet(it) },
@@ -318,14 +324,14 @@ fun AppNavHost(
 
         composable(Screen.AdminCards.route) {
             val viewModel: AdminViewModel = hiltViewModel()
-            val cardsState by viewModel.cards.collectAsState()
+            val cardsState by viewModel.cards.collectAsStateWithLifecycle()
             
             LaunchedEffect(Unit) {
                 viewModel.fetchCards()
             }
             
             CardManagementScreen(
-                cards = (cardsState as? Result.Success)?.data ?: emptyList(),
+                cards = (cardsState as? Result.Success<List<AuthCard>>)?.data ?: emptyList(),
                 onIssueCard = { uid, cid, pin -> viewModel.issueCard(uid, cid, pin) },
                 onRevokeCard = { viewModel.revokeCard(it) },
                 onBackClick = { navController.popBackStack() }
@@ -365,7 +371,7 @@ fun AppNavHost(
             val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
             val userName = backStackEntry.arguments?.getString("userName") ?: "User"
             val viewModel: AdminViewModel = hiltViewModel()
-            val logsState by viewModel.auditLogs.collectAsState()
+            val logsState by viewModel.auditLogs.collectAsStateWithLifecycle()
             
             LaunchedEffect(userId) {
                 viewModel.fetchAuditLogs(userId)
@@ -373,7 +379,7 @@ fun AppNavHost(
             
             UserAuditScreen(
                 userName = userName,
-                logs = (logsState as? Result.Success)?.data ?: emptyList(),
+                logs = (logsState as? Result.Success<List<AuditLogEntry>>)?.data ?: emptyList(),
                 onBackClick = { navController.popBackStack() }
             )
         }
@@ -381,7 +387,7 @@ fun AppNavHost(
         // Engagement Flow
         composable(Screen.Notifications.route) {
             val viewModel: NotificationViewModel = hiltViewModel()
-            val state by viewModel.uiState.collectAsState()
+            val state by viewModel.uiState.collectAsStateWithLifecycle()
             NotificationsScreen(
                 state = state,
                 onBackClick = { navController.popBackStack() }
@@ -390,7 +396,7 @@ fun AppNavHost(
         
         composable(Screen.Voting.route) {
             val viewModel: VotingViewModel = hiltViewModel()
-            val state by viewModel.uiState.collectAsState()
+            val state by viewModel.uiState.collectAsStateWithLifecycle()
             
             VotingScreen(
                 state = state,
@@ -401,9 +407,9 @@ fun AppNavHost(
         
         composable(Screen.Leaderboard.route) {
             val viewModel: LeaderboardViewModel = hiltViewModel()
-            val state by viewModel.uiState.collectAsState()
+            val state by viewModel.uiState.collectAsStateWithLifecycle()
             LeaderboardScreen(
-                leaderboard = (state as? Result.Success)?.data ?: emptyList(),
+                leaderboard = (state as? Result.Success<List<LeaderboardEntry>>)?.data ?: emptyList(),
                 currentUserId = "", // Can be retrieved from TokenManager if needed
                 onBackClick = { navController.popBackStack() }
             )
@@ -412,7 +418,7 @@ fun AppNavHost(
         // Messaging Flow
         composable(Screen.MessagesList.route) {
             val viewModel: MessagingViewModel = hiltViewModel()
-            val state by viewModel.uiState.collectAsState()
+            val state by viewModel.uiState.collectAsStateWithLifecycle()
             MessagesListScreen(
                 state = state,
                 onNavigateToChat = { conversationId ->
@@ -428,7 +434,7 @@ fun AppNavHost(
         ) { backStackEntry ->
             val conversationId = backStackEntry.arguments?.getString("conversationId") ?: return@composable
             val viewModel: MessagingViewModel = hiltViewModel()
-            val state by viewModel.chatState.collectAsState()
+            val state by viewModel.chatState.collectAsStateWithLifecycle()
             
             LaunchedEffect(conversationId) {
                 viewModel.loadMessages(conversationId)

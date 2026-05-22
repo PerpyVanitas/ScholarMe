@@ -42,6 +42,7 @@
     "node_modules",
     "mobile",
     "android",
-    "backend"
+    "backend",
+    "test_update.ts"
   ]
 }

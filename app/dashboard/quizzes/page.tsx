@@ -52,12 +52,12 @@ export default function QuizzesPage() {
         fetch("/api/quizzes/my-sets"),
         fetch("/api/quizzes/shared")
       ])
-      
+
       if (myRes.ok) {
         const myData = await myRes.json()
         setMyStudySets(myData.data || [])
       }
-      
+
       if (sharedRes.ok) {
         const sharedData = await sharedRes.json()
         setSharedStudySets(sharedData.data || [])
@@ -72,7 +72,7 @@ export default function QuizzesPage() {
 
   const handleCreateQuiz = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!formData.title || !formData.content) {
       toast.error("Please fill in title and content")
       return
@@ -133,11 +133,11 @@ export default function QuizzesPage() {
 
   const handleDeleteQuiz = async (id: string) => {
     if (!confirm("Are you sure you want to delete this study set?")) return
-    
+
     try {
       const res = await fetch(`/api/quizzes/${id}`, { method: "DELETE" })
       if (!res.ok) throw new Error("Failed to delete")
-      
+
       toast.success("Study set deleted")
       await loadStudySets()
     } catch (error) {
@@ -345,8 +345,8 @@ export default function QuizzesPage() {
               <div className="space-y-2">
                 <Label>Visibility</Label>
                 <div className="flex items-center gap-2 pt-2">
-                  <Switch 
-                    checked={formData.is_public} 
+                  <Switch
+                    checked={formData.is_public}
                     onCheckedChange={(checked) => setFormData({ ...formData, is_public: checked })}
                     disabled={creating}
                   />

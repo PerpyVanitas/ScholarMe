@@ -36,7 +36,7 @@ export async function POST(
     if (is_active) {
       // First, deactivate all other periods
       const { error: deactivateError } = await adminClient
-        .from("timesheet_periods")
+        .from("semester_configs")
         .update({ is_active: false })
         .neq("id", id);
 
@@ -46,7 +46,7 @@ export async function POST(
 
       // Then, activate the target period
       const { data, error } = await adminClient
-        .from("timesheet_periods")
+        .from("semester_configs")
         .update({ is_active: true })
         .eq("id", id)
         .select()
@@ -60,7 +60,7 @@ export async function POST(
     } else {
       // Deactivate the target period
       const { data, error } = await adminClient
-        .from("timesheet_periods")
+        .from("semester_configs")
         .update({ is_active: false })
         .eq("id", id)
         .select()

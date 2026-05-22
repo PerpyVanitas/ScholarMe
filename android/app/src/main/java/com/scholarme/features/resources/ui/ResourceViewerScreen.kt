@@ -10,12 +10,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.scholarme.core.util.Result
+import com.scholarme.features.resources.data.model.ResourceDto
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,7 +31,7 @@ fun ResourceViewerScreen(
         viewModel.loadFiles(repositoryId)
     }
 
-    val filesResult by viewModel.files.collectAsState()
+    val filesResult by viewModel.files.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -64,8 +66,8 @@ fun ResourceViewerScreen(
                     Text(result.message, color = MaterialTheme.colorScheme.error)
                 }
             }
-            is Result.Success -> {
-                val files = result.data
+            is Result.Success<*> -> {
+                val files = result.data as? List<ResourceDto> ?: emptyList()
                 if (files.isEmpty()) {
                     Box(
                         modifier = Modifier

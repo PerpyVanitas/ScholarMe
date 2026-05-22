@@ -92,6 +92,8 @@ export default function SignUpPage() {
     date_of_birth: "",
     password: "",
     confirmPassword: "",
+    academic_year_joined: "2024-2025",
+    esas_scholar: false,
     terms_accepted: false,
   });
   const [passwordMatch, setPasswordMatch] = useState(true);
@@ -141,6 +143,10 @@ export default function SignUpPage() {
     fd.set("phone_number", formData.phone_number);
     fd.set("date_of_birth", formData.date_of_birth);
     fd.set("role", selectedRole);
+    fd.set("academic_year_joined", formData.academic_year_joined);
+    if (selectedRole === "tutor") {
+      fd.set("esas_scholar", formData.esas_scholar.toString());
+    }
 
     const result = await signUp(fd);
     if (result?.error) {
@@ -401,6 +407,39 @@ export default function SignUpPage() {
                 <p className="text-xs text-destructive">{fieldErrors.confirmPassword || "Passwords do not match."}</p>
               )}
             </div>
+
+            {/* Academic Year */}
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="academic_year_joined">Academic Year Joined <span className="text-destructive">*</span></Label>
+              <select
+                id="academic_year_joined"
+                required
+                value={formData.academic_year_joined}
+                onChange={(e) => setFormData({ ...formData, academic_year_joined: e.target.value })}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="2022-2023">2022-2023</option>
+                <option value="2023-2024">2023-2024</option>
+                <option value="2024-2025">2024-2025</option>
+                <option value="2025-2026">2025-2026</option>
+              </select>
+            </div>
+
+            {/* ESAS Scholar (Tutor only) */}
+            {selectedRole === "tutor" && (
+              <div className="flex items-center gap-2.5 bg-muted/50 p-3 rounded-lg border border-border/50">
+                <input
+                  type="checkbox"
+                  id="esas_scholar"
+                  checked={formData.esas_scholar}
+                  onChange={(e) => setFormData({ ...formData, esas_scholar: e.target.checked })}
+                  className="h-4 w-4 rounded border-input text-primary focus:ring-primary bg-background accent-primary"
+                />
+                <Label htmlFor="esas_scholar" className="text-sm font-medium cursor-pointer">
+                  I am an ESAS Scholar
+                </Label>
+              </div>
+            )}
 
             {/* Terms */}
             <div className="flex items-start gap-2.5">

@@ -307,45 +307,16 @@ function AdminUsersContent() {
   // QrIdCard / Card Management States
   const [idCardOpen, setIdCardOpen] = useState(false);
   const [idCardUser, setIdCardUser] = useState<Profile | null>(null);
-  const [cardDetails, setCardDetails] = useState<any>(null);
-  const [loadingCard, setLoadingCard] = useState(false);
-  const [pinInput, setPinInput] = useState("");
   const [updatingCard, setUpdatingCard] = useState(false);
-
-  async function fetchCardDetails(userId: string) {
-    setLoadingCard(true);
-    setCardDetails(null);
-    setPinInput("");
-    try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("auth_cards")
-        .select("*")
-        .eq("user_id", userId)
-        .maybeSingle();
-      if (data) {
-        setCardDetails(data);
-        setPinInput(data.pin || "");
-      }
-    } catch (err) {
-      console.error("Error fetching card", err);
-    } finally {
-      setLoadingCard(false);
-    }
-  }
 
   const openPrintId = (profile: Profile) => {
     setIdCardUser(profile);
     setIdCardOpen(true);
-    fetchCardDetails(profile.id);
   };
 
-  async function handleIssueCard() {
+  async function handleToggleStatus() {
     if (!idCardUser) return;
-    if (!idCardUser.unique_id_number) {
-      toast.error("User does not have a unique ID number generated yet.");
-      return;
-    }
+    const newStatus = !idCardUser.is_card_issued;
     setUpdatingCard(true);
     try {
       const res = await fetch("/api/admin/cards", {
@@ -353,42 +324,13 @@ function AdminUsersContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_id: idCardUser.id,
-          card_id: idCardUser.unique_id_number,
-          pin: pinInput,
+          is_card_issued: newStatus,
         }),
       });
       if (res.ok) {
-        const data = await res.json();
-        setCardDetails(data);
-        toast.success("Card issued successfully!");
-      } else {
-        const data = await res.json();
-        toast.error(data.error || "Failed to issue card");
-      }
-    } catch (err) {
-      toast.error("Failed to issue card");
-    } finally {
-      setUpdatingCard(false);
-    }
-  }
-
-  async function handleToggleStatus() {
-    if (!cardDetails) return;
-    const newStatus = cardDetails.status === "active" ? "revoked" : "active";
-    setUpdatingCard(true);
-    try {
-      const res = await fetch("/api/admin/cards", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: cardDetails.id,
-          status: newStatus,
-        }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setCardDetails(data);
-        toast.success(`Card ${newStatus} successfully!`);
+        setIdCardUser({ ...idCardUser, is_card_issued: newStatus });
+        setProfiles((prev) => prev.map(p => p.id === idCardUser.id ? { ...p, is_card_issued: newStatus } : p));
+        toast.success(`Card marked as ${newStatus ? 'Issued' : 'Not Issued'} successfully!`);
       } else {
         const data = await res.json();
         toast.error(data.error || "Failed to update card status");
@@ -749,7 +691,6 @@ function AdminUsersContent() {
                 profile={idCardUser}
                 role={Array.isArray(idCardUser.roles) && idCardUser.roles.length > 0 ? idCardUser.roles[0].name : "learner"}
                 showCompactPreview={false}
-                cardPin={cardDetails?.pin}
               />
             )}
           </div>
@@ -757,26 +698,19 @@ function AdminUsersContent() {
           {/* Vertical divider on desktop */}
           <div className="hidden md:block w-px bg-zinc-800 self-stretch my-2"></div>
 
-          {/* Right panel: Card Management Actions */}
-          <div className="flex-1 flex flex-col justify-start space-y-4 text-left">
-            <div>
-              <DialogTitle className="text-xl font-bold tracking-widest text-[#FFD700] uppercase">
-                CARD SETTINGS
-              </DialogTitle>
-              <DialogDescription className="text-zinc-400 text-xs font-medium mt-1">
-                Configure local authentication options for {idCardUser?.full_name || "this user"}.
-              </DialogDescription>
-            </div>
-
-            <Separator className="bg-zinc-800" />
-
-            {loadingCard ? (
-              <div className="flex flex-col items-center justify-center py-12 flex-1">
-                <Loader2 className="h-6 w-6 text-[#FFD700] animate-spin" />
-                <span className="text-xs text-zinc-400 mt-2">Checking card records...</span>
+            {/* Right panel: Card Management Actions */}
+            <div className="flex-1 flex flex-col justify-start space-y-4 text-left">
+              <div>
+                <DialogTitle className="text-xl font-bold tracking-widest text-[#FFD700] uppercase">
+                  CARD MANAGEMENT
+                </DialogTitle>
+                <DialogDescription className="text-zinc-400 text-xs font-medium mt-1">
+                  Manage the physical card status for {idCardUser?.full_name || "this user"}.
+                </DialogDescription>
               </div>
-            ) : cardDetails ? (
-              // Card exists
+
+              <Separator className="bg-zinc-800" />
+
               <div className="space-y-4 flex-1 flex flex-col justify-between">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -784,19 +718,19 @@ function AdminUsersContent() {
                     <Badge
                       variant="outline"
                       className={
-                        cardDetails.status === "active"
+                        idCardUser?.is_card_issued
                           ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 font-bold uppercase text-[10px]"
                           : "bg-rose-500/10 text-rose-400 border-rose-500/20 font-bold uppercase text-[10px]"
                       }
                     >
-                      {cardDetails.status}
+                      {idCardUser?.is_card_issued ? "Issued" : "Not Issued"}
                     </Badge>
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-zinc-400">Card ID:</span>
+                    <span className="text-xs font-semibold text-zinc-400">Unique ID:</span>
                     <span className="font-mono text-xs text-zinc-200 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded">
-                      {cardDetails.card_id}
+                      {idCardUser?.unique_id_number || "PENDING"}
                     </span>
                   </div>
                 </div>
@@ -804,47 +738,25 @@ function AdminUsersContent() {
                 <div className="pt-4 mt-auto">
                   <Button
                     onClick={handleToggleStatus}
-                    disabled={updatingCard}
-                    variant="outline"
-                    className="w-full border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
-                  >
-                    {updatingCard ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : cardDetails.status === "active" ? (
-                      "Revoke/Deactivate Card"
-                    ) : (
-                      "Re-activate Card"
-                    )}
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              // No card issued yet
-              <div className="space-y-4 flex-1 flex flex-col justify-between">
-                <div className="space-y-4">
-                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
-                    <p className="text-xs text-amber-500 font-medium leading-relaxed">
-                      No card has been issued to this user yet. You can issue a card immediately using their unique ID number: <strong className="font-mono text-zinc-200">{idCardUser?.unique_id_number || "HS-PENDING"}</strong>.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="pt-4 mt-auto">
-                  <Button
-                    onClick={handleIssueCard}
                     disabled={updatingCard || !idCardUser?.unique_id_number}
-                    className="w-full bg-[#FFD700] hover:bg-[#FFD700]/90 text-black font-semibold text-sm"
+                    variant={idCardUser?.is_card_issued ? "outline" : "default"}
+                    className={
+                      idCardUser?.is_card_issued
+                        ? "w-full border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
+                        : "w-full bg-[#FFD700] hover:bg-[#FFD700]/90 text-black font-semibold text-sm"
+                    }
                   >
                     {updatingCard ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : idCardUser?.is_card_issued ? (
+                      "Mark as Not Issued"
                     ) : (
-                      "Issue New Card"
+                      "Mark as Issued"
                     )}
                   </Button>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

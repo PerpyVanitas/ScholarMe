@@ -52,12 +52,12 @@ class AuthRepository @Inject constructor(
             }
         }
     }
-
+    
     suspend fun loginWithCard(cardId: String, pin: String): Result<UserProfile> {
         return withContext(Dispatchers.IO) {
             try {
                 val response = authApi.cardLogin(CardLoginRequest(cardId, pin))
-                
+
                 if (response.isSuccessful && response.body()?.success == true) {
                     val data = response.body()?.data
                     if (data != null) {
@@ -67,7 +67,7 @@ class AuthRepository @Inject constructor(
                             fullName = data.user?.fullName ?: data.profile?.fullName ?: "",
                             role = data.user?.role ?: data.profile?.role ?: "learner"
                         )
-                        
+
                         tokenManager.saveAccessToken(data.token)
                         tokenManager.saveUserInfo(
                             userId = user.id ?: "",
@@ -88,7 +88,7 @@ class AuthRepository @Inject constructor(
             }
         }
     }
-    
+
     suspend fun register(
         email: String,
         password: String,

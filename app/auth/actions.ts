@@ -26,6 +26,8 @@ export async function signUp(formData: FormData) {
   const dateOfBirth = formData.get("date_of_birth") as string
   const requestedRole = (formData.get("role") as string) || "learner"
   const selectedRole = requestedRole === "tutor" ? "tutor" : "learner"
+  const academicYearJoined = formData.get("academic_year_joined") as string || "2024-2025"
+  const esasScholar = formData.get("esas_scholar") === "true"
 
   // Check if phone number is already registered
   if (phoneNumber) {
@@ -54,6 +56,8 @@ export async function signUp(formData: FormData) {
       date_of_birth: dateOfBirth,
       role_id: roleId,
       role_name: selectedRole,
+      academic_year_joined: academicYearJoined,
+      esas_scholar: esasScholar,
     },
   })
   if (createError) return { error: createError.message }
@@ -70,6 +74,8 @@ export async function signUp(formData: FormData) {
         phone_number: phoneNumber,
         ...birthdateFields(dateOfBirth || null),
         role_id: roleId,
+        academic_year_joined: academicYearJoined,
+        esas_scholar: esasScholar,
         terms_accepted_at: new Date().toISOString(),
       }, { onConflict: "id" })
 

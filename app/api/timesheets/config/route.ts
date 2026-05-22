@@ -10,7 +10,7 @@ export async function GET() {
     }
 
     const { data, error } = await supabase
-      .from("timesheet_periods")
+      .from("semester_configs")
       .select("id, name, start_date, end_date, is_active")
       .eq("is_active", true)
       .maybeSingle();
