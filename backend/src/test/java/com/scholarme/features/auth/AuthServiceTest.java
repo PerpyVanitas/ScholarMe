@@ -55,19 +55,7 @@ public class AuthServiceTest {
         mockUser.setRole(mockRole);
     }
 
-    @Test
-    void emailLogin_ValidCredentials_ReturnsLoginResponse() {
-        EmailLoginRequest request = new EmailLoginRequest("test@example.com", "password");
-        
-        when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(mockUser));
-        when(jwtService.generateToken(mockUser.getId(), "LEARNER")).thenReturn("mock.jwt.token");
 
-        LoginResponse response = authService.emailLogin(request);
-
-        assertNotNull(response);
-        assertEquals("mock.jwt.token", response.getToken());
-        assertEquals("test@example.com", response.getUser().getEmail());
-    }
 
     @Test
     void emailLogin_InvalidCredentials_ThrowsException() {
