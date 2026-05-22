@@ -40,7 +40,9 @@ A high-performance academic management ecosystem built with **Next.js**, **Supab
 
 ### 📱 Native Android Experience
 - **Single-Activity Compose**: 100% modern UI built with Jetpack Compose.
-- **Digital ID Card**: High-contrast, brand-aligned identity cards with dynamic QR generation.
+- **Gamification & XP Integration**: Real-time XP rewarding system featuring dynamic Level Titles, Colored Avatar borders, and Leaderboards.
+- **AI Generation Studio**: Native creation screens for generating Study Quizzes and Flashcards on the go.
+- **Digital ID & Designations**: High-contrast, brand-aligned identity cards rendering Honor Society Designations and dynamic QR generation.
 - **Offline Persistence**: Room DB support for resource viewing and session history.
 - **Hilt DI**: Clean, testable architecture with enterprise-grade dependency injection.
 

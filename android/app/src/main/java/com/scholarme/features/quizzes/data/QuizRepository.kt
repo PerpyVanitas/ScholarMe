@@ -81,4 +81,19 @@ class QuizRepository @Inject constructor(
             }
         }
     }
+
+    suspend fun generateQuiz(request: GenerateQuizRequest): Result<Boolean> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = quizApi.generateQuiz(request)
+                if (response.isSuccessful && response.body()?.success == true) {
+                    Result.Success(true)
+                } else {
+                    Result.Error("Failed to generate quiz")
+                }
+            } catch (e: Exception) {
+                Result.Error(e.message ?: "Network error occurred")
+            }
+        }
+    }
 }

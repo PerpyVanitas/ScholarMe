@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Android Native Gamification integration (XP triggers, Dynamic Leaderboards, Level-colored Avatar Borders).
+- Android Native AI Generation Screens (`QuizCreateScreen`, `FlashcardCreateScreen`).
+- Android Native Honor Society Designations rendered on the Profile screen alongside the Digital ID Card.
+- Exponential XP Scaling Curve database migration and recalculation logic (`Level = FLOOR(0.1 * SQRT(total_xp)) + 1`).
 - Swagger/OpenAPI Documentation to Spring Boot controllers.
 - Spring Boot Actuator Health Endpoint.
 - Structured Request Logging with Correlation IDs in Spring Boot (`RequestLoggingFilter`).
@@ -23,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CONTRIBUTING.md` guidelines.
 
 ### Changed
+- Completely refactored Next.js `app-sidebar.tsx` with rigorous Role-Based Access Control and categorized navigation groups (Core, Academics, Community, Tools).
 - Refactored `rate-limit.ts` from in-memory Map to Supabase backing store to prevent state loss on serverless cold starts.
 - Enforced TypeScript `strict: true` across the Next.js app.
 - Relocated `lib/demo.ts` to `scripts/demo.ts` with production safety warnings.

@@ -23,7 +23,9 @@ data class UserProfile(
     
     // Gamification fields
     @SerializedName("totalXp") val totalXp: Int? = 0,
-    @SerializedName("currentLevel") val currentLevel: Int? = 1
+    @SerializedName("currentLevel") val currentLevel: Int? = 1,
+    
+    @SerializedName("hs_designations") val hsDesignations: List<String>? = null
 )
 
 // Alias for convenience

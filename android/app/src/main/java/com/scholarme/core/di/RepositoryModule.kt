@@ -18,6 +18,8 @@ import com.scholarme.features.profile.data.ProfileRepository
 import com.scholarme.features.profile.data.remote.ProfileApi
 import com.scholarme.features.quizzes.data.QuizRepository
 import com.scholarme.features.quizzes.data.remote.QuizApi
+import com.scholarme.features.flashcards.data.FlashcardRepository
+import com.scholarme.features.flashcards.data.remote.FlashcardApi
 import com.scholarme.features.sessions.data.SessionRepository
 import com.scholarme.features.sessions.data.remote.SessionApi
 import com.scholarme.features.tutors.data.TutorRepository
@@ -48,6 +50,7 @@ object RepositoryModule {
     @Provides @Singleton fun provideAdminRepository(api: AdminApi) = AdminRepository(api)
     @Provides @Singleton fun provideGamificationRepository(api: GamificationApi) = GamificationRepository(api)
     @Provides @Singleton fun provideQuizRepository(api: QuizApi, dao: OfflineDao) = QuizRepository(api, dao)
+    @Provides @Singleton fun provideFlashcardRepository(api: FlashcardApi, dao: OfflineDao) = FlashcardRepository(api, dao)
     @Provides @Singleton fun provideMessagingRepository(api: MessagingApi) = MessagingRepository(api)
     @Provides @Singleton fun provideVotingRepository(api: VotingApi) = VotingRepository(api)
 }

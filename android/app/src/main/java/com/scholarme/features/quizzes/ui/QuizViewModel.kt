@@ -12,9 +12,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.scholarme.features.gamification.data.GamificationRepository
+
 @HiltViewModel
 class QuizViewModel @Inject constructor(
-    private val repository: QuizRepository
+    private val repository: QuizRepository,
+    private val gamificationRepository: GamificationRepository
 ) : ViewModel() {
 
     private val _quizzes = MutableStateFlow<List<QuizDto>>(emptyList())
@@ -64,6 +67,34 @@ class QuizViewModel @Inject constructor(
                 else -> {}
             }
             _isLoading.value = false
+        }
+    }
+
+    fun generateQuiz(request: GenerateQuizRequest, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            when (val result = repository.generateQuiz(request)) {
+                is Result.Success -> {
+                    _error.value = null
+                    loadQuizzes() // Refresh list
+                    onSuccess()
+                }
+                is Result.Error -> {
+                    _error.value = result.message
+                }
+                else -> {}
+            }
+            _isLoading.value = false
+        }
+    }
+
+    fun finishQuiz(onXpEarned: (Int) -> Unit) {
+        viewModelScope.launch {
+            // Reward 50 XP for finishing a quiz
+            val result = gamificationRepository.awardXp(50, "Quiz Study")
+            if (result is Result.Success) {
+                onXpEarned(result.data.xpEarned)
+            }
         }
     }
 }

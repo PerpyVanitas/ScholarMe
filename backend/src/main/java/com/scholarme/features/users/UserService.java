@@ -1,11 +1,14 @@
 package com.scholarme.features.users;
 
 import com.scholarme.features.users.dto.*;
+import com.scholarme.shared.entity.DeviceToken;
 import com.scholarme.shared.entity.User;
+import com.scholarme.shared.repository.DeviceTokenRepository;
 import com.scholarme.shared.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.UUID;
 
 /**
@@ -17,6 +20,7 @@ import java.util.UUID;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final DeviceTokenRepository deviceTokenRepository;
 
     public UserProfileDto getProfile(UUID userId) {
         User user = userRepository.findById(userId)
@@ -47,17 +51,28 @@ public class UserService {
         return toDto(userRepository.save(user));
     }
 
-    public void changePassword(UUID userId, ChangePasswordRequest request) {
-        // Note: Password changes should go through Supabase Auth
-        // This is a placeholder for backend-only auth systems
-        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
-            throw new IllegalArgumentException("Passwords do not match");
-        }
-        // In production: validate current password, hash new password, update user
-    }
+
 
     public void registerDeviceToken(UUID userId, DeviceTokenRequest request) {
-        System.out.println("Registering device token for user " + userId + ": " + request.getToken());
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        deviceTokenRepository.findByTokenAndUser(request.getToken(), user)
+                .ifPresentOrElse(
+                        existingToken -> {
+                            existingToken.setLastUsedAt(Instant.now());
+                            deviceTokenRepository.save(existingToken);
+                        },
+                        () -> {
+                            DeviceToken newToken = DeviceToken.builder()
+                                    .user(user)
+                                    .token(request.getToken())
+                                    .platform(request.getDeviceType() != null ? request.getDeviceType() : "android")
+                                    .lastUsedAt(Instant.now())
+                                    .build();
+                            deviceTokenRepository.save(newToken);
+                        }
+                );
     }
 
     private UserProfileDto toDto(User user) {

@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Loader2, Plus, Trash2, BookOpen, CheckCircle, Users, Lock, FileText } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
+import { createClient } from "@/lib/supabase/client"
 
 interface StudySet {
   id: string
@@ -38,14 +39,76 @@ function QuizzesContent() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    type: "flashcard" as "flashcard" | "multiple_choice" | "true_false" | "mixed",
+    type: "mixed" as any,
     is_public: false,
     content: "",
+    source_resource_id: "",
   })
+  const [structuredItems, setStructuredItems] = useState<any[]>([])
+  const [targetChapters, setTargetChapters] = useState("")
+  const [userContext, setUserContext] = useState("")
+  const [quizConfig, setQuizConfig] = useState({
+    multiple_choice: { enabled: true, count: 5, choices: 4 },
+    true_false: { enabled: true, count: 5 },
+    matching_type: { enabled: false, count: 5 },
+    modified_true_false: { enabled: false, count: 5 },
+    identification: { enabled: false, count: 5 },
+    fill_in_the_blanks: { enabled: false, count: 5 },
+  })
+
+  const [resources, setResources] = useState<any[]>([])
+  const [selectedResource, setSelectedResource] = useState("")
+  const [extractedTopics, setExtractedTopics] = useState<string[]>([])
+  const [extractingTopics, setExtractingTopics] = useState(false)
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([])
+
+  const [aiPrompt, setAiPrompt] = useState("")
+  const [aiCount, setAiCount] = useState(5)
+  const [generating, setGenerating] = useState(false)
+  const [creationMethod, setCreationMethod] = useState("manual")
+
+        const loadResources = async () => {
+    const supabase = createClient()
+    const { data } = await supabase.from("resources").select("id, title").order("created_at", { ascending: false })
+    if (data) setResources(data)
+  }
 
   useEffect(() => {
     loadStudySets()
+    loadResources()
   }, [])
+
+  useEffect(() => {
+    async function extractTopics(resourceId: string) {
+      setExtractingTopics(true)
+      try {
+        const res = await fetch("/api/resources/extract-topics", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ resource_id: resourceId }),
+        })
+        const data = await res.json()
+        if (data.topics) {
+          setExtractedTopics(data.topics)
+          setSelectedTopics([])
+        }
+      } catch (e) {
+        console.error(e)
+      } finally {
+        setExtractingTopics(false)
+      }
+    }
+    if (selectedResource) {
+      extractTopics(selectedResource)
+    } else {
+      setExtractedTopics([])
+      setSelectedTopics([])
+    }
+  }, [selectedResource])
+
+  const toggleTopic = (topic: string) => {
+    setSelectedTopics(prev => prev.includes(topic) ? prev.filter(t => t !== topic) : [...prev, topic])
+  }
 
   const loadStudySets = async () => {
     try {
@@ -72,6 +135,121 @@ function QuizzesContent() {
     }
   }
 
+  const handleGenerateQuiz = async () => {
+    if (!aiPrompt) {
+      toast.error("Please enter a topic to generate questions about")
+      return
+    }
+
+    try {
+      setGenerating(true)
+      
+      const enabledTypes = Object.entries(quizConfig).filter(([_, conf]) => conf.enabled);
+      const derivedType = enabledTypes.length === 1 ? enabledTypes[0][0] : "mixed";
+      const totalCount = enabledTypes.reduce((acc, [_, conf]) => acc + conf.count, 0) || aiCount;
+
+      const res = await fetch("/api/quizzes/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic: aiPrompt,
+          type: derivedType,
+          count: totalCount,
+        }),
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.error || "Failed to generate questions")
+      }
+
+      const data = await res.json()
+      if (data.data && Array.isArray(data.data)) {
+        const newContent = data.data
+          .map((item: any) => `Q: ${item.question}\nA: ${item.answer}`)
+          .join("\n\n")
+        
+        setFormData(prev => ({
+          ...prev,
+          content: prev.content ? prev.content + "\n\n" + newContent : newContent
+        }))
+        
+        toast.success("Questions generated successfully!")
+        setCreationMethod("manual") // Switch back so they can see the generated content
+      }
+    } catch (error) {
+      console.error("Error generating questions:", error)
+      toast.error(error instanceof Error ? error.message : "Failed to generate questions")
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  const handleGenerateFromResource = async () => {
+    if (!selectedResource) return;
+    try {
+      setGenerating(true)
+      
+      // Build question types config from state
+      const question_types: any = {}
+      Object.entries(quizConfig).forEach(([key, val]) => {
+        if (val.enabled) {
+          question_types[key] = {
+            enabled: true,
+            question_count: val.count,
+            ...(key === 'multiple_choice' ? { choices_per_question: (val as any).choices } : {})
+          }
+        }
+      })
+      
+      if (Object.keys(question_types).length === 0) {
+        toast.error("Please enable at least one question type")
+        setGenerating(false)
+        return
+      }
+
+      const res = await fetch("/api/quizzes/generate-from-resource", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resource_id: selectedResource,
+          config: {
+             user_context: userContext,
+             target_chapters: selectedTopics.length > 0 ? selectedTopics.join(", ") : targetChapters,
+             generate_flashcards: false,
+             generate_quiz: true,
+             question_types
+          }
+        }),
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.error || "Failed to generate from resource")
+      }
+
+      const { data } = await res.json()
+      const items = data.questions;
+      
+      if (items && Array.isArray(items)) {
+        setStructuredItems(items)
+        setFormData(prev => ({
+          ...prev,
+          source_resource_id: selectedResource,
+          type: "mixed"
+        }))
+        toast.success("Content generated successfully from resource!")
+      } else {
+        toast.error("No questions found in the generated response.")
+      }
+    } catch (error) {
+      console.error("Error generating from resource:", error)
+      toast.error(error instanceof Error ? error.message : "Failed to generate")
+    } finally {
+      setGenerating(false)
+    }
+  }
+
   const handleCreateQuiz = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -83,22 +261,33 @@ function QuizzesContent() {
     try {
       setCreating(true)
 
-      // Parse content into items (format: "Q: question A: answer" per line)
-      const lines = formData.content.split("\n").filter(line => line.trim())
-      const items = lines.map((line) => {
-        const match = line.match(/Q:\s*(.+?)\s+A:\s*(.+)/i)
-        if (match) {
-          return {
-            question: match[1].trim(),
-            answer: match[2].trim(),
-            item_type: formData.type === "mixed" ? "flashcard" : formData.type,
+      let items: any[] = []
+      
+      if (structuredItems.length > 0) {
+        items = structuredItems.map(item => ({
+          question: item.question || item.front || item.instructions || "Matching Type",
+          answer: item.correct_answer || item.answer || item.back || JSON.stringify(item.correct_matches || []),
+          options: item.choices?.map((c: any) => c.text) || item.accepted_answers || item.responses || null,
+          item_type: item.type || formData.type
+        }))
+      } else {
+        // Parse content into items (format: "Q: question A: answer" per line)
+        const lines = formData.content.split("\n").filter(line => line.trim())
+        items = lines.map((line) => {
+          const match = line.match(/Q:\s*(.+?)\s+A:\s*(.+)/i)
+          if (match) {
+            return {
+              question: match[1].trim(),
+              answer: match[2].trim(),
+              item_type: formData.type,
+            }
           }
-        }
-        return null
-      }).filter(Boolean)
+          return null
+        }).filter(Boolean)
+      }
 
       if (items.length === 0) {
-        toast.error("Please add at least one question in format: Q: question A: answer")
+        toast.error("Please add at least one question")
         setCreating(false)
         return
       }
@@ -111,7 +300,8 @@ function QuizzesContent() {
           description: formData.description,
           type: formData.type,
           is_public: formData.is_public,
-          source_type: "manual",
+          source_type: formData.source_resource_id ? "resource" : "manual",
+          source_resource_id: formData.source_resource_id || undefined,
           items,
         }),
       })
@@ -122,7 +312,20 @@ function QuizzesContent() {
       }
 
       toast.success("Study set created!")
-      setFormData({ title: "", description: "", type: "flashcard", is_public: false, content: "" })
+      
+      // Earn XP
+      const { earnXp } = await import("@/lib/utils/gamification")
+      const xpData = await earnXp(25, "Created Quiz")
+      if (xpData.success) {
+        toast.success(`🎉 +25 XP Earned!`, {
+          description: xpData.current_level ? `You are now Level ${xpData.current_level}` : "Keep building your knowledge base!",
+        })
+      }
+
+      setFormData({ title: "", description: "", type: "mixed", is_public: false, content: "", source_resource_id: "" })
+      setStructuredItems([])
+      setUserContext("")
+      setTargetChapters("")
       setDialogOpen(false)
       await loadStudySets()
     } catch (error) {
@@ -301,7 +504,7 @@ function QuizzesContent() {
 
       {/* Create Study Set Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New Study Set</DialogTitle>
             <DialogDescription>Add flashcards or quiz questions</DialogDescription>
@@ -328,50 +531,218 @@ function QuizzesContent() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Type</Label>
-                <Select value={formData.type} onValueChange={(v: any) => setFormData({ ...formData, type: v })}>
-                  <SelectTrigger disabled={creating}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="flashcard">Flashcards</SelectItem>
-                    <SelectItem value="multiple_choice">Multiple Choice</SelectItem>
-                    <SelectItem value="true_false">True/False</SelectItem>
-                    <SelectItem value="mixed">Mixed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Visibility</Label>
-                <div className="flex items-center gap-2 pt-2">
-                  <Switch
-                    checked={formData.is_public}
-                    onCheckedChange={(checked) => setFormData({ ...formData, is_public: checked })}
-                    disabled={creating}
-                  />
-                  <span className="text-sm">{formData.is_public ? "Public" : "Private"}</span>
-                </div>
+            
+            <div className="space-y-2">
+              <Label>Visibility</Label>
+              <div className="flex items-center gap-2 pt-2">
+                <Switch
+                  checked={formData.is_public}
+                  onCheckedChange={(checked) => setFormData({ ...formData, is_public: checked })}
+                  disabled={creating}
+                />
+                <span className="text-sm">{formData.is_public ? "Public" : "Private"}</span>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Questions</Label>
-              <p className="text-xs text-muted-foreground">Format: Q: question text A: answer text (one per line)</p>
-              <Textarea
-                placeholder="Q: What is the capital of France? A: Paris
+            <div className="space-y-3 p-4 bg-zinc-900/50 rounded-lg border border-border">
+              <Label className="text-sm font-semibold">Question Types Configuration</Label>
+              <p className="text-xs text-muted-foreground mb-2">Select types and quantities. Applies to all creation methods.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {Object.entries(quizConfig).map(([key, config]) => (
+                  <div key={key} className="flex items-center justify-between p-2 border border-border/60 rounded-md bg-zinc-950">
+                    <div className="flex items-center space-x-2">
+                      <input 
+                        type="checkbox" 
+                        id={'quiz_'+key} 
+                        checked={config.enabled} 
+                        onChange={(e) => setQuizConfig(prev => ({ ...prev, [key]: { ...prev[key as keyof typeof prev], enabled: e.target.checked } }))} 
+                        disabled={generating || creating}
+                        className="rounded border-zinc-700 bg-zinc-900 w-4 h-4 cursor-pointer"
+                      />
+                      <Label htmlFor={'quiz_'+key} className="capitalize cursor-pointer text-xs">{key.replace(/_/g, ' ')}</Label>
+                    </div>
+                    {config.enabled && (
+                      <Input 
+                        type="number" 
+                        min="1" max="50" 
+                        className="w-16 h-7 text-xs px-2" 
+                        value={config.count}
+                        onChange={(e) => setQuizConfig(prev => ({ ...prev, [key]: { ...prev[key as keyof typeof prev], count: Math.max(1, parseInt(e.target.value) || 1) } }))}
+                        disabled={generating || creating}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Tabs value={creationMethod} onValueChange={setCreationMethod} className="w-full">
+              <TabsList className="w-full">
+                <TabsTrigger value="manual" className="flex-1">Manual Entry</TabsTrigger>
+                <TabsTrigger value="ai" className="flex-1 flex items-center gap-2">
+                  <BookOpen className="w-4 h-4" />
+                  Generate with AI
+                </TabsTrigger>
+                <TabsTrigger value="resource" className="flex-1 flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  From Resource
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="manual" className="space-y-2 mt-4">
+                <Label>Questions</Label>
+                <p className="text-xs text-muted-foreground">Format: Q: question text A: answer text (one per line)</p>
+                <Textarea
+                  placeholder="Q: What is the capital of France? A: Paris
 Q: What is 2+2? A: 4
 Q: The sun is a star A: true"
-                value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                disabled={creating}
-                rows={6}
-              />
-            </div>
+                  value={formData.content}
+                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  disabled={creating}
+                  rows={6}
+                />
+              </TabsContent>
 
-            <div className="flex gap-2 justify-end">
+              <TabsContent value="ai" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label>What should the study set be about?</Label>
+                  <Textarea
+                    placeholder="e.g. The history of the Roman Empire, focusing on Julius Caesar"
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    disabled={generating}
+                    rows={3}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Number of questions</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={aiCount}
+                    onChange={(e) => setAiCount(parseInt(e.target.value) || 5)}
+                    disabled={generating}
+                  />
+                </div>
+                <Button 
+                  type="button" 
+                  onClick={handleGenerateQuiz} 
+                  disabled={generating || !aiPrompt}
+                  className="w-full"
+                  variant="secondary"
+                >
+                  {generating ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</>
+                  ) : (
+                    "Generate Questions"
+                  )}
+                </Button>
+              </TabsContent>
+
+              <TabsContent value="resource" className="space-y-4 mt-4">
+                {structuredItems.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between border-b pb-2">
+                      <Label className="text-base font-semibold">Generated Preview ({structuredItems.length} items)</Label>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => setStructuredItems([])}>
+                        Clear
+                      </Button>
+                    </div>
+                    <div className="max-h-[300px] overflow-y-auto space-y-2 pr-2">
+                      {structuredItems.map((item, i) => (
+                        <div key={i} className="p-3 bg-muted rounded-md text-sm">
+                          <div className="flex items-start justify-between mb-1">
+                            <span className="font-medium">Q: {item.question || item.instructions || "Question"}</span>
+                            <Badge variant="outline" className="ml-2 text-[10px] uppercase shrink-0">{item.type?.replace(/_/g, ' ')}</Badge>
+                          </div>
+                          <p className="text-muted-foreground">A: {item.correct_answer || item.answer || "Check DB"}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center">Click Create Study Set to save these questions.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Select Resource</Label>
+                      <Select value={selectedResource} onValueChange={setSelectedResource} disabled={generating}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a document/PDF" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {resources.map(r => (
+                            <SelectItem key={r.id} value={r.id}>{r.title}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    
+                    {extractingTopics ? (
+                      <div className="flex items-center gap-2 p-4 text-sm text-zinc-400 bg-zinc-900/30 rounded-lg">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Scanning document for chapters and topics...
+                      </div>
+                    ) : extractedTopics.length > 0 ? (
+                      <div className="space-y-2">
+                        <Label>Select Topics to Include</Label>
+                        <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto p-2 border border-border/50 rounded-md bg-zinc-950">
+                          {extractedTopics.map(topic => (
+                            <div key={topic} className="flex items-start space-x-2">
+                              <input 
+                                type="checkbox" 
+                                id={'topic_'+topic}
+                                checked={selectedTopics.includes(topic)}
+                                onChange={() => toggleTopic(topic)}
+                                className="mt-1 rounded border-zinc-700 bg-zinc-900 w-4 h-4 cursor-pointer shrink-0"
+                              />
+                              <Label htmlFor={'topic_'+topic} className="text-xs cursor-pointer leading-tight">{topic}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Label>Target Chapters/Topics</Label>
+                        <Input 
+                          placeholder="e.g. Chapter 3, Photosynthesis (Enter manually)" 
+                          value={targetChapters}
+                          onChange={e => setTargetChapters(e.target.value)}
+                          disabled={generating}
+                        />
+                      </div>
+                    )}
+                    <div className="space-y-2 mt-4">
+                      <Label>Context / Instructions</Label>
+                      <Input 
+                        placeholder="e.g. Focus on definitions" 
+                        value={userContext}
+                        onChange={e => setUserContext(e.target.value)}
+                        disabled={generating}
+                      />
+                    </div>
+
+                    
+                    <Button 
+                      type="button" 
+                      onClick={handleGenerateFromResource} 
+                      disabled={generating || !selectedResource}
+                      className="w-full mt-4"
+                      variant="secondary"
+                    >
+                      {generating ? (
+                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Extracting from Resource...</>
+                      ) : (
+                        "Generate Questions"
+                      )}
+                    </Button>
+                  </>
+                )}
+              </TabsContent>
+            </Tabs>
+
+            <div className="flex gap-2 justify-end pt-4 border-t">
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} disabled={creating}>
                 Cancel
               </Button>

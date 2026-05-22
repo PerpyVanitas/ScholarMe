@@ -87,6 +87,8 @@ export default function SessionsPage() {
   }, []);
 
   async function updateStatus(sessionId: string, status: string) {
+    const session = sessions.find(s => s.id === sessionId);
+    
     const res = await fetch(`/api/sessions/${sessionId}/status`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -98,6 +100,27 @@ export default function SessionsPage() {
         prev.map((s) => (s.id === sessionId ? { ...s, status: status as Session["status"] } : s))
       );
       toast.success(`Session ${status}`);
+
+      // Earn XP if completing a session as a tutor
+      if (status === "completed" && role === "tutor" && session && session.start_time && session.end_time) {
+        const startHour = parseInt(session.start_time.split(":")[0]);
+        const startMin = parseInt(session.start_time.split(":")[1]);
+        const endHour = parseInt(session.end_time.split(":")[0]);
+        const endMin = parseInt(session.end_time.split(":")[1]);
+        const durationHours = (endHour + endMin / 60) - (startHour + startMin / 60);
+        
+        // 25 XP per hour, minimum 1 hour if it's less
+        const earnedXp = Math.max(25, Math.round(durationHours * 25));
+
+        const { earnXp } = await import("@/lib/utils/gamification");
+        const xpData = await earnXp(earnedXp, `Tutoring Session (${durationHours.toFixed(1)} hrs)`);
+        
+        if (xpData.success) {
+          toast.success(`🎉 +${earnedXp} XP Earned!`, {
+            description: xpData.current_level ? `You are now Level ${xpData.current_level}` : "Great job helping a fellow student!",
+          });
+        }
+      }
     } else {
       toast.error("Failed to update session");
     }

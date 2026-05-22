@@ -47,8 +47,15 @@ export function buildStudySetItemInsert(
   },
   index: number
 ) {
-  const rawType = item.item_type === "mixed" ? "flashcard" : item.item_type
+  let rawType = item.item_type === "mixed" ? "flashcard" : item.item_type
+  
+  // Map AI-generated advanced types to database constraint values
+  if (rawType === "matching_type") rawType = "matching"
+  if (rawType === "modified_true_false") rawType = "true_false"
+  if (rawType === "fill_in_the_blanks") rawType = "identification"
+
   const itemType = rawType || "flashcard"
+  
   return {
     study_set_id: studySetId,
     question: item.question,

@@ -11,9 +11,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.scholarme.features.gamification.data.GamificationRepository
+
 @HiltViewModel
 class ResourceViewModel @Inject constructor(
-    private val repository: ResourceRepository
+    private val repository: ResourceRepository,
+    private val gamificationRepository: GamificationRepository
 ) : ViewModel() {
 
     private val _repositories = MutableStateFlow<Result<List<RepositoryDto>>>(Result.Loading)
@@ -37,6 +40,29 @@ class ResourceViewModel @Inject constructor(
         viewModelScope.launch {
             _files.value = Result.Loading
             _files.value = repository.getRepositoryFiles(repositoryId)
+        }
+    }
+
+    fun uploadResource(
+        repositoryId: String,
+        title: String,
+        description: String?,
+        fileBody: okhttp3.MultipartBody.Part,
+        onXpEarned: (Int) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            val result = repository.uploadResource(repositoryId, title, description, fileBody)
+            if (result is Result.Success) {
+                // Reload files for this repository to show the new upload
+                loadFiles(repositoryId)
+                // Reward 100 XP for uploading a resource
+                val xpResult = gamificationRepository.awardXp(100, "Resource Upload")
+                if (xpResult is Result.Success) {
+                    onXpEarned(xpResult.data.xpEarned)
+                }
+            } else {
+                // Provide a way to surface errors if needed (e.g., using a Channel for one-time UI events)
+            }
         }
     }
 }

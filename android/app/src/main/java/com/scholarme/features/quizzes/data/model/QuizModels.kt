@@ -26,3 +26,12 @@ data class QuizQuestionDto(
     val options: List<String>,
     val correctAnswerIndex: Int
 )
+
+data class GenerateQuizRequest(
+    val title: String,
+    val topic: String,
+    val description: String? = null,
+    val type: String = "flashcard",
+    val count: Int = 5,
+    val is_public: Boolean = false
+)

@@ -3,6 +3,7 @@ package com.scholarme.features.profile.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -73,6 +74,9 @@ fun ProfileScreen(
     }
 }
 
+import com.scholarme.features.gamification.ui.GamificationUtils
+
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ProfileContent(
     modifier: Modifier = Modifier,
@@ -100,6 +104,11 @@ fun ProfileContent(
                     modifier = Modifier
                         .size(100.dp)
                         .clip(CircleShape)
+                        .androidx.compose.foundation.border(
+                            width = 4.dp,
+                            color = GamificationUtils.getLevelColor(profile.currentLevel ?: 1),
+                            shape = CircleShape
+                        )
                         .background(MaterialTheme.colorScheme.surfaceVariant),
                     contentScale = ContentScale.Crop
                 )
@@ -108,6 +117,12 @@ fun ProfileContent(
                     profile.fullName ?: "Scholar",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
+                )
+                Text(
+                    "Level ${profile.currentLevel ?: 1} • ${GamificationUtils.getLevelTitle(profile.currentLevel ?: 1)} • ${profile.totalXp ?: 0} XP",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold
                 )
                 Surface(
                     color = MaterialTheme.colorScheme.primaryContainer,
@@ -135,6 +150,46 @@ fun ProfileContent(
                 birthdate = profile.birthdate ?: "N/A",
                 avatarUrl = profile.avatarUrl
             )
+        }
+
+        // Designations Section
+        if (!profile.hsDesignations.isNullOrEmpty()) {
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFD700))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Honor Society Designations", fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            profile.hsDesignations.forEach { designation ->
+                                Surface(
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Text(
+                                        text = designation,
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         // Info Section

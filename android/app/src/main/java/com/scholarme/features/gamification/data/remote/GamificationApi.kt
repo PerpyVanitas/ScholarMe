@@ -11,8 +11,8 @@ interface GamificationApi {
         @Query("limit") limit: Int = 50
     ): Response<ApiResponse<LeaderboardResponse>>
     
-    @POST("gamification/xp")
+    @POST("api/xp/earn")
     suspend fun awardXp(
-        @Body request: Map<String, Any>
-    ): Response<ApiResponse<Map<String, Any>>>
+        @Body request: Map<String, @JvmSuppressWildcards Any>
+    ): Response<XpAwardResponse>
 }

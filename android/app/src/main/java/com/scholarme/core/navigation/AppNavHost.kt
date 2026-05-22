@@ -31,6 +31,7 @@ import com.scholarme.features.availability.ui.AvailabilityManagerScreen
 import com.scholarme.features.notifications.ui.NotificationsScreen
 import com.scholarme.features.notifications.ui.NotificationViewModel
 import com.scholarme.features.quizzes.ui.*
+import com.scholarme.features.flashcards.ui.*
 import com.scholarme.features.resources.ui.ResourceDirectoryScreen
 import com.scholarme.features.resources.ui.ResourceViewerScreen
 import com.scholarme.features.sessions.ui.SessionBookingScreen
@@ -93,6 +94,7 @@ fun AppNavHost(
                 statsResult = statsState,
                 sessionsResult = sessionsState,
                 onStudyClick = { navController.navigate(Screen.ResourceDirectory.route) },
+                onFlashcardClick = { navController.navigate(Screen.FlashcardList.route) },
                 onQuizClick = { navController.navigate(Screen.QuizList.route) },
                 onProfileClick = { navController.navigate(Screen.Profile.route) },
                 onManageUsersClick = { navController.navigate(Screen.UserManagement.route) },
@@ -273,6 +275,35 @@ fun AppNavHost(
             val quizId = backStackEntry.arguments?.getString("quizId") ?: return@composable
             QuizActiveScreen(
                 quizTitle = "Quiz #$quizId",
+                onClose = { navController.popBackStack() }
+            )
+        }
+
+        // Flashcards Flow
+        composable(Screen.FlashcardList.route) {
+            FlashcardListScreen(
+                onStudyFlashcard = { flashcardId ->
+                    navController.navigate(Screen.FlashcardStudy.createRoute(flashcardId))
+                },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        
+        composable(
+            route = Screen.FlashcardStudy.route,
+            arguments = listOf(navArgument("flashcardId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val flashcardId = backStackEntry.arguments?.getString("flashcardId") ?: return@composable
+            val viewModel: FlashcardViewModel = hiltViewModel()
+            val studySet by viewModel.currentStudySet.collectAsStateWithLifecycle()
+            
+            LaunchedEffect(flashcardId) {
+                viewModel.fetchStudySet(flashcardId)
+            }
+            
+            FlashcardStudyScreen(
+                title = studySet?.title ?: "Study Flashcards",
+                items = studySet?.items ?: emptyList(),
                 onClose = { navController.popBackStack() }
             )
         }

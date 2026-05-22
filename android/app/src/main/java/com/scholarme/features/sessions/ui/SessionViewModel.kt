@@ -18,9 +18,12 @@ data class SessionListState(
     val error: String? = null
 )
 
+import com.scholarme.features.gamification.data.GamificationRepository
+
 @HiltViewModel
 class SessionViewModel @Inject constructor(
-    private val repository: SessionRepository
+    private val repository: SessionRepository,
+    private val gamificationRepository: GamificationRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SessionListState())
@@ -49,6 +52,19 @@ class SessionViewModel @Inject constructor(
                 else -> {
                     _uiState.value = _uiState.value.copy(isLoading = false)
                 }
+            }
+        }
+    }
+
+    fun markSessionComplete(sessionId: String, durationHours: Int = 1, onXpEarned: (Int) -> Unit = {}) {
+        viewModelScope.launch {
+            // Usually we would update session status on backend first via repository.
+            // Reward 25 XP per hour of tutoring
+            val xpAmount = durationHours * 25
+            val result = gamificationRepository.awardXp(xpAmount, "Completed Tutoring Session")
+            if (result is Result.Success) {
+                onXpEarned(result.data.xpEarned)
+                loadSessions()
             }
         }
     }

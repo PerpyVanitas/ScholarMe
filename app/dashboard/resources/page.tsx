@@ -39,6 +39,7 @@ import {
   Eye,
   X,
 } from "lucide-react"
+import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { toast } from "sonner"
 import type { UserRole } from "@/lib/types"
 import { getRoleName } from "@/lib/utils/roles"
@@ -256,7 +257,7 @@ export default function ResourcesPage() {
 
       const { error: storageErr } = await supabase.storage
         .from("resources")
-        .upload(filePath, uploadFile, { upsert: false })
+        .upload(filePath, uploadFile, { upsert: false, contentType: uploadFile.type })
       if (storageErr) throw storageErr
 
       const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/resources/${filePath}`
@@ -279,7 +280,18 @@ export default function ResourcesPage() {
         ...prev,
         [uploadRepoId]: [data, ...(prev[uploadRepoId] || [])],
       }))
+      
       toast.success("Resource uploaded!")
+
+      // Earn XP
+      const { earnXp } = await import("@/lib/utils/gamification")
+      const xpData = await earnXp(100, "Uploaded Resource")
+      if (xpData.success) {
+        toast.success(`🎉 +100 XP Earned!`, {
+          description: xpData.current_level ? `You are now Level ${xpData.current_level}` : "Great job uploading a resource!",
+        })
+      }
+
       closeUploadDialog()
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Upload failed")
@@ -590,7 +602,14 @@ export default function ResourcesPage() {
                           const canDelete = role === "administrator" || resource.uploaded_by === userId || isOwner
 
                           return (
-                            <div key={resource.id} className="flex items-center gap-3 rounded-lg border border-border/60 p-3 transition-colors hover:bg-muted/30">
+                            <div 
+                              key={resource.id} 
+                              className="flex items-center gap-3 rounded-lg border border-border/60 p-3 transition-colors hover:bg-muted/30 cursor-pointer"
+                              onClick={() => {
+                                setPreviewResource(resource)
+                                setPreviewOpen(true)
+                              }}
+                            >
                               <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${info.color}`}>
                                 <Icon className="h-4 w-4" />
                               </div>
@@ -606,19 +625,7 @@ export default function ResourcesPage() {
                                   {(resource.profiles as { full_name: string } | null)?.full_name || "Unknown"} · {new Date(resource.created_at).toLocaleDateString()}
                                 </p>
                               </div>
-                              <div className="flex items-center gap-1 shrink-0">
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="h-8 w-8 text-zinc-300 hover:text-white" 
-                                  onClick={() => {
-                                    setPreviewResource(resource)
-                                    setPreviewOpen(true)
-                                  }}
-                                  aria-label={`Preview ${resource.title}`}
-                                >
-                                  <Eye className="h-4 w-4 text-amber-500" />
-                                </Button>
+                              <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                                 <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
                                   <a href={resource.url} target="_blank" rel="noopener noreferrer" aria-label={`Download ${resource.title}`}>
                                     <Download className="h-4 w-4" />
@@ -650,72 +657,76 @@ export default function ResourcesPage() {
       )}
 
       {/* Resource Preview Dialog */}
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent 
-          showCloseButton={false}
-          className="fixed inset-0 top-0 left-0 translate-x-0 translate-y-0 w-screen h-screen max-w-none m-0 p-0 rounded-none border-none bg-black/98 text-white flex flex-col z-50 duration-200"
-        >
-          {/* Top Bar */}
-          <div className="h-16 border-b border-zinc-800 bg-zinc-950 px-4 md:px-6 flex items-center justify-between shrink-0 select-none">
-            {/* Left side: Icon, title, uploader */}
-            <div className="flex items-center gap-3 min-w-0 flex-1 mr-4">
-              {previewResource && (
-                <>
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-zinc-900 border border-zinc-800">
-                    {(() => {
-                      const info = getTypeInfo(previewResource.file_type)
-                      const Icon = info.icon
-                      return <Icon className={`h-5 w-5 ${info.color.split(" ")[0]}`} />
-                    })()}
-                  </div>
-                  <div className="min-w-0">
-                    <h2 className="text-sm font-semibold text-zinc-100 truncate">
-                      {previewResource.title}
-                    </h2>
-                    <p className="text-[10px] text-zinc-400 truncate mt-0.5">
-                      Uploaded by {(previewResource.profiles as { full_name: string } | null)?.full_name || "Unknown"} on {new Date(previewResource.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
+      <DialogPrimitive.Root open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogPrimitive.Portal>
+          <DialogPrimitive.Overlay className="fixed inset-0 z-[100] bg-black/98 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+          <DialogPrimitive.Content 
+            className="fixed inset-0 z-[100] flex flex-col text-white duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 outline-none"
+          >
+            <DialogPrimitive.Title className="sr-only">Resource Preview</DialogPrimitive.Title>
+            <DialogPrimitive.Description className="sr-only">Preview of the selected resource</DialogPrimitive.Description>
+            {/* Top Bar */}
+            <div className="h-16 border-b border-zinc-800 bg-zinc-950 px-4 md:px-6 flex items-center justify-between shrink-0 select-none">
+              {/* Left side: Icon, title, uploader */}
+              <div className="flex items-center gap-3 min-w-0 flex-1 mr-4">
+                {previewResource && (
+                  <>
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-zinc-900 border border-zinc-800">
+                      {(() => {
+                        const info = getTypeInfo(previewResource.file_type)
+                        const Icon = info.icon
+                        return <Icon className={`h-5 w-5 ${info.color.split(" ")[0]}`} />
+                      })()}
+                    </div>
+                    <div className="min-w-0">
+                      <h2 className="text-sm font-semibold text-zinc-100 truncate">
+                        {previewResource.title}
+                      </h2>
+                      <p className="text-[10px] text-zinc-400 truncate mt-0.5">
+                        Uploaded by {(previewResource.profiles as { full_name: string } | null)?.full_name || "Unknown"} on {new Date(previewResource.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
 
-            {/* Right side: Actions & Close */}
-            <div className="flex items-center gap-2 shrink-0">
-              {previewResource && (
+              {/* Right side: Actions & Close */}
+              <div className="flex items-center gap-2 shrink-0">
+                {previewResource && (
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="h-9 text-zinc-300 hover:bg-zinc-900 hover:text-white"
+                    asChild
+                  >
+                    <a href={previewResource.url} download target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                      <Download className="h-4 w-4 text-amber-500" />
+                      <span className="hidden sm:inline">Download</span>
+                    </a>
+                  </Button>
+                )}
+                
+                <div className="w-px h-6 bg-zinc-800 mx-1 hidden sm:block"></div>
+
                 <Button 
-                  size="sm" 
                   variant="ghost" 
-                  className="h-9 text-zinc-300 hover:bg-zinc-900 hover:text-white"
-                  asChild
+                  size="icon" 
+                  className="h-9 w-9 rounded-lg hover:bg-zinc-900 text-zinc-400 hover:text-white"
+                  onClick={() => setPreviewOpen(false)}
                 >
-                  <a href={previewResource.url} download target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
-                    <Download className="h-4 w-4 text-amber-500" />
-                    <span className="hidden sm:inline">Download</span>
-                  </a>
+                  <X className="h-5 w-5" />
+                  <span className="sr-only">Close</span>
                 </Button>
-              )}
-              
-              <div className="w-px h-6 bg-zinc-800 mx-1 hidden sm:block"></div>
-
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-9 w-9 rounded-lg hover:bg-zinc-900 text-zinc-400 hover:text-white"
-                onClick={() => setPreviewOpen(false)}
-              >
-                <X className="h-5 w-5" />
-                <span className="sr-only">Close</span>
-              </Button>
+              </div>
             </div>
-          </div>
 
-          {/* Viewer Container */}
-          <div className="flex-1 w-full bg-zinc-950/40 p-4 md:p-8 flex items-center justify-center overflow-hidden">
-            {previewResource && renderPreviewContent(previewResource)}
-          </div>
-        </DialogContent>
-      </Dialog>
+            {/* Viewer Container */}
+            <div className="flex-1 w-full p-4 md:p-8 flex items-center justify-center overflow-hidden">
+              {previewResource && renderPreviewContent(previewResource)}
+            </div>
+          </DialogPrimitive.Content>
+        </DialogPrimitive.Portal>
+      </DialogPrimitive.Root>
     </div>
   )
 }
@@ -756,20 +767,34 @@ function renderPreviewContent(resource: ResourceRow) {
     return (
       <iframe 
         src={officeViewerUrl} 
-        className="w-full h-full min-h-[75vh] md:min-h-[80vh] border border-zinc-800 rounded-lg bg-zinc-950 shadow-2xl"
+        className="w-full h-full min-h-[75vh] md:min-h-[85vh] max-w-5xl mx-auto border border-zinc-800 rounded-lg bg-zinc-950 shadow-2xl"
         title={resource.title}
         frameBorder="0"
       />
     )
   }
 
-  // PDF or plain text
-  if (resource.file_type === "pdf" || ext === ".pdf" || ext === ".txt" || ext === ".csv") {
+  // PDF
+  if (resource.file_type === "pdf" || ext === ".pdf") {
     return (
       <iframe 
-        src={url} 
-        className="w-full h-full min-h-[75vh] md:min-h-[80vh] border border-zinc-800 rounded-lg bg-white shadow-2xl"
+        src={`${url}#toolbar=1&navpanes=0&view=Fit`}
+        className="w-full h-full min-h-[75vh] md:min-h-[85vh] max-w-5xl mx-auto border border-zinc-800 rounded-lg bg-zinc-950 shadow-2xl"
         title={resource.title}
+        frameBorder="0"
+      />
+    )
+  }
+
+  // Plain text or CSV
+  if (ext === ".txt" || ext === ".csv" || ext === ".rtf") {
+    const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`
+    return (
+      <iframe 
+        src={googleViewerUrl} 
+        className="w-full h-full min-h-[75vh] md:min-h-[85vh] max-w-5xl mx-auto border border-zinc-800 rounded-lg bg-zinc-950 shadow-2xl"
+        title={resource.title}
+        frameBorder="0"
       />
     )
   }

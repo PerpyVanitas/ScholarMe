@@ -27,6 +27,10 @@ sealed class Screen(val route: String) {
     object QuizStudy : Screen("quiz_study/{quizId}") {
         fun createRoute(quizId: String) = "quiz_study/$quizId"
     }
+    object FlashcardList : Screen("flashcards")
+    object FlashcardStudy : Screen("flashcard_study/{flashcardId}") {
+        fun createRoute(flashcardId: String) = "flashcard_study/$flashcardId"
+    }
 
 
     // Phase 3: Role-Specific

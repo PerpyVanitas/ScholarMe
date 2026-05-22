@@ -15,6 +15,7 @@ export async function GET() {
       .from("study_sets")
       .select(STUDY_SET_LIST_SELECT)
       .eq("user_id", user.id)
+      .neq("generation_mode", "flashcard")
       .order("created_at", { ascending: false })
 
     if (error) {

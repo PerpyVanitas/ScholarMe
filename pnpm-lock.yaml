@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@google/genai':
+        specifier: ^2.5.0
+        version: 2.5.0
       '@hookform/resolvers':
         specifier: ^3.9.1
         version: 3.10.0(react-hook-form@7.71.2(react@19.2.4))
@@ -419,6 +422,15 @@ packages:
   '@google-cloud/storage@7.19.0':
     resolution: {integrity: sha512-n2FjE7NAOYyshogdc7KQOl/VZb4sneqPjWouSyia9CMDdMhRX5+RIbqalNmC7LOLzuLAN89VlF2HvG8na9G+zQ==}
     engines: {node: '>=14'}
+
+  '@google/genai@2.5.0':
+    resolution: {integrity: sha512-qDi3LLh9I3llJK0f9uV8kZ8EdT9oHPxGJJ9yOJ/i5YXYrVwRCs8jHo9x4e99uOeKYDvD3TZwT70p/H/LS3BixQ==}
+    engines: {node: '>=20.0.0'}
+    peerDependencies:
+      '@modelcontextprotocol/sdk': ^1.25.2
+    peerDependenciesMeta:
+      '@modelcontextprotocol/sdk':
+        optional: true
 
   '@grpc/grpc-js@1.14.3':
     resolution: {integrity: sha512-Iq8QQQ/7X3Sac15oB6p0FmUg/klxQvXLeileoqrTRGJYLV+/9tubbr9ipz0GKHjmXVsgFPo/+W+2cA8eNcR+XA==}
@@ -1599,6 +1611,9 @@ packages:
 
   '@types/request@2.48.13':
     resolution: {integrity: sha512-FGJ6udDNUCjd19pp0Q3iTiDkwhYup7J8hpMW9c4k53NrccQFFWKRho6hvtPPEhnXWKvukfwAlB6DbDz4yhH5Gg==}
+
+  '@types/retry@0.12.0':
+    resolution: {integrity: sha512-wWKOClTTiizcZhXnPY4wikVAwmdYHp8q6DmC+EJUzAMsycb7HB32Kh9RN4+0gExjmPmZSAQjgURXIGATPegAvA==}
 
   '@types/tough-cookie@4.0.5':
     resolution: {integrity: sha512-/Ad8+nIOV7Rl++6f1BdKxFSMgmoqEoYbHRpPcx3JEfv8VRsQe9Z4mCXeJBzxs7mbHY/XOZZuXlRNfhpVPbs6ZA==}
@@ -3151,6 +3166,10 @@ packages:
     resolution: {integrity: sha512-LaNjtRWUBY++zB5nE/NwcaoMylSPk+S+ZHNB1TzdbMJMny6dynpAGt7X/tl/QYq3TIeE6nxHppbo2LGymrG5Pw==}
     engines: {node: '>=10'}
 
+  p-retry@4.6.2:
+    resolution: {integrity: sha512-312Id396EbJdvRONlngUx0NydfrIQ5lsYu0znKVUzVvArzEIt08V1qhtyESbGVd1FGX7UKtiFp5uwKZdM8wIuQ==}
+    engines: {node: '>=8'}
+
   parent-module@1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
     engines: {node: '>=6'}
@@ -4115,6 +4134,17 @@ snapshots:
       - supports-color
     optional: true
 
+  '@google/genai@2.5.0':
+    dependencies:
+      google-auth-library: 10.6.2
+      p-retry: 4.6.2
+      protobufjs: 7.5.9
+      ws: 8.19.0
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+
   '@grpc/grpc-js@1.14.3':
     dependencies:
       '@grpc/proto-loader': 0.8.1
@@ -4333,37 +4363,27 @@ snapshots:
   '@opentelemetry/api@1.9.0':
     optional: true
 
-  '@protobufjs/aspromise@1.1.2':
-    optional: true
+  '@protobufjs/aspromise@1.1.2': {}
 
-  '@protobufjs/base64@1.1.2':
-    optional: true
+  '@protobufjs/base64@1.1.2': {}
 
-  '@protobufjs/codegen@2.0.5':
-    optional: true
+  '@protobufjs/codegen@2.0.5': {}
 
-  '@protobufjs/eventemitter@1.1.0':
-    optional: true
+  '@protobufjs/eventemitter@1.1.0': {}
 
   '@protobufjs/fetch@1.1.1':
     dependencies:
       '@protobufjs/aspromise': 1.1.2
-    optional: true
 
-  '@protobufjs/float@1.0.2':
-    optional: true
+  '@protobufjs/float@1.0.2': {}
 
-  '@protobufjs/inquire@1.1.2':
-    optional: true
+  '@protobufjs/inquire@1.1.2': {}
 
-  '@protobufjs/path@1.1.2':
-    optional: true
+  '@protobufjs/path@1.1.2': {}
 
-  '@protobufjs/pool@1.1.0':
-    optional: true
+  '@protobufjs/pool@1.1.0': {}
 
-  '@protobufjs/utf8@1.1.1':
-    optional: true
+  '@protobufjs/utf8@1.1.1': {}
 
   '@radix-ui/number@1.1.1': {}
 
@@ -5250,6 +5270,8 @@ snapshots:
       '@types/tough-cookie': 4.0.5
       form-data: 2.5.5
     optional: true
+
+  '@types/retry@0.12.0': {}
 
   '@types/tough-cookie@4.0.5':
     optional: true
@@ -6808,8 +6830,7 @@ snapshots:
 
   lodash@4.17.23: {}
 
-  long@5.3.2:
-    optional: true
+  long@5.3.2: {}
 
   loose-envify@1.4.0:
     dependencies:
@@ -7003,6 +7024,11 @@ snapshots:
     dependencies:
       p-limit: 3.1.0
 
+  p-retry@4.6.2:
+    dependencies:
+      '@types/retry': 0.12.0
+      retry: 0.13.1
+
   parent-module@1.0.1:
     dependencies:
       callsites: 3.1.0
@@ -7108,7 +7134,6 @@ snapshots:
       '@protobufjs/utf8': 1.1.1
       '@types/node': 22.19.11
       long: 5.3.2
-    optional: true
 
   punycode@2.3.1: {}
 

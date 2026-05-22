@@ -24,8 +24,8 @@ data class LeaderboardResponse(
 
 @Parcelize
 data class XpAwardResponse(
-    val newXp: Int,
-    val newLevel: Int,
-    val leveledUp: Boolean,
-    val xpEarned: Int
+    val success: Boolean,
+    @SerializedName("total_xp") val totalXp: Int,
+    @SerializedName("current_level") val currentLevel: Int,
+    @SerializedName("xp_earned") val xpEarned: Int
 ) : Parcelable

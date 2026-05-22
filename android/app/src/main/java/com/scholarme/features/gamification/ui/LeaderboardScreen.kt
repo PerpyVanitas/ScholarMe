@@ -153,6 +153,11 @@ fun LeaderboardItem(entry: LeaderboardEntry, isCurrentUser: Boolean) {
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
+                    .androidx.compose.foundation.border(
+                        width = 2.dp,
+                        color = GamificationUtils.getLevelColor(entry.currentLevel),
+                        shape = CircleShape
+                    )
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentScale = ContentScale.Crop
             )
@@ -168,7 +173,7 @@ fun LeaderboardItem(entry: LeaderboardEntry, isCurrentUser: Boolean) {
                     maxLines = 1
                 )
                 Text(
-                    "Level ${entry.currentLevel}",
+                    "Level ${entry.currentLevel} • ${GamificationUtils.getLevelTitle(entry.currentLevel)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold

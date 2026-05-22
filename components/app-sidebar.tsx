@@ -56,46 +56,85 @@ interface AppSidebarProps {
 }
 
 function getNavItems(role: UserRole) {
-  const shared = [
+  // Core items available to everyone
+  const coreItems = [
     { title: "Dashboard", href: "/dashboard/home", icon: LayoutDashboard },
-    { title: "Messages", href: "/dashboard/messages", icon: MessageSquare },
-    { title: "Voting", href: "/dashboard/voting", icon: Vote },
-    { title: "Leaderboard", href: "/dashboard/leaderboard", icon: Trophy },
     { title: "Notifications", href: "/dashboard/notifications", icon: Bell },
-    { title: "Profile", href: "/dashboard/profile", icon: UserCircle },
   ];
 
-  const learnerItems = [
-    { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
-    { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
-    { title: "Resources", href: "/dashboard/resources", icon: BookOpen },
-    { title: "Study Quizzes", href: "/dashboard/quizzes", icon: Lightbulb },
+  // Study items depending on role
+  let studyItems: { title: string; href: string; icon: any }[] = [];
+  if (role === "learner") {
+    studyItems = [
+      { title: "Resources", href: "/dashboard/resources", icon: BookOpen },
+      { title: "Study Quizzes", href: "/dashboard/quizzes", icon: Lightbulb },
+      { title: "Flashcards", href: "/dashboard/flashcards", icon: BookOpen },
+    ];
+  } else if (role === "tutor") {
+    studyItems = [
+      { title: "My Repositories", href: "/dashboard/resources", icon: FolderOpen },
+      { title: "Study Quizzes", href: "/dashboard/quizzes", icon: Lightbulb },
+      { title: "Flashcards", href: "/dashboard/flashcards", icon: BookOpen },
+    ];
+  } else if (role === "administrator") {
+    studyItems = [
+      { title: "All Resources", href: "/dashboard/resources", icon: FolderOpen },
+      { title: "Study Quizzes", href: "/dashboard/quizzes", icon: Lightbulb },
+      { title: "Flashcards", href: "/dashboard/flashcards", icon: BookOpen },
+    ];
+  }
+
+  // Community items depending on role
+  let communityItems: { title: string; href: string; icon: any }[] = [];
+  if (role === "learner") {
+    communityItems = [
+      { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
+      { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
+      { title: "Messages", href: "/dashboard/messages", icon: MessageSquare },
+      { title: "Voting", href: "/dashboard/voting", icon: Vote },
+      { title: "Leaderboard", href: "/dashboard/leaderboard", icon: Trophy },
+    ];
+  } else if (role === "tutor" || role === "administrator") {
+    communityItems = [
+      { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
+      { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
+      { title: "Messages", href: "/dashboard/messages", icon: MessageSquare },
+      { title: "Voting", href: "/dashboard/voting", icon: Vote },
+      { title: "Leaderboard", href: "/dashboard/leaderboard", icon: Trophy },
+    ];
+  }
+
+  // Admin/Tutor specific management tools
+  let managementItems: { title: string; href: string; icon: any }[] = [];
+  if (role === "tutor") {
+    managementItems = [
+      { title: "Timesheet", href: "/dashboard/timesheet", icon: Timer },
+      { title: "Availability", href: "/dashboard/availability", icon: Clock },
+    ];
+  } else if (role === "administrator") {
+    managementItems = [
+      { title: "Users Management", href: "/dashboard/admin/users", icon: Users },
+      { title: "All Sessions", href: "/dashboard/admin/sessions", icon: Calendar },
+      { title: "Timesheets", href: "/dashboard/admin/timesheets", icon: Timer },
+      { title: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
+      { title: "User Messages", href: "/dashboard/admin/messages", icon: MessageSquare },
+    ];
+  }
+
+  const groups = [
+    { label: "Core", items: coreItems },
+    { label: "Academics & Study", items: studyItems }
   ];
 
-  const tutorItems = [
-    { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
-    { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
-    { title: "Timesheet", href: "/dashboard/timesheet", icon: Timer },
-    { title: "Availability", href: "/dashboard/availability", icon: Clock },
-    { title: "My Repositories", href: "/dashboard/resources", icon: FolderOpen },
-  ];
+  if (communityItems.length > 0) {
+    groups.push({ label: "Community & Interaction", items: communityItems });
+  }
+  
+  if (managementItems.length > 0) {
+    groups.push({ label: `${roleLabels[role]} Tools`, items: managementItems });
+  }
 
-  const adminItems = [
-    { title: "Users", href: "/dashboard/admin/users", icon: Users },
-    { title: "All Sessions", href: "/dashboard/admin/sessions", icon: Calendar },
-    { title: "Timesheets", href: "/dashboard/admin/timesheets", icon: Timer },
-    { title: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
-    { title: "Resources", href: "/dashboard/resources", icon: FolderOpen },
-    { title: "User Messages", href: "/dashboard/admin/messages", icon: MessageSquare },
-  ];
-
-  const roleItems = {
-    learner: learnerItems,
-    tutor: tutorItems,
-    administrator: adminItems,
-  };
-
-  return { shared, roleSpecific: roleItems[role] || learnerItems };
+  return groups;
 }
 
 const roleLabels: Record<UserRole, string> = {
@@ -106,7 +145,7 @@ const roleLabels: Record<UserRole, string> = {
 
 export function AppSidebar({ profile, role, notificationCount }: AppSidebarProps) {
   const pathname = usePathname();
-  const { shared, roleSpecific } = getNavItems(role);
+  const navGroups = getNavItems(role);
   const initials = profile?.full_name
     ? profile.full_name
         .split(" ")
@@ -148,46 +187,30 @@ export function AppSidebar({ profile, role, notificationCount }: AppSidebarProps
       <SidebarSeparator />
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>General</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {shared.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.title}>
-                    <Link href={item.href}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                      {item.title === "Notifications" && notificationCount > 0 && (
-                        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium text-primary-foreground">
-                          {notificationCount > 99 ? "99+" : notificationCount}
-                        </span>
-                      )}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>{roleLabels[role]} Tools</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {roleSpecific.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.title}>
-                    <Link href={item.href}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {navGroups.map((group, index) => (
+          <SidebarGroup key={index}>
+            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.items.map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.title}>
+                      <Link href={item.href}>
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                        {item.title === "Notifications" && notificationCount > 0 && (
+                          <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium text-primary-foreground">
+                            {notificationCount > 99 ? "99+" : notificationCount}
+                          </span>
+                        )}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
 
       <SidebarFooter>
@@ -202,12 +225,12 @@ export function AppSidebar({ profile, role, notificationCount }: AppSidebarProps
                       {initials}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex flex-col gap-0.5 leading-none">
-                    <span className="text-sm font-medium truncate">
+                  <div className="flex flex-col gap-0.5 leading-none overflow-hidden">
+                    <span className="text-sm font-bold truncate">
                       {profile?.full_name || "User"}
                     </span>
-                    <span className="text-xs text-muted-foreground truncate">
-                      {profile?.email || ""}
+                    <span className="text-[10px] uppercase font-bold text-primary truncate">
+                      {profile?.current_level ? `Level ${profile.current_level} • ${profile.total_xp} XP` : "Novice"}
                     </span>
                   </div>
                   <ChevronsUpDown className="ml-auto h-4 w-4 text-muted-foreground" />

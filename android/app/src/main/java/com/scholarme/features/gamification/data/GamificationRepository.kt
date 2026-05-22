@@ -29,20 +29,10 @@ class GamificationRepository @Inject constructor(
     suspend fun awardXp(xpAmount: Int, reason: String): Result<XpAwardResponse> {
         return withContext(Dispatchers.IO) {
             try {
-                val response = gamificationApi.awardXp(mapOf("xpAmount" to xpAmount, "reason" to reason))
-                if (response.isSuccessful && response.body()?.success == true) {
-                    val data = response.body()?.data
-                    if (data != null) {
-                         val result = XpAwardResponse(
-                             newXp = (data["newXp"] as? Double)?.toInt() ?: 0,
-                             newLevel = (data["newLevel"] as? Double)?.toInt() ?: 1,
-                             leveledUp = data["leveledUp"] as? Boolean ?: false,
-                             xpEarned = (data["xpEarned"] as? Double)?.toInt() ?: 0
-                         )
-                        Result.Success(result)
-                    } else {
-                        Result.Error("Empty response")
-                    }
+                val response = gamificationApi.awardXp(mapOf("amount" to xpAmount, "reason" to reason))
+                val body = response.body()
+                if (response.isSuccessful && body?.success == true) {
+                    Result.Success(body)
                 } else {
                     Result.Error("Failed to award XP")
                 }

@@ -6,12 +6,15 @@ import retrofit2.Response
 import retrofit2.http.*
 
 interface QuizApi {
-    @GET("quizzes")
+    @GET("api/quizzes")
     suspend fun getQuizzes(): Response<ApiResponse<List<QuizDto>>>
 
-    @GET("quizzes/{id}/questions")
+    @GET("api/quizzes/{id}/questions")
     suspend fun getQuizQuestions(@Path("id") id: String): Response<ApiResponse<List<QuizQuestionDto>>>
 
-    @GET("quizzes/{id}/study")
+    @GET("api/quizzes/{id}/study")
     suspend fun getStudySet(@Path("id") id: String): Response<ApiResponse<StudySetResponse>>
+
+    @POST("api/quizzes/generate")
+    suspend fun generateQuiz(@Body request: GenerateQuizRequest): Response<ApiResponse<Any>>
 }

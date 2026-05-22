@@ -50,7 +50,6 @@ export default function StudyModePage({ params }: { params: Promise<{ id: string
   const [showAnswer, setShowAnswer] = useState(false)
   const [selectedAnswer, setSelectedAnswer] = useState<string>("")
   const [answers, setAnswers] = useState<Record<string, { answer: string; correct: boolean }>>({})
-  const [studyMode, setStudyMode] = useState<"flashcard" | "quiz">("flashcard")
   const [isComplete, setIsComplete] = useState(false)
   const [startTime] = useState(Date.now())
   const [shuffledItems, setShuffledItems] = useState<StudySetItem[]>([])
@@ -101,6 +100,7 @@ export default function StudyModePage({ params }: { params: Promise<{ id: string
       setShowAnswer(false)
       setSelectedAnswer("")
     } else {
+      saveAttempt()
       setIsComplete(true)
     }
   }
@@ -111,10 +111,6 @@ export default function StudyModePage({ params }: { params: Promise<{ id: string
       setShowAnswer(false)
       setSelectedAnswer("")
     }
-  }
-
-  function handleFlip() {
-    setShowAnswer(!showAnswer)
   }
 
   function handleAnswerSelect(answer: string) {
@@ -156,6 +152,15 @@ export default function StudyModePage({ params }: { params: Promise<{ id: string
           time_spent_seconds: timeSpent,
         }),
       })
+
+      // Earn XP for finishing a quiz
+      const { earnXp } = await import("@/lib/utils/gamification")
+      const xpData = await earnXp(50, "Completed Quiz")
+      if (xpData.success) {
+        toast.success(`🎉 +50 XP Earned!`, {
+          description: xpData.current_level ? `You are now Level ${xpData.current_level}` : "Great job completing the quiz!",
+        })
+      }
     } catch (error) {
       console.error("Failed to save attempt:", error)
     }
@@ -198,9 +203,6 @@ export default function StudyModePage({ params }: { params: Promise<{ id: string
     const minutes = Math.floor(timeSpent / 60)
     const seconds = timeSpent % 60
     const percentage = Math.round((correctCount / shuffledItems.length) * 100)
-
-    // Save attempt
-    saveAttempt()
 
     return (
       <div className="container mx-auto p-6 max-w-2xl">
@@ -269,127 +271,70 @@ export default function StudyModePage({ params }: { params: Promise<{ id: string
       {/* Progress */}
       <Progress value={progress} className="mb-6 h-2" />
 
-      {/* Study Mode Tabs */}
-      <div className="flex gap-2 mb-6">
-        <Button 
-          variant={studyMode === "flashcard" ? "default" : "outline"} 
-          size="sm"
-          onClick={() => setStudyMode("flashcard")}
-        >
-          Flashcard Mode
-        </Button>
-        <Button 
-          variant={studyMode === "quiz" ? "default" : "outline"} 
-          size="sm"
-          onClick={() => setStudyMode("quiz")}
-        >
-          Quiz Mode
-        </Button>
-      </div>
+
 
       {/* Card */}
       <Card className="min-h-[300px] mb-6">
         <CardContent className="p-8">
-          {studyMode === "flashcard" ? (
-            // Flashcard Mode
-            <div 
-              className="cursor-pointer min-h-[220px] w-full"
-              style={{ perspective: "1000px" }}
-              onClick={handleFlip}
-            >
-              <div 
-                className="relative w-full h-full min-h-[220px] transition-transform duration-500 ease-in-out"
-                style={{ 
-                  transformStyle: "preserve-3d", 
-                  transform: showAnswer ? "rotateY(180deg)" : "rotateY(0deg)" 
-                }}
-              >
-                {/* Front (Question) */}
-                <div 
-                  className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-card"
-                  style={{ backfaceVisibility: "hidden" }}
-                >
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground mb-4">Question</p>
-                  <p className="text-xl font-medium">{currentItem.question}</p>
-                  <p className="text-sm text-muted-foreground mt-6">Click to reveal answer</p>
-                </div>
-
-                {/* Back (Answer) */}
-                <div 
-                  className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-card"
-                  style={{ 
-                    backfaceVisibility: "hidden", 
-                    transform: "rotateY(180deg)" 
-                  }}
-                >
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground mb-4">Answer</p>
-                  <p className="text-xl font-medium text-primary">{currentItem.answer}</p>
-                  <p className="text-sm text-muted-foreground mt-6">Click to see question</p>
-                </div>
-              </div>
-            </div>
-          ) : (
-            // Quiz Mode
-            <div className="min-h-[220px]">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground mb-4">Question</p>
-              <p className="text-xl font-medium mb-6">{currentItem.question}</p>
-              
-              {currentItem.item_type === "true_false" ? (
-                <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect} disabled={showAnswer}>
-                  <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-muted/50">
-                    <RadioGroupItem value="true" id="true" />
-                    <Label htmlFor="true" className="flex-1 cursor-pointer">True</Label>
-                    {showAnswer && currentItem.answer.toLowerCase() === "true" && (
-                      <CheckCircle className="h-5 w-5 text-green-500" />
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-muted/50">
-                    <RadioGroupItem value="false" id="false" />
-                    <Label htmlFor="false" className="flex-1 cursor-pointer">False</Label>
-                    {showAnswer && currentItem.answer.toLowerCase() === "false" && (
-                      <CheckCircle className="h-5 w-5 text-green-500" />
-                    )}
-                  </div>
-                </RadioGroup>
-              ) : currentItem.options && currentItem.options.length > 0 ? (
-                <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect} disabled={showAnswer}>
-                  {currentItem.options.map((option, idx) => (
-                    <div 
-                      key={idx} 
-                      className={`flex items-center space-x-2 p-3 rounded-lg border hover:bg-muted/50 ${
-                        showAnswer && option === currentItem.answer ? "border-green-500 bg-green-50 dark:bg-green-950/20" : ""
-                      } ${
-                        showAnswer && selectedAnswer === option && option !== currentItem.answer ? "border-orange-500 bg-orange-50 dark:bg-orange-950/20" : ""
-                      }`}
-                    >
-                      <RadioGroupItem value={option} id={`option-${idx}`} />
-                      <Label htmlFor={`option-${idx}`} className="flex-1 cursor-pointer">{option}</Label>
-                      {showAnswer && option === currentItem.answer && (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                      )}
-                      {showAnswer && selectedAnswer === option && option !== currentItem.answer && (
-                        <XCircle className="h-5 w-5 text-orange-500" />
-                      )}
-                    </div>
-                  ))}
-                </RadioGroup>
-              ) : (
-                // Free text - show answer on click
-                <div>
-                  {!showAnswer ? (
-                    <Button onClick={() => setShowAnswer(true)} variant="outline" className="w-full">
-                      Show Answer
-                    </Button>
-                  ) : (
-                    <div className="p-4 bg-muted rounded-lg">
-                      <p className="text-sm text-muted-foreground mb-1">Correct Answer:</p>
-                      <p className="font-medium text-primary">{currentItem.answer}</p>
-                    </div>
+          <div className="min-h-[220px]">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground mb-4">Question</p>
+            <p className="text-xl font-medium mb-6">{currentItem.question}</p>
+            
+            {currentItem.item_type === "true_false" ? (
+              <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect} disabled={showAnswer}>
+                <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-muted/50">
+                  <RadioGroupItem value="true" id="true" />
+                  <Label htmlFor="true" className="flex-1 cursor-pointer">True</Label>
+                  {showAnswer && currentItem.answer.toLowerCase() === "true" && (
+                    <CheckCircle className="h-5 w-5 text-green-500" />
                   )}
                 </div>
-              )}
-            </div>
-          )}
+                <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-muted/50">
+                  <RadioGroupItem value="false" id="false" />
+                  <Label htmlFor="false" className="flex-1 cursor-pointer">False</Label>
+                  {showAnswer && currentItem.answer.toLowerCase() === "false" && (
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                  )}
+                </div>
+              </RadioGroup>
+            ) : currentItem.options && currentItem.options.length > 0 ? (
+              <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect} disabled={showAnswer}>
+                {currentItem.options.map((option, idx) => (
+                  <div 
+                    key={idx} 
+                    className={`flex items-center space-x-2 p-3 rounded-lg border hover:bg-muted/50 ${
+                      showAnswer && option === currentItem.answer ? "border-green-500 bg-green-50 dark:bg-green-950/20" : ""
+                    } ${
+                      showAnswer && selectedAnswer === option && option !== currentItem.answer ? "border-orange-500 bg-orange-50 dark:bg-orange-950/20" : ""
+                    }`}
+                  >
+                    <RadioGroupItem value={option} id={`option-${idx}`} />
+                    <Label htmlFor={`option-${idx}`} className="flex-1 cursor-pointer">{option}</Label>
+                    {showAnswer && option === currentItem.answer && (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    )}
+                    {showAnswer && selectedAnswer === option && option !== currentItem.answer && (
+                      <XCircle className="h-5 w-5 text-orange-500" />
+                    )}
+                  </div>
+                ))}
+              </RadioGroup>
+            ) : (
+              // Free text - show answer on click
+              <div>
+                {!showAnswer ? (
+                  <Button onClick={() => setShowAnswer(true)} variant="outline" className="w-full">
+                    Show Answer
+                  </Button>
+                ) : (
+                  <div className="p-4 bg-muted rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">Correct Answer:</p>
+                    <p className="font-medium text-primary">{currentItem.answer}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 

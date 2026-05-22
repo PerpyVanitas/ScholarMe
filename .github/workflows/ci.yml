@@ -14,7 +14,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Scan for secrets
-        uses: trufflesecurity/trufflehog-action@main
+        uses: trufflesecurity/trufflehog@main
         with:
           path: ./
           base: ${{ github.event.repository.default_branch }}
@@ -108,7 +108,7 @@ jobs:
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-token: "${{ secrets['VERCEL_TOKEN'] }}"
+          vercel-org-id: "${{ secrets['VERCEL_ORG_ID'] }}"
+          vercel-project-id: "${{ secrets['VERCEL_PROJECT_ID'] }}"
           vercel-args: '--prod'

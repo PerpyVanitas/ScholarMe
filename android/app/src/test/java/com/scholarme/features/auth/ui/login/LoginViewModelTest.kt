@@ -3,8 +3,8 @@ package com.scholarme.features.auth.ui.login
 import com.scholarme.core.util.Result
 import com.scholarme.features.auth.data.AuthRepository
 import com.scholarme.features.profile.data.model.UserProfile
-import io.mockk.coEvery
-import io.mockk.mockk
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -21,13 +21,13 @@ import org.junit.Assert.assertTrue
 class LoginViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
-    private lateinit val authRepository: AuthRepository
-    private lateinit val viewModel: LoginViewModel
+    private lateinit var authRepository: AuthRepository
+    private lateinit var viewModel: LoginViewModel
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        authRepository = mockk()
+        authRepository = mock()
         viewModel = LoginViewModel(authRepository)
     }
 
@@ -69,7 +69,7 @@ class LoginViewModelTest {
             isProfileComplete = true
         )
         
-        coEvery { authRepository.login("test@example.com", "password123") } returns Result.Success(mockUser)
+        whenever(authRepository.login("test@example.com", "password123")).thenReturn(Result.Success(mockUser))
         
         viewModel.login("test@example.com", "password123")
         
@@ -97,7 +97,7 @@ class LoginViewModelTest {
             isProfileComplete = true
         )
 
-        coEvery { authRepository.loginWithCard("card123", "1234") } returns Result.Success(mockUser)
+        whenever(authRepository.loginWithCard("card123", "1234")).thenReturn(Result.Success(mockUser))
 
         viewModel.loginWithCard("card123", "1234")
 
