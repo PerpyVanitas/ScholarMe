@@ -6,15 +6,15 @@ import retrofit2.Response
 import retrofit2.http.*
 
 interface FlashcardApi {
-    @GET("api/flashcards")
+    @GET("flashcards")
     suspend fun getflashcards(): Response<ApiResponse<List<FlashcardDto>>>
 
-    @GET("api/flashcards/{id}/questions")
+    @GET("flashcards/{id}/questions")
     suspend fun getFlashcardQuestions(@Path("id") id: String): Response<ApiResponse<List<FlashcardQuestionDto>>>
 
-    @GET("api/flashcards/{id}/study")
+    @GET("flashcards/{id}/study")
     suspend fun getStudySet(@Path("id") id: String): Response<ApiResponse<StudySetResponse>>
 
-    @POST("api/flashcards/generate")
+    @POST("flashcards/generate")
     suspend fun generateFlashcard(@Body request: GenerateFlashcardRequest): Response<ApiResponse<Any>>
 }

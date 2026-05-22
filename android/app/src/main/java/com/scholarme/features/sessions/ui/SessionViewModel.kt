@@ -55,7 +55,7 @@ class SessionViewModel @Inject constructor(
         }
     }
 
-    fun markSessionComplete(sessionId: String, durationHours: Int = 1, onXpEarned: (Int) -> Unit = {}) {
+    fun markSessionComplete(durationHours: Int = 1, onXpEarned: (Int) -> Unit = {}) {
         viewModelScope.launch {
             // Usually we would update session status on backend first via repository.
             // Reward 25 XP per hour of tutoring

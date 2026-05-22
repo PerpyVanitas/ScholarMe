@@ -23,7 +23,7 @@ class UserManagementViewModel @Inject constructor(
         loadUsers()
     }
 
-    fun loadUsers(search: String? = null, role: String? = null) {
+    fun loadUsers() {
         viewModelScope.launch {
             _users.value = Result.Loading
             _users.value = repository.getUsers()

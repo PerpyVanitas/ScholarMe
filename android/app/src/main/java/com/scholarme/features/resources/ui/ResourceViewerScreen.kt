@@ -66,8 +66,8 @@ fun ResourceViewerScreen(
                     Text(result.message, color = MaterialTheme.colorScheme.error)
                 }
             }
-            is Result.Success<*> -> {
-                val files = result.data as? List<ResourceDto> ?: emptyList()
+            is Result.Success -> {
+                val files = result.data
                 if (files.isEmpty()) {
                     Box(
                         modifier = Modifier

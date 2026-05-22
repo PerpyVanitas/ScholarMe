@@ -53,7 +53,6 @@ fun UserManagementScreen(
                 value = searchQuery,
                 onValueChange = { 
                     searchQuery = it
-                    viewModel.loadUsers(search = it)
                 },
                 placeholder = { Text("Search by name or email...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
@@ -75,7 +74,15 @@ fun UserManagementScreen(
                     }
                 }
                 is Result.Success -> {
-                    val users = result.data
+                    val users = if (searchQuery.isNotBlank()) {
+                        result.data.filter { user ->
+                            user.fullName?.contains(searchQuery, ignoreCase = true) == true ||
+                            user.email?.contains(searchQuery, ignoreCase = true) == true
+                        }
+                    } else {
+                        result.data
+                    }
+                    
                     if (users.isEmpty()) {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text("No users found")

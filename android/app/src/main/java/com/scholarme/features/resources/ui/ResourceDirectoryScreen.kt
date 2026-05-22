@@ -31,6 +31,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.scholarme.features.resources.data.model.RepositoryDto
 import com.scholarme.core.util.Result
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.asRequestBody
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -215,7 +216,7 @@ fun ResourceDirectoryScreen(
                                     
                                     val mimeType = context.contentResolver.getType(selectedFileUri!!) ?: "application/octet-stream"
                                     val mediaType = mimeType.toMediaTypeOrNull()
-                                    val requestFile = okhttp3.RequestBody.create(mediaType, file)
+                                    val requestFile = file.asRequestBody(mediaType)
                                     val body = okhttp3.MultipartBody.Part.createFormData("file", file.name, requestFile)
                                     
                                     viewModel.uploadResource(selectedRepoId, uploadTitle, uploadDescription, body)

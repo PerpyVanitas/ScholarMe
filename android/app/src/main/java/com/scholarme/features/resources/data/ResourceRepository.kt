@@ -5,6 +5,7 @@ import com.scholarme.features.resources.data.remote.ResourceApi
 import com.scholarme.core.util.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.RequestBody.Companion.toRequestBody
 import javax.inject.Inject
 
 class ResourceRepository @Inject constructor(
@@ -48,9 +49,9 @@ class ResourceRepository @Inject constructor(
     ): Result<ResourceDto> {
         return withContext(Dispatchers.IO) {
             try {
-                val repoIdBody = okhttp3.RequestBody.create(okhttp3.MultipartBody.FORM, repositoryId)
-                val titleBody = okhttp3.RequestBody.create(okhttp3.MultipartBody.FORM, title)
-                val descBody = description?.let { okhttp3.RequestBody.create(okhttp3.MultipartBody.FORM, it) }
+                val repoIdBody = repositoryId.toRequestBody(okhttp3.MultipartBody.FORM)
+                val titleBody = title.toRequestBody(okhttp3.MultipartBody.FORM)
+                val descBody = description?.toRequestBody(okhttp3.MultipartBody.FORM)
                 
                 val response = resourceApi.uploadResource(repoIdBody, titleBody, descBody, fileBody)
                 if (response.isSuccessful && response.body()?.success == true) {
