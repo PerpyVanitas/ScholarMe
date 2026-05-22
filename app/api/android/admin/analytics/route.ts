@@ -16,7 +16,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
     }
     const { data: profile } = await authSupabase.from("profiles").select("*, roles(name)").eq("id", user.id).single();
-    if (getRoleName(profile) !== "admin") {
+    if (getRoleName(profile) !== "administrator") {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 403 });
     }
 
