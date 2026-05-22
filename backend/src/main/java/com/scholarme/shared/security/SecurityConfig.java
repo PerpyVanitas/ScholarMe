@@ -39,6 +39,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+            // CSRF disabled: this API is stateless (JWT Bearer tokens only).
+            // No session cookies are issued, so CSRF attacks are not applicable.
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -47,6 +49,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/tutors/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/specializations/**").permitAll()
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMINISTRATOR")
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/actuator/health").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
@@ -59,7 +63,13 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
+        config.setAllowedHeaders(List.of(
+            "Authorization",
+            "Content-Type",
+            "Accept",
+            "X-Requested-With",
+            "Cache-Control"
+        ));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 
