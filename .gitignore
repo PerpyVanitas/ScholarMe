@@ -21,3 +21,15 @@ android/local.properties
 # Java/Maven ignores
 backend/target/
 *.class
+
+# Cleanup ignores
+scratch_*.mjs
+scratch_*.js
+fetch_*.mjs
+fetch_*.js
+test_update.ts
+run_migration.mjs
+tsconfig.tsbuildinfo
+android/gradle-output.txt
+package-lock.json
+lib/demo.ts
