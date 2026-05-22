@@ -1,6 +1,8 @@
 package com.scholarme.features.sessions;
 
 import com.scholarme.features.sessions.dto.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.scholarme.shared.dto.ApiResponse;
 import com.scholarme.shared.entity.User;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +29,7 @@ import java.util.UUID;
  * 
  * @see SessionService for business logic
  */
+@Tag(name = "Sessions", description = "Tutoring session management endpoints")
 @RestController
 @RequestMapping("/api/v1/sessions")
 public class SessionController {
@@ -86,6 +89,7 @@ public class SessionController {
      * @param request New status value
      * @return Updated session DTO
      */
+    @Operation(summary = "Endpoint")
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('TUTOR') or hasRole('ADMINISTRATOR')")
     public ResponseEntity<ApiResponse<SessionDto>> updateStatus(
@@ -109,6 +113,7 @@ public class SessionController {
      * @param request Rating (1-5 stars) and optional comment
      * @return Created rating DTO
      */
+    @Operation(summary = "Endpoint")
     @PostMapping("/{id}/rating")
     public ResponseEntity<ApiResponse<SessionRatingDto>> rateSession(
             @AuthenticationPrincipal User user,

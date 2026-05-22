@@ -1,6 +1,8 @@
 package com.scholarme.features.auth;
 
 import com.scholarme.shared.dto.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.scholarme.features.auth.dto.*;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
  * @see AuthService for business logic implementation
  * @see com.scholarme.shared.security.JwtService for token generation
  */
+@Tag(name = "Authentication", description = "Authentication endpoints")
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
@@ -38,6 +41,7 @@ public class AuthController {
      * @return JWT token and user profile on success
      * @throws 401 Unauthorized if card is invalid, inactive, or PIN is incorrect
      */
+    @Operation(summary = "Login")
     @PostMapping("/card-login")
     public ResponseEntity<ApiResponse<LoginResponse>> cardLogin(@Valid @RequestBody CardLoginRequest request) {
         try {
@@ -57,6 +61,7 @@ public class AuthController {
      * @return JWT token and user profile on success
      * @throws 401 Unauthorized if credentials are invalid
      */
+    @Operation(summary = "Login")
     @PostMapping("/email-login")
     public ResponseEntity<ApiResponse<LoginResponse>> emailLogin(@Valid @RequestBody EmailLoginRequest request) {
         try {
@@ -76,6 +81,7 @@ public class AuthController {
      * @return JWT token and newly created user profile
      * @throws 400 Bad Request if email already exists or validation fails
      */
+    @Operation(summary = "Register user")
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegisterResponse>> register(@Valid @RequestBody RegisterRequest request) {
         try {
@@ -96,6 +102,7 @@ public class AuthController {
      * 
      * @return Success confirmation message
      */
+    @Operation(summary = "Logout")
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<String>> logout() {
         return ResponseEntity.ok(ApiResponse.ok("Logged out successfully"));

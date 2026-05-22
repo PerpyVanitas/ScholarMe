@@ -1,6 +1,8 @@
 package com.scholarme.features.tutors;
 
 import com.scholarme.features.tutors.dto.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.scholarme.shared.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +15,7 @@ import java.util.UUID;
  * Tutors Feature Controller
  * Public and authenticated endpoints for tutor browsing
  */
+@Tag(name = "Tutors", description = "Tutor management endpoints")
 @RestController
 @RequestMapping("/api/v1/tutors")
 @RequiredArgsConstructor
@@ -28,6 +31,8 @@ public class TutorController {
         return ResponseEntity.ok(ApiResponse.ok(tutors));
     }
 
+    @Operation(summary = "Endpoint")
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<TutorDto>> getTutor(@PathVariable UUID id) {
         try {
@@ -38,6 +43,8 @@ public class TutorController {
                     .body(ApiResponse.error("NOT-001", "Tutor not found"));
         }
     }
+
+    @Operation(summary = "Endpoint")
 
     @GetMapping("/{id}/availability")
     public ResponseEntity<ApiResponse<List<TutorAvailabilityDto>>> getAvailability(
