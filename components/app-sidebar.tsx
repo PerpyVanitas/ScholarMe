@@ -45,6 +45,7 @@ import {
   MessageSquare,
   LayoutDashboard,
   Trophy,
+  ShieldAlert,
 } from "lucide-react";
 import { signOut } from "@/app/auth/actions";
 import { HonorSocietyLogo } from "@/components/honsoc-logo";
@@ -68,67 +69,53 @@ function getNavItems(role: UserRole) {
     studyItems = [
       { title: "Resources", href: "/dashboard/resources", icon: BookOpen },
       { title: "Study Quizzes", href: "/dashboard/quizzes", icon: Lightbulb },
-      { title: "Flashcards", href: "/dashboard/flashcards", icon: BookOpen },
+      { title: "Flashcards", href: "/dashboard/flashcards", icon: FolderOpen },
     ];
   } else if (role === "tutor") {
     studyItems = [
-      { title: "My Repositories", href: "/dashboard/resources", icon: FolderOpen },
+      { title: "My Repositories", href: "/dashboard/resources", icon: BookOpen },
       { title: "Study Quizzes", href: "/dashboard/quizzes", icon: Lightbulb },
-      { title: "Flashcards", href: "/dashboard/flashcards", icon: BookOpen },
+      { title: "Flashcards", href: "/dashboard/flashcards", icon: FolderOpen },
     ];
   } else if (role === "administrator") {
     studyItems = [
-      { title: "All Resources", href: "/dashboard/resources", icon: FolderOpen },
+      { title: "Resource Library", href: "/dashboard/resources", icon: BookOpen },
       { title: "Study Quizzes", href: "/dashboard/quizzes", icon: Lightbulb },
-      { title: "Flashcards", href: "/dashboard/flashcards", icon: BookOpen },
+      { title: "Flashcards", href: "/dashboard/flashcards", icon: FolderOpen },
     ];
   }
 
   // Community items depending on role
-  let communityItems: { title: string; href: string; icon: any }[] = [];
-  if (role === "learner") {
-    communityItems = [
-      { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
-      { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
-      { title: "Messages", href: "/dashboard/messages", icon: MessageSquare },
-      { title: "Voting", href: "/dashboard/voting", icon: Vote },
-      { title: "Leaderboard", href: "/dashboard/leaderboard", icon: Trophy },
-    ];
-  } else if (role === "tutor" || role === "administrator") {
-    communityItems = [
-      { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
-      { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
-      { title: "Messages", href: "/dashboard/messages", icon: MessageSquare },
-      { title: "Voting", href: "/dashboard/voting", icon: Vote },
-      { title: "Leaderboard", href: "/dashboard/leaderboard", icon: Trophy },
-    ];
-  }
+  const communityItems = [
+    { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
+    { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
+    { title: "My Messages", href: "/dashboard/messages", icon: MessageSquare },
+    { title: "Voting", href: "/dashboard/voting", icon: Vote },
+    { title: "Leaderboard", href: "/dashboard/leaderboard", icon: Trophy },
+  ];
 
   // Admin/Tutor specific management tools
   let managementItems: { title: string; href: string; icon: any }[] = [];
   if (role === "tutor") {
     managementItems = [
-      { title: "Timesheet", href: "/dashboard/timesheet", icon: Timer },
+      { title: "My Timesheet", href: "/dashboard/timesheet", icon: Timer },
       { title: "Availability", href: "/dashboard/availability", icon: Clock },
     ];
   } else if (role === "administrator") {
     managementItems = [
-      { title: "Users Management", href: "/dashboard/admin/users", icon: Users },
-      { title: "All Sessions", href: "/dashboard/admin/sessions", icon: Calendar },
-      { title: "Timesheets", href: "/dashboard/admin/timesheets", icon: Timer },
-      { title: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
-      { title: "User Messages", href: "/dashboard/admin/messages", icon: MessageSquare },
+      { title: "User Management", href: "/dashboard/admin/users", icon: Users },
+      { title: "Platform Sessions", href: "/dashboard/admin/sessions", icon: Calendar },
+      { title: "Timesheet Audit", href: "/dashboard/admin/timesheets", icon: Timer },
+      { title: "Platform Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
+      { title: "Message Audit", href: "/dashboard/admin/messages", icon: ShieldAlert },
     ];
   }
 
   const groups = [
     { label: "Core", items: coreItems },
-    { label: "Academics & Study", items: studyItems }
+    { label: "Academics & Study", items: studyItems },
+    { label: "Community & Interaction", items: communityItems }
   ];
-
-  if (communityItems.length > 0) {
-    groups.push({ label: "Community & Interaction", items: communityItems });
-  }
   
   if (managementItems.length > 0) {
     groups.push({ label: `${roleLabels[role]} Tools`, items: managementItems });
