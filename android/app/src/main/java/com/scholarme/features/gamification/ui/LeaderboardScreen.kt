@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.border
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.ArrowBack
@@ -153,7 +154,7 @@ fun LeaderboardItem(entry: LeaderboardEntry, isCurrentUser: Boolean) {
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
-                    .androidx.compose.foundation.border(
+                    .border(
                         width = 2.dp,
                         color = GamificationUtils.getLevelColor(entry.currentLevel),
                         shape = CircleShape

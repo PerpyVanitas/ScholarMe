@@ -79,7 +79,7 @@ fun QuizCreateScreen(
             Button(
                 onClick = { 
                     if (topic.isNotBlank()) {
-                        onGenerate(GenerateQuizRequest(topic = topic))
+                        onGenerate(GenerateQuizRequest(title = topic, topic = topic))
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),

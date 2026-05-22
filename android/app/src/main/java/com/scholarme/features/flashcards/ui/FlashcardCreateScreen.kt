@@ -78,7 +78,7 @@ fun FlashcardCreateScreen(
             Button(
                 onClick = { 
                     if (topic.isNotBlank()) {
-                        onGenerate(GenerateFlashcardRequest(topic = topic))
+                        onGenerate(GenerateFlashcardRequest(title = topic, topic = topic))
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
