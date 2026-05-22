@@ -23,6 +23,9 @@ class UserManagementViewModel @Inject constructor(
         loadUsers()
     }
 
+    private val _actionStatus = MutableStateFlow<Result<Unit>?>(null)
+    val actionStatus: StateFlow<Result<Unit>?> = _actionStatus
+
     fun loadUsers() {
         viewModelScope.launch {
             _users.value = Result.Loading
@@ -30,12 +33,43 @@ class UserManagementViewModel @Inject constructor(
         }
     }
 
-    fun updateUserRole(userId: String, newRole: String) {
+    fun createUser(email: String, pass: String, name: String, role: String) {
         viewModelScope.launch {
-            val result = repository.updateUserRole(userId, newRole)
-            if (result is Result.Success) {
-                loadUsers()
-            }
+            _actionStatus.value = Result.Loading
+            val result = repository.createUser(email, pass, name, role)
+            _actionStatus.value = result
+            if (result is Result.Success) loadUsers()
         }
+    }
+
+    fun editUser(userId: String, name: String?, email: String?, role: String?, pass: String?) {
+        viewModelScope.launch {
+            _actionStatus.value = Result.Loading
+            val result = repository.editUser(userId, name, email, role, pass)
+            _actionStatus.value = result
+            if (result is Result.Success) loadUsers()
+        }
+    }
+
+    fun deleteUser(userId: String) {
+        viewModelScope.launch {
+            _actionStatus.value = Result.Loading
+            val result = repository.deleteUser(userId)
+            _actionStatus.value = result
+            if (result is Result.Success) loadUsers()
+        }
+    }
+
+    fun toggleCardStatus(userId: String, isIssued: Boolean) {
+        viewModelScope.launch {
+            _actionStatus.value = Result.Loading
+            val result = repository.toggleCardStatus(userId, isIssued)
+            _actionStatus.value = result
+            if (result is Result.Success) loadUsers()
+        }
+    }
+
+    fun resetActionStatus() {
+        _actionStatus.value = null
     }
 }

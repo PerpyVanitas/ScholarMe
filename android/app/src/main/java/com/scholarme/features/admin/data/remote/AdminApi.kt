@@ -46,9 +46,18 @@ interface AdminApi {
         @Path("id") id: String
     ): Response<ApiResponse<Unit>>
 
-    @PATCH("admin/users/{id}/role")
-    suspend fun updateUserRole(
-        @Path("id") id: String,
-        @Body role: Map<String, String>
+    @POST("admin/users")
+    suspend fun createUser(
+        @Body request: Map<String, String>
+    ): Response<ApiResponse<Unit>>
+
+    @PATCH("admin/users")
+    suspend fun editUser(
+        @Body request: Map<String, String>
+    ): Response<ApiResponse<Unit>>
+
+    @HTTP(method = "DELETE", path = "admin/users", hasBody = true)
+    suspend fun deleteUser(
+        @Body request: Map<String, String>
     ): Response<ApiResponse<Unit>>
 }

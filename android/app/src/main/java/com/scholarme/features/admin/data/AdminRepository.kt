@@ -146,18 +146,49 @@ class AdminRepository @Inject constructor(
         }
     }
 
-    suspend fun updateUserRole(userId: String, newRole: String): Result<Unit> {
+    suspend fun createUser(email: String, pass: String, name: String, role: String): Result<Unit> {
         return withContext(Dispatchers.IO) {
             try {
-                val response = adminApi.updateUserRole(userId, mapOf("role" to newRole))
-                if (response.isSuccessful && response.body()?.success == true) {
-                    Result.Success(Unit)
-                } else {
-                    Result.Error("Failed to update user role")
-                }
-            } catch (e: Exception) {
-                Result.Error(e.message ?: "Network error occurred")
-            }
+                val response = adminApi.createUser(mapOf("email" to email, "password" to pass, "full_name" to name, "role_name" to role))
+                if (response.isSuccessful && response.body()?.success == true) Result.Success(Unit)
+                else Result.Error("Failed to create user")
+            } catch (e: Exception) { Result.Error(e.message ?: "Network error") }
+        }
+    }
+
+    suspend fun editUser(userId: String, name: String?, email: String?, role: String?, pass: String?): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val map = mutableMapOf("user_id" to userId)
+                name?.let { map["full_name"] = it }
+                email?.let { map["email"] = it }
+                role?.let { map["role_name"] = it }
+                if (!pass.isNullOrBlank()) map["password"] = pass
+                
+                val response = adminApi.editUser(map)
+                if (response.isSuccessful && response.body()?.success == true) Result.Success(Unit)
+                else Result.Error("Failed to edit user")
+            } catch (e: Exception) { Result.Error(e.message ?: "Network error") }
+        }
+    }
+
+    suspend fun deleteUser(userId: String): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = adminApi.deleteUser(mapOf("user_id" to userId))
+                if (response.isSuccessful && response.body()?.success == true) Result.Success(Unit)
+                else Result.Error("Failed to delete user")
+            } catch (e: Exception) { Result.Error(e.message ?: "Network error") }
+        }
+    }
+
+    suspend fun toggleCardStatus(userId: String, isIssued: Boolean): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = adminApi.issueCard(mapOf("user_id" to userId, "is_card_issued" to isIssued.toString()))
+                if (response.isSuccessful && response.body()?.success == true) Result.Success(Unit)
+                else Result.Error("Failed to toggle card status")
+            } catch (e: Exception) { Result.Error(e.message ?: "Network error") }
         }
     }
 }

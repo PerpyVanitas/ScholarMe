@@ -27,7 +27,11 @@ data class UserProfile(
     @SerializedName("totalXp") val totalXp: Int? = 0,
     @SerializedName("currentLevel") val currentLevel: Int? = 1,
     
-    @SerializedName("hs_designations") val hsDesignations: List<String>? = null
+    @SerializedName("hs_designations") val hsDesignations: List<String>? = null,
+    
+    // Card Management fields
+    @SerializedName("isCardIssued") val isCardIssued: Boolean = false,
+    @SerializedName("uniqueIdNumber") val uniqueIdNumber: String? = null
 )
 
 // Alias for convenience
