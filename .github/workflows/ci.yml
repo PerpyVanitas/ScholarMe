@@ -86,6 +86,14 @@ jobs:
           node-version: '20'
       - name: Install axe-cli
         run: npm install -g @axe-core/cli
+      - name: Build and Start Next.js Server
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.28.0 --activate
+          pnpm install --frozen-lockfile
+          pnpm run build
+          pnpm run start &
+          sleep 5
       - name: Run accessibility audit
         run: axe http://localhost:3000 --exit
 
