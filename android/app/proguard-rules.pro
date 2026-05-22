@@ -41,3 +41,20 @@
 
 # Model classes
 -keep class com.scholarme.** { *; }
+
+# Retrofit
+-keepattributes Signature
+-keepattributes Exceptions
+-keep class retrofit2.** { *; }
+-keepclasseswithmembers class * {
+    @retrofit2.http.* <methods>;
+}
+
+# Hilt
+-keep class dagger.hilt.** { *; }
+-keep class javax.inject.** { *; }
+
+# Data models (prevent stripping of JSON-mapped fields)
+-keep class com.scholarme.**.model.** { *; }
+-keep class com.scholarme.**.dto.** { *; }
+
