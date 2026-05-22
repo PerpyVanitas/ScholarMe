@@ -73,9 +73,10 @@ export default function AdminTimesheetsPage() {
 
   // Modal Details View
   const [detailPeriod, setDetailPeriod] = useState<any | null>(null);
+  const [search, setSearch] = useState("");
   const [modalSearch, setModalSearch] = useState("");
 
-  const { data: modalEntries, isLoading: modalEntriesLoading } = useSWR<Timesheet[]>(
+  const { data: modalEntries, isLoading: modalEntriesLoading } = useSWR<Timesheet[]>( 
     detailPeriod ? `/api/admin/timesheets?start_date=${detailPeriod.start_date}&end_date=${detailPeriod.end_date}` : null,
     fetcher
   );
