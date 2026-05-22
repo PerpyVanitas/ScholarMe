@@ -16,6 +16,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: { message: "Unauthorized" } }, { status: 401 });
     }
 
+    const { title, topic: rawTopic, description = "", type = "flashcard", count: rawCount = 5, is_public = false } = await req.json();
+
+    const topic = String(rawTopic || "").slice(0, 500);
+    const count = Math.min(Math.max(1, Number(rawCount)), 20);
+
+    if (!title || !topic) {
+      return NextResponse.json({ success: false, error: { message: "Title and topic are required" } }, { status: 400 });
+    }
+
     const supabase = createSupabaseForBearer(token);
     const { data: authData, error: authError } = await supabase.auth.getUser();
 

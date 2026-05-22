@@ -5,7 +5,10 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export async function POST(req: Request) {
   try {
-    const { topic, type = "flashcard", count = 5 } = await req.json();
+    const { topic: rawTopic, type = "flashcard", count: rawCount = 5 } = await req.json();
+
+    const topic = String(rawTopic || "").slice(0, 500);
+    const count = Math.min(Math.max(1, Number(rawCount)), 20);
 
     if (!topic) {
       return NextResponse.json(

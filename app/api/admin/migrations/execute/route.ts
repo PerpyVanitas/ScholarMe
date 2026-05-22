@@ -7,9 +7,16 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     // Check authorization
+    if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json({ error: 'Migration API is disabled in production' }, { status: 404 });
+    }
+
+    const expectedToken = process.env.MIGRATION_TOKEN;
+    if (!expectedToken) {
+      return NextResponse.json({ error: 'Migration not configured' }, { status: 503 });
+    }
+
     const authHeader = request.headers.get('authorization');
-    const expectedToken = process.env.MIGRATION_TOKEN || 'scholarme-admin-migration';
-    
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Missing authorization header' }, { status: 401 });
     }

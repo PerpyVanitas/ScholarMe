@@ -69,6 +69,10 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
 
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("Invalid credentials");
+        }
+
         String role = user.getRole().getName();
         String token = jwtService.generateToken(user.getId(), role);
 

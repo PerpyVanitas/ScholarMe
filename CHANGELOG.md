@@ -35,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved Spring Security CORS and CSRF configurations.
 
 ### Removed
-- `proxy.ts` (renamed to `middleware.ts` for standard Next.js conventions).
+- `middleware.ts` (renamed to `proxy.ts` for Next.js 16.1+ App Router conventions).
 - Unused dependencies (`@ai-sdk/google`, `ai`, `mammoth`, `officeparser`, `pdf-parse`).
 - Misplaced development artifacts from the root directory (`scratch_*.mjs`, `fetch_*.js`, etc.).
 - Deprecated React Native mobile client code from `mobile/` directory.

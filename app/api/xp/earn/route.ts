@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { XP_AWARDS } from "@/lib/utils/gamification";
 
 export async function POST(req: Request) {
   try {
@@ -11,11 +12,12 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { amount, reason } = body;
+    const { action, reason } = body;
 
-    if (!amount || typeof amount !== 'number' || amount <= 0) {
-      return NextResponse.json({ error: "Invalid XP amount" }, { status: 400 });
+    if (!action || !XP_AWARDS[action as keyof typeof XP_AWARDS]) {
+      return NextResponse.json({ error: "Invalid or missing action" }, { status: 400 });
     }
+    const amount = XP_AWARDS[action as keyof typeof XP_AWARDS];
 
     if (!reason || typeof reason !== 'string') {
       return NextResponse.json({ error: "Reason is required" }, { status: 400 });

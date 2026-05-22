@@ -22,14 +22,21 @@ android/local.properties
 backend/target/
 *.class
 
-# Cleanup ignores
+# Debug and Development Scripts
+fetch_*.mjs
 scratch_*.mjs
-scratch_*.js
+scratch.*
+extract_logs.*
+fix-*.js
+fix_*.js
+refactor-*.js
 fetch_*.mjs
 fetch_*.js
 test_update.ts
 run_migration.mjs
 tsconfig.tsbuildinfo
+
+# Cleanup ignores
 android/gradle-output.txt
 package-lock.json
 lib/demo.ts

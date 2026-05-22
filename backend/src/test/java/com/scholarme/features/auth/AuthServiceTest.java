@@ -79,6 +79,71 @@ public class AuthServiceTest {
     }
 
     @Test
+    void emailLogin_WrongPassword_ThrowsException() {
+        EmailLoginRequest request = new EmailLoginRequest("test@example.com", "wrongpassword");
+        mockUser.setPasswordHash("encodedpassword");
+        
+        when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(mockUser));
+        when(passwordEncoder.matches("wrongpassword", "encodedpassword")).thenReturn(false);
+
+        assertThrows(IllegalArgumentException.class, () -> authService.emailLogin(request));
+    }
+
+    @Test
+    void emailLogin_ValidCredentials_MatchesPassword_ReturnsLoginResponse() {
+        EmailLoginRequest request = new EmailLoginRequest("test@example.com", "password");
+        mockUser.setPasswordHash("encodedpassword");
+        
+        when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(mockUser));
+        when(passwordEncoder.matches("password", "encodedpassword")).thenReturn(true);
+        when(jwtService.generateToken(mockUser.getId(), "LEARNER")).thenReturn("mock.jwt.token");
+
+        LoginResponse response = authService.emailLogin(request);
+
+        assertNotNull(response);
+        assertEquals("mock.jwt.token", response.getToken());
+    }
+
+    @Test
+    void cardLogin_Success() {
+        com.scholarme.features.auth.dto.CardLoginRequest request = new com.scholarme.features.auth.dto.CardLoginRequest("CARD123", "1234");
+        com.scholarme.shared.entity.AuthCard card = new com.scholarme.shared.entity.AuthCard();
+        card.setCardId("CARD123");
+        card.setPin("encodedpin");
+        card.setUser(mockUser);
+
+        when(authCardRepository.findByCardIdAndStatus("CARD123", "active")).thenReturn(Optional.of(card));
+        when(passwordEncoder.matches("1234", "encodedpin")).thenReturn(true);
+        when(jwtService.generateToken(mockUser.getId(), "LEARNER")).thenReturn("mock.jwt.token");
+
+        LoginResponse response = authService.cardLogin(request);
+
+        assertNotNull(response);
+        assertEquals("mock.jwt.token", response.getToken());
+    }
+
+    @Test
+    void cardLogin_CardNotFound_ThrowsException() {
+        com.scholarme.features.auth.dto.CardLoginRequest request = new com.scholarme.features.auth.dto.CardLoginRequest("CARD123", "1234");
+
+        when(authCardRepository.findByCardIdAndStatus("CARD123", "active")).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> authService.cardLogin(request));
+    }
+
+    @Test
+    void cardLogin_InvalidPin_ThrowsException() {
+        com.scholarme.features.auth.dto.CardLoginRequest request = new com.scholarme.features.auth.dto.CardLoginRequest("CARD123", "wrongpin");
+        com.scholarme.shared.entity.AuthCard card = new com.scholarme.shared.entity.AuthCard();
+        card.setPin("encodedpin");
+
+        when(authCardRepository.findByCardIdAndStatus("CARD123", "active")).thenReturn(Optional.of(card));
+        when(passwordEncoder.matches("wrongpin", "encodedpin")).thenReturn(false);
+
+        assertThrows(IllegalArgumentException.class, () -> authService.cardLogin(request));
+    }
+
+    @Test
     void register_NewEmail_ReturnsRegisterResponse() {
         RegisterRequest request = new RegisterRequest();
         request.setEmail("new@example.com");
