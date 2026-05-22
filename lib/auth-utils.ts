@@ -22,3 +22,29 @@ export async function validateAdmin() {
 
   return { user, isAdmin };
 }
+
+import { createSupabaseForBearer } from "@/lib/supabase/bearer-client";
+
+export async function validateAndroidAdmin(request: Request) {
+  const authHeader = request.headers.get("authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return { user: null, isAdmin: false };
+  }
+  const token = authHeader.substring(7);
+  const authSupabase = createSupabaseForBearer(token);
+  const { data: { user }, error: userError } = await authSupabase.auth.getUser(token);
+  
+  if (userError || !user) return { user: null, isAdmin: false };
+  
+  const { data: profile } = await authSupabase
+    .from("profiles")
+    .select("roles(name)")
+    .eq("id", user.id)
+    .single();
+
+  const isAdmin = Array.isArray(profile?.roles) 
+    ? profile.roles.some((role: any) => role.name === "administrator" || role.name === "admin")
+    : (profile?.roles as any)?.name === "administrator" || (profile?.roles as any)?.name === "admin";
+    
+  return { user, isAdmin };
+}
