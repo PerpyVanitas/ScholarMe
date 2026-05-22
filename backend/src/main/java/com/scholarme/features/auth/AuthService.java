@@ -98,6 +98,9 @@ public class AuthService {
         User user = new User();
         user.setEmail(request.getEmail());
         user.setFullName(request.getFullName());
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        }
         user = userRepository.save(user);
         
         String role = user.getRole() != null ? user.getRole().getName() : "LEARNER";
