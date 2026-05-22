@@ -1,11 +1,13 @@
 /**
- * In-memory sliding window rate limiter.
+ * Supabase-backed sliding window rate limiter.
+ * Protected from serverless cold starts.
  *
  * Usage:
  *   const limiter = rateLimit({ interval: 15 * 60 * 1000, limit: 5 });
  *   const result = await limiter.check(identifier);
  *   if (!result.success) return 429;
  */
+import { createClient } from "@supabase/supabase-js";
 
 interface RateLimitOptions {
   /** Window size in milliseconds */
@@ -21,32 +23,51 @@ interface RateLimitResult {
 }
 
 interface WindowEntry {
+  identifier: string;
   timestamps: number[];
 }
 
-const store = new Map<string, WindowEntry>();
-
 export function rateLimit({ interval, limit }: RateLimitOptions) {
   return {
-    check(identifier: string): RateLimitResult {
+    async check(identifier: string): Promise<RateLimitResult> {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        // Fallback to allow if env vars are missing (should be caught by lib/env.ts anyway)
+        return { success: true, remaining: limit - 1, reset: Date.now() + interval };
+      }
+
+      const supabase = createClient(supabaseUrl, supabaseKey);
       const now = Date.now();
       const windowStart = now - interval;
 
-      const entry = store.get(identifier) ?? { timestamps: [] };
+      // Fetch existing entry
+      const { data } = await supabase
+        .from('ratelimit_windows')
+        .select('timestamps')
+        .eq('identifier', identifier)
+        .single();
+
+      let timestamps: number[] = data?.timestamps || [];
 
       // Remove timestamps outside the current window
-      entry.timestamps = entry.timestamps.filter((t) => t > windowStart);
+      timestamps = timestamps.filter((t: number) => t > windowStart);
 
-      const remaining = Math.max(0, limit - entry.timestamps.length);
-      const success = entry.timestamps.length < limit;
+      const remaining = Math.max(0, limit - timestamps.length);
+      const success = timestamps.length < limit;
 
       if (success) {
-        entry.timestamps.push(now);
-        store.set(identifier, entry);
+        timestamps.push(now);
       }
 
-      const reset = entry.timestamps.length > 0
-        ? entry.timestamps[0] + interval
+      // Upsert the updated timestamps
+      await supabase
+        .from('ratelimit_windows')
+        .upsert({ identifier, timestamps }, { onConflict: 'identifier' });
+
+      const reset = timestamps.length > 0
+        ? timestamps[0] + interval
         : now + interval;
 
       return { success, remaining: success ? remaining - 1 : 0, reset };
