@@ -40,7 +40,9 @@ A high-performance academic management ecosystem built with **Next.js**, **Supab
 
 ### 📱 Native Android Experience
 - **Single-Activity Compose**: 100% modern UI built with Jetpack Compose.
-- **Digital ID Card**: High-contrast, brand-aligned identity cards with dynamic QR generation.
+- **Gamification & XP Integration**: Real-time XP rewarding system featuring dynamic Level Titles, Colored Avatar borders, and Leaderboards.
+- **AI Generation Studio**: Native creation screens for generating Study Quizzes and Flashcards on the go.
+- **Digital ID & Designations**: High-contrast, brand-aligned identity cards rendering Honor Society Designations and dynamic QR generation.
 - **Offline Persistence**: Room DB support for resource viewing and session history.
 - **Hilt DI**: Clean, testable architecture with enterprise-grade dependency injection.
 
@@ -160,8 +162,9 @@ Our flagship mobile client provides the full ScholarMe experience with an emphas
 - **Build**: Open `android/` in Android Studio and build the `debug` or `release` APK.
 - **Stack**: Kotlin, Compose, Hilt, Retrofit, Room, CameraX (Scanner).
 
-### React Native / Expo (Legacy)
-Located in `mobile/`, this client is maintained for cross-platform prototyping.
+### React Native / Expo (Deprecated)
+Located in `mobile/`, this client is no longer actively maintained. It was used for early cross-platform prototyping and has been superseded by the native Android client located in `/android`.
+Do not add new features here. For mobile development, use `/android`.
 
 ---
 

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bell, Calendar, BookOpen, Settings, CheckCheck, Loader2, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
-import { getDemoUserFromCookie } from "@/lib/demo";
+import { getDemoUserFromCookie } from "@/scripts/demo";
 import type { Notification } from "@/lib/types";
 
 const typeIcons: Record<string, React.ReactNode> = {

@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile, UserRole } from "@/lib/types";
-import { DEMO_USERS, getDemoUserFromCookie } from "@/lib/demo";
+import { DEMO_USERS, getDemoUserFromCookie } from "@/scripts/demo";
 import { resolveRoleId } from "@/lib/profiles/db";
 
 interface UserContextType {

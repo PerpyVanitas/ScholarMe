@@ -42,18 +42,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("/me/change-password")
-    public ResponseEntity<ApiResponse<String>> changePassword(
-            @AuthenticationPrincipal User user,
-            @Valid @RequestBody ChangePasswordRequest request) {
-        try {
-            userService.changePassword(user.getId(), request);
-            return ResponseEntity.ok(ApiResponse.ok("Password changed successfully"));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("AUTH-003", e.getMessage()));
-        }
-    }
+
 
     @PostMapping("/me/device-token")
     public ResponseEntity<ApiResponse<String>> registerDeviceToken(

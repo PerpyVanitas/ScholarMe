@@ -1,7 +1,7 @@
 import { createClient, createAdminClient } from "@/lib/supabase/create-client";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { DEMO_USERS, getDemoProfileId, getDemoTutorId } from "@/lib/demo";
+import { DEMO_USERS, getDemoProfileId, getDemoTutorId } from "@/scripts/demo";
 import type { UserRole, Profile } from "@/lib/types";
 
 export async function GET() {

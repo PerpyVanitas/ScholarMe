@@ -13,6 +13,6 @@ interface GamificationApi {
     
     @POST("gamification/xp")
     suspend fun awardXp(
-        @Body request: Map<String, Any>
-    ): Response<ApiResponse<Map<String, Any>>>
+        @Body request: Map<String, @JvmSuppressWildcards Any>
+    ): Response<XpAwardResponse>
 }

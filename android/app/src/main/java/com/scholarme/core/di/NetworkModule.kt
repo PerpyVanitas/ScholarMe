@@ -15,6 +15,7 @@ import com.scholarme.features.gamification.data.remote.GamificationApi
 import com.scholarme.features.notifications.data.remote.NotificationApi
 import com.scholarme.features.profile.data.remote.ProfileApi
 import com.scholarme.features.quizzes.data.remote.QuizApi
+import com.scholarme.features.flashcards.data.remote.FlashcardApi
 import com.scholarme.features.resources.data.remote.ResourceApi
 import com.scholarme.features.sessions.data.remote.SessionApi
 import com.scholarme.features.tutors.data.remote.TutorApi
@@ -116,6 +117,7 @@ object NetworkModule {
     @Provides @Singleton fun provideAdminApi(retrofit: Retrofit): AdminApi = retrofit.create(AdminApi::class.java)
     @Provides @Singleton fun provideGamificationApi(retrofit: Retrofit): GamificationApi = retrofit.create(GamificationApi::class.java)
     @Provides @Singleton fun provideQuizApi(retrofit: Retrofit): QuizApi = retrofit.create(QuizApi::class.java)
+    @Provides @Singleton fun provideFlashcardApi(retrofit: Retrofit): FlashcardApi = retrofit.create(FlashcardApi::class.java)
     @Provides @Singleton fun provideNotificationApi(retrofit: Retrofit): NotificationApi = retrofit.create(NotificationApi::class.java)
     @Provides @Singleton fun provideVotingApi(retrofit: Retrofit): VotingApi = retrofit.create(VotingApi::class.java)
     @Provides @Singleton fun provideMessagingApi(retrofit: Retrofit): MessagingApi = retrofit.create(MessagingApi::class.java)

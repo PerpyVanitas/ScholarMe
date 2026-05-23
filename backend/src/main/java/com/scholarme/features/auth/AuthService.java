@@ -69,6 +69,10 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
 
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("Invalid credentials");
+        }
+
         String role = user.getRole().getName();
         String token = jwtService.generateToken(user.getId(), role);
 
@@ -94,6 +98,9 @@ public class AuthService {
         User user = new User();
         user.setEmail(request.getEmail());
         user.setFullName(request.getFullName());
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        }
         user = userRepository.save(user);
         
         String role = user.getRole() != null ? user.getRole().getName() : "LEARNER";

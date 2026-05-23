@@ -29,10 +29,7 @@ export default async function AdminMessagesAuditPage() {
   const rawRole = profile?.roles;
   const roleName = Array.isArray(rawRole) ? rawRole[0]?.name : (rawRole as any)?.name;
 
-  // Gate: Only administrators can access the message audit page
-  if (roleName !== "administrator") {
-    redirect("/dashboard/home");
-  }
+  // Role is validated by app/dashboard/admin/layout.tsx
 
   // Fetch all conversations. Since the user is a super admin, RLS allows retrieving all conversations.
   const { data: conversations, error } = await supabase

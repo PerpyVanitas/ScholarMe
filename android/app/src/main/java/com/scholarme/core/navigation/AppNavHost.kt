@@ -31,6 +31,7 @@ import com.scholarme.features.availability.ui.AvailabilityManagerScreen
 import com.scholarme.features.notifications.ui.NotificationsScreen
 import com.scholarme.features.notifications.ui.NotificationViewModel
 import com.scholarme.features.quizzes.ui.*
+import com.scholarme.features.flashcards.ui.*
 import com.scholarme.features.resources.ui.ResourceDirectoryScreen
 import com.scholarme.features.resources.ui.ResourceViewerScreen
 import com.scholarme.features.sessions.ui.SessionBookingScreen
@@ -48,6 +49,16 @@ import com.scholarme.features.messaging.ui.ActiveChatScreen
 import com.scholarme.features.messaging.ui.MessagingViewModel
 import com.scholarme.features.gamification.data.model.LeaderboardEntry
 
+/**
+ * Main navigation host configuration for the ScholarMe Android application.
+ *
+ * Defines the navigation graph, routing rules, and entry points for all top-level features
+ * including the dashboard, authentication, profile management, administration, and messaging.
+ * Uses Jetpack Navigation Compose with Hilt for ViewModel injection.
+ *
+ * @param navController The central [NavHostController] managing navigation state.
+ * @param startDestination The initial route to display. Defaults to the Dashboard screen.
+ */
 @Composable
 fun AppNavHost(
     navController: NavHostController,
@@ -83,6 +94,7 @@ fun AppNavHost(
                 statsResult = statsState,
                 sessionsResult = sessionsState,
                 onStudyClick = { navController.navigate(Screen.ResourceDirectory.route) },
+                onFlashcardClick = { navController.navigate(Screen.FlashcardList.route) },
                 onQuizClick = { navController.navigate(Screen.QuizList.route) },
                 onProfileClick = { navController.navigate(Screen.Profile.route) },
                 onManageUsersClick = { navController.navigate(Screen.UserManagement.route) },
@@ -267,6 +279,35 @@ fun AppNavHost(
             )
         }
 
+        // Flashcards Flow
+        composable(Screen.FlashcardList.route) {
+            FlashcardListScreen(
+                onStudyFlashcard = { flashcardId ->
+                    navController.navigate(Screen.FlashcardStudy.createRoute(flashcardId))
+                },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        
+        composable(
+            route = Screen.FlashcardStudy.route,
+            arguments = listOf(navArgument("flashcardId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val flashcardId = backStackEntry.arguments?.getString("flashcardId") ?: return@composable
+            val viewModel: FlashcardViewModel = hiltViewModel()
+            val studySet by viewModel.currentStudySet.collectAsStateWithLifecycle()
+            
+            LaunchedEffect(flashcardId) {
+                viewModel.fetchStudySet(flashcardId)
+            }
+            
+            FlashcardStudyScreen(
+                title = studySet?.title ?: "Study Flashcards",
+                items = studySet?.items ?: emptyList(),
+                onClose = { navController.popBackStack() }
+            )
+        }
+
         // Role-Specific & Admin Flow
         composable(Screen.AvailabilityManager.route) {
             AvailabilityManagerScreen(
@@ -300,7 +341,7 @@ fun AppNavHost(
             }
             
             AnalyticsScreen(
-                analytics = (analytics as? Result.Success<AdminAnalytics>)?.data,
+                analyticsState = analytics,
                 onBackClick = { navController.popBackStack() }
             )
         }

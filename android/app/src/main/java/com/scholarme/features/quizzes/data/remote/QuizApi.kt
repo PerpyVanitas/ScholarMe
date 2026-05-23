@@ -14,4 +14,7 @@ interface QuizApi {
 
     @GET("quizzes/{id}/study")
     suspend fun getStudySet(@Path("id") id: String): Response<ApiResponse<StudySetResponse>>
+
+    @POST("quizzes/generate")
+    suspend fun generateQuiz(@Body request: GenerateQuizRequest): Response<ApiResponse<Any>>
 }

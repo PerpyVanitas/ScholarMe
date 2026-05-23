@@ -7,8 +7,22 @@ on:
     branches: [ main, master, dev ]
 
 jobs:
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan for secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          extra_args: --only-verified
+
   # 1. Next.js Web Validation
   web-build:
+    needs: [secret-scan]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,6 +40,7 @@ jobs:
 
   # 2. Spring Boot Backend Unit Tests
   backend-test:
+    needs: [secret-scan]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -43,6 +58,7 @@ jobs:
 
   # 3. Android Mobile Unit Tests
   android-test:
+    needs: [secret-scan]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -57,3 +73,42 @@ jobs:
           cd android
           chmod +x gradlew
           ./gradlew test
+
+  # 4. Accessibility Audit
+  accessibility-audit:
+    needs: [web-build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install axe-cli
+        run: npm install -g @axe-core/cli
+      - name: Build and Start Next.js Server
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.28.0 --activate
+          pnpm install --frozen-lockfile
+          pnpm run build
+          pnpm run start &
+          sleep 5
+      - name: Run accessibility audit
+        run: axe http://localhost:3000 --exit
+
+  # 5. Vercel Production Deployment
+  # Note: VERCEL_TOKEN, VERCEL_ORG_ID, and VERCEL_PROJECT_ID must be set in GitHub repository secrets
+  deploy-web:
+    needs: [secret-scan, web-build, backend-test, android-test, accessibility-audit]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: "${{ secrets.VERCEL_TOKEN }}"
+          vercel-org-id: "${{ secrets.VERCEL_ORG_ID }}"
+          vercel-project-id: "${{ secrets.VERCEL_PROJECT_ID }}"
+          vercel-args: '--prod'

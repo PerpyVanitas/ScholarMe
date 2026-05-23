@@ -1,4 +1,5 @@
-/** Root layout -- fonts, theme provider, analytics, and global styles. Build v2. */
+/** Root layout -- fonts, theme provider, analytics, and global styles. Build v2. */
+import '@/lib/env'
 import type { Metadata, Viewport } from 'next'
 import { Inter, JetBrains_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'

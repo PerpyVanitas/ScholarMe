@@ -6,10 +6,10 @@ import retrofit2.Response
 import retrofit2.http.*
 
 interface TimesheetApi {
-    @GET("android/timesheets")
+    @GET("timesheets")
     suspend fun getTimesheets(): Response<ApiResponse<List<TimesheetEntryDto>>>
 
-    @POST("android/timesheets")
+    @POST("timesheets")
     suspend fun postTimesheetAction(
         @Body body: Map<String, String>
     ): Response<ApiResponse<TimesheetEntryDto>>

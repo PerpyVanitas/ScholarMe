@@ -23,7 +23,7 @@ android {
         // API Base URL - UPDATE THIS to your Spring Boot backend URL
         // For local dev: http://10.0.2.2:8080/api/v1/ (Android emulator localhost)
         // For production: https://your-backend.railway.app/api/v1/
-        buildConfigField("String", "API_BASE_URL", "\"https://scholarme.vercel.app/api/android/\"")
+        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/api/android/\"")
 
         buildConfigField("String", "ENVIRONMENT", "\"development\"")
         buildConfigField("Boolean", "ENABLE_NETWORK_LOGGING", "true")
@@ -159,6 +159,8 @@ dependencies {
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+    testImplementation("org.mockito:mockito-core:5.10.0")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }

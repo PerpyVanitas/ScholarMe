@@ -1,6 +1,8 @@
 package com.scholarme.features.admin;
 
 import com.scholarme.features.admin.dto.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.scholarme.shared.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,7 @@ import java.util.UUID;
  * Admin Feature Controller
  * Administrative endpoints for system management
  */
+@Tag(name = "Admin", description = "Administration endpoints")
 @RestController
 @RequestMapping("/api/v1/admin")
 @PreAuthorize("hasRole('ADMINISTRATOR')")
@@ -22,11 +25,15 @@ public class AdminController {
 
     private final AdminService adminService;
 
+    @Operation(summary = "Endpoint")
+
     @GetMapping("/stats")
     public ResponseEntity<ApiResponse<AdminStatsDto>> getAdminStats() {
         AdminStatsDto stats = adminService.getAdminStats();
         return ResponseEntity.ok(ApiResponse.ok(stats));
     }
+
+    @Operation(summary = "Endpoint")
 
     @GetMapping("/users")
     public ResponseEntity<ApiResponse<List<AdminUserDto>>> getAllUsers(
@@ -36,6 +43,8 @@ public class AdminController {
         List<AdminUserDto> users = adminService.getAllUsers(role, page, size);
         return ResponseEntity.ok(ApiResponse.ok(users));
     }
+
+    @Operation(summary = "Endpoint")
 
     @PatchMapping("/users/{id}/role")
     public ResponseEntity<ApiResponse<AdminUserDto>> updateUserRole(
@@ -50,11 +59,15 @@ public class AdminController {
         }
     }
 
+    @Operation(summary = "Endpoint")
+
     @DeleteMapping("/users/{id}")
     public ResponseEntity<ApiResponse<String>> deactivateUser(@PathVariable UUID id) {
         adminService.deactivateUser(id);
         return ResponseEntity.ok(ApiResponse.ok("User deactivated"));
     }
+
+    @Operation(summary = "Endpoint")
 
     @GetMapping("/analytics")
     public ResponseEntity<ApiResponse<List<AnalyticsLogDto>>> getAnalytics(

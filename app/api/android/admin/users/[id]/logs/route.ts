@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/create-client";
-import { validateAdmin } from "@/lib/auth-utils";
+import { validateAndroidAdmin } from "@/lib/auth-utils";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { isAdmin } = await validateAdmin();
+    const { isAdmin } = await validateAndroidAdmin(request);
     if (!isAdmin) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
 
     const { id } = await params;

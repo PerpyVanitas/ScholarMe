@@ -34,6 +34,7 @@ fun DashboardScreen(
     statsResult: Result<DashboardStats>,
     sessionsResult: Result<List<Session>>,
     onStudyClick: () -> Unit = {},
+    onFlashcardClick: () -> Unit = {},
     onQuizClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     onManageUsersClick: () -> Unit = {},
@@ -123,23 +124,30 @@ fun DashboardScreen(
                     )
                 } else {
                     QuickActionCard(
-                        title = "Study",
+                        title = "Resources",
                         icon = Icons.Default.School,
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
                         modifier = Modifier.weight(1f),
                         onClick = onStudyClick
                     )
                     QuickActionCard(
+                        title = "Flashcards",
+                        icon = Icons.Default.Style,
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        modifier = Modifier.weight(1f),
+                        onClick = onFlashcardClick
+                    )
+                    QuickActionCard(
                         title = "Quizzes",
                         icon = Icons.Default.Quiz,
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                         modifier = Modifier.weight(1f),
                         onClick = onQuizClick
                     )
                     QuickActionCard(
                         title = "Profile",
                         icon = Icons.Default.Person,
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
                         modifier = Modifier.weight(1f),
                         onClick = onProfileClick
                     )

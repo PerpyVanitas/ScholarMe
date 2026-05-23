@@ -23,11 +23,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.scholarme.features.admin.data.model.AdminAnalytics
 import com.scholarme.features.admin.data.model.DataPoint
+import com.scholarme.core.util.Result
+import androidx.compose.material.icons.filled.Error
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnalyticsScreen(
-    analytics: AdminAnalytics?,
+    analyticsState: Result<AdminAnalytics>,
     onBackClick: () -> Unit
 ) {
     Scaffold(
@@ -42,11 +44,24 @@ fun AnalyticsScreen(
             )
         }
     ) { padding ->
-        if (analytics == null) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+        when (val state = analyticsState) {
+            is Result.Loading -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
             }
-        } else {
+            is Result.Error -> {
+                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.Error, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(48.dp))
+                        Spacer(Modifier.height(16.dp))
+                        Text("Failed to load analytics:", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
+                        Text(state.message, color = MaterialTheme.colorScheme.error)
+                    }
+                }
+            }
+            is Result.Success -> {
+                val analytics = state.data
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -110,6 +125,7 @@ fun AnalyticsScreen(
                         }
                     }
                 }
+            }
             }
         }
     }

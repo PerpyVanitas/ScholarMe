@@ -6,7 +6,12 @@ import okhttp3.Response
 import javax.inject.Inject
 
 /**
- * OkHttp Interceptor that adds JWT token to all authenticated requests.
+ * OkHttp Interceptor that attaches JWT Bearer tokens to outgoing API requests.
+ *
+ * Automatically skips attaching headers to unauthenticated endpoints like login and register.
+ * If a `401 Unauthorized` is returned, it clears the local token storage via [TokenManager].
+ *
+ * @property tokenManager The manager responsible for retrieving and clearing tokens.
  */
 class AuthInterceptor @Inject constructor(
     private val tokenManager: TokenManager

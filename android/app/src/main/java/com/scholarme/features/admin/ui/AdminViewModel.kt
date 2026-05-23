@@ -86,17 +86,5 @@ class AdminViewModel @Inject constructor(
         }
     }
 
-    fun updateUserRole(userId: String, newRole: String) {
-        viewModelScope.launch {
-            repository.updateUserRole(userId, newRole)
-            fetchUsers()
-        }
-    }
 
-    private fun fetchUsers() {
-        viewModelScope.launch {
-            // This would update a _users StateFlow if I added it
-            repository.getUsers()
-        }
-    }
 }

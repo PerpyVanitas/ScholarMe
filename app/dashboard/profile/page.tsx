@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Profile, Specialization, HsDesignation, DesignationType } from "@/lib/types";
+import { getLevelTitle, getLevelColor } from "@/lib/utils/gamification";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -551,7 +552,7 @@ export default function ProfilePage() {
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-            <Avatar className="h-24 w-24 border-4 border-background shadow-lg">
+            <Avatar className={`h-24 w-24 border-4 shadow-lg ${getLevelColor(profile.current_level || 1)}`}>
               <AvatarImage src={getAvatarDisplayUrl(profile.avatar_url)} alt={displayName} />
               <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
                 {getInitials(displayName)}
@@ -564,9 +565,17 @@ export default function ProfilePage() {
                 <Badge variant="secondary" className="w-fit mx-auto sm:mx-0 capitalize">
                   {roleName}
                 </Badge>
+                <Badge className={`w-fit mx-auto sm:mx-0 ${getLevelColor(profile.current_level || 1).split(' ')[1]}`}>
+                  Level {profile.current_level || 1} • {getLevelTitle(profile.current_level || 1)}
+                </Badge>
               </div>
               <p className="text-muted-foreground">{profile.email}</p>
               
+              <div className="flex items-center justify-center sm:justify-start gap-2 pt-1 text-sm font-medium">
+                <Star className="h-4 w-4 text-yellow-500" />
+                <span className="text-primary">{profile.total_xp || 0} XP Total</span>
+              </div>
+
               {specializations.length > 0 && (
                 <div className="flex flex-wrap gap-2 justify-center sm:justify-start pt-2">
                   {specializations.map(spec => (

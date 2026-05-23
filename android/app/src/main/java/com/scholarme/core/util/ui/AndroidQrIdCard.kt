@@ -82,7 +82,6 @@ fun AndroidQrIdCard(
         // Front Side
         if (frontAlpha > 0f) {
             CardFrontSide(
-                userId = userId,
                 userName = userName,
                 role = role,
                 program = program,
@@ -111,7 +110,6 @@ fun AndroidQrIdCard(
 
 @Composable
 private fun CardFrontSide(
-    userId: String,
     userName: String,
     role: String,
     program: String,
@@ -141,7 +139,7 @@ private fun CardFrontSide(
         ) {
             // Watermark Logo
             Image(
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                painter = painterResource(id = R.drawable.honsoc_logo_white),
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxSize()
@@ -156,7 +154,7 @@ private fun CardFrontSide(
                 // Header
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Image(
-                        painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                        painter = painterResource(id = R.drawable.honsoc_logo_white),
                         contentDescription = null,
                         modifier = Modifier.size(36.dp)
                     )
@@ -295,7 +293,7 @@ private fun CardBackSide(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
-                            painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                            painter = painterResource(id = R.drawable.honsoc_logo_white),
                             contentDescription = null,
                             modifier = Modifier.size(20.dp)
                         )
