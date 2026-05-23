@@ -46,7 +46,7 @@ export async function GET(request: Request) {
             name: r.name ?? ""
           }))
         : u.roles
-        ? [{ id: u.roles.id ?? "", name: u.roles.name ?? "" }]
+        ? [{ id: (u.roles as any).id ?? "", name: (u.roles as any).name ?? "" }]
         : [],
       isCardIssued: u.is_card_issued || false,
       uniqueIdNumber: u.unique_id_number || ""
