@@ -33,12 +33,21 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, message: "Database error" }, { status: 500 });
     }
 
+
+    // Ensure roles is an array of { id, name }
     const formattedUsers = users.map(u => ({
       id: u.id,
       fullName: u.full_name,
       email: u.email,
       avatarUrl: u.avatar_url,
-      role: getRoleName(u) || "learner",
+      roles: Array.isArray(u.roles)
+        ? u.roles.map((r: any) => ({
+            id: r.id ?? "",
+            name: r.name ?? ""
+          }))
+        : u.roles
+        ? [{ id: u.roles.id ?? "", name: u.roles.name ?? "" }]
+        : [],
       isCardIssued: u.is_card_issued || false,
       uniqueIdNumber: u.unique_id_number || ""
     }));
