@@ -59,10 +59,8 @@ Respond with ONLY the JSON array. Do not include markdown formatting like \`\`\`
     const responseText = response.text?.trim() || "[]";
     let generatedItems;
     try {
-        let cleanText = responseText;
-        if (cleanText.startsWith("\`\`\`json")) cleanText = cleanText.substring(7);
-        if (cleanText.endsWith("\`\`\`")) cleanText = cleanText.substring(0, cleanText.length - 3);
-        generatedItems = JSON.parse(cleanText.trim());
+        const match = responseText.match(/\[[\s\S]*\]|\{[\s\S]*\}/);
+        generatedItems = match ? JSON.parse(match[0]) : JSON.parse(responseText.trim());
     } catch (parseError) {
         console.error("Failed to parse Gemini response:", responseText);
         return NextResponse.json({ success: false, error: { message: "Failed to parse AI response" } }, { status: 500 });

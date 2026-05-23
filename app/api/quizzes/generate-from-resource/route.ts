@@ -75,14 +75,8 @@ export async function POST(req: Request) {
     let items;
     
     try {
-        let cleanText = responseText;
-        if (cleanText.startsWith("```json")) {
-            cleanText = cleanText.substring(7);
-        }
-        if (cleanText.endsWith("```")) {
-            cleanText = cleanText.substring(0, cleanText.length - 3);
-        }
-        items = JSON.parse(cleanText.trim());
+        const match = responseText.match(/\[[\s\S]*\]|\{[\s\S]*\}/);
+        items = match ? JSON.parse(match[0]) : JSON.parse(responseText.trim());
     } catch (parseError) {
         console.error("Failed to parse Gemini response:", responseText);
         return NextResponse.json(
