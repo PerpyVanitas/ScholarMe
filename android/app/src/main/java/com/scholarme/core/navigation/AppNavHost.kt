@@ -341,7 +341,7 @@ fun AppNavHost(
             }
             
             AnalyticsScreen(
-                analytics = (analytics as? Result.Success<AdminAnalytics>)?.data,
+                analyticsState = analytics,
                 onBackClick = { navController.popBackStack() }
             )
         }

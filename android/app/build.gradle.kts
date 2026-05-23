@@ -23,7 +23,7 @@ android {
         // API Base URL - UPDATE THIS to your Spring Boot backend URL
         // For local dev: http://10.0.2.2:8080/api/v1/ (Android emulator localhost)
         // For production: https://your-backend.railway.app/api/v1/
-        buildConfigField("String", "API_BASE_URL", "\"https://scholarme.vercel.app/api/android/\"")
+        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/api/android/\"")
 
         buildConfigField("String", "ENVIRONMENT", "\"development\"")
         buildConfigField("Boolean", "ENABLE_NETWORK_LOGGING", "true")
