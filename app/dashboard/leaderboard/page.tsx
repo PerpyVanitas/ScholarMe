@@ -10,6 +10,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getAvatarUrl } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -161,7 +162,7 @@ function LeaderboardContent() {
                       >
                         <AvatarImage
                           src={
-                            entry.avatarUrl ||
+                            getAvatarUrl(entry.avatarUrl) ||
                             `https://api.dicebear.com/7.x/avataaars/svg?seed=${entry.fullName}`
                           }
                         />
@@ -233,7 +234,7 @@ function LeaderboardContent() {
                     >
                       <AvatarImage
                         src={
-                          entry.avatarUrl ||
+                          getAvatarUrl(entry.avatarUrl) ||
                           `https://api.dicebear.com/7.x/avataaars/svg?seed=${entry.fullName}`
                         }
                       />
@@ -302,7 +303,9 @@ function LeaderboardContent() {
                     <Avatar
                       className={`h-10 w-10 border-2 ${getLevelColor(currentUserEntry.currentLevel)}`}
                     >
-                      <AvatarImage src={currentUserEntry.avatarUrl || ""} />
+                      <AvatarImage
+                        src={getAvatarUrl(currentUserEntry.avatarUrl) || ""}
+                      />
                       <AvatarFallback>
                         {currentUserEntry.fullName.slice(0, 2).toUpperCase()}
                       </AvatarFallback>

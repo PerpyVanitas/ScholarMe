@@ -11,7 +11,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDebounce } from "use-debounce";
 
-import { cn } from "@/lib/utils";
+import { cn, getAvatarUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -136,7 +136,9 @@ export function UserSelector() {
           {selectedUser ? (
             <div className="flex items-center gap-2 truncate">
               <Avatar className="h-6 w-6">
-                <AvatarImage src={selectedUser.avatar_url || ""} />
+                <AvatarImage
+                  src={getAvatarUrl(selectedUser.avatar_url) || ""}
+                />
                 <AvatarFallback>
                   {selectedUser.full_name?.charAt(0) || "U"}
                 </AvatarFallback>
@@ -178,7 +180,7 @@ export function UserSelector() {
                     className="flex items-center gap-3 cursor-pointer"
                   >
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.avatar_url || ""} />
+                      <AvatarImage src={getAvatarUrl(user.avatar_url) || ""} />
                       <AvatarFallback>
                         {user.full_name?.charAt(0) || "U"}
                       </AvatarFallback>

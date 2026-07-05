@@ -1,76 +1,85 @@
-"use client"
+"use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-import { useState, useEffect, useRef } from "react"
-import { createClient } from "@/lib/supabase/client"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { GraduationCap, Camera, Loader2, CheckCircle2 } from "lucide-react"
-import { toast } from "sonner"
-import { getRoleName } from "@/lib/utils/roles"
-import { ensureProfile, ensureTutor } from "@/app/dashboard/profile/actions"
+import { useState, useEffect, useRef } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { getAvatarUrl } from "@/lib/utils";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { GraduationCap, Camera, Loader2, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
+import { getRoleName } from "@/lib/utils/roles";
+import { ensureProfile, ensureTutor } from "@/app/dashboard/profile/actions";
 
 interface Specialization {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 export default function SetupProfilePage() {
-  const router = useRouter()
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const supabase = createClient()
+  const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const supabase = createClient();
 
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const [userId, setUserId] = useState<string | null>(null)
-  const [roleName, setRoleName] = useState<string>("learner")
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-  const [avatarPathname, setAvatarPathname] = useState<string | null>(null) // Store actual Blob pathname
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [roleName, setRoleName] = useState<string>("learner");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarPathname, setAvatarPathname] = useState<string | null>(null); // Store actual Blob pathname
 
   // Form fields
-  const [firstName, setFirstName] = useState("")
-  const [lastName, setLastName] = useState("")
-  const [membershipNumber, setMembershipNumber] = useState("")
-  const [selectedSpecs, setSelectedSpecs] = useState<string[]>([])
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [membershipNumber, setMembershipNumber] = useState("");
+  const [selectedSpecs, setSelectedSpecs] = useState<string[]>([]);
 
   // Data
-  const [specializations, setSpecializations] = useState<Specialization[]>([])
+  const [specializations, setSpecializations] = useState<Specialization[]>([]);
 
-  const isTutor = roleName === "tutor"
+  const isTutor = roleName === "tutor";
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
-        router.push("/auth/login")
-        return
+        router.push("/auth/login");
+        return;
       }
-      setUserId(user.id)
+      setUserId(user.id);
 
       // Get profile with role
       const { data: profile } = await supabase
         .from("profiles")
         .select("*, roles(name)")
         .eq("id", user.id)
-        .single()
+        .single();
 
       if (profile) {
-        setFirstName(profile.first_name || "")
-        setLastName(profile.last_name || "")
-        setMembershipNumber(profile.membership_number || "")
-        setAvatarUrl(profile.avatar_url || null)
-        setRoleName(getRoleName(profile))
+        setFirstName(profile.first_name || "");
+        setLastName(profile.last_name || "");
+        setMembershipNumber(profile.membership_number || "");
+        setAvatarUrl(profile.avatar_url || null);
+        setRoleName(getRoleName(profile));
 
         // If profile already completed, go to dashboard
         if (profile.profile_completed) {
-          router.push("/dashboard")
-          return
+          router.push("/dashboard");
+          return;
         }
       }
 
@@ -78,8 +87,8 @@ export default function SetupProfilePage() {
       const { data: specs } = await supabase
         .from("specializations")
         .select("id, name")
-        .order("name")
-      if (specs) setSpecializations(specs)
+        .order("name");
+      if (specs) setSpecializations(specs);
 
       // Load existing tutor specializations
       if (profile && profile.roles && Array.isArray(profile.roles)) {
@@ -89,66 +98,66 @@ export default function SetupProfilePage() {
             .from("tutors")
             .select("id")
             .eq("user_id", user.id)
-            .single()
+            .single();
 
           if (tutorRow) {
             const { data: tutorSpecs } = await supabase
               .from("tutor_specializations")
               .select("specialization_id")
-              .eq("tutor_id", tutorRow.id)
+              .eq("tutor_id", tutorRow.id);
             if (tutorSpecs) {
-              setSelectedSpecs(tutorSpecs.map((s: any) => s.specialization_id))
+              setSelectedSpecs(tutorSpecs.map((s: any) => s.specialization_id));
             }
           }
         }
       }
 
-      setLoading(false)
+      setLoading(false);
     }
-    load()
-  }, [])
+    load();
+  }, []);
 
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file || !userId) return
+    const file = e.target.files?.[0];
+    if (!file || !userId) return;
 
     // Client-side validation
-    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
-      toast.error("Please upload a JPEG, PNG, GIF, or WebP image.")
-      return
+      toast.error("Please upload a JPEG, PNG, GIF, or WebP image.");
+      return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be smaller than 5MB.")
-      return
+      toast.error("Image must be smaller than 5MB.");
+      return;
     }
 
-    setUploading(true)
+    setUploading(true);
     try {
-      const formData = new FormData()
-      formData.append("file", file)
+      const formData = new FormData();
+      formData.append("file", file);
 
       const res = await fetch("/api/avatar", {
         method: "POST",
         body: formData,
-      })
+      });
 
-      const data = await res.json()
+      const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Upload failed")
+        throw new Error(data.error || "Upload failed");
       }
 
       // Store the actual pathname in state
-      setAvatarPathname(data.pathname)
+      setAvatarPathname(data.pathname);
       // Convert pathname to displayable URL for private Blob
-      const displayUrl = `/api/avatar?pathname=${encodeURIComponent(data.pathname)}`
-      setAvatarUrl(displayUrl)
-      toast.success("Photo uploaded!")
+      const displayUrl = `/api/avatar?pathname=${encodeURIComponent(data.pathname)}`;
+      setAvatarUrl(displayUrl);
+      toast.success("Photo uploaded!");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Upload failed")
+      toast.error(err instanceof Error ? err.message : "Upload failed");
     } finally {
-      setUploading(false)
+      setUploading(false);
     }
   }
 
@@ -156,18 +165,18 @@ export default function SetupProfilePage() {
     setSelectedSpecs((prev: string[]) =>
       prev.includes(specId)
         ? prev.filter((id: string) => id !== specId)
-        : [...prev, specId]
-    )
+        : [...prev, specId],
+    );
   }
 
   async function handleSave() {
-    if (!userId) return
+    if (!userId) return;
     if (!firstName.trim() || !lastName.trim()) {
-      toast.error("First name and last name are required")
-      return
+      toast.error("First name and last name are required");
+      return;
     }
 
-    setSaving(true)
+    setSaving(true);
     try {
       // Update profile
       const { error: profileError } = await supabase
@@ -180,9 +189,9 @@ export default function SetupProfilePage() {
           membership_number: isTutor ? membershipNumber.trim() || null : null,
           profile_completed: true,
         })
-        .eq("id", userId)
+        .eq("id", userId);
 
-      if (profileError) throw profileError
+      if (profileError) throw profileError;
 
       // If tutor, update specializations
       if (isTutor) {
@@ -191,15 +200,15 @@ export default function SetupProfilePage() {
           .from("tutors")
           .select("id")
           .eq("user_id", userId)
-          .single()
+          .single();
 
         if (!tutorRow) {
           const { data: newTutor } = await supabase
             .from("tutors")
             .insert({ user_id: userId })
             .select("id")
-            .single()
-          tutorRow = newTutor
+            .single();
+          tutorRow = newTutor;
         }
 
         if (tutorRow) {
@@ -207,51 +216,51 @@ export default function SetupProfilePage() {
           await supabase
             .from("tutor_specializations")
             .delete()
-            .eq("tutor_id", tutorRow.id)
+            .eq("tutor_id", tutorRow.id);
 
           if (selectedSpecs.length > 0) {
-            await supabase
-              .from("tutor_specializations")
-              .insert(
-                selectedSpecs.map((specId: string) => ({
-                  tutor_id: tutorRow!.id,
-                  specialization_id: specId,
-                }))
-              )
+            await supabase.from("tutor_specializations").insert(
+              selectedSpecs.map((specId: string) => ({
+                tutor_id: tutorRow!.id,
+                specialization_id: specId,
+              })),
+            );
           }
         }
       }
 
-      await ensureTutor()
+      await ensureTutor();
 
-      toast.success("Profile setup complete!")
-      window.location.href = "/dashboard"
+      toast.success("Profile setup complete!");
+      window.location.href = "/dashboard";
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save profile")
+      toast.error(
+        err instanceof Error ? err.message : "Failed to save profile",
+      );
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
   }
 
   async function handleSkip() {
-    if (!userId) return
-    setSaving(true)
+    if (!userId) return;
+    setSaving(true);
     try {
-      const profileResult = await ensureProfile()
+      const profileResult = await ensureProfile();
       if (!profileResult.success) {
-        throw new Error(profileResult.error || "Could not save profile")
+        throw new Error(profileResult.error || "Could not save profile");
       }
       if (isTutor) {
-        const tutorResult = await ensureTutor()
+        const tutorResult = await ensureTutor();
         if (!tutorResult.success) {
-          throw new Error(tutorResult.error || "Could not create tutor record")
+          throw new Error(tutorResult.error || "Could not create tutor record");
         }
       }
-      window.location.href = "/dashboard"
+      window.location.href = "/dashboard";
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not continue")
+      toast.error(err instanceof Error ? err.message : "Could not continue");
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
   }
 
@@ -260,10 +269,11 @@ export default function SetupProfilePage() {
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
-  const initials = `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase() || "?"
+  const initials =
+    `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase() || "?";
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12">
@@ -271,7 +281,9 @@ export default function SetupProfilePage() {
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
           <GraduationCap className="h-5 w-5 text-primary-foreground" />
         </div>
-        <span className="text-xl font-bold tracking-tight text-foreground">ScholarMe</span>
+        <span className="text-xl font-bold tracking-tight text-foreground">
+          ScholarMe
+        </span>
       </div>
 
       <Card className="w-full max-w-lg">
@@ -288,7 +300,10 @@ export default function SetupProfilePage() {
           <div className="flex flex-col items-center gap-3">
             <div className="relative">
               <Avatar className="h-24 w-24">
-                <AvatarImage src={avatarUrl || undefined} alt="Profile photo" />
+                <AvatarImage
+                  src={getAvatarUrl(avatarUrl) || undefined}
+                  alt="Profile photo"
+                />
                 <AvatarFallback className="text-2xl">{initials}</AvatarFallback>
               </Avatar>
               <button
@@ -311,7 +326,9 @@ export default function SetupProfilePage() {
                 className="hidden"
               />
             </div>
-            <p className="text-xs text-muted-foreground">Click the camera icon to upload a photo</p>
+            <p className="text-xs text-muted-foreground">
+              Click the camera icon to upload a photo
+            </p>
           </div>
 
           {/* Name fields */}
@@ -351,10 +368,12 @@ export default function SetupProfilePage() {
 
               <div className="space-y-2">
                 <Label>Specializations</Label>
-                <p className="text-xs text-muted-foreground">Select the subjects you can tutor</p>
+                <p className="text-xs text-muted-foreground">
+                  Select the subjects you can tutor
+                </p>
                 <div className="flex flex-wrap gap-2 pt-1">
                   {specializations.map((spec: any) => {
-                    const isSelected = selectedSpecs.includes(spec.id)
+                    const isSelected = selectedSpecs.includes(spec.id);
                     return (
                       <button
                         key={spec.id}
@@ -369,7 +388,7 @@ export default function SetupProfilePage() {
                         {isSelected && <CheckCircle2 className="h-3.5 w-3.5" />}
                         {spec.name}
                       </button>
-                    )
+                    );
                   })}
                 </div>
               </div>
@@ -403,5 +422,5 @@ export default function SetupProfilePage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

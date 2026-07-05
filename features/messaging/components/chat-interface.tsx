@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { useRealtimeMessages } from "@/features/messaging/hooks/use-realtime-messages";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getAvatarUrl } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -341,7 +342,9 @@ export function ChatInterface({
                           className="flex items-center gap-3 p-3 text-left rounded-md transition-colors hover:bg-muted"
                         >
                           <Avatar className="h-8 w-8">
-                            <AvatarImage src={u.avatar_url || ""} />
+                            <AvatarImage
+                              src={getAvatarUrl(u.avatar_url) || ""}
+                            />
                             <AvatarFallback className="bg-primary/10 text-primary text-xs">
                               {u.full_name?.charAt(0) || "?"}
                             </AvatarFallback>
@@ -404,7 +407,9 @@ export function ChatInterface({
                       }`}
                     >
                       <Avatar>
-                        <AvatarImage src={displayInfo.avatarUrl || ""} />
+                        <AvatarImage
+                          src={getAvatarUrl(displayInfo.avatarUrl) || ""}
+                        />
                         <AvatarFallback className="bg-primary/10 text-primary">
                           {displayInfo.initial}
                         </AvatarFallback>

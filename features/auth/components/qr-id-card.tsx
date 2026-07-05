@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { getAvatarUrl } from "@/lib/utils";
 import { QRCodeCanvas } from "qrcode.react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -98,17 +99,6 @@ export function QrIdCard({
         .slice(0, 2)
     : "HS";
 
-  const getAvatarDisplayUrl = (avatarUrl: string | null | undefined) => {
-    if (!avatarUrl) return undefined;
-    if (avatarUrl.startsWith("http://") || avatarUrl.startsWith("https://")) {
-      return avatarUrl;
-    }
-    if (avatarUrl.startsWith("avatars/")) {
-      return `/api/avatar?pathname=${encodeURIComponent(avatarUrl)}`;
-    }
-    return avatarUrl;
-  };
-
   // Resolve designation: prop > profile.hs_designations current > fallback
   const currentDesignation =
     designation || profile.hs_designations?.find((d) => d.is_current) || null;
@@ -205,7 +195,7 @@ export function QrIdCard({
           <div className="relative">
             <Avatar className="h-28 w-28 border-4 border-[#FFD700] shadow-xl rounded-2xl">
               <AvatarImage
-                src={getAvatarDisplayUrl(profile.avatar_url)}
+                src={getAvatarUrl(profile.avatar_url)}
                 alt={displayName}
               />
               <AvatarFallback className="bg-gradient-to-br from-zinc-800 to-zinc-950 text-white font-bold text-3xl rounded-2xl">
@@ -342,7 +332,7 @@ export function QrIdCard({
           <div className="relative">
             <Avatar className="h-28 w-28 border-4 border-[#FFD700] shadow-xl rounded-2xl">
               <AvatarImage
-                src={getAvatarDisplayUrl(profile.avatar_url)}
+                src={getAvatarUrl(profile.avatar_url)}
                 alt={displayName}
               />
               <AvatarFallback className="bg-gradient-to-br from-zinc-800 to-zinc-950 text-white font-bold text-3xl rounded-2xl">
@@ -559,7 +549,7 @@ export function QrIdCard({
           <div className="relative">
             <Avatar className="h-20 w-20 border-2 border-[#FFD700] shadow-md">
               <AvatarImage
-                src={getAvatarDisplayUrl(profile.avatar_url)}
+                src={getAvatarUrl(profile.avatar_url)}
                 alt={displayName}
               />
               <AvatarFallback className="bg-gradient-to-br from-zinc-800 to-zinc-950 text-white font-bold text-lg">

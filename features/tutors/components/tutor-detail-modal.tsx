@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { getAvatarUrl } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Star, Mail, BookOpen, MessageSquare } from "lucide-react";
@@ -75,14 +76,6 @@ export function TutorDetailModal({
 
     checkBookingHistory();
   }, [open, tutor.id, supabase]);
-
-  const getAvatarUrl = (avatarUrl: string | null | undefined) => {
-    if (!avatarUrl) return undefined;
-    if (avatarUrl.startsWith("avatars/")) {
-      return `/api/avatar?pathname=${encodeURIComponent(avatarUrl)}`;
-    }
-    return avatarUrl;
-  };
 
   const specs = tutor.tutor_specializations
     .map((ts) => ts.specializations?.name)

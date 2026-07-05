@@ -10,6 +10,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getAvatarUrl } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import {
   Loader2,
@@ -75,7 +76,10 @@ function ClockedInRow({ item }: { item: any }) {
       className="flex items-center gap-3 rounded-lg border border-border/60 p-3 transition-colors hover:bg-muted/50"
     >
       <Avatar className="h-9 w-9">
-        <AvatarImage src={profile?.avatar_url || ""} alt={profile?.full_name} />
+        <AvatarImage
+          src={getAvatarUrl(profile?.avatar_url) || ""}
+          alt={profile?.full_name}
+        />
         <AvatarFallback className="text-xs">
           {getInitials(profile?.full_name)}
         </AvatarFallback>
@@ -114,7 +118,10 @@ function TutorRow({ tutor }: { tutor: Record<string, unknown> }) {
       className="flex items-center gap-3 rounded-lg border border-border/60 p-3 transition-colors hover:bg-muted/50"
     >
       <Avatar className="h-9 w-9">
-        <AvatarImage src={profile?.avatar_url || ""} alt={profile?.full_name} />
+        <AvatarImage
+          src={getAvatarUrl(profile?.avatar_url) || ""}
+          alt={profile?.full_name}
+        />
         <AvatarFallback className="text-xs">
           {getInitials(profile?.full_name)}
         </AvatarFallback>

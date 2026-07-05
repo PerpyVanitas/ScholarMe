@@ -2,26 +2,74 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Profile, Specialization, HsDesignation, DesignationType } from "@/lib/types";
+import {
+  Profile,
+  Specialization,
+  HsDesignation,
+  DesignationType,
+} from "@/lib/types";
 import { getLevelTitle, getLevelColor } from "@/lib/utils/gamification";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { getAvatarUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { 
-  User, Mail, Phone, Calendar, Clock, Award, Edit2, Loader2, 
-  Key, Eye, EyeOff, Trash2, AlertTriangle, Camera, X, BookOpen, Star,
-  Crown, Shield, GraduationCap, Plus
+import {
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  Clock,
+  Award,
+  Edit2,
+  Loader2,
+  Key,
+  Eye,
+  EyeOff,
+  Trash2,
+  AlertTriangle,
+  Camera,
+  X,
+  BookOpen,
+  Star,
+  Crown,
+  Shield,
+  GraduationCap,
+  Plus,
 } from "lucide-react";
 import { ImageCropper } from "@/components/image-cropper";
 import { useRouter } from "next/navigation";
-import { updateProfile, UpdateProfileData, updateTutorInfo, ensureProfile } from "./actions";
+import {
+  updateProfile,
+  UpdateProfileData,
+  updateTutorInfo,
+  ensureProfile,
+} from "./actions";
 import { useUser } from "@/lib/user-context";
 import { QrIdCard } from "@/features/auth/components/qr-id-card";
 import { getRoleName } from "@/lib/utils/roles";
@@ -65,8 +113,12 @@ export default function ProfilePage() {
   const [tutorBio, setTutorBio] = useState("");
   const [hourlyRate, setHourlyRate] = useState<number | null>(null);
   const [yearsExperience, setYearsExperience] = useState<number | null>(null);
-  const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>([]);
-  const [allSpecializations, setAllSpecializations] = useState<Specialization[]>([]);
+  const [selectedSpecializations, setSelectedSpecializations] = useState<
+    string[]
+  >([]);
+  const [allSpecializations, setAllSpecializations] = useState<
+    Specialization[]
+  >([]);
   const [tutorData, setTutorData] = useState<any>(null);
   const [savingTutor, setSavingTutor] = useState(false);
 
@@ -75,7 +127,8 @@ export default function ProfilePage() {
   // Designation state
   const [designations, setDesignations] = useState<HsDesignation[]>([]);
   const [designationDialogOpen, setDesignationDialogOpen] = useState(false);
-  const [editingDesignation, setEditingDesignation] = useState<HsDesignation | null>(null);
+  const [editingDesignation, setEditingDesignation] =
+    useState<HsDesignation | null>(null);
   const [desigType, setDesigType] = useState<DesignationType>("member");
   const [desigPosition, setDesigPosition] = useState("");
   const [desigAcademicYear, setDesigAcademicYear] = useState("2024-2025");
@@ -89,7 +142,9 @@ export default function ProfilePage() {
   // Load profile data
   useEffect(() => {
     async function loadProfile() {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         router.push("/auth/login");
         return;
@@ -102,7 +157,10 @@ export default function ProfilePage() {
         .maybeSingle();
 
       if (error || !data) {
-        console.warn("Profile fetch returned error or no data, healing:", error);
+        console.warn(
+          "Profile fetch returned error or no data, healing:",
+          error,
+        );
         const heal = await ensureProfile();
         if (heal.success) {
           const { data: healed } = await supabase
@@ -119,13 +177,20 @@ export default function ProfilePage() {
         }
 
         let fallbackRole = "learner";
-        if (user.user_metadata?.role_name === "administrator" || user.user_metadata?.role === "administrator") {
+        if (
+          user.user_metadata?.role_name === "administrator" ||
+          user.user_metadata?.role === "administrator"
+        ) {
           fallbackRole = "administrator";
-        } else if (user.user_metadata?.role_name === "tutor" || user.user_metadata?.role === "tutor") {
+        } else if (
+          user.user_metadata?.role_name === "tutor" ||
+          user.user_metadata?.role === "tutor"
+        ) {
           fallbackRole = "tutor";
         }
 
-        const fullNameStr = user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
+        const fullNameStr =
+          user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
         let derivedFirstName = user.user_metadata?.first_name || "";
         let derivedLastName = user.user_metadata?.last_name || "";
         if (!derivedFirstName && !derivedLastName) {
@@ -152,7 +217,7 @@ export default function ProfilePage() {
           current_level: 1,
           profile_completed: false,
           created_at: user.created_at || new Date().toISOString(),
-          roles: { name: fallbackRole }
+          roles: { name: fallbackRole },
         };
 
         setProfile(fallbackProfile);
@@ -168,7 +233,7 @@ export default function ProfilePage() {
           const { data: allSpecs } = await supabase
             .from("specializations")
             .select("id, name");
-          
+
           if (allSpecs) {
             setAllSpecializations(allSpecs);
           }
@@ -176,7 +241,9 @@ export default function ProfilePage() {
           // Load tutor-specific data
           const { data: tutorInfo } = await supabase
             .from("tutors")
-            .select("id, bio, hourly_rate, years_experience, tutor_specializations(specializations(id, name))")
+            .select(
+              "id, bio, hourly_rate, years_experience, tutor_specializations(specializations(id, name))",
+            )
             .eq("user_id", user.id)
             .single();
 
@@ -185,11 +252,13 @@ export default function ProfilePage() {
             setTutorBio(tutorInfo.bio || "");
             setHourlyRate(tutorInfo.hourly_rate);
             setYearsExperience(tutorInfo.years_experience);
-            
+
             if (tutorInfo.tutor_specializations) {
               const specs = tutorInfo.tutor_specializations
                 .map((ts: any) => {
-                  const specs = Array.isArray(ts.specializations) ? ts.specializations : [];
+                  const specs = Array.isArray(ts.specializations)
+                    ? ts.specializations
+                    : [];
                   return specs.length > 0 ? specs[0] : null;
                 })
                 .filter(Boolean);
@@ -216,7 +285,7 @@ export default function ProfilePage() {
   // Open edit modal with current values
   const openEditModal = useCallback(() => {
     if (!profile) return;
-    
+
     // Parse name from full_name if first/last not set
     let fn = profile.first_name || "";
     let ln = profile.last_name || "";
@@ -235,7 +304,9 @@ export default function ProfilePage() {
     setEditYearLevel(profile.year_level?.toString() || "");
     // Set avatar URL - convert pathname to API route if needed
     if (profile.avatar_url?.startsWith("avatars/")) {
-      setEditAvatarUrl(`/api/avatar?pathname=${encodeURIComponent(profile.avatar_url)}`);
+      setEditAvatarUrl(
+        `/api/avatar?pathname=${encodeURIComponent(profile.avatar_url)}`,
+      );
     } else {
       setEditAvatarUrl(profile.avatar_url || null);
     }
@@ -272,7 +343,10 @@ export default function ProfilePage() {
     try {
       const formData = new FormData();
       formData.append("file", blob, "avatar.jpg");
-      const res = await fetch("/api/avatar", { method: "POST", body: formData });
+      const res = await fetch("/api/avatar", {
+        method: "POST",
+        body: formData,
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Upload failed");
       const apiUrl = data.pathname
@@ -329,16 +403,20 @@ export default function ProfilePage() {
       // Update the avatar URL in the edit modal
       const newAvatarUrl = `/api/avatar?pathname=${encodeURIComponent(data.pathname)}`;
       setEditAvatarUrl(newAvatarUrl);
-      
+
       // Update the profile state immediately
-      setProfile(prev => prev ? { ...prev, avatar_url: data.pathname } : null);
-      
+      setProfile((prev) =>
+        prev ? { ...prev, avatar_url: data.pathname } : null,
+      );
+
       // Refresh the user context so sidebar updates
       await refreshProfile();
-      
+
       toast.success("Photo uploaded successfully");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to upload photo");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to upload photo",
+      );
     } finally {
       setUploadingAvatar(false);
       // Reset the input
@@ -366,7 +444,11 @@ export default function ProfilePage() {
       setTutorSettingsOpen(false);
       await refreshProfile();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update tutor settings");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update tutor settings",
+      );
     } finally {
       setSavingTutor(false);
     }
@@ -385,14 +467,16 @@ export default function ProfilePage() {
       }
 
       setEditAvatarUrl(null);
-      setProfile(prev => prev ? { ...prev, avatar_url: null } : null);
-      
+      setProfile((prev) => (prev ? { ...prev, avatar_url: null } : null));
+
       // Refresh the user context so sidebar updates
       await refreshProfile();
-      
+
       toast.success("Photo removed");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to remove photo");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to remove photo",
+      );
     } finally {
       setUploadingAvatar(false);
     }
@@ -406,7 +490,7 @@ export default function ProfilePage() {
     }
 
     setSaving(true);
-    
+
     const updateData: UpdateProfileData = {
       first_name: editFirstName.trim(),
       last_name: editLastName.trim(),
@@ -421,19 +505,23 @@ export default function ProfilePage() {
 
     if (result.success) {
       // Update local state
-      setProfile(prev => prev ? {
-        ...prev,
-        first_name: updateData.first_name,
-        last_name: updateData.last_name,
-        full_name: `${updateData.first_name} ${updateData.last_name}`,
-        phone_number: updateData.phone_number,
-        birthdate: updateData.birthdate,
-        date_of_birth: updateData.birthdate,
-        membership_number: updateData.membership_number,
-        degree_program: updateData.degree_program,
-        year_level: updateData.year_level,
-      } : null);
-      
+      setProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              first_name: updateData.first_name,
+              last_name: updateData.last_name,
+              full_name: `${updateData.first_name} ${updateData.last_name}`,
+              phone_number: updateData.phone_number,
+              birthdate: updateData.birthdate,
+              date_of_birth: updateData.birthdate,
+              membership_number: updateData.membership_number,
+              degree_program: updateData.degree_program,
+              year_level: updateData.year_level,
+            }
+          : null,
+      );
+
       toast.success("Profile updated successfully");
       setEditOpen(false);
       await refreshProfile();
@@ -460,9 +548,9 @@ export default function ProfilePage() {
     }
 
     setChangingPassword(true);
-    
+
     const { error } = await supabase.auth.updateUser({ password: newPassword });
-    
+
     if (error) {
       toast.error(error.message || "Failed to change password");
     } else {
@@ -471,7 +559,7 @@ export default function ProfilePage() {
       setNewPassword("");
       setConfirmPassword("");
     }
-    
+
     setChangingPassword(false);
   };
 
@@ -505,22 +593,12 @@ export default function ProfilePage() {
 
   // Get initials for avatar fallback
   const getInitials = (name: string) => {
-    return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
-  };
-
-  // Get display URL for avatar (handles private blob pathnames)
-  const getAvatarDisplayUrl = (avatarUrl: string | null | undefined) => {
-    if (!avatarUrl) return undefined;
-    if (avatarUrl.startsWith("http://") || avatarUrl.startsWith("https://")) {
-      return avatarUrl;
-    }
-    if (avatarUrl.startsWith("avatars/")) {
-      return `/api/avatar?pathname=${encodeURIComponent(avatarUrl)}`;
-    }
-    if (avatarUrl.startsWith("data:")) {
-      return avatarUrl;
-    }
-    return avatarUrl;
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   if (loading) {
@@ -544,7 +622,10 @@ export default function ProfilePage() {
     );
   }
 
-  const displayName = profile.full_name || `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || "User";
+  const displayName =
+    profile.full_name ||
+    `${profile.first_name || ""} ${profile.last_name || ""}`.trim() ||
+    "User";
 
   return (
     <div className="container mx-auto max-w-4xl py-8 space-y-6">
@@ -552,8 +633,13 @@ export default function ProfilePage() {
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-            <Avatar className={`h-24 w-24 border-4 shadow-lg ${getLevelColor(profile.current_level || 1)}`}>
-              <AvatarImage src={getAvatarDisplayUrl(profile.avatar_url)} alt={displayName} />
+            <Avatar
+              className={`h-24 w-24 border-4 shadow-lg ${getLevelColor(profile.current_level || 1)}`}
+            >
+              <AvatarImage
+                src={getAvatarUrl(profile.avatar_url)}
+                alt={displayName}
+              />
               <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
                 {getInitials(displayName)}
               </AvatarFallback>
@@ -562,24 +648,34 @@ export default function ProfilePage() {
             <div className="flex-1 text-center sm:text-left space-y-2">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                 <h1 className="text-2xl font-bold">{displayName}</h1>
-                <Badge variant="secondary" className="w-fit mx-auto sm:mx-0 capitalize">
+                <Badge
+                  variant="secondary"
+                  className="w-fit mx-auto sm:mx-0 capitalize"
+                >
                   {roleName}
                 </Badge>
-                <Badge className={`w-fit mx-auto sm:mx-0 ${getLevelColor(profile.current_level || 1).split(' ')[1]}`}>
-                  Level {profile.current_level || 1} • {getLevelTitle(profile.current_level || 1)}
+                <Badge
+                  className={`w-fit mx-auto sm:mx-0 ${getLevelColor(profile.current_level || 1).split(" ")[1]}`}
+                >
+                  Level {profile.current_level || 1} •{" "}
+                  {getLevelTitle(profile.current_level || 1)}
                 </Badge>
               </div>
               <p className="text-muted-foreground">{profile.email}</p>
-              
+
               <div className="flex items-center justify-center sm:justify-start gap-2 pt-1 text-sm font-medium">
                 <Star className="h-4 w-4 text-yellow-500" />
-                <span className="text-primary">{profile.total_xp || 0} XP Total</span>
+                <span className="text-primary">
+                  {profile.total_xp || 0} XP Total
+                </span>
               </div>
 
               {specializations.length > 0 && (
                 <div className="flex flex-wrap gap-2 justify-center sm:justify-start pt-2">
-                  {specializations.map(spec => (
-                    <Badge key={spec.id} variant="outline">{spec.name}</Badge>
+                  {specializations.map((spec) => (
+                    <Badge key={spec.id} variant="outline">
+                      {spec.name}
+                    </Badge>
                   ))}
                 </div>
               )}
@@ -595,18 +691,20 @@ export default function ProfilePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-1">
-          <QrIdCard 
-            profile={{...profile, hs_designations: designations}} 
-            role={roleName} 
+          <QrIdCard
+            profile={{ ...profile, hs_designations: designations }}
+            role={roleName}
           />
         </div>
-        
+
         <div className="lg:col-span-2 space-y-6">
           {/* Profile Details */}
           <Card>
             <CardHeader>
               <CardTitle>Profile Information</CardTitle>
-              <CardDescription>Your personal details and account information</CardDescription>
+              <CardDescription>
+                Your personal details and account information
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -614,7 +712,9 @@ export default function ProfilePage() {
                   <User className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
                     <p className="text-sm font-medium">Full Name</p>
-                    <p className="text-sm text-muted-foreground">{displayName}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {displayName}
+                    </p>
                   </div>
                 </div>
 
@@ -622,7 +722,9 @@ export default function ProfilePage() {
                   <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
                     <p className="text-sm font-medium">Email</p>
-                    <p className="text-sm text-muted-foreground">{profile.email}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {profile.email}
+                    </p>
                   </div>
                 </div>
 
@@ -630,7 +732,9 @@ export default function ProfilePage() {
                   <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
                     <p className="text-sm font-medium">Phone Number</p>
-                    <p className="text-sm text-muted-foreground">{profile.phone_number || "Not set"}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {profile.phone_number || "Not set"}
+                    </p>
                   </div>
                 </div>
 
@@ -648,7 +752,9 @@ export default function ProfilePage() {
                   <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
                     <p className="text-sm font-medium">Member Since</p>
-                    <p className="text-sm text-muted-foreground">{formatDate(profile.created_at)}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatDate(profile.created_at)}
+                    </p>
                   </div>
                 </div>
 
@@ -656,7 +762,9 @@ export default function ProfilePage() {
                   <Award className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
                     <p className="text-sm font-medium">Student ID Number</p>
-                    <p className="text-sm text-muted-foreground">{profile.membership_number || "Not set"}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {profile.membership_number || "Not set"}
+                    </p>
                   </div>
                 </div>
 
@@ -666,14 +774,18 @@ export default function ProfilePage() {
                       <BookOpen className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div>
                         <p className="text-sm font-medium">Degree Program</p>
-                        <p className="text-sm text-muted-foreground">{profile.degree_program || "Not set"}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {profile.degree_program || "Not set"}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                       <Star className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div>
                         <p className="text-sm font-medium">Year Level</p>
-                        <p className="text-sm text-muted-foreground">{profile.year_level || "Not set"}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {profile.year_level || "Not set"}
+                        </p>
                       </div>
                     </div>
                   </>
@@ -691,7 +803,9 @@ export default function ProfilePage() {
                     <Award className="h-5 w-5" />
                     Tutor Settings
                   </CardTitle>
-                  <CardDescription>Manage your tutoring profile and specializations</CardDescription>
+                  <CardDescription>
+                    Manage your tutoring profile and specializations
+                  </CardDescription>
                 </div>
                 <Button
                   onClick={() => setTutorSettingsOpen(true)}
@@ -706,25 +820,31 @@ export default function ProfilePage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Bio</p>
-                  <p className="text-sm text-muted-foreground">{tutorBio || "Not set"}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {tutorBio || "Not set"}
+                  </p>
                 </div>
                 {hourlyRate && (
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Hourly Rate</p>
-                    <p className="text-sm text-muted-foreground">${hourlyRate}/hour</p>
+                    <p className="text-sm text-muted-foreground">
+                      ${hourlyRate}/hour
+                    </p>
                   </div>
                 )}
                 {yearsExperience && (
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Years of Experience</p>
-                    <p className="text-sm text-muted-foreground">{yearsExperience} years</p>
+                    <p className="text-sm text-muted-foreground">
+                      {yearsExperience} years
+                    </p>
                   </div>
                 )}
                 {specializations.length > 0 && (
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Specializations</p>
                     <div className="flex flex-wrap gap-2">
-                      {specializations.map(spec => (
+                      {specializations.map((spec) => (
                         <Badge key={spec.id} variant="secondary">
                           {spec.name}
                         </Badge>
@@ -744,7 +864,9 @@ export default function ProfilePage() {
                   <Crown className="h-5 w-5" />
                   Honor Society Designation
                 </CardTitle>
-                <CardDescription>Your current and past designations in the Honor Society</CardDescription>
+                <CardDescription>
+                  Your current and past designations in the Honor Society
+                </CardDescription>
               </div>
               <Button
                 variant="outline"
@@ -765,7 +887,9 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent>
               {designations.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center">No designations added yet.</p>
+                <p className="text-sm text-muted-foreground py-4 text-center">
+                  No designations added yet.
+                </p>
               ) : (
                 <div className="space-y-3">
                   {[...designations]
@@ -778,38 +902,62 @@ export default function ProfilePage() {
                       <div
                         key={d.id}
                         className={`flex items-center justify-between p-3 rounded-lg border ${
-                          d.is_current ? "border-primary/30 bg-primary/5" : "border-muted bg-muted/20"
+                          d.is_current
+                            ? "border-primary/30 bg-primary/5"
+                            : "border-muted bg-muted/20"
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-full ${
-                            d.designation === "esas_scholar" ? "bg-amber-500/10 text-amber-500" :
-                            d.designation === "officer" ? "bg-blue-500/10 text-blue-500" :
-                            d.designation === "administrator" ? "bg-red-500/10 text-red-500" :
-                            "bg-muted text-muted-foreground"
-                          }`}>
-                            {d.designation === "officer" ? <Shield className="h-4 w-4" /> :
-                             d.designation === "esas_scholar" ? <GraduationCap className="h-4 w-4" /> :
-                             d.designation === "administrator" ? <Crown className="h-4 w-4" /> :
-                             <Award className="h-4 w-4" />}
+                          <div
+                            className={`p-2 rounded-full ${
+                              d.designation === "esas_scholar"
+                                ? "bg-amber-500/10 text-amber-500"
+                                : d.designation === "officer"
+                                  ? "bg-blue-500/10 text-blue-500"
+                                  : d.designation === "administrator"
+                                    ? "bg-red-500/10 text-red-500"
+                                    : "bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            {d.designation === "officer" ? (
+                              <Shield className="h-4 w-4" />
+                            ) : d.designation === "esas_scholar" ? (
+                              <GraduationCap className="h-4 w-4" />
+                            ) : d.designation === "administrator" ? (
+                              <Crown className="h-4 w-4" />
+                            ) : (
+                              <Award className="h-4 w-4" />
+                            )}
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="font-semibold text-sm capitalize">
-                                {d.designation === "esas_scholar" ? "ESAS Scholar" :
-                                 d.designation === "officer" ? (d.position || "Officer") :
-                                 d.designation.charAt(0).toUpperCase() + d.designation.slice(1)}
+                                {d.designation === "esas_scholar"
+                                  ? "ESAS Scholar"
+                                  : d.designation === "officer"
+                                    ? d.position || "Officer"
+                                    : d.designation.charAt(0).toUpperCase() +
+                                      d.designation.slice(1)}
                               </span>
                               {d.is_current && (
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Current</Badge>
+                                <Badge
+                                  variant="secondary"
+                                  className="text-[10px] px-1.5 py-0"
+                                >
+                                  Current
+                                </Badge>
                               )}
                             </div>
-                            <span className="text-xs text-muted-foreground">AY {d.academic_year}</span>
+                            <span className="text-xs text-muted-foreground">
+                              AY {d.academic_year}
+                            </span>
                           </div>
                         </div>
                         <div className="flex gap-1">
                           <Button
-                            variant="ghost" size="sm" className="h-7 px-2"
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2"
                             onClick={() => {
                               setEditingDesignation(d);
                               setDesigType(d.designation);
@@ -822,12 +970,22 @@ export default function ProfilePage() {
                             <Edit2 className="h-3 w-3" />
                           </Button>
                           <Button
-                            variant="ghost" size="sm"
+                            variant="ghost"
+                            size="sm"
                             className="h-7 px-2 text-destructive hover:text-destructive"
                             onClick={async () => {
-                              const { error } = await supabase.from("hs_designations").delete().eq("id", d.id);
-                              if (error) { toast.error("Failed to delete"); }
-                              else { setDesignations(prev => prev.filter(x => x.id !== d.id)); toast.success("Removed"); }
+                              const { error } = await supabase
+                                .from("hs_designations")
+                                .delete()
+                                .eq("id", d.id);
+                              if (error) {
+                                toast.error("Failed to delete");
+                              } else {
+                                setDesignations((prev) =>
+                                  prev.filter((x) => x.id !== d.id),
+                                );
+                                toast.success("Removed");
+                              }
                             }}
                           >
                             <Trash2 className="h-3 w-3" />
@@ -857,7 +1015,7 @@ export default function ProfilePage() {
                     id="currentPassword"
                     type={showPasswords ? "text" : "password"}
                     value={currentPassword}
-                    onChange={e => setCurrentPassword(e.target.value)}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
                     placeholder="Enter current password"
                   />
                   <button
@@ -865,7 +1023,11 @@ export default function ProfilePage() {
                     onClick={() => setShowPasswords(!showPasswords)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
-                    {showPasswords ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPasswords ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -877,7 +1039,7 @@ export default function ProfilePage() {
                     id="newPassword"
                     type={showPasswords ? "text" : "password"}
                     value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
+                    onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Min. 8 characters"
                   />
                 </div>
@@ -887,19 +1049,28 @@ export default function ProfilePage() {
                     id="confirmPassword"
                     type={showPasswords ? "text" : "password"}
                     value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Repeat new password"
                   />
                 </div>
               </div>
 
-              {newPassword && confirmPassword && newPassword !== confirmPassword && (
-                <p className="text-sm text-destructive">Passwords do not match</p>
-              )}
+              {newPassword &&
+                confirmPassword &&
+                newPassword !== confirmPassword && (
+                  <p className="text-sm text-destructive">
+                    Passwords do not match
+                  </p>
+                )}
 
               <Button
                 onClick={handleChangePassword}
-                disabled={changingPassword || !currentPassword || !newPassword || newPassword !== confirmPassword}
+                disabled={
+                  changingPassword ||
+                  !currentPassword ||
+                  !newPassword ||
+                  newPassword !== confirmPassword
+                }
               >
                 {changingPassword ? (
                   <>
@@ -920,7 +1091,9 @@ export default function ProfilePage() {
                 <AlertTriangle className="h-5 w-5" />
                 Danger Zone
               </CardTitle>
-              <CardDescription>Irreversible actions for your account</CardDescription>
+              <CardDescription>
+                Irreversible actions for your account
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Button
@@ -950,7 +1123,9 @@ export default function ProfilePage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Profile</DialogTitle>
-            <DialogDescription>Update your personal information</DialogDescription>
+            <DialogDescription>
+              Update your personal information
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
@@ -976,7 +1151,9 @@ export default function ProfilePage() {
                   size="sm"
                   className="gap-1"
                   disabled={uploadingAvatar}
-                  onClick={() => document.getElementById("avatar-upload")?.click()}
+                  onClick={() =>
+                    document.getElementById("avatar-upload")?.click()
+                  }
                 >
                   <Camera className="h-4 w-4" />
                   {editAvatarUrl ? "Change" : "Upload"}
@@ -1002,7 +1179,9 @@ export default function ProfilePage() {
                   onChange={handleAvatarFileSelect}
                 />
               </div>
-              <p className="text-xs text-muted-foreground">JPEG, PNG, GIF or WebP. Max 5MB.</p>
+              <p className="text-xs text-muted-foreground">
+                JPEG, PNG, GIF or WebP. Max 5MB.
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -1011,7 +1190,7 @@ export default function ProfilePage() {
                 <Input
                   id="editFirstName"
                   value={editFirstName}
-                  onChange={e => setEditFirstName(e.target.value)}
+                  onChange={(e) => setEditFirstName(e.target.value)}
                   placeholder="First name"
                 />
               </div>
@@ -1020,7 +1199,7 @@ export default function ProfilePage() {
                 <Input
                   id="editLastName"
                   value={editLastName}
-                  onChange={e => setEditLastName(e.target.value)}
+                  onChange={(e) => setEditLastName(e.target.value)}
                   placeholder="Last name"
                 />
               </div>
@@ -1032,7 +1211,7 @@ export default function ProfilePage() {
                 id="editPhone"
                 type="tel"
                 value={editPhone}
-                onChange={e => setEditPhone(e.target.value)}
+                onChange={(e) => setEditPhone(e.target.value)}
                 placeholder="Enter phone number"
               />
             </div>
@@ -1043,7 +1222,7 @@ export default function ProfilePage() {
                 id="editBirthdate"
                 type="date"
                 value={editBirthdate}
-                onChange={e => setEditBirthdate(e.target.value)}
+                onChange={(e) => setEditBirthdate(e.target.value)}
               />
             </div>
 
@@ -1052,7 +1231,7 @@ export default function ProfilePage() {
               <Input
                 id="editMembershipNumber"
                 value={editMembershipNumber}
-                onChange={e => setEditMembershipNumber(e.target.value)}
+                onChange={(e) => setEditMembershipNumber(e.target.value)}
                 placeholder="e.g. 21-1234-567"
               />
             </div>
@@ -1064,7 +1243,7 @@ export default function ProfilePage() {
                   <Input
                     id="editDegreeProgram"
                     value={editDegreeProgram}
-                    onChange={e => setEditDegreeProgram(e.target.value)}
+                    onChange={(e) => setEditDegreeProgram(e.target.value)}
                     placeholder="e.g. BS Computer Science"
                   />
                 </div>
@@ -1074,7 +1253,7 @@ export default function ProfilePage() {
                     id="editYearLevel"
                     type="number"
                     value={editYearLevel}
-                    onChange={e => setEditYearLevel(e.target.value)}
+                    onChange={(e) => setEditYearLevel(e.target.value)}
                     placeholder="e.g. 1"
                   />
                 </div>
@@ -1083,7 +1262,11 @@ export default function ProfilePage() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditOpen(false)} disabled={saving}>
+            <Button
+              variant="outline"
+              onClick={() => setEditOpen(false)}
+              disabled={saving}
+            >
               Cancel
             </Button>
             <Button onClick={handleSaveProfile} disabled={saving}>
@@ -1105,7 +1288,9 @@ export default function ProfilePage() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Tutor Settings</DialogTitle>
-            <DialogDescription>Update your bio, rate, and specializations</DialogDescription>
+            <DialogDescription>
+              Update your bio, rate, and specializations
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -1114,7 +1299,7 @@ export default function ProfilePage() {
                 id="tutorBio"
                 className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 value={tutorBio}
-                onChange={e => setTutorBio(e.target.value)}
+                onChange={(e) => setTutorBio(e.target.value)}
                 placeholder="Tell students about your expertise..."
               />
             </div>
@@ -1125,7 +1310,11 @@ export default function ProfilePage() {
                   id="hourlyRate"
                   type="number"
                   value={hourlyRate || ""}
-                  onChange={e => setHourlyRate(e.target.value ? Number(e.target.value) : null)}
+                  onChange={(e) =>
+                    setHourlyRate(
+                      e.target.value ? Number(e.target.value) : null,
+                    )
+                  }
                   placeholder="e.g. 50"
                 />
               </div>
@@ -1135,14 +1324,22 @@ export default function ProfilePage() {
                   id="yearsExperience"
                   type="number"
                   value={yearsExperience || ""}
-                  onChange={e => setYearsExperience(e.target.value ? Number(e.target.value) : null)}
+                  onChange={(e) =>
+                    setYearsExperience(
+                      e.target.value ? Number(e.target.value) : null,
+                    )
+                  }
                   placeholder="e.g. 5"
                 />
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setTutorSettingsOpen(false)} disabled={savingTutor}>
+            <Button
+              variant="outline"
+              onClick={() => setTutorSettingsOpen(false)}
+              disabled={savingTutor}
+            >
               Cancel
             </Button>
             <Button onClick={handleSaveTutorSettings} disabled={savingTutor}>
@@ -1164,7 +1361,10 @@ export default function ProfilePage() {
         <ImageCropper
           imageSrc={cropperImageSrc}
           open={cropperOpen}
-          onClose={() => { setCropperOpen(false); setCropperImageSrc(null); }}
+          onClose={() => {
+            setCropperOpen(false);
+            setCropperImageSrc(null);
+          }}
           onCropComplete={handleCroppedUpload}
           cropShape="round"
           aspectRatio={1}
@@ -1172,18 +1372,28 @@ export default function ProfilePage() {
       )}
 
       {/* Honor Society Designation Dialog */}
-      <Dialog open={designationDialogOpen} onOpenChange={setDesignationDialogOpen}>
+      <Dialog
+        open={designationDialogOpen}
+        onOpenChange={setDesignationDialogOpen}
+      >
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>{editingDesignation ? "Edit Designation" : "Add Designation"}</DialogTitle>
+            <DialogTitle>
+              {editingDesignation ? "Edit Designation" : "Add Designation"}
+            </DialogTitle>
             <DialogDescription>
-              {editingDesignation ? "Update your Honor Society designation." : "Add a designation or role you held."}
+              {editingDesignation
+                ? "Update your Honor Society designation."
+                : "Add a designation or role you held."}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="desigType">Designation Type</Label>
-              <Select value={desigType} onValueChange={(v) => setDesigType(v as DesignationType)}>
+              <Select
+                value={desigType}
+                onValueChange={(v) => setDesigType(v as DesignationType)}
+              >
                 <SelectTrigger id="desigType">
                   <SelectValue placeholder="Select designation" />
                 </SelectTrigger>
@@ -1223,42 +1433,75 @@ export default function ProfilePage() {
                 onChange={(e) => setDesigIsCurrent(e.target.checked)}
                 className="h-4 w-4 rounded border-gray-300"
               />
-              <Label htmlFor="desigIsCurrent" className="font-normal">This is my current designation</Label>
+              <Label htmlFor="desigIsCurrent" className="font-normal">
+                This is my current designation
+              </Label>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDesignationDialogOpen(false)}>Cancel</Button>
             <Button
-              disabled={savingDesignation || (desigType === "officer" && !desigPosition)}
+              variant="outline"
+              onClick={() => setDesignationDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={
+                savingDesignation || (desigType === "officer" && !desigPosition)
+              }
               onClick={async () => {
                 setSavingDesignation(true);
                 try {
                   if (editingDesignation) {
-                    const { error } = await supabase.from("hs_designations").update({
-                      designation: desigType,
-                      position: desigType === "officer" ? desigPosition : null,
-                      academic_year: desigAcademicYear,
-                      is_current: desigIsCurrent,
-                    }).eq("id", editingDesignation.id);
+                    const { error } = await supabase
+                      .from("hs_designations")
+                      .update({
+                        designation: desigType,
+                        position:
+                          desigType === "officer" ? desigPosition : null,
+                        academic_year: desigAcademicYear,
+                        is_current: desigIsCurrent,
+                      })
+                      .eq("id", editingDesignation.id);
                     if (error) throw error;
-                    setDesignations(prev => prev.map(d =>
-                      d.id === editingDesignation.id
-                        ? { ...d, designation: desigType, position: desigType === "officer" ? desigPosition : null, academic_year: desigAcademicYear, is_current: desigIsCurrent }
-                        : desigIsCurrent ? { ...d, is_current: false } : d
-                    ));
+                    setDesignations((prev) =>
+                      prev.map((d) =>
+                        d.id === editingDesignation.id
+                          ? {
+                              ...d,
+                              designation: desigType,
+                              position:
+                                desigType === "officer" ? desigPosition : null,
+                              academic_year: desigAcademicYear,
+                              is_current: desigIsCurrent,
+                            }
+                          : desigIsCurrent
+                            ? { ...d, is_current: false }
+                            : d,
+                      ),
+                    );
                     toast.success("Designation updated");
                   } else {
-                    const { data, error } = await supabase.from("hs_designations").insert({
-                      user_id: profile?.id,
-                      designation: desigType,
-                      position: desigType === "officer" ? desigPosition : null,
-                      academic_year: desigAcademicYear,
-                      is_current: desigIsCurrent,
-                    }).select().single();
+                    const { data, error } = await supabase
+                      .from("hs_designations")
+                      .insert({
+                        user_id: profile?.id,
+                        designation: desigType,
+                        position:
+                          desigType === "officer" ? desigPosition : null,
+                        academic_year: desigAcademicYear,
+                        is_current: desigIsCurrent,
+                      })
+                      .select()
+                      .single();
                     if (error) throw error;
-                    setDesignations(prev => desigIsCurrent
-                      ? [data, ...prev.map(d => ({ ...d, is_current: false }))]
-                      : [data, ...prev]
+                    setDesignations((prev) =>
+                      desigIsCurrent
+                        ? [
+                            data,
+                            ...prev.map((d) => ({ ...d, is_current: false })),
+                          ]
+                        : [data, ...prev],
                     );
                     toast.success("Designation added");
                   }
@@ -1270,7 +1513,14 @@ export default function ProfilePage() {
                 }
               }}
             >
-              {savingDesignation ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving...</> : "Save"}
+              {savingDesignation ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

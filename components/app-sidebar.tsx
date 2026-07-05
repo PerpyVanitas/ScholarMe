@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 import type { Profile, UserRole } from "@/lib/types";
+import { getAvatarUrl } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 import {
   Sidebar,
@@ -182,15 +183,6 @@ export function AppSidebar({
         .toUpperCase()
         .slice(0, 2)
     : "?";
-
-  // Get display URL for avatar (handles private blob pathnames)
-  const getAvatarUrl = (avatarUrl: string | null | undefined) => {
-    if (!avatarUrl) return undefined;
-    if (avatarUrl.startsWith("avatars/")) {
-      return `/api/avatar?pathname=${encodeURIComponent(avatarUrl)}`;
-    }
-    return avatarUrl;
-  };
 
   return (
     <Sidebar>

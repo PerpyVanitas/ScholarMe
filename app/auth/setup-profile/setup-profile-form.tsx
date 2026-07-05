@@ -1,32 +1,39 @@
-"use client"
+"use client";
 
-import { useState, useRef } from "react"
-import { createClient } from "@/lib/supabase/client"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { GraduationCap, Camera, Loader2, CheckCircle2 } from "lucide-react"
-import { toast } from "sonner"
-import { birthdateFields } from "@/lib/profiles/db"
+import { useState, useRef } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { getAvatarUrl } from "@/lib/utils";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { GraduationCap, Camera, Loader2, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
+import { birthdateFields } from "@/lib/profiles/db";
 
 interface Specialization {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 interface SetupProfileFormProps {
-  userId: string
-  initialRoleName: string
-  initialFirstName: string
-  initialLastName: string
-  initialBirthdate: string
-  initialMembershipNumber: string
-  initialAvatarUrl: string | null
-  specializations: Specialization[]
-  initialSelectedSpecs: string[]
+  userId: string;
+  initialRoleName: string;
+  initialFirstName: string;
+  initialLastName: string;
+  initialBirthdate: string;
+  initialMembershipNumber: string;
+  initialAvatarUrl: string | null;
+  specializations: Specialization[];
+  initialSelectedSpecs: string[];
 }
 
 export function SetupProfileForm({
@@ -40,62 +47,65 @@ export function SetupProfileForm({
   specializations,
   initialSelectedSpecs,
 }: SetupProfileFormProps) {
-  const router = useRouter()
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const supabase = createClient()
+  const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const supabase = createClient();
 
-  const [saving, setSaving] = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatarUrl)
-  const [avatarPathname, setAvatarPathname] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatarUrl);
+  const [avatarPathname, setAvatarPathname] = useState<string | null>(null);
 
   // Form fields
-  const [firstName, setFirstName] = useState(initialFirstName)
-  const [lastName, setLastName] = useState(initialLastName)
-  const [birthdate, setBirthdate] = useState(initialBirthdate)
-  const [membershipNumber, setMembershipNumber] = useState(initialMembershipNumber)
-  const [selectedSpecs, setSelectedSpecs] = useState<string[]>(initialSelectedSpecs)
+  const [firstName, setFirstName] = useState(initialFirstName);
+  const [lastName, setLastName] = useState(initialLastName);
+  const [birthdate, setBirthdate] = useState(initialBirthdate);
+  const [membershipNumber, setMembershipNumber] = useState(
+    initialMembershipNumber,
+  );
+  const [selectedSpecs, setSelectedSpecs] =
+    useState<string[]>(initialSelectedSpecs);
 
-  const isTutor = initialRoleName === "tutor"
+  const isTutor = initialRoleName === "tutor";
 
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file || !userId) return
+    const file = e.target.files?.[0];
+    if (!file || !userId) return;
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
-      toast.error("Please upload a JPEG, PNG, GIF, or WebP image.")
-      return
+      toast.error("Please upload a JPEG, PNG, GIF, or WebP image.");
+      return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be smaller than 5MB.")
-      return
+      toast.error("Image must be smaller than 5MB.");
+      return;
     }
 
-    setUploading(true)
+    setUploading(true);
     try {
-      const formData = new FormData()
-      formData.append("file", file)
+      const formData = new FormData();
+      formData.append("file", file);
 
       const res = await fetch("/api/avatar", {
         method: "POST",
         body: formData,
-      })
+      });
 
-      const data = await res.json()
+      const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Upload failed")
+        throw new Error(data.error || "Upload failed");
       }
 
-      setAvatarPathname(data.pathname)
-      const displayUrl = `/api/avatar?pathname=${encodeURIComponent(data.pathname)}`
-      setAvatarUrl(displayUrl)
-      toast.success("Photo uploaded!")
+      setAvatarPathname(data.pathname);
+      const displayUrl = `/api/avatar?pathname=${encodeURIComponent(data.pathname)}`;
+      setAvatarUrl(displayUrl);
+      toast.success("Photo uploaded!");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Upload failed")
+      toast.error(err instanceof Error ? err.message : "Upload failed");
     } finally {
-      setUploading(false)
+      setUploading(false);
     }
   }
 
@@ -103,22 +113,22 @@ export function SetupProfileForm({
     setSelectedSpecs((prev: string[]) =>
       prev.includes(specId)
         ? prev.filter((id: string) => id !== specId)
-        : [...prev, specId]
-    )
+        : [...prev, specId],
+    );
   }
 
   async function handleSave() {
     if (!firstName.trim() || !lastName.trim()) {
-      toast.error("First name and last name are required")
-      return
-    }
-    
-    if (!membershipNumber.trim()) {
-      toast.error("Student ID is required")
-      return
+      toast.error("First name and last name are required");
+      return;
     }
 
-    setSaving(true)
+    if (!membershipNumber.trim()) {
+      toast.error("Student ID is required");
+      return;
+    }
+
+    setSaving(true);
     try {
       const { error: profileError } = await supabase
         .from("profiles")
@@ -131,55 +141,56 @@ export function SetupProfileForm({
           membership_number: membershipNumber.trim(),
           profile_completed: true,
         })
-        .eq("id", userId)
+        .eq("id", userId);
 
-      if (profileError) throw profileError
+      if (profileError) throw profileError;
 
       if (isTutor) {
         let { data: tutorRow } = await supabase
           .from("tutors")
           .select("id")
           .eq("user_id", userId)
-          .single()
+          .single();
 
         if (!tutorRow) {
           const { data: newTutor } = await supabase
             .from("tutors")
             .insert({ user_id: userId })
             .select("id")
-            .single()
-          tutorRow = newTutor
+            .single();
+          tutorRow = newTutor;
         }
 
         if (tutorRow) {
           await supabase
             .from("tutor_specializations")
             .delete()
-            .eq("tutor_id", tutorRow.id)
+            .eq("tutor_id", tutorRow.id);
 
           if (selectedSpecs.length > 0) {
-            await supabase
-              .from("tutor_specializations")
-              .insert(
-                selectedSpecs.map((specId: string) => ({
-                  tutor_id: tutorRow!.id,
-                  specialization_id: specId,
-                }))
-              )
+            await supabase.from("tutor_specializations").insert(
+              selectedSpecs.map((specId: string) => ({
+                tutor_id: tutorRow!.id,
+                specialization_id: specId,
+              })),
+            );
           }
         }
       }
 
-      toast.success("Profile setup complete!")
-      router.push("/dashboard")
+      toast.success("Profile setup complete!");
+      router.push("/dashboard");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save profile")
+      toast.error(
+        err instanceof Error ? err.message : "Failed to save profile",
+      );
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
   }
 
-  const initials = `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase() || "?"
+  const initials =
+    `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase() || "?";
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12">
@@ -187,7 +198,9 @@ export function SetupProfileForm({
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
           <GraduationCap className="h-5 w-5 text-primary-foreground" />
         </div>
-        <span className="text-xl font-bold tracking-tight text-foreground">ScholarMe</span>
+        <span className="text-xl font-bold tracking-tight text-foreground">
+          ScholarMe
+        </span>
       </div>
 
       <Card className="w-full max-w-lg">
@@ -203,7 +216,10 @@ export function SetupProfileForm({
           <div className="flex flex-col items-center gap-3">
             <div className="relative">
               <Avatar className="h-24 w-24">
-                <AvatarImage src={avatarUrl || undefined} alt="Profile photo" />
+                <AvatarImage
+                  src={getAvatarUrl(avatarUrl) || undefined}
+                  alt="Profile photo"
+                />
                 <AvatarFallback className="text-2xl">{initials}</AvatarFallback>
               </Avatar>
               <button
@@ -226,7 +242,9 @@ export function SetupProfileForm({
                 className="hidden"
               />
             </div>
-            <p className="text-xs text-muted-foreground">Click the camera icon to upload a photo</p>
+            <p className="text-xs text-muted-foreground">
+              Click the camera icon to upload a photo
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -273,13 +291,14 @@ export function SetupProfileForm({
 
           {isTutor && (
             <>
-
               <div className="space-y-2">
                 <Label>Specializations</Label>
-                <p className="text-xs text-muted-foreground">Select the subjects you can tutor</p>
+                <p className="text-xs text-muted-foreground">
+                  Select the subjects you can tutor
+                </p>
                 <div className="flex flex-wrap gap-2 pt-1">
                   {specializations.map((spec: any) => {
-                    const isSelected = selectedSpecs.includes(spec.id)
+                    const isSelected = selectedSpecs.includes(spec.id);
                     return (
                       <button
                         key={spec.id}
@@ -294,7 +313,7 @@ export function SetupProfileForm({
                         {isSelected && <CheckCircle2 className="h-3.5 w-3.5" />}
                         {spec.name}
                       </button>
-                    )
+                    );
                   })}
                 </div>
               </div>
@@ -303,7 +322,12 @@ export function SetupProfileForm({
 
           <Button
             onClick={handleSave}
-            disabled={saving || !firstName.trim() || !lastName.trim() || !membershipNumber.trim()}
+            disabled={
+              saving ||
+              !firstName.trim() ||
+              !lastName.trim() ||
+              !membershipNumber.trim()
+            }
             className="w-full"
             size="lg"
           >
@@ -320,7 +344,7 @@ export function SetupProfileForm({
           <button
             type="button"
             onClick={() => {
-              router.push("/dashboard")
+              router.push("/dashboard");
             }}
             className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
@@ -329,5 +353,5 @@ export function SetupProfileForm({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
