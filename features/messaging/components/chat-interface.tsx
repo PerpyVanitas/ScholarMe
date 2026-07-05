@@ -167,7 +167,7 @@ export function ChatInterface({ initialConversations, currentUserId, isAdmin = f
           const insertedMessage = payload.new as Message;
 
           // Fetch message profiles if not present in payload
-          let fullyPopulatedMessage = { ...insertedMessage };
+          const fullyPopulatedMessage = { ...insertedMessage };
           if (!insertedMessage.profiles) {
             const { data } = await supabase
               .from("profiles")

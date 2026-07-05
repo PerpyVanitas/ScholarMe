@@ -72,7 +72,7 @@ export default function DashboardView() {
             await ensureTutor()
           }
 
-          let { data: tutor } = await supabase
+          const { data: tutor } = await supabase
             .from("tutors")
             .select("*")
             .eq("user_id", userId)

@@ -42,7 +42,7 @@ export default function AvailabilityPage() {
         await ensureTutor();
       }
 
-      let { data: tutorData } = await supabase
+      const { data: tutorData } = await supabase
         .from("tutors")
         .select("*")
         .eq("user_id", userId)

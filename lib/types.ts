@@ -1,6 +1,6 @@
 /** Central type definitions -- each interface mirrors a Supabase table. */
 
-export type UserRole = "administrator" | "tutor" | "learner"
+export type UserRole = "administrator" | "tutor" | "learner" | "finance_manager"
 
 export type DesignationType = "member" | "esas_scholar" | "officer" | "administrator"
 
@@ -249,3 +249,104 @@ export interface Message {
   created_at: string
   profiles?: { id: string; full_name: string; avatar_url: string | null } | null
 }
+
+export type FinanceRequestStatus = "pending" | "finance_review" | "president_approved" | "released" | "rejected"
+
+export interface FinanceBudgetRequest {
+  id: string
+  activity_title: string
+  objectives: string | null
+  breakdown: any
+  amount: number
+  submitted_by: string
+  status: FinanceRequestStatus
+  created_at: string
+  updated_at: string
+  profiles?: Profile
+}
+
+export type PettyCashStatus = "pending" | "approved" | "rejected"
+
+export interface FinancePettyCash {
+  id: string
+  amount: number
+  justification: string
+  submitted_by: string
+  status: PettyCashStatus
+  approved_by: string | null
+  linked_request_id: string | null
+  created_at: string
+  updated_at: string
+  profiles?: Profile
+  approver?: Profile
+}
+
+export interface FinanceLiquidation {
+  id: string
+  request_id: string | null
+  receipt_urls: string[]
+  proof_of_payment_urls: string[]
+  submitted_by: string
+  submitted_at: string
+  is_late: boolean
+  created_at: string
+  updated_at: string
+  finance_budget_requests?: FinanceBudgetRequest
+  profiles?: Profile
+}
+
+export type ScardsStatus = "draft" | "auditor_review" | "cosigned"
+
+export interface FinanceScards {
+  id: string
+  event_id: string | null
+  receipts_total: number
+  disbursements_total: number
+  balance: number
+  status: ScardsStatus
+  cosigned_by: string | null
+  cosigned_at: string | null
+  version: number
+  created_at: string
+  updated_at: string
+  finance_budget_requests?: FinanceBudgetRequest
+  cosigner?: Profile
+}
+
+export interface FinanceAuditFinding {
+  id: string
+  scards_id: string | null
+  auditor_id: string | null
+  issue_type: string
+  description: string
+  resolved: boolean
+  created_at: string
+  updated_at: string
+  finance_scards?: FinanceScards
+  auditor?: Profile
+}
+
+export type TeamTaskStatus = "todo" | "in_progress" | "review" | "done"
+
+export interface TeamTask {
+  id: string
+  committee_id: string | null
+  deliverable: string
+  deadline: string | null
+  assignee_id: string | null
+  status: TeamTaskStatus
+  created_at: string
+  updated_at: string
+  assignee?: Profile
+}
+
+export interface TeamSchedule {
+  id: string
+  member_id: string
+  date: string
+  activity: string
+  created_at: string
+  updated_at: string
+  profiles?: Profile
+}
+

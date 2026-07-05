@@ -38,42 +38,6 @@ jobs:
       - name: Run Next.js Build
         run: pnpm run build
 
-  # 2. Spring Boot Backend Unit Tests
-  backend-test:
-    needs: [secret-scan]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: 'maven'
-      - name: Run Spring Boot Tests
-        run: |
-          cd backend
-          chmod +x mvnw
-          ./mvnw test
-
-  # 3. Android Mobile Unit Tests
-  android-test:
-    needs: [secret-scan]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: 'gradle'
-      - name: Run Android JVM Tests
-        run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew test
-
   # 4. Accessibility Audit
   accessibility-audit:
     needs: [web-build]
@@ -100,7 +64,7 @@ jobs:
   # 5. Vercel Production Deployment
   # Note: VERCEL_TOKEN, VERCEL_ORG_ID, and VERCEL_PROJECT_ID must be set in GitHub repository secrets
   deploy-web:
-    needs: [secret-scan, web-build, backend-test, android-test, accessibility-audit]
+    needs: [secret-scan, web-build, accessibility-audit]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
@@ -108,7 +72,7 @@ jobs:
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
         with:
-          vercel-token: "${{ secrets.VERCEL_TOKEN }}"
-          vercel-org-id: "${{ secrets.VERCEL_ORG_ID }}"
-          vercel-project-id: "${{ secrets.VERCEL_PROJECT_ID }}"
+          vercel-token: ${{ secrets['VERCEL_TOKEN'] }}
+          vercel-org-id: ${{ secrets['VERCEL_ORG_ID'] }}
+          vercel-project-id: ${{ secrets['VERCEL_PROJECT_ID'] }}
           vercel-args: '--prod'

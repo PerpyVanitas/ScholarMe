@@ -128,6 +128,7 @@ const roleLabels: Record<UserRole, string> = {
   learner: "Learner",
   tutor: "Tutor",
   administrator: "Admin",
+  finance_manager: "Finance Manager",
 };
 
 export function AppSidebar({ profile, role, notificationCount }: AppSidebarProps) {
