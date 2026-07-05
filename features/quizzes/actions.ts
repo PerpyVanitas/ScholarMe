@@ -1,139 +1,152 @@
-"use server"
+"use server";
 
-import { createClient } from "@/lib/supabase/server"
-import { revalidatePath } from "next/cache"
-import type { StudySet, StudySetItem, QuizAttempt } from "./types"
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
+import type { StudySetItem } from "./types";
 import {
   buildStudySetInsert,
   buildStudySetItemInsert,
   STUDY_SET_LIST_SELECT,
   STUDY_SET_DETAIL_SELECT,
-} from "@/lib/study-sets/db"
+} from "@/lib/study-sets/db";
 
 // ============================================
 // Study Set CRUD Operations
 // ============================================
 
 export async function createStudySet(data: {
-  title: string
-  description?: string
-  type: "flashcard" | "multiple_choice" | "true_false" | "mixed"
-  is_public: boolean
-  source_type: "manual" | "resource" | "upload"
-  source_resource_id?: string
+  title: string;
+  description?: string;
+  type: "flashcard" | "multiple_choice" | "true_false" | "mixed";
+  is_public: boolean;
+  source_type: "manual" | "resource" | "upload";
+  source_resource_id?: string;
 }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   if (!user) {
-    return { error: "Not authenticated" }
+    return { error: "Not authenticated" };
   }
 
   const { data: studySet, error } = await supabase
     .from("study_sets")
     .insert(buildStudySetInsert(user.id, data))
     .select()
-    .single()
+    .single();
 
   if (error) {
-    return { error: error.message }
+    return { error: error.message };
   }
 
-  revalidatePath("/dashboard/quizzes")
-  return { data: studySet }
+  revalidatePath("/dashboard/quizzes");
+  return { data: studySet };
 }
 
 export async function getMyStudySets() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   if (!user) {
-    return { error: "Not authenticated", data: [] }
+    return { error: "Not authenticated", data: [] };
   }
 
   const { data, error } = await supabase
     .from("study_sets")
     .select(STUDY_SET_LIST_SELECT)
     .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
+    .order("created_at", { ascending: false });
 
   if (error) {
-    return { error: error.message, data: [] }
+    return { error: error.message, data: [] };
   }
 
-  return { data: data || [] }
+  return { data: data || [] };
 }
 
 export async function getPublicStudySets() {
-  const supabase = await createClient()
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("study_sets")
     .select(STUDY_SET_LIST_SELECT)
     .eq("is_public", true)
-    .order("created_at", { ascending: false })
+    .order("created_at", { ascending: false });
 
   if (error) {
-    return { error: error.message, data: [] }
+    return { error: error.message, data: [] };
   }
 
-  return { data: data || [] }
+  return { data: data || [] };
 }
 
 export async function getStudySetById(id: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { data, error } = await supabase
     .from("study_sets")
     .select(STUDY_SET_DETAIL_SELECT)
     .eq("id", id)
-    .single()
+    .single();
 
   if (error) {
-    return { error: error.message, data: null }
+    return { error: error.message, data: null };
   }
 
   // Check access: owner or public
   if (!data.is_public && data.user_id !== user?.id) {
-    return { error: "Access denied", data: null }
+    return { error: "Access denied", data: null };
   }
 
-  return { data }
+  return { data };
 }
 
 export async function deleteStudySet(id: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   if (!user) {
-    return { error: "Not authenticated" }
+    return { error: "Not authenticated" };
   }
 
   const { error } = await supabase
     .from("study_sets")
     .delete()
     .eq("id", id)
-    .eq("user_id", user.id)
+    .eq("user_id", user.id);
 
   if (error) {
-    return { error: error.message }
+    return { error: error.message };
   }
 
-  revalidatePath("/dashboard/quizzes")
-  return { success: true }
+  revalidatePath("/dashboard/quizzes");
+  return { success: true };
 }
 
 // ============================================
 // Study Set Items Operations
 // ============================================
 
-export async function addStudySetItems(studySetId: string, items: Omit<StudySetItem, "id" | "study_set_id" | "created_at">[]) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
+export async function addStudySetItems(
+  studySetId: string,
+  items: Omit<StudySetItem, "id" | "study_set_id" | "created_at">[],
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   if (!user) {
-    return { error: "Not authenticated" }
+    return { error: "Not authenticated" };
   }
 
   // Verify ownership
@@ -141,35 +154,40 @@ export async function addStudySetItems(studySetId: string, items: Omit<StudySetI
     .from("study_sets")
     .select("user_id")
     .eq("id", studySetId)
-    .single()
+    .single();
 
   if (!studySet || studySet.user_id !== user.id) {
-    return { error: "Access denied" }
+    return { error: "Access denied" };
   }
 
   const itemsWithSetId = items.map((item, index) =>
-    buildStudySetItemInsert(studySetId, item, index)
-  )
+    buildStudySetItemInsert(studySetId, item, index),
+  );
 
   const { data, error } = await supabase
     .from("study_set_items")
     .insert(itemsWithSetId)
-    .select()
+    .select();
 
   if (error) {
-    return { error: error.message }
+    return { error: error.message };
   }
 
-  revalidatePath(`/dashboard/quizzes/study/${studySetId}`)
-  return { data }
+  revalidatePath(`/dashboard/quizzes/study/${studySetId}`);
+  return { data };
 }
 
-export async function updateStudySetItem(itemId: string, updates: Partial<StudySetItem>) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
+export async function updateStudySetItem(
+  itemId: string,
+  updates: Partial<StudySetItem>,
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   if (!user) {
-    return { error: "Not authenticated" }
+    return { error: "Not authenticated" };
   }
 
   const { data, error } = await supabase
@@ -177,28 +195,28 @@ export async function updateStudySetItem(itemId: string, updates: Partial<StudyS
     .update(updates)
     .eq("id", itemId)
     .select()
-    .single()
+    .single();
 
   if (error) {
-    return { error: error.message }
+    return { error: error.message };
   }
 
-  return { data }
+  return { data };
 }
 
 export async function deleteStudySetItem(itemId: string) {
-  const supabase = await createClient()
-  
+  const supabase = await createClient();
+
   const { error } = await supabase
     .from("study_set_items")
     .delete()
-    .eq("id", itemId)
+    .eq("id", itemId);
 
   if (error) {
-    return { error: error.message }
+    return { error: error.message };
   }
 
-  return { success: true }
+  return { success: true };
 }
 
 // ============================================
@@ -206,17 +224,19 @@ export async function deleteStudySetItem(itemId: string) {
 // ============================================
 
 export async function submitQuizAttempt(data: {
-  study_set_id: string
-  score: number
-  total_questions: number
-  answers: Record<string, string>
-  time_spent_seconds: number
+  study_set_id: string;
+  score: number;
+  total_questions: number;
+  answers: Record<string, string>;
+  time_spent_seconds: number;
 }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   if (!user) {
-    return { error: "Not authenticated" }
+    return { error: "Not authenticated" };
   }
 
   const { data: attempt, error } = await supabase
@@ -231,42 +251,46 @@ export async function submitQuizAttempt(data: {
       completed_at: new Date().toISOString(),
     })
     .select()
-    .single()
+    .single();
 
   if (error) {
-    return { error: error.message }
+    return { error: error.message };
   }
 
-  revalidatePath(`/dashboard/quizzes/study/${data.study_set_id}`)
-  return { data: attempt }
+  revalidatePath(`/dashboard/quizzes/study/${data.study_set_id}`);
+  return { data: attempt };
 }
 
 export async function getMyQuizAttempts(studySetId?: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   if (!user) {
-    return { error: "Not authenticated", data: [] }
+    return { error: "Not authenticated", data: [] };
   }
 
   let query = supabase
     .from("quiz_attempts")
-    .select(`
+    .select(
+      `
       *,
       study_sets(title, type:generation_mode)
-    `)
+    `,
+    )
     .eq("user_id", user.id)
-    .order("completed_at", { ascending: false })
+    .order("completed_at", { ascending: false });
 
   if (studySetId) {
-    query = query.eq("study_set_id", studySetId)
+    query = query.eq("study_set_id", studySetId);
   }
 
-  const { data, error } = await query
+  const { data, error } = await query;
 
   if (error) {
-    return { error: error.message, data: [] }
+    return { error: error.message, data: [] };
   }
 
-  return { data: data || [] }
+  return { data: data || [] };
 }

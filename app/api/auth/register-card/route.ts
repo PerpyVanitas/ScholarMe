@@ -2,6 +2,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { createErrorResponse, createSuccessResponse } from "@/lib/api-errors";
+import { isAdminRole } from "@/lib/utils/roles";
 
 export async function POST(request: Request) {
   try {
@@ -14,25 +15,31 @@ export async function POST(request: Request) {
           card_id: !card_id ? "Card ID is required" : "",
           pin: !pin ? "PIN is required" : "",
         }),
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (pin.length < 4) {
       return NextResponse.json(
-        createErrorResponse("VALID_001_PASSWORD_SHORT", "PIN must be at least 4 digits"),
-        { status: 400 }
+        createErrorResponse(
+          "VALID_001_PASSWORD_SHORT",
+          "PIN must be at least 4 digits",
+        ),
+        { status: 400 },
       );
     }
 
     const supabase = await createClient();
 
     // Check if user is admin
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         createErrorResponse("AUTH_002_SESSION_EXPIRED", "Session expired"),
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -46,12 +53,12 @@ export async function POST(request: Request) {
     const roleName = Array.isArray(profile?.roles)
       ? profile.roles[0]?.name
       : (profile?.roles as any)?.name;
-    const isAdmin = roleName === "administrator";
-    
+    const isAdmin = isAdminRole(roleName as string);
+
     if (profileError || !profile || !isAdmin) {
       return NextResponse.json(
         createErrorResponse("AUTH_003_ADMIN_ONLY", "Admin access required"),
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -64,8 +71,11 @@ export async function POST(request: Request) {
 
     if (existingCard) {
       return NextResponse.json(
-        createErrorResponse("DB_001_DUPLICATE_RECORD", "Card ID already exists"),
-        { status: 409 }
+        createErrorResponse(
+          "DB_001_DUPLICATE_RECORD",
+          "Card ID already exists",
+        ),
+        { status: 409 },
       );
     }
 
@@ -83,8 +93,11 @@ export async function POST(request: Request) {
 
     if (createError) {
       return NextResponse.json(
-        createErrorResponse("DB_001_DATA_INTEGRITY_ERROR", "Failed to create card"),
-        { status: 500 }
+        createErrorResponse(
+          "DB_001_DATA_INTEGRITY_ERROR",
+          "Failed to create card",
+        ),
+        { status: 500 },
       );
     }
 
@@ -93,12 +106,15 @@ export async function POST(request: Request) {
         message: "Card registered successfully",
         card: newCard,
       }),
-      { status: 201 }
+      { status: 201 },
     );
   } catch {
     return NextResponse.json(
-      createErrorResponse("SYSTEM_001_UNKNOWN_ERROR", "An unexpected error occurred"),
-      { status: 500 }
+      createErrorResponse(
+        "SYSTEM_001_UNKNOWN_ERROR",
+        "An unexpected error occurred",
+      ),
+      { status: 500 },
     );
   }
 }

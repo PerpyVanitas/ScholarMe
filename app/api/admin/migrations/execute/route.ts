@@ -1,29 +1,41 @@
-import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import { NextRequest, NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
     // Check authorization
-    if (process.env.NODE_ENV === 'production') {
-      return NextResponse.json({ error: 'Migration API is disabled in production' }, { status: 404 });
+    if (process.env.NODE_ENV === "production") {
+      return NextResponse.json(
+        { error: "Migration API is disabled in production" },
+        { status: 404 },
+      );
     }
 
     const expectedToken = process.env.MIGRATION_TOKEN;
     if (!expectedToken) {
-      return NextResponse.json({ error: 'Migration not configured' }, { status: 503 });
+      return NextResponse.json(
+        { error: "Migration not configured" },
+        { status: 503 },
+      );
     }
 
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Missing authorization header' }, { status: 401 });
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return NextResponse.json(
+        { error: "Missing authorization header" },
+        { status: 401 },
+      );
     }
 
     const token = authHeader.substring(7);
     if (token !== expectedToken) {
-      return NextResponse.json({ error: 'Invalid authorization token' }, { status: 401 });
+      return NextResponse.json(
+        { error: "Invalid authorization token" },
+        { status: 401 },
+      );
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -31,14 +43,14 @@ export async function POST(request: NextRequest) {
 
     if (!supabaseUrl || !supabaseServiceKey) {
       return NextResponse.json(
-        { error: 'Missing Supabase configuration' },
-        { status: 500 }
+        { error: "Missing Supabase configuration" },
+        { status: 500 },
       );
     }
 
     // Read migration SQL file
-    const migrationPath = path.join(process.cwd(), 'MIGRATION_CLEAN.sql');
-    const migrationSQL = fs.readFileSync(migrationPath, 'utf-8');
+    const migrationPath = path.join(process.cwd(), "MIGRATION_CLEAN.sql");
+    const migrationSQL = fs.readFileSync(migrationPath, "utf-8");
 
     // Parse statements
     const statements = parseSQLStatements(migrationSQL);
@@ -57,11 +69,11 @@ export async function POST(request: NextRequest) {
       try {
         // Call Supabase PostgreSQL REST API
         const response = await fetch(`${supabaseUrl}/rest/v1/rpc/exec`, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'apikey': supabaseServiceKey,
-            'Authorization': `Bearer ${supabaseServiceKey}`,
+            "Content-Type": "application/json",
+            apikey: supabaseServiceKey,
+            Authorization: `Bearer ${supabaseServiceKey}`,
           },
           body: JSON.stringify({ sql: stmt }),
         });
@@ -71,19 +83,23 @@ export async function POST(request: NextRequest) {
           results.push({
             index: i + 1,
             type: stmtType,
-            status: 'success',
+            status: "success",
             preview: stmt.substring(0, 50),
           });
         } else {
           // Try with pooling connection instead
-          const poolResponse = await executeViaPooling(stmt, supabaseUrl, supabaseServiceKey);
-          
+          const poolResponse = await executeViaPooling(
+            stmt,
+            supabaseUrl,
+            supabaseServiceKey,
+          );
+
           if (poolResponse.ok) {
             successCount++;
             results.push({
               index: i + 1,
               type: stmtType,
-              status: 'success (pooled)',
+              status: "success (pooled)",
               preview: stmt.substring(0, 50),
             });
           } else {
@@ -91,7 +107,7 @@ export async function POST(request: NextRequest) {
             results.push({
               index: i + 1,
               type: stmtType,
-              status: 'error',
+              status: "error",
               preview: stmt.substring(0, 50),
               message: await poolResponse.text(),
             });
@@ -102,7 +118,7 @@ export async function POST(request: NextRequest) {
         results.push({
           index: i + 1,
           type: stmtType,
-          status: 'error',
+          status: "error",
           preview: stmt.substring(0, 50),
           message: err.message,
         });
@@ -120,50 +136,51 @@ export async function POST(request: NextRequest) {
       totalResults: results.length,
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+    console.error("[API Error]", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 function parseSQLStatements(sql: string): string[] {
   const statements: string[] = [];
-  let current = '';
+  let current = "";
   let inFunction = false;
   let dollarCount = 0;
 
-  for (const line of sql.split('\n')) {
+  for (const line of sql.split("\n")) {
     const trimmed = line.trim();
 
     // Skip comments and headers
-    if (trimmed.startsWith('--') || trimmed.startsWith('=')) {
+    if (trimmed.startsWith("--") || trimmed.startsWith("=")) {
       continue;
     }
 
     // Track function definitions
-    if (trimmed.includes('CREATE OR REPLACE FUNCTION') || trimmed.includes('CREATE FUNCTION')) {
+    if (
+      trimmed.includes("CREATE OR REPLACE FUNCTION") ||
+      trimmed.includes("CREATE FUNCTION")
+    ) {
       inFunction = true;
     }
 
     // Track $$ markers
-    if (inFunction && trimmed.includes('$$')) {
+    if (inFunction && trimmed.includes("$$")) {
       dollarCount++;
     }
 
-    current += line + '\n';
+    current += line + "\n";
 
     // Statement end detection
-    if (trimmed.endsWith(';') && !inFunction) {
+    if (trimmed.endsWith(";") && !inFunction) {
       const stmt = current.trim();
       if (stmt) statements.push(stmt);
-      current = '';
-    } else if (inFunction && dollarCount >= 2 && trimmed.endsWith(';')) {
+      current = "";
+    } else if (inFunction && dollarCount >= 2 && trimmed.endsWith(";")) {
       inFunction = false;
       dollarCount = 0;
       const stmt = current.trim();
       if (stmt) statements.push(stmt);
-      current = '';
+      current = "";
     }
   }
 
@@ -177,15 +194,15 @@ function parseSQLStatements(sql: string): string[] {
 async function executeViaPooling(
   sql: string,
   supabaseUrl: string,
-  serviceKey: string
+  serviceKey: string,
 ): Promise<Response> {
-  const poolUrl = supabaseUrl.replace('/rest/v1', '');
+  const poolUrl = supabaseUrl.replace("/rest/v1", "");
   return fetch(`${poolUrl}/rest/v1/rpc/execute_sql`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      'apikey': serviceKey,
-      'Authorization': `Bearer ${serviceKey}`,
+      "Content-Type": "application/json",
+      apikey: serviceKey,
+      Authorization: `Bearer ${serviceKey}`,
     },
     body: JSON.stringify({ sql }),
   });

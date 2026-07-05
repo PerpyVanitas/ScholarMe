@@ -4,15 +4,24 @@ import { createClient } from "@/lib/supabase/server";
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
-    
-    // Verify user is an admin
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { data: profile } = await supabase.from("profiles").select("roles(name)").eq("id", user.id).single();
+    // Verify user is an admin
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("roles(name)")
+      .eq("id", user.id)
+      .single();
     const rawRole = profile?.roles;
-    const roleName = Array.isArray(rawRole) ? rawRole[0]?.name : (rawRole as any)?.name;
-    if (roleName !== "administrator") {
+    const roleName = Array.isArray(rawRole)
+      ? rawRole[0]?.name
+      : (rawRole as any)?.name;
+    if (!["administrator", "super_admin"].includes(roleName as string)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -20,11 +29,17 @@ export async function POST(request: Request) {
     const { name, start_date, end_date } = body;
 
     if (!name || !start_date || !end_date) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 },
+      );
     }
 
     // Deactivate current active semester
-    await supabase.from("semester_configs").update({ is_active: false }).eq("is_active", true);
+    await supabase
+      .from("semester_configs")
+      .update({ is_active: false })
+      .eq("is_active", true);
 
     // Create and activate new semester
     const { data, error } = await supabase

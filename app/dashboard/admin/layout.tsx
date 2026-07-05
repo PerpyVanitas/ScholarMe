@@ -28,8 +28,8 @@ export default async function AdminLayout({
     ? rawRole[0]?.name
     : (rawRole as any)?.name;
 
-  // Gate: Only administrators can access any route within /dashboard/admin
-  if (roleName !== "administrator") {
+  // Gate: Only permitted roles can access routes within /dashboard/admin
+  if (!["administrator", "super_admin"].includes(roleName)) {
     redirect("/dashboard/home");
   }
 

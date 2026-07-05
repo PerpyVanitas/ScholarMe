@@ -1,5 +1,5 @@
-import admin from 'firebase-admin';
-import webpush from 'web-push';
+import admin from "firebase-admin";
+import webpush from "web-push";
 
 // Initialize Firebase Admin (requires GOOGLE_APPLICATION_CREDENTIALS)
 if (!admin.apps.length) {
@@ -8,16 +8,16 @@ if (!admin.apps.length) {
       credential: admin.credential.applicationDefault(),
     });
   } catch (error) {
-    console.error('Firebase admin initialization error:', error);
+    console.error("Firebase admin initialization error:", error);
   }
 }
 
 // Initialize Web Push VAPID keys
 if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(
-    'mailto:support@scholarme.com',
+    "mailto:support@scholarme.com",
     process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-    process.env.VAPID_PRIVATE_KEY
+    process.env.VAPID_PRIVATE_KEY,
   );
 }
 
@@ -31,11 +31,11 @@ export interface NotificationPayload {
  * Unified service to dispatch notifications to FCM and Web Push.
  */
 export async function sendPushNotification(
-  userId: string, 
+  userId: string,
   payload: NotificationPayload,
-  tokens: { fcm?: string[]; web?: any[] }
+  tokens: { fcm?: string[]; web?: unknown[] },
 ) {
-  const results: any = { fcm: [], web: [] };
+  const results: Record<string, unknown> = { fcm: [], web: [] };
 
   // 1. Send to Android via FCM
   if (tokens.fcm && tokens.fcm.length > 0) {
@@ -47,20 +47,21 @@ export async function sendPushNotification(
           body: payload.body,
         },
         data: {
-          url: payload.url || '',
-        }
+          url: payload.url || "",
+        },
       });
       results.fcm = fcmResponse;
     } catch (error) {
-      console.error('FCM Send error:', error);
+      console.error("FCM Send error:", error);
     }
   }
 
   // 2. Send to Web via Web Push
   if (tokens.web && tokens.web.length > 0) {
-    const webPromises = tokens.web.map(sub => 
-      webpush.sendNotification(sub, JSON.stringify(payload))
-        .catch(err => console.error('Web Push error for sub:', err))
+    const webPromises = tokens.web.map((sub) =>
+      webpush
+        .sendNotification(sub as any, JSON.stringify(payload))
+        .catch((err) => console.error("Web Push error for sub:", err)),
     );
     results.web = await Promise.all(webPromises);
   }

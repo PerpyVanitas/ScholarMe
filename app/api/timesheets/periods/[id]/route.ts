@@ -1,14 +1,17 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { isAdminRole } from "@/lib/utils/roles";
 
 export async function DELETE(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
@@ -23,10 +26,13 @@ export async function DELETE(
     const roleName = Array.isArray(profile?.roles)
       ? profile.roles[0]?.name
       : (profile?.roles as any)?.name;
-    const isAdmin = roleName === "admin" || roleName === "administrator";
+    const isAdmin = isAdminRole(roleName as string);
 
     if (!profile || !isAdmin) {
-      return NextResponse.json({ error: "Access denied - admin only" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Access denied - admin only" },
+        { status: 403 },
+      );
     }
 
     const adminClient = await createAdminClient();
@@ -41,6 +47,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
+    console.error("[API Error]", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

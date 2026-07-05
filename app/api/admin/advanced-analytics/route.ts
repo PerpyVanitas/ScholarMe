@@ -6,13 +6,22 @@ export async function GET(request: Request) {
     const supabase = await createClient();
 
     // Verify user is an admin
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { data: profile } = await supabase.from("profiles").select("roles(name)").eq("id", user.id).single();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("roles(name)")
+      .eq("id", user.id)
+      .single();
     const rawRole = profile?.roles;
-    const roleName = Array.isArray(rawRole) ? rawRole[0]?.name : (rawRole as any)?.name;
-    if (roleName !== "administrator") {
+    const roleName = Array.isArray(rawRole)
+      ? rawRole[0]?.name
+      : (rawRole as any)?.name;
+    if (!["administrator", "super_admin"].includes(roleName as string)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -23,11 +32,15 @@ export async function GET(request: Request) {
 
     // If the table doesn't exist, the migration hasn't been run yet.
     if (tableCheckError) {
-      return NextResponse.json({
-        success: false,
-        migrationRequired: true,
-        error: "The advanced analytics migration has not been applied yet. Please run 20260522_advanced_analytics_rpc.sql in your Supabase SQL Editor.",
-      }, { status: 503 });
+      return NextResponse.json(
+        {
+          success: false,
+          migrationRequired: true,
+          error:
+            "The advanced analytics migration has not been applied yet. Please run 20260522_advanced_analytics_rpc.sql in your Supabase SQL Editor.",
+        },
+        { status: 503 },
+      );
     }
 
     // --- Check if there is an active semester ---
@@ -62,17 +75,23 @@ export async function GET(request: Request) {
     if (error) {
       console.error("RPC get_advanced_analytics failed:", error);
       // Return a structured error with the Postgres message for debugging
-      return NextResponse.json({
-        success: false,
-        error: error.message,
-        hint: error.hint ?? null,
-        details: error.details ?? null,
-      }, { status: 500 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: error.message,
+          hint: error.hint ?? null,
+          details: error.details ?? null,
+        },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
     console.error("Advanced analytics unexpected error:", error);
-    return NextResponse.json({ error: error.message ?? "Unknown server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message ?? "Unknown server error" },
+      { status: 500 },
+    );
   }
 }

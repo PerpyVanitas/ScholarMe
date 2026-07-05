@@ -1,11 +1,28 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Star, Clock, CheckCircle2, FolderOpen, ArrowRight, LogIn, LogOut, Timer, UserCircle } from "lucide-react";
+import {
+  Calendar,
+  Star,
+  Clock,
+  CheckCircle2,
+  FolderOpen,
+  ArrowRight,
+  LogIn,
+  LogOut,
+  Timer,
+  UserCircle,
+} from "lucide-react";
 import { SESSION_STATUS_COLORS } from "@/lib/constants";
 import { toast } from "sonner";
 import type { Profile, Session, Tutor } from "@/lib/types";
@@ -22,7 +39,12 @@ interface TutorDashboardProps {
   };
 }
 
-export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: TutorDashboardProps) {
+export function TutorDashboard({
+  profile,
+  tutor,
+  upcomingSessions,
+  stats,
+}: TutorDashboardProps) {
   const [clockedIn, setClockedIn] = useState(false);
   const [clockLoading, setClockLoading] = useState(false);
   const [clockCheckDone, setClockCheckDone] = useState(false);
@@ -32,7 +54,9 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
       const res = await fetch("/api/timesheets");
       if (res.ok) {
         const data = await res.json();
-        const open = Array.isArray(data) ? data.find((e: { clock_out: string | null }) => !e.clock_out) : null;
+        const open = Array.isArray(data)
+          ? data.find((e: { clock_out: string | null }) => !e.clock_out)
+          : null;
         setClockedIn(!!open);
       }
     } finally {
@@ -42,7 +66,10 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
 
   useEffect(() => {
     if (tutor) checkClockStatus();
-    else setClockCheckDone(true);
+    else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setClockCheckDone(true);
+    }
   }, [tutor, checkClockStatus]);
 
   async function handleClock(action: "clock_in" | "clock_out") {
@@ -58,7 +85,10 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
         body: JSON.stringify({ action }),
       });
       const data = await res.json();
-      if (!res.ok) { toast.error(data.error); return; }
+      if (!res.ok) {
+        toast.error(data.error);
+        return;
+      }
       toast.success(action === "clock_in" ? "Clocked in!" : "Clocked out!");
       setClockedIn(action === "clock_in");
     } finally {
@@ -72,9 +102,12 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-medium text-foreground">Finish your tutor setup</p>
+              <p className="text-sm font-medium text-foreground">
+                Finish your tutor setup
+              </p>
               <p className="text-sm text-muted-foreground">
-                You can use the app now. Add bio, specializations, and availability anytime from Profile.
+                You can use the app now. Add bio, specializations, and
+                availability anytime from Profile.
               </p>
             </div>
             <Button asChild size="sm">
@@ -101,25 +134,45 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
         <Card className="border-border/60">
           <CardContent className="flex items-center justify-between p-4">
             <div className="flex items-center gap-3">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-full ${clockedIn ? "bg-green-500/10" : "bg-muted"}`}>
-                <Timer className={`h-5 w-5 ${clockedIn ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`} />
+              <div
+                className={`flex h-10 w-10 items-center justify-center rounded-full ${clockedIn ? "bg-green-500/10" : "bg-muted"}`}
+              >
+                <Timer
+                  className={`h-5 w-5 ${clockedIn ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}
+                />
               </div>
               <div className="flex flex-col">
-                <span className={`text-sm font-medium ${clockedIn ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
+                <span
+                  className={`text-sm font-medium ${clockedIn ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}
+                >
                   {clockedIn ? "Currently Clocked In" : "Not Clocked In"}
                 </span>
-                <Link href="/dashboard/timesheet" className="text-xs text-primary hover:underline">
+                <Link
+                  href="/dashboard/timesheet"
+                  className="text-xs text-primary hover:underline"
+                >
                   View timesheet
                 </Link>
               </div>
             </div>
             {clockedIn ? (
-              <Button onClick={() => handleClock("clock_out")} disabled={clockLoading} variant="destructive" size="sm" className="gap-2">
+              <Button
+                onClick={() => handleClock("clock_out")}
+                disabled={clockLoading}
+                variant="destructive"
+                size="sm"
+                className="gap-2"
+              >
                 <LogOut className="h-3.5 w-3.5" />
                 {clockLoading ? "..." : "Clock Out"}
               </Button>
             ) : (
-              <Button onClick={() => handleClock("clock_in")} disabled={clockLoading} size="sm" className="gap-2">
+              <Button
+                onClick={() => handleClock("clock_in")}
+                disabled={clockLoading}
+                size="sm"
+                className="gap-2"
+              >
                 <LogIn className="h-3.5 w-3.5" />
                 {clockLoading ? "..." : "Clock In"}
               </Button>
@@ -135,7 +188,9 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
               <Clock className="h-5 w-5 text-primary" />
             </div>
             <div className="flex flex-col">
-              <span className="text-2xl font-bold text-foreground">{stats.upcomingSessions}</span>
+              <span className="text-2xl font-bold text-foreground">
+                {stats.upcomingSessions}
+              </span>
               <span className="text-xs text-muted-foreground">Upcoming</span>
             </div>
           </CardContent>
@@ -146,7 +201,9 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
               <CheckCircle2 className="h-5 w-5 text-success" />
             </div>
             <div className="flex flex-col">
-              <span className="text-2xl font-bold text-foreground">{stats.completedSessions}</span>
+              <span className="text-2xl font-bold text-foreground">
+                {stats.completedSessions}
+              </span>
               <span className="text-xs text-muted-foreground">Completed</span>
             </div>
           </CardContent>
@@ -170,7 +227,9 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
               <Star className="h-5 w-5 text-muted-foreground" />
             </div>
             <div className="flex flex-col">
-              <span className="text-2xl font-bold text-foreground">{stats.totalRatings}</span>
+              <span className="text-2xl font-bold text-foreground">
+                {stats.totalRatings}
+              </span>
               <span className="text-xs text-muted-foreground">Reviews</span>
             </div>
           </CardContent>
@@ -182,10 +241,15 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="text-base">Upcoming Sessions</CardTitle>
-              <CardDescription>Sessions that need your attention</CardDescription>
+              <CardDescription>
+                Sessions that need your attention
+              </CardDescription>
             </div>
             <Button asChild variant="ghost" size="sm">
-              <Link href="/dashboard/sessions" className="flex items-center gap-1">
+              <Link
+                href="/dashboard/sessions"
+                className="flex items-center gap-1"
+              >
                 View all <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </Button>
@@ -196,7 +260,9 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
                 <div className="rounded-full bg-muted p-3">
                   <Calendar className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <p className="text-sm text-muted-foreground">No upcoming sessions</p>
+                <p className="text-sm text-muted-foreground">
+                  No upcoming sessions
+                </p>
               </div>
             ) : (
               <div className="flex flex-col gap-3">
@@ -207,14 +273,18 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
                   >
                     <div className="flex flex-col gap-1">
                       <span className="text-sm font-medium text-foreground">
-                        {new Date(session.scheduled_date).toLocaleDateString("en-US", {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                        })}
+                        {new Date(session.scheduled_date).toLocaleDateString(
+                          "en-US",
+                          {
+                            weekday: "short",
+                            month: "short",
+                            day: "numeric",
+                          },
+                        )}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {session.start_time?.slice(0, 5)} - {session.end_time?.slice(0, 5)}
+                        {session.start_time?.slice(0, 5)} -{" "}
+                        {session.end_time?.slice(0, 5)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -223,7 +293,10 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
                           {session.specializations.name}
                         </Badge>
                       )}
-                      <Badge className={SESSION_STATUS_COLORS[session.status] || ""} variant="outline">
+                      <Badge
+                        className={SESSION_STATUS_COLORS[session.status] || ""}
+                        variant="outline"
+                      >
                         {session.status}
                       </Badge>
                     </div>
@@ -240,47 +313,85 @@ export function TutorDashboard({ profile, tutor, upcomingSessions, stats }: Tuto
             <CardDescription>Manage your tutoring</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href="/dashboard/timesheet" className="flex items-center gap-3">
+            <Button
+              asChild
+              variant="outline"
+              className="justify-start h-auto py-3"
+            >
+              <Link
+                href="/dashboard/timesheet"
+                className="flex items-center gap-3"
+              >
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
                   <Timer className="h-4 w-4 text-primary" />
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
                   <span className="text-sm font-medium">Timesheet</span>
-                  <span className="text-xs text-muted-foreground">View clock-in history</span>
+                  <span className="text-xs text-muted-foreground">
+                    View clock-in history
+                  </span>
                 </div>
               </Link>
             </Button>
-            <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href="/dashboard/availability" className="flex items-center gap-3">
+            <Button
+              asChild
+              variant="outline"
+              className="justify-start h-auto py-3"
+            >
+              <Link
+                href="/dashboard/availability"
+                className="flex items-center gap-3"
+              >
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
                   <Clock className="h-4 w-4 text-primary" />
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
-                  <span className="text-sm font-medium">Manage Availability</span>
-                  <span className="text-xs text-muted-foreground">Set your schedule</span>
+                  <span className="text-sm font-medium">
+                    Manage Availability
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    Set your schedule
+                  </span>
                 </div>
               </Link>
             </Button>
-            <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href="/dashboard/sessions" className="flex items-center gap-3">
+            <Button
+              asChild
+              variant="outline"
+              className="justify-start h-auto py-3"
+            >
+              <Link
+                href="/dashboard/sessions"
+                className="flex items-center gap-3"
+              >
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-success/10">
                   <Calendar className="h-4 w-4 text-success" />
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
                   <span className="text-sm font-medium">View Sessions</span>
-                  <span className="text-xs text-muted-foreground">Manage your bookings</span>
+                  <span className="text-xs text-muted-foreground">
+                    Manage your bookings
+                  </span>
                 </div>
               </Link>
             </Button>
-            <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href="/dashboard/resources" className="flex items-center gap-3">
+            <Button
+              asChild
+              variant="outline"
+              className="justify-start h-auto py-3"
+            >
+              <Link
+                href="/dashboard/resources"
+                className="flex items-center gap-3"
+              >
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/30">
                   <FolderOpen className="h-4 w-4 text-accent-foreground" />
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
                   <span className="text-sm font-medium">My Repositories</span>
-                  <span className="text-xs text-muted-foreground">Share study materials</span>
+                  <span className="text-xs text-muted-foreground">
+                    Share study materials
+                  </span>
                 </div>
               </Link>
             </Button>

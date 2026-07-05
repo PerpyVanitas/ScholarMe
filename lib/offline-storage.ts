@@ -5,25 +5,25 @@
 
 const CACHE_NAME = "scholarme-offline-v1";
 
-export async function saveToOfflineCache(url: string, data: any) {
+export async function saveToOfflineCache(url: string, data: unknown) {
   if (!window.caches) return;
-  
+
   const cache = await window.caches.open(CACHE_NAME);
   const response = new Response(JSON.stringify(data), {
-    headers: { 'Content-Type': 'application/json' }
+    headers: { "Content-Type": "application/json" },
   });
-  
+
   await cache.put(url, response);
 }
 
 export async function getFromOfflineCache(url: string) {
   if (!window.caches) return null;
-  
+
   const cache = await window.caches.open(CACHE_NAME);
   const response = await cache.match(url);
-  
+
   if (!response) return null;
-  
+
   return await response.json();
 }
 

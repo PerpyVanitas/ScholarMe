@@ -6,7 +6,9 @@ import { createClient } from "@/lib/supabase/create-client";
  */
 export async function validateAdmin() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) return { user: null, isAdmin: false };
 
@@ -16,9 +18,16 @@ export async function validateAdmin() {
     .eq("id", user.id)
     .single();
 
-  const isAdmin = Array.isArray(profile?.roles) 
-    ? profile.roles.some((role: any) => role.name === "administrator")
-    : (profile?.roles as any)?.name === "administrator";
+  const isAdmin = Array.isArray(profile?.roles)
+    ? profile.roles.some(
+        (role: { name: string }) =>
+          role.name === "administrator" ||
+          role.name === "president" ||
+          role.name === "super_admin",
+      )
+    : ["administrator", "president", "super_admin"].includes(
+        (profile?.roles as { name: string } | undefined)?.name || "",
+      );
 
   return { user, isAdmin };
 }
@@ -32,19 +41,30 @@ export async function validateAndroidAdmin(request: Request) {
   }
   const token = authHeader.substring(7);
   const authSupabase = createSupabaseForBearer(token);
-  const { data: { user }, error: userError } = await authSupabase.auth.getUser(token);
-  
+  const {
+    data: { user },
+    error: userError,
+  } = await authSupabase.auth.getUser(token);
+
   if (userError || !user) return { user: null, isAdmin: false };
-  
+
   const { data: profile } = await authSupabase
     .from("profiles")
     .select("roles(name)")
     .eq("id", user.id)
     .single();
 
-  const isAdmin = Array.isArray(profile?.roles) 
-    ? profile.roles.some((role: any) => role.name === "administrator" || role.name === "admin")
-    : (profile?.roles as any)?.name === "administrator" || (profile?.roles as any)?.name === "admin";
-    
+  const isAdmin = Array.isArray(profile?.roles)
+    ? profile.roles.some(
+        (role: { name: string }) =>
+          role.name === "administrator" ||
+          role.name === "admin" ||
+          role.name === "president" ||
+          role.name === "super_admin",
+      )
+    : ["administrator", "admin", "president", "super_admin"].includes(
+        (profile?.roles as { name: string } | undefined)?.name || "",
+      );
+
   return { user, isAdmin };
 }

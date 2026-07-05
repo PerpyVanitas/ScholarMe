@@ -7,17 +7,32 @@ import { signUp } from "@/app/auth/actions";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, Loader2, BookOpen, Users, Eye, EyeOff, CheckCircle2 } from "lucide-react";
+import {
+  GraduationCap,
+  Loader2,
+  BookOpen,
+  Users,
+  Eye,
+  EyeOff,
+  CheckCircle2,
+} from "lucide-react";
+import { TosLink, PrivacyLink } from "@/components/legal-modals";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 function mapAuthError(msg: string): string {
   const m = msg.toLowerCase();
   if (m.includes("phone number")) return msg;
-  if (m.includes("already registered") || m.includes("already exists")) return "An account with this email already exists. Please sign in instead.";
+  if (m.includes("already registered") || m.includes("already exists"))
+    return "An account with this email already exists. Please sign in instead.";
   if (m.includes("invalid email")) return "Please enter a valid email address.";
-  if (m.includes("password") && (m.includes("weak") || m.includes("short") || m.includes("least"))) return "Password must be at least 8 characters long.";
-  if (m.includes("rate limit") || m.includes("too many")) return "Too many attempts. Please wait a moment before trying again.";
+  if (
+    m.includes("password") &&
+    (m.includes("weak") || m.includes("short") || m.includes("least"))
+  )
+    return "Password must be at least 8 characters long.";
+  if (m.includes("rate limit") || m.includes("too many"))
+    return "Too many attempts. Please wait a moment before trying again.";
   return msg || "An unexpected error occurred. Please try again.";
 }
 
@@ -37,7 +52,8 @@ const VALIDATORS = {
   },
   email: (v: string) => {
     if (!v.trim()) return "Email address is required.";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return "Please enter a valid email address (e.g. you@example.com).";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))
+      return "Please enter a valid email address (e.g. you@example.com).";
     return "";
   },
   phone_number: (v: string) => {
@@ -46,7 +62,8 @@ const VALIDATORS = {
     // Philippine mobile: starts with 09 (11 digits) or +639 (12 digits with country code)
     const isLocal = /^09\d{9}$/.test(digits);
     const isIntl = /^639\d{9}$/.test(digits);
-    if (!isLocal && !isIntl) return "Enter a valid Philippine mobile number (e.g. +63 917 123 4567 or 0917 123 4567).";
+    if (!isLocal && !isIntl)
+      return "Enter a valid Philippine mobile number (e.g. +63 917 123 4567 or 0917 123 4567).";
     return "";
   },
   confirmPassword: (v: string) => {
@@ -60,7 +77,11 @@ const VALIDATORS = {
     if (dob > new Date()) return "Date of birth cannot be in the future.";
     const now = new Date();
     let age = now.getFullYear() - dob.getFullYear();
-    if (now.getMonth() < dob.getMonth() || (now.getMonth() === dob.getMonth() && now.getDate() < dob.getDate())) age--;
+    if (
+      now.getMonth() < dob.getMonth() ||
+      (now.getMonth() === dob.getMonth() && now.getDate() < dob.getDate())
+    )
+      age--;
     if (age < 13) return "You must be at least 13 years old to register.";
     if (age > 120) return "Please enter a valid date of birth.";
     return "";
@@ -82,7 +103,9 @@ const FEATURES = [
 export default function SignUpPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [selectedRole, setSelectedRole] = useState<"learner" | "tutor">("learner");
+  const [selectedRole, setSelectedRole] = useState<"learner" | "tutor">(
+    "learner",
+  );
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     first_name: "",
@@ -171,9 +194,23 @@ export default function SignUpPage() {
     return score;
   })();
 
-  const strengthLabel = ["", "Weak", "Fair", "Good", "Strong"][passwordStrength];
-  const strengthColor = ["", "bg-orange-500", "bg-amber-400", "bg-primary", "bg-emerald-500"][passwordStrength];
-  const strengthTextColor = ["", "text-orange-500", "text-amber-400", "text-primary", "text-emerald-500"][passwordStrength];
+  const strengthLabel = ["", "Weak", "Fair", "Good", "Strong"][
+    passwordStrength
+  ];
+  const strengthColor = [
+    "",
+    "bg-orange-500",
+    "bg-amber-400",
+    "bg-primary",
+    "bg-emerald-500",
+  ][passwordStrength];
+  const strengthTextColor = [
+    "",
+    "text-orange-500",
+    "text-amber-400",
+    "text-primary",
+    "text-emerald-500",
+  ][passwordStrength];
 
   return (
     <div className="flex min-h-screen">
@@ -188,18 +225,24 @@ export default function SignUpPage() {
 
         <div className="flex flex-col gap-8">
           <div className="flex flex-col gap-3">
-            <p className="text-sm font-semibold uppercase tracking-widest text-sidebar-foreground/55">Join thousands of learners</p>
+            <p className="text-sm font-semibold uppercase tracking-widest text-sidebar-foreground/55">
+              Join thousands of learners
+            </p>
             <h2 className="text-4xl font-bold leading-tight text-balance">
               Start your learning journey today
             </h2>
             <p className="text-base leading-relaxed text-sidebar-foreground/70">
-              ScholarMe connects students with expert tutors for personalized, flexible learning — on your schedule.
+              ScholarMe connects students with expert tutors for personalized,
+              flexible learning — on your schedule.
             </p>
           </div>
 
           <ul className="flex flex-col gap-3">
             {FEATURES.map((f) => (
-              <li key={f} className="flex items-center gap-3 text-sm text-sidebar-foreground/80">
+              <li
+                key={f}
+                className="flex items-center gap-3 text-sm text-sidebar-foreground/80"
+              >
                 <CheckCircle2 className="h-4 w-4 shrink-0 text-accent" />
                 {f}
               </li>
@@ -219,15 +262,22 @@ export default function SignUpPage() {
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
             <GraduationCap className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-foreground">ScholarMe</span>
+          <span className="text-xl font-bold tracking-tight text-foreground">
+            ScholarMe
+          </span>
         </div>
 
         <div className="w-full max-w-md">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Create an account</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Create an account
+            </h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Already have one?{" "}
-              <Link href="/auth/login" className="font-medium text-primary hover:underline underline-offset-4">
+              <Link
+                href="/auth/login"
+                className="font-medium text-primary hover:underline underline-offset-4"
+              >
                 Sign in
               </Link>
             </p>
@@ -247,24 +297,38 @@ export default function SignUpPage() {
                       "flex items-center gap-3 rounded-lg border-2 p-3.5 text-left transition-all",
                       selectedRole === r
                         ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/40 bg-card"
+                        : "border-border hover:border-primary/40 bg-card",
                     )}
                   >
-                    <div className={cn(
-                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-md",
-                      selectedRole === r ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                    )}>
-                      {r === "learner"
-                        ? <BookOpen className="h-4 w-4" />
-                        : <Users className="h-4 w-4" />
-                      }
+                    <div
+                      className={cn(
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-md",
+                        selectedRole === r
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      {r === "learner" ? (
+                        <BookOpen className="h-4 w-4" />
+                      ) : (
+                        <Users className="h-4 w-4" />
+                      )}
                     </div>
                     <div>
-                      <p className={cn("text-sm font-semibold", selectedRole === r ? "text-primary" : "text-foreground")}>
+                      <p
+                        className={cn(
+                          "text-sm font-semibold",
+                          selectedRole === r
+                            ? "text-primary"
+                            : "text-foreground",
+                        )}
+                      >
                         {r === "learner" ? "Learner" : "Tutor"}
                       </p>
                       <p className="text-[11px] text-muted-foreground leading-snug">
-                        {r === "learner" ? "Find & book tutors" : "Teach & earn"}
+                        {r === "learner"
+                          ? "Find & book tutors"
+                          : "Teach & earn"}
                       </p>
                     </div>
                   </button>
@@ -275,147 +339,291 @@ export default function SignUpPage() {
             {/* First Name and Last Name side by side */}
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="first_name">First Name <span className="text-destructive">*</span></Label>
+                <Label htmlFor="first_name">
+                  First Name <span className="text-destructive">*</span>
+                </Label>
                 <Input
-                  id="first_name" type="text" placeholder="Maria" required autoComplete="given-name"
+                  id="first_name"
+                  type="text"
+                  placeholder="Maria"
+                  required
+                  autoComplete="given-name"
                   value={formData.first_name}
-                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, first_name: e.target.value })
+                  }
                   onBlur={(e) => validateField("first_name", e.target.value)}
-                  className={cn(fieldErrors.first_name && "border-destructive focus-visible:ring-destructive")}
+                  className={cn(
+                    fieldErrors.first_name &&
+                      "border-destructive focus-visible:ring-destructive",
+                  )}
                 />
-                {fieldErrors.first_name && <p className="text-xs text-destructive">{fieldErrors.first_name}</p>}
+                {fieldErrors.first_name && (
+                  <p className="text-xs text-destructive">
+                    {fieldErrors.first_name}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="last_name">Last Name <span className="text-destructive">*</span></Label>
+                <Label htmlFor="last_name">
+                  Last Name <span className="text-destructive">*</span>
+                </Label>
                 <Input
-                  id="last_name" type="text" placeholder="Santos" required autoComplete="family-name"
+                  id="last_name"
+                  type="text"
+                  placeholder="Santos"
+                  required
+                  autoComplete="family-name"
                   value={formData.last_name}
-                  onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, last_name: e.target.value })
+                  }
                   onBlur={(e) => validateField("last_name", e.target.value)}
-                  className={cn(fieldErrors.last_name && "border-destructive focus-visible:ring-destructive")}
+                  className={cn(
+                    fieldErrors.last_name &&
+                      "border-destructive focus-visible:ring-destructive",
+                  )}
                 />
-                {fieldErrors.last_name && <p className="text-xs text-destructive">{fieldErrors.last_name}</p>}
+                {fieldErrors.last_name && (
+                  <p className="text-xs text-destructive">
+                    {fieldErrors.last_name}
+                  </p>
+                )}
               </div>
             </div>
 
             {/* Email */}
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="email">Email Address <span className="text-destructive">*</span></Label>
+              <Label htmlFor="email">
+                Email Address <span className="text-destructive">*</span>
+              </Label>
               <Input
-                id="email" type="text" placeholder="you@example.com" required autoComplete="email"
+                id="email"
+                type="text"
+                placeholder="you@example.com"
+                required
+                autoComplete="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
                 onBlur={(e) => validateField("email", e.target.value)}
-                className={cn(fieldErrors.email && "border-destructive focus-visible:ring-destructive")}
+                className={cn(
+                  fieldErrors.email &&
+                    "border-destructive focus-visible:ring-destructive",
+                )}
               />
-              {fieldErrors.email && <p className="text-xs text-destructive">{fieldErrors.email}</p>}
+              {fieldErrors.email && (
+                <p className="text-xs text-destructive">{fieldErrors.email}</p>
+              )}
             </div>
 
             {/* Phone + DOB side by side */}
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="phone_number">Mobile Number <span className="text-destructive">*</span></Label>
+                <Label htmlFor="phone_number">
+                  Mobile Number <span className="text-destructive">*</span>
+                </Label>
                 <Input
-                  id="phone_number" type="tel" placeholder="+63 917 123 4567" autoComplete="tel"
+                  id="phone_number"
+                  type="tel"
+                  placeholder="+63 917 123 4567"
+                  autoComplete="tel"
                   value={formData.phone_number}
-                  onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone_number: e.target.value })
+                  }
                   onBlur={(e) => validateField("phone_number", e.target.value)}
-                  className={cn(fieldErrors.phone_number && "border-destructive focus-visible:ring-destructive")}
+                  className={cn(
+                    fieldErrors.phone_number &&
+                      "border-destructive focus-visible:ring-destructive",
+                  )}
                 />
-                {fieldErrors.phone_number && <p className="text-xs text-destructive">{fieldErrors.phone_number}</p>}
+                {fieldErrors.phone_number && (
+                  <p className="text-xs text-destructive">
+                    {fieldErrors.phone_number}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="date_of_birth">Date of Birth <span className="text-destructive">*</span></Label>
+                <Label htmlFor="date_of_birth">
+                  Date of Birth <span className="text-destructive">*</span>
+                </Label>
                 <Input
-                  id="date_of_birth" type="date" required
+                  id="date_of_birth"
+                  type="date"
+                  required
                   value={formData.date_of_birth}
-                  onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, date_of_birth: e.target.value })
+                  }
                   onBlur={(e) => validateField("date_of_birth", e.target.value)}
-                  className={cn(fieldErrors.date_of_birth && "border-destructive focus-visible:ring-destructive")}
+                  className={cn(
+                    fieldErrors.date_of_birth &&
+                      "border-destructive focus-visible:ring-destructive",
+                  )}
                 />
-                {fieldErrors.date_of_birth && <p className="text-xs text-destructive">{fieldErrors.date_of_birth}</p>}
+                {fieldErrors.date_of_birth && (
+                  <p className="text-xs text-destructive">
+                    {fieldErrors.date_of_birth}
+                  </p>
+                )}
               </div>
             </div>
 
             {/* Password */}
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="password">Password <span className="text-destructive">*</span></Label>
+              <Label htmlFor="password">
+                Password <span className="text-destructive">*</span>
+              </Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Min. 8 characters"
-                  required minLength={8} autoComplete="new-password"
+                  required
+                  minLength={8}
+                  autoComplete="new-password"
                   value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
                   onBlur={(e) => validateField("password", e.target.value)}
-                  className={cn("pr-10", fieldErrors.password && "border-destructive focus-visible:ring-destructive")}
+                  className={cn(
+                    "pr-10",
+                    fieldErrors.password &&
+                      "border-destructive focus-visible:ring-destructive",
+                  )}
                 />
-                <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
-              {fieldErrors.password && <p className="text-xs text-destructive mt-1">{fieldErrors.password}</p>}
+              {fieldErrors.password && (
+                <p className="text-xs text-destructive mt-1">
+                  {fieldErrors.password}
+                </p>
+              )}
               {/* Password strength bar — always visible while typing */}
-              <div className={cn("mt-1 transition-all", formData.password ? "opacity-100" : "opacity-0 pointer-events-none")}>
+              <div
+                className={cn(
+                  "mt-1 transition-all",
+                  formData.password
+                    ? "opacity-100"
+                    : "opacity-0 pointer-events-none",
+                )}
+              >
                 <div className="flex items-center gap-2">
                   <div className="flex flex-1 gap-1">
                     {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className={cn(
-                        "h-1.5 flex-1 rounded-full transition-all duration-300",
-                        formData.password && i <= passwordStrength ? strengthColor : "bg-border"
-                      )} />
+                      <div
+                        key={i}
+                        className={cn(
+                          "h-1.5 flex-1 rounded-full transition-all duration-300",
+                          formData.password && i <= passwordStrength
+                            ? strengthColor
+                            : "bg-border",
+                        )}
+                      />
                     ))}
                   </div>
-                  <span className={cn("text-xs font-medium w-10 text-right transition-colors", strengthTextColor)}>
+                  <span
+                    className={cn(
+                      "text-xs font-medium w-10 text-right transition-colors",
+                      strengthTextColor,
+                    )}
+                  >
                     {formData.password ? strengthLabel : ""}
                   </span>
                 </div>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
-                  Use 8+ characters with uppercase, numbers, and symbols for a strong password.
+                  Use 8+ characters with uppercase, numbers, and symbols for a
+                  strong password.
                 </p>
               </div>
             </div>
 
             {/* Confirm Password */}
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="confirmPassword">Confirm Password <span className="text-destructive">*</span></Label>
+              <Label htmlFor="confirmPassword">
+                Confirm Password <span className="text-destructive">*</span>
+              </Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
                   type={showPassword ? "text" : "password"}
                   placeholder="Repeat your password"
-                  required minLength={8} autoComplete="new-password"
+                  required
+                  minLength={8}
+                  autoComplete="new-password"
                   value={formData.confirmPassword}
                   onChange={(e) => {
                     const val = e.target.value;
                     setFormData({ ...formData, confirmPassword: val });
                     const match = val === formData.password || val === "";
                     setPasswordMatch(match);
-                    if (!match) setFieldErrors((prev) => ({ ...prev, confirmPassword: "Passwords do not match." }));
-                    else setFieldErrors((prev) => ({ ...prev, confirmPassword: "" }));
+                    if (!match)
+                      setFieldErrors((prev) => ({
+                        ...prev,
+                        confirmPassword: "Passwords do not match.",
+                      }));
+                    else
+                      setFieldErrors((prev) => ({
+                        ...prev,
+                        confirmPassword: "",
+                      }));
                   }}
-                  className={cn("pr-10", (formData.confirmPassword && !passwordMatch) || fieldErrors.confirmPassword ? "border-destructive focus-visible:ring-destructive" : "")}
+                  className={cn(
+                    "pr-10",
+                    (formData.confirmPassword && !passwordMatch) ||
+                      fieldErrors.confirmPassword
+                      ? "border-destructive focus-visible:ring-destructive"
+                      : "",
+                  )}
                 />
-                <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
-              {(fieldErrors.confirmPassword || (formData.confirmPassword && !passwordMatch)) && (
-                <p className="text-xs text-destructive">{fieldErrors.confirmPassword || "Passwords do not match."}</p>
+              {(fieldErrors.confirmPassword ||
+                (formData.confirmPassword && !passwordMatch)) && (
+                <p className="text-xs text-destructive">
+                  {fieldErrors.confirmPassword || "Passwords do not match."}
+                </p>
               )}
             </div>
 
             {/* Academic Year */}
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="academic_year_joined">Academic Year Joined <span className="text-destructive">*</span></Label>
+              <Label htmlFor="academic_year_joined">
+                Academic Year Joined <span className="text-destructive">*</span>
+              </Label>
               <select
                 id="academic_year_joined"
                 required
                 value={formData.academic_year_joined}
-                onChange={(e) => setFormData({ ...formData, academic_year_joined: e.target.value })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    academic_year_joined: e.target.value,
+                  })
+                }
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <option value="2022-2023">2022-2023</option>
@@ -432,10 +640,15 @@ export default function SignUpPage() {
                   type="checkbox"
                   id="esas_scholar"
                   checked={formData.esas_scholar}
-                  onChange={(e) => setFormData({ ...formData, esas_scholar: e.target.checked })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, esas_scholar: e.target.checked })
+                  }
                   className="h-4 w-4 rounded border-input text-primary focus:ring-primary bg-background accent-primary"
                 />
-                <Label htmlFor="esas_scholar" className="text-sm font-medium cursor-pointer">
+                <Label
+                  htmlFor="esas_scholar"
+                  className="text-sm font-medium cursor-pointer"
+                >
                   I am an ESAS Scholar
                 </Label>
               </div>
@@ -444,16 +657,23 @@ export default function SignUpPage() {
             {/* Terms */}
             <div className="flex items-start gap-2.5">
               <input
-                type="checkbox" id="terms" required
+                type="checkbox"
+                id="terms"
+                required
                 checked={formData.terms_accepted}
-                onChange={(e) => setFormData({ ...formData, terms_accepted: e.target.checked })}
+                onChange={(e) =>
+                  setFormData({ ...formData, terms_accepted: e.target.checked })
+                }
                 className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-primary"
               />
-              <Label htmlFor="terms" className="text-xs leading-relaxed font-normal cursor-pointer text-muted-foreground">
+              <Label
+                htmlFor="terms"
+                className="text-xs leading-relaxed font-normal cursor-pointer text-muted-foreground"
+              >
                 I agree to the{" "}
-                <Link href="/terms" className="text-foreground underline hover:no-underline">Terms of Service</Link>
-                {" "}and{" "}
-                <Link href="/privacy" className="text-foreground underline hover:no-underline">Privacy Policy</Link>
+                <TosLink className="text-foreground underline hover:no-underline font-medium" />{" "}
+                and{" "}
+                <PrivacyLink className="text-foreground underline hover:no-underline font-medium" />
                 <span className="text-destructive"> *</span>
               </Label>
             </div>
@@ -469,10 +689,14 @@ export default function SignUpPage() {
               className="w-full h-11 text-sm font-semibold"
               disabled={loading || !formData.terms_accepted}
             >
-              {loading
-                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating account...</>
-                : "Create Account"
-              }
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                "Create Account"
+              )}
             </Button>
           </form>
         </div>

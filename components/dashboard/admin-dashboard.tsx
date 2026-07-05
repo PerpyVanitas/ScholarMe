@@ -1,32 +1,57 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Users, Calendar, GraduationCap, Clock, ArrowRight, BarChart3, QrCode, ClipboardList } from "lucide-react"
-import { SESSION_STATUS_COLORS } from "@/lib/constants"
-import { AdminStatModal } from "@/components/dashboard/admin-stat-modal"
-import type { Profile, Session } from "@/lib/types"
+import { useState } from "react";
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Users,
+  Calendar,
+  GraduationCap,
+  Clock,
+  ArrowRight,
+  BarChart3,
+  QrCode,
+  ClipboardList,
+} from "lucide-react";
+import { SESSION_STATUS_COLORS } from "@/lib/constants";
+import { AdminStatModal } from "@/components/dashboard/admin-stat-modal";
+import type { Profile, Session } from "@/lib/types";
 
-type StatType = "clocked_in" | "tutors" | "today" | "pending"
+type StatType = "clocked_in" | "tutors" | "today" | "pending";
 
 interface AdminDashboardProps {
-  profile: Profile
+  profile: Profile;
   stats: {
-    pendingSessions: number
-    clockedInTutors: number
-    activeTutors: number
-    sessionsToday: number
-  }
-  recentSessions: Session[]
+    pendingSessions: number;
+    clockedInTutors: number;
+    activeTutors: number;
+    sessionsToday: number;
+  };
+  recentSessions: Session[];
 }
 
-export function AdminDashboard({ profile, stats, recentSessions }: AdminDashboardProps) {
-  const [modalType, setModalType] = useState<StatType | null>(null)
+export function AdminDashboard({
+  profile: _profile,
+  stats,
+  recentSessions,
+}: AdminDashboardProps) {
+  const [modalType, setModalType] = useState<StatType | null>(null);
 
-  const statCards: { type: StatType; value: number; label: string; icon: React.ReactNode; bg: string }[] = [
+  const statCards: {
+    type: StatType;
+    value: number;
+    label: string;
+    icon: React.ReactNode;
+    bg: string;
+  }[] = [
     {
       type: "clocked_in",
       value: stats.clockedInTutors,
@@ -55,7 +80,7 @@ export function AdminDashboard({ profile, stats, recentSessions }: AdminDashboar
       icon: <Clock className="h-5 w-5 text-warning-foreground" />,
       bg: "bg-warning/10",
     },
-  ]
+  ];
 
   return (
     <div className="flex flex-col gap-6">
@@ -76,12 +101,18 @@ export function AdminDashboard({ profile, stats, recentSessions }: AdminDashboar
             onClick={() => setModalType(card.type)}
           >
             <CardContent className="flex items-center gap-4 p-4">
-              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${card.bg}`}>
+              <div
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${card.bg}`}
+              >
                 {card.icon}
               </div>
               <div className="flex flex-col">
-                <span className="text-2xl font-bold text-foreground">{card.value}</span>
-                <span className="text-xs text-muted-foreground">{card.label}</span>
+                <span className="text-2xl font-bold text-foreground">
+                  {card.value}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {card.label}
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -91,7 +122,9 @@ export function AdminDashboard({ profile, stats, recentSessions }: AdminDashboar
       <AdminStatModal
         type={modalType || "pending"}
         open={modalType !== null}
-        onOpenChange={(open) => { if (!open) setModalType(null) }}
+        onOpenChange={(open) => {
+          if (!open) setModalType(null);
+        }}
       />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -102,7 +135,10 @@ export function AdminDashboard({ profile, stats, recentSessions }: AdminDashboar
               <CardDescription>Latest session activity</CardDescription>
             </div>
             <Button asChild variant="ghost" size="sm">
-              <Link href="/dashboard/admin/sessions" className="flex items-center gap-1">
+              <Link
+                href="/dashboard/admin/sessions"
+                className="flex items-center gap-1"
+              >
                 View all <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </Button>
@@ -127,14 +163,20 @@ export function AdminDashboard({ profile, stats, recentSessions }: AdminDashboar
                         {session.tutors?.profiles?.full_name || "Tutor"}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {new Date(session.scheduled_date).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                        })}{" "}
+                        {new Date(session.scheduled_date).toLocaleDateString(
+                          "en-US",
+                          {
+                            month: "short",
+                            day: "numeric",
+                          },
+                        )}{" "}
                         at {session.start_time?.slice(0, 5)}
                       </span>
                     </div>
-                    <Badge className={SESSION_STATUS_COLORS[session.status] || ""} variant="outline">
+                    <Badge
+                      className={SESSION_STATUS_COLORS[session.status] || ""}
+                      variant="outline"
+                    >
                       {session.status}
                     </Badge>
                   </div>
@@ -150,47 +192,83 @@ export function AdminDashboard({ profile, stats, recentSessions }: AdminDashboar
             <CardDescription>Manage your organization</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href="/dashboard/admin/users" className="flex items-center gap-3">
+            <Button
+              asChild
+              variant="outline"
+              className="justify-start h-auto py-3"
+            >
+              <Link
+                href="/dashboard/admin/users"
+                className="flex items-center gap-3"
+              >
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
                   <Users className="h-4 w-4 text-primary" />
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
                   <span className="text-sm font-medium">User Management</span>
-                  <span className="text-xs text-muted-foreground">Create and manage accounts</span>
+                  <span className="text-xs text-muted-foreground">
+                    Create and manage accounts
+                  </span>
                 </div>
               </Link>
             </Button>
-            <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href="/dashboard/admin/scanner" className="flex items-center gap-3">
+            <Button
+              asChild
+              variant="outline"
+              className="justify-start h-auto py-3"
+            >
+              <Link
+                href="/dashboard/admin/scanner"
+                className="flex items-center gap-3"
+              >
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-warning/15">
                   <QrCode className="h-4 w-4 text-warning-foreground" />
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
                   <span className="text-sm font-medium">QR Scanner</span>
-                  <span className="text-xs text-muted-foreground">Scan and authenticate cards</span>
+                  <span className="text-xs text-muted-foreground">
+                    Scan and authenticate cards
+                  </span>
                 </div>
               </Link>
             </Button>
-            <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href="/dashboard/admin/timesheets" className="flex items-center gap-3">
+            <Button
+              asChild
+              variant="outline"
+              className="justify-start h-auto py-3"
+            >
+              <Link
+                href="/dashboard/admin/timesheets"
+                className="flex items-center gap-3"
+              >
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10">
                   <ClipboardList className="h-4 w-4 text-amber-500" />
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
                   <span className="text-sm font-medium">Timesheets</span>
-                  <span className="text-xs text-muted-foreground">Review tutor hours & logs</span>
+                  <span className="text-xs text-muted-foreground">
+                    Review tutor hours & logs
+                  </span>
                 </div>
               </Link>
             </Button>
-            <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href="/dashboard/admin/analytics" className="flex items-center gap-3">
+            <Button
+              asChild
+              variant="outline"
+              className="justify-start h-auto py-3"
+            >
+              <Link
+                href="/dashboard/admin/analytics"
+                className="flex items-center gap-3"
+              >
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/30">
                   <BarChart3 className="h-4 w-4 text-accent-foreground" />
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
                   <span className="text-sm font-medium">Analytics</span>
-                  <span className="text-xs text-muted-foreground">View insights and reports</span>
+                  <span className="text-xs text-muted-foreground">
+                    View insights and reports
+                  </span>
                 </div>
               </Link>
             </Button>
@@ -198,5 +276,5 @@ export function AdminDashboard({ profile, stats, recentSessions }: AdminDashboar
         </Card>
       </div>
     </div>
-  )
+  );
 }

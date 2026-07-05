@@ -40,3 +40,6 @@ tsconfig.tsbuildinfo
 android/gradle-output.txt
 package-lock.json
 lib/demo.ts
+scratch/
+.idea/
+test-update.js

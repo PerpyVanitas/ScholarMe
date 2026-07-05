@@ -2,6 +2,7 @@ import { createClient, createAdminClient } from "@/lib/supabase/create-client";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { DEMO_USERS, getDemoProfileId, getDemoTutorId } from "@/scripts/demo";
+import { isAdminRole } from "@/lib/utils/roles";
 import type { UserRole, Profile } from "@/lib/types";
 
 export async function GET() {
@@ -36,7 +37,8 @@ export async function GET() {
     profile = {
       id: user.id,
       role_id: null,
-      full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
+      full_name:
+        user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
       email: user.email || "",
       avatar_url: null,
       phone_number: null,
@@ -58,7 +60,9 @@ export async function GET() {
     if (demoProfile) {
       profile = demoProfile;
     } else {
-      const demoInfo = DEMO_USERS[selectedRole as keyof typeof DEMO_USERS] || DEMO_USERS.administrator;
+      const demoInfo =
+        DEMO_USERS[selectedRole as keyof typeof DEMO_USERS] ||
+        DEMO_USERS.administrator;
       profile = {
         id: demoInfo.profileId,
         role_id: null,
@@ -86,24 +90,42 @@ export async function GET() {
     };
   }
 
-  const role = (isDemoMode && devRole ? devRole : (Array.isArray(profile?.roles) && profile.roles.length > 0 ? profile.roles[0].name : "learner")) as UserRole;
+  const role = (
+    isDemoMode && devRole
+      ? devRole
+      : Array.isArray(profile?.roles) && profile.roles.length > 0
+        ? profile.roles[0].name
+        : "learner"
+  ) as UserRole;
+  const canUseAdminData = !!user && isAdminRole(role);
 
   try {
-    if (role === "administrator") {
+    if (canUseAdminData) {
       // Use admin client to bypass RLS for org-wide stats
       const adminClient = await createAdminClient();
 
       const results = await Promise.allSettled([
-        adminClient.from("profiles").select("*", { count: "exact", head: true }),
-        adminClient.from("sessions").select("*", { count: "exact", head: true }),
+        adminClient
+          .from("profiles")
+          .select("*", { count: "exact", head: true }),
+        adminClient
+          .from("sessions")
+          .select("*", { count: "exact", head: true }),
         adminClient.from("tutors").select("*", { count: "exact", head: true }),
-        adminClient.from("sessions").select("*", { count: "exact", head: true }).eq("status", "pending"),
+        adminClient
+          .from("sessions")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "pending"),
       ]);
 
-      const totalUsers = results[0].status === "fulfilled" ? results[0].value.count || 0 : 0;
-      const totalSessions = results[1].status === "fulfilled" ? results[1].value.count || 0 : 0;
-      const activeTutors = results[2].status === "fulfilled" ? results[2].value.count || 0 : 0;
-      const pendingSessions = results[3].status === "fulfilled" ? results[3].value.count || 0 : 0;
+      const totalUsers =
+        results[0].status === "fulfilled" ? results[0].value.count || 0 : 0;
+      const totalSessions =
+        results[1].status === "fulfilled" ? results[1].value.count || 0 : 0;
+      const activeTutors =
+        results[2].status === "fulfilled" ? results[2].value.count || 0 : 0;
+      const pendingSessions =
+        results[3].status === "fulfilled" ? results[3].value.count || 0 : 0;
 
       const { data: recentSessions } = await adminClient
         .from("sessions")
@@ -114,7 +136,12 @@ export async function GET() {
       return NextResponse.json({
         role,
         profile,
-        adminStats: { totalUsers, totalSessions, activeTutors, pendingSessions },
+        adminStats: {
+          totalUsers,
+          totalSessions,
+          activeTutors,
+          pendingSessions,
+        },
         recentSessions: recentSessions || [],
       });
     }

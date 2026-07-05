@@ -79,9 +79,17 @@ import { toast } from "sonner";
 import type { Profile } from "@/lib/types";
 import { QrIdCard } from "@/features/auth/components/qr-id-card";
 import { HonorSocietyLogo } from "@/components/honsoc-logo";
+import { ExportCsvButton } from "@/components/export-csv-button";
 
 const roleColors: Record<string, string> = {
+  super_admin: "bg-red-500/10 text-red-500 border-red-500/30",
+  president: "bg-purple-500/10 text-purple-500 border-purple-500/30",
   administrator: "bg-warning/10 text-warning-foreground border-warning/30",
+  treasurer: "bg-yellow-500/10 text-yellow-500 border-yellow-500/30",
+  auditor: "bg-orange-500/10 text-orange-500 border-orange-500/30",
+  finance_manager: "bg-emerald-500/10 text-emerald-500 border-emerald-500/30",
+  committee_head: "bg-blue-500/10 text-blue-500 border-blue-500/30",
+  faculty_adviser: "bg-pink-500/10 text-pink-500 border-pink-500/30",
   tutor: "bg-primary/10 text-primary border-primary/30",
   learner: "bg-success/10 text-success border-success/30",
 };
@@ -171,13 +179,13 @@ function AdminUsersContent() {
       .from("profiles")
       .select("*, roles(name)")
       .order("created_at", { ascending: false });
-    
+
     setProfiles(data || []);
-    
+
     // Check for userId in query params to auto-open logs
     const userId = searchParams.get("userId");
     if (userId && data) {
-      const p = data.find(u => u.id === userId);
+      const p = data.find((u) => u.id === userId);
       if (p) {
         // Need to define openLogs inside or before use
         setLogsUser(p);
@@ -233,7 +241,11 @@ function AdminUsersContent() {
     setEditUser(p);
     setEditName(p.full_name || "");
     setEditEmail(p.email || "");
-    setEditRole(Array.isArray(p.roles) && p.roles.length > 0 ? p.roles[0].name : "learner");
+    setEditRole(
+      Array.isArray(p.roles) && p.roles.length > 0
+        ? p.roles[0].name
+        : "learner",
+    );
     setEditPassword("");
     setShowEditPassword(false);
     setEditOpen(true);
@@ -249,7 +261,13 @@ function AdminUsersContent() {
         user_id: editUser.id,
         full_name: editName,
         email: editEmail !== editUser.email ? editEmail : undefined,
-        role_name: editRole !== (Array.isArray(editUser.roles) && editUser.roles.length > 0 ? editUser.roles[0].name : "learner") ? editRole : undefined,
+        role_name:
+          editRole !==
+          (Array.isArray(editUser.roles) && editUser.roles.length > 0
+            ? editUser.roles[0].name
+            : "learner")
+            ? editRole
+            : undefined,
         password: editPassword ? editPassword : undefined,
       }),
     });
@@ -329,8 +347,14 @@ function AdminUsersContent() {
       });
       if (res.ok) {
         setIdCardUser({ ...idCardUser, is_card_issued: newStatus });
-        setProfiles((prev) => prev.map(p => p.id === idCardUser.id ? { ...p, is_card_issued: newStatus } : p));
-        toast.success(`Card marked as ${newStatus ? 'Issued' : 'Not Issued'} successfully!`);
+        setProfiles((prev) =>
+          prev.map((p) =>
+            p.id === idCardUser.id ? { ...p, is_card_issued: newStatus } : p,
+          ),
+        );
+        toast.success(
+          `Card marked as ${newStatus ? "Issued" : "Not Issued"} successfully!`,
+        );
       } else {
         const data = await res.json();
         toast.error(data.error || "Failed to update card status");
@@ -349,7 +373,11 @@ function AdminUsersContent() {
       !search ||
       p.full_name?.toLowerCase().includes(search.toLowerCase()) ||
       p.email?.toLowerCase().includes(search.toLowerCase());
-    const roleMatch = roleFilter === "all" || (Array.isArray(p.roles) && p.roles.length > 0 && p.roles[0].name === roleFilter);
+    const roleMatch =
+      roleFilter === "all" ||
+      (Array.isArray(p.roles) &&
+        p.roles.length > 0 &&
+        p.roles[0].name === roleFilter);
     return nameMatch && roleMatch;
   });
 
@@ -365,77 +393,139 @@ function AdminUsersContent() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">User Management</h1>
-          <p className="text-muted-foreground">Create, edit, and manage user accounts.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            User Management
+          </h1>
+          <p className="text-muted-foreground">
+            Create, edit, and manage user accounts.
+          </p>
         </div>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Create User
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New User</DialogTitle>
-              <DialogDescription>Create an account for a learner, tutor, or administrator.</DialogDescription>
-            </DialogHeader>
-            <div className="flex flex-col gap-4 py-4">
-              <div className="flex flex-col gap-2">
-                <Label>Full Name</Label>
-                <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="John Doe" />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label>Email</Label>
-                <Input value={newEmail} onChange={(e) => setNewEmail(e.target.value)} type="email" placeholder="john@example.com" />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label>Password</Label>
-                <div className="relative">
-                  <Input
-                    value={newPassword}
-                    onChange={(e: any) => setNewPassword(e.target.value)}
-                    type={showCreatePassword ? "text" : "password"}
-                    placeholder="Minimum 6 characters"
-                    className="pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowCreatePassword(!showCreatePassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showCreatePassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label>Role</Label>
-                <Select value={newRole} onValueChange={setNewRole}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="learner">Learner</SelectItem>
-                    <SelectItem value="tutor">Tutor</SelectItem>
-                    <SelectItem value="administrator">Administrator</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-              <Button onClick={handleCreateUser} disabled={createLoading}>
-                {createLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+        <div className="flex items-center gap-2">
+          <ExportCsvButton
+            data={filtered.map((p) => ({
+              Name: p.full_name,
+              Email: p.email,
+              Role: Array.isArray(p.roles)
+                ? p.roles[0]?.name
+                : ((p.roles as { name: string } | undefined)?.name ??
+                  "learner"),
+              "Member #": p.membership_number ?? "",
+              Program: p.degree_program ?? "",
+              "Year Level": p.year_level ?? "",
+              Joined: new Date(p.created_at).toLocaleDateString(),
+            }))}
+            filename="users_export"
+          />
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
                 Create User
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New User</DialogTitle>
+                <DialogDescription>
+                  Create an account for a learner, tutor, or administrator.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex flex-col gap-4 py-4">
+                <div className="flex flex-col gap-2">
+                  <Label>Full Name</Label>
+                  <Input
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    placeholder="John Doe"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label>Email</Label>
+                  <Input
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    type="email"
+                    placeholder="john@example.com"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label>Password</Label>
+                  <div className="relative">
+                    <Input
+                      value={newPassword}
+                      onChange={(e: any) => setNewPassword(e.target.value)}
+                      type={showCreatePassword ? "text" : "password"}
+                      placeholder="Minimum 6 characters"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCreatePassword(!showCreatePassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showCreatePassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label>Role</Label>
+                  <Select value={newRole} onValueChange={setNewRole}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="learner">Learner</SelectItem>
+                      <SelectItem value="tutor">Tutor</SelectItem>
+                      <SelectItem value="committee_head">
+                        Committee Head
+                      </SelectItem>
+                      <SelectItem value="administrator">
+                        Administrator
+                      </SelectItem>
+                      <SelectItem value="finance_manager">
+                        Finance Manager
+                      </SelectItem>
+                      <SelectItem value="treasurer">Treasurer</SelectItem>
+                      <SelectItem value="auditor">Auditor</SelectItem>
+                      <SelectItem value="president">President</SelectItem>
+                      <SelectItem value="faculty_adviser">
+                        Faculty Adviser
+                      </SelectItem>
+                      <SelectItem value="super_admin">Super Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setCreateOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleCreateUser} disabled={createLoading}>
+                  {createLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  Create User
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search users..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input
+            placeholder="Search users..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
         </div>
         <Select value={roleFilter} onValueChange={setRoleFilter}>
           <SelectTrigger className="w-full sm:w-48">
@@ -445,7 +535,14 @@ function AdminUsersContent() {
             <SelectItem value="all">All Roles</SelectItem>
             <SelectItem value="learner">Learner</SelectItem>
             <SelectItem value="tutor">Tutor</SelectItem>
+            <SelectItem value="committee_head">Committee Head</SelectItem>
             <SelectItem value="administrator">Administrator</SelectItem>
+            <SelectItem value="finance_manager">Finance Manager</SelectItem>
+            <SelectItem value="treasurer">Treasurer</SelectItem>
+            <SelectItem value="auditor">Auditor</SelectItem>
+            <SelectItem value="president">President</SelectItem>
+            <SelectItem value="faculty_adviser">Faculty Adviser</SelectItem>
+            <SelectItem value="super_admin">Super Admin</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -467,18 +564,35 @@ function AdminUsersContent() {
               <Card key={p.id} className="border-border/60">
                 <CardContent className="flex items-center gap-3 p-4">
                   <Avatar className="h-10 w-10 shrink-0">
-                    <AvatarFallback className="bg-primary/10 text-primary text-xs">{getInitials(p.full_name)}</AvatarFallback>
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                      {getInitials(p.full_name)}
+                    </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                    <span className="font-medium text-foreground truncate">{p.full_name || "Unnamed"}</span>
-                    <span className="text-xs text-muted-foreground truncate">{p.email}</span>
+                    <span className="font-medium text-foreground truncate">
+                      {p.full_name || "Unnamed"}
+                    </span>
+                    <span className="text-xs text-muted-foreground truncate">
+                      {p.email}
+                    </span>
                     <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline" className={`text-[10px] ${roleColors[(Array.isArray(p.roles) && p.roles.length > 0 ? p.roles[0].name : "learner")]}`}>
-                        {Array.isArray(p.roles) && p.roles.length > 0 ? p.roles[0].name : "learner"}
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] ${roleColors[Array.isArray(p.roles) && p.roles.length > 0 ? p.roles[0].name : "learner"]}`}
+                      >
+                        {Array.isArray(p.roles) && p.roles.length > 0
+                          ? p.roles[0].name
+                          : "learner"}
                       </Badge>
                     </div>
                   </div>
-                  <UserActionsMenu profile={p} onEdit={openEdit} onDelete={openDelete} onLogs={openLogs} onPrintId={openPrintId} />
+                  <UserActionsMenu
+                    profile={p}
+                    onEdit={openEdit}
+                    onDelete={openDelete}
+                    onLogs={openLogs}
+                    onPrintId={openPrintId}
+                  />
                 </CardContent>
               </Card>
             ))}
@@ -494,7 +608,9 @@ function AdminUsersContent() {
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Joined</TableHead>
-                    <TableHead className="w-12"><span className="sr-only">Actions</span></TableHead>
+                    <TableHead className="w-12">
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -503,22 +619,49 @@ function AdminUsersContent() {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8">
-                            <AvatarFallback className="bg-primary/10 text-primary text-xs">{getInitials(p.full_name)}</AvatarFallback>
+                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                              {getInitials(p.full_name)}
+                            </AvatarFallback>
                           </Avatar>
-                          <span className="font-medium text-foreground">{p.full_name || "Unnamed"}</span>
+                          <span className="font-medium text-foreground">
+                            {p.full_name || "Unnamed"}
+                          </span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{p.email}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {p.email}
+                      </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={roleColors[(Array.isArray(p.roles) && p.roles.length > 0 ? p.roles[0].name : "learner")]}>
-                          {Array.isArray(p.roles) && p.roles.length > 0 ? p.roles[0].name : "learner"}
+                        <Badge
+                          variant="outline"
+                          className={
+                            roleColors[
+                              Array.isArray(p.roles) && p.roles.length > 0
+                                ? p.roles[0].name
+                                : "learner"
+                            ]
+                          }
+                        >
+                          {Array.isArray(p.roles) && p.roles.length > 0
+                            ? p.roles[0].name
+                            : "learner"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
-                        {new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        {new Date(p.created_at).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
                       </TableCell>
                       <TableCell>
-                        <UserActionsMenu profile={p} onEdit={openEdit} onDelete={openDelete} onLogs={openLogs} onPrintId={openPrintId} />
+                        <UserActionsMenu
+                          profile={p}
+                          onEdit={openEdit}
+                          onDelete={openDelete}
+                          onLogs={openLogs}
+                          onPrintId={openPrintId}
+                        />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -534,25 +677,47 @@ function AdminUsersContent() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>Update account details for {editUser?.full_name || "this user"}.</DialogDescription>
+            <DialogDescription>
+              Update account details for {editUser?.full_name || "this user"}.
+            </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4">
             <div className="flex flex-col gap-2">
               <Label>Full Name</Label>
-              <Input value={editName} onChange={(e) => setEditName(e.target.value)} />
+              <Input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+              />
             </div>
             <div className="flex flex-col gap-2">
               <Label>Email</Label>
-              <Input value={editEmail} onChange={(e) => setEditEmail(e.target.value)} type="email" />
+              <Input
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+                type="email"
+              />
             </div>
             <div className="flex flex-col gap-2">
               <Label>Role</Label>
               <Select value={editRole} onValueChange={setEditRole}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="learner">Learner</SelectItem>
                   <SelectItem value="tutor">Tutor</SelectItem>
+                  <SelectItem value="committee_head">Committee Head</SelectItem>
                   <SelectItem value="administrator">Administrator</SelectItem>
+                  <SelectItem value="finance_manager">
+                    Finance Manager
+                  </SelectItem>
+                  <SelectItem value="treasurer">Treasurer</SelectItem>
+                  <SelectItem value="auditor">Auditor</SelectItem>
+                  <SelectItem value="president">President</SelectItem>
+                  <SelectItem value="faculty_adviser">
+                    Faculty Adviser
+                  </SelectItem>
+                  <SelectItem value="super_admin">Super Admin</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -571,15 +736,23 @@ function AdminUsersContent() {
                   onClick={() => setShowEditPassword(!showEditPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
-                  {showEditPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showEditPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>
+              Cancel
+            </Button>
             <Button onClick={handleEditUser} disabled={editLoading}>
-              {editLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {editLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
               Save Changes
             </Button>
           </DialogFooter>
@@ -593,8 +766,11 @@ function AdminUsersContent() {
             <AlertDialogTitle>Delete User</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to permanently delete{" "}
-              <span className="font-semibold text-foreground">{deleteUser?.full_name || deleteUser?.email}</span>?
-              This will remove their profile, sessions, and all associated data. This cannot be undone.
+              <span className="font-semibold text-foreground">
+                {deleteUser?.full_name || deleteUser?.email}
+              </span>
+              ? This will remove their profile, sessions, and all associated
+              data. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -604,7 +780,11 @@ function AdminUsersContent() {
               disabled={deleteLoading}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleteLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+              {deleteLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="mr-2 h-4 w-4" />
+              )}
               Delete User
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -617,7 +797,8 @@ function AdminUsersContent() {
           <SheetHeader>
             <SheetTitle>Activity History</SheetTitle>
             <SheetDescription>
-              Action history for {logsUser?.full_name || logsUser?.email || "this user"}.
+              Action history for{" "}
+              {logsUser?.full_name || logsUser?.email || "this user"}.
             </SheetDescription>
           </SheetHeader>
           <div className="mt-6">
@@ -628,7 +809,9 @@ function AdminUsersContent() {
             ) : logs.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-12">
                 <History className="h-8 w-8 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">No activity recorded yet</p>
+                <p className="text-sm text-muted-foreground">
+                  No activity recorded yet
+                </p>
               </div>
             ) : (
               <div className="flex flex-col gap-0">
@@ -644,17 +827,23 @@ function AdminUsersContent() {
                           <span className="text-sm font-medium text-foreground">
                             {actionLabels[log.action] || log.action}
                           </span>
-                          {log.metadata && Object.keys(log.metadata).length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-0.5">
-                              {Object.entries(log.metadata).map(([key, value]) =>
-                                value ? (
-                                  <span key={key} className="text-[11px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                                    {key.replace(/_/g, " ")}: {String(value)}
-                                  </span>
-                                ) : null
-                              )}
-                            </div>
-                          )}
+                          {log.metadata &&
+                            Object.keys(log.metadata).length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-0.5">
+                                {Object.entries(log.metadata).map(
+                                  ([key, value]) =>
+                                    value ? (
+                                      <span
+                                        key={key}
+                                        className="text-[11px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded"
+                                      >
+                                        {key.replace(/_/g, " ")}:{" "}
+                                        {String(value)}
+                                      </span>
+                                    ) : null,
+                                )}
+                              </div>
+                            )}
                           <span className="text-[11px] text-muted-foreground mt-0.5">
                             {new Date(log.created_at).toLocaleString("en-US", {
                               month: "short",
@@ -677,26 +866,37 @@ function AdminUsersContent() {
       </Sheet>
 
       {/* Print Preview & Card Management Dialog */}
-      <Dialog open={idCardOpen} onOpenChange={(open) => { setIdCardOpen(open); if (!open) setIdCardUser(null); }}>
+      <Dialog
+        open={idCardOpen}
+        onOpenChange={(open) => {
+          setIdCardOpen(open);
+          if (!open) setIdCardUser(null);
+        }}
+      >
         <DialogContent className="sm:max-w-2xl bg-zinc-950 border-zinc-800 text-white p-6 outline-none relative">
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none flex items-center justify-center">
             <HonorSocietyLogo variant="white" className="w-[500px] h-[500px]" />
           </div>
 
           <div className="flex flex-col md:flex-row items-stretch gap-6 relative z-10">
-          {/* Left panel: ID Card display */}
-          <div className="flex-1 flex flex-col items-center justify-center">
-            {idCardUser && (
-              <QrIdCard
-                profile={idCardUser}
-                role={Array.isArray(idCardUser.roles) && idCardUser.roles.length > 0 ? idCardUser.roles[0].name : "learner"}
-                showCompactPreview={false}
-              />
-            )}
-          </div>
+            {/* Left panel: ID Card display */}
+            <div className="flex-1 flex flex-col items-center justify-center">
+              {idCardUser && (
+                <QrIdCard
+                  profile={idCardUser}
+                  role={
+                    Array.isArray(idCardUser.roles) &&
+                    idCardUser.roles.length > 0
+                      ? idCardUser.roles[0].name
+                      : "learner"
+                  }
+                  showCompactPreview={false}
+                />
+              )}
+            </div>
 
-          {/* Vertical divider on desktop */}
-          <div className="hidden md:block w-px bg-zinc-800 self-stretch my-2"></div>
+            {/* Vertical divider on desktop */}
+            <div className="hidden md:block w-px bg-zinc-800 self-stretch my-2"></div>
 
             {/* Right panel: Card Management Actions */}
             <div className="flex-1 flex flex-col justify-start space-y-4 text-left">
@@ -705,7 +905,8 @@ function AdminUsersContent() {
                   CARD MANAGEMENT
                 </DialogTitle>
                 <DialogDescription className="text-zinc-400 text-xs font-medium mt-1">
-                  Manage the physical card status for {idCardUser?.full_name || "this user"}.
+                  Manage the physical card status for{" "}
+                  {idCardUser?.full_name || "this user"}.
                 </DialogDescription>
               </div>
 
@@ -714,7 +915,9 @@ function AdminUsersContent() {
               <div className="space-y-4 flex-1 flex flex-col justify-between">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-zinc-400">Card Status:</span>
+                    <span className="text-xs font-semibold text-zinc-400">
+                      Card Status:
+                    </span>
                     <Badge
                       variant="outline"
                       className={
@@ -728,7 +931,9 @@ function AdminUsersContent() {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-zinc-400">Unique ID:</span>
+                    <span className="text-xs font-semibold text-zinc-400">
+                      Unique ID:
+                    </span>
                     <span className="font-mono text-xs text-zinc-200 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded">
                       {idCardUser?.unique_id_number || "PENDING"}
                     </span>
@@ -766,11 +971,13 @@ function AdminUsersContent() {
 
 export default function AdminUsersPage() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      }
+    >
       <AdminUsersContent />
     </Suspense>
   );
@@ -812,7 +1019,10 @@ function UserActionsMenu({
           View Activity
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => onDelete(profile)} className="text-destructive focus:text-destructive">
+        <DropdownMenuItem
+          onClick={() => onDelete(profile)}
+          className="text-destructive focus:text-destructive"
+        >
           <Trash2 className="mr-2 h-4 w-4" />
           Delete User
         </DropdownMenuItem>

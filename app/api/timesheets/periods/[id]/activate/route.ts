@@ -1,14 +1,17 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { isAdminRole } from "@/lib/utils/roles";
 
 export async function POST(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
@@ -23,10 +26,13 @@ export async function POST(
     const roleName = Array.isArray(profile?.roles)
       ? profile.roles[0]?.name
       : (profile?.roles as any)?.name;
-    const isAdmin = roleName === "admin" || roleName === "administrator";
+    const isAdmin = isAdminRole(roleName as string);
 
     if (!profile || !isAdmin) {
-      return NextResponse.json({ error: "Access denied - admin only" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Access denied - admin only" },
+        { status: 403 },
+      );
     }
 
     const { is_active } = await req.json();
@@ -41,7 +47,10 @@ export async function POST(
         .neq("id", id);
 
       if (deactivateError) {
-        return NextResponse.json({ error: deactivateError.message }, { status: 500 });
+        return NextResponse.json(
+          { error: deactivateError.message },
+          { status: 500 },
+        );
       }
 
       // Then, activate the target period
@@ -73,6 +82,7 @@ export async function POST(
       return NextResponse.json(data);
     }
   } catch (error: any) {
+    console.error("[API Error]", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

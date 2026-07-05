@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   _request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
   const supabase = await createClient();
@@ -13,7 +13,8 @@ export async function GET(
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -24,15 +25,15 @@ export async function GET(
   const roleName = Array.isArray(profile?.roles)
     ? profile.roles[0]?.name
     : (profile?.roles as any)?.name;
-  const isAdmin = roleName === "administrator";
-  
+  const isAdmin = ["administrator", "super_admin"].includes(roleName as string);
+
   if (!isAdmin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
   const adminClient = createBareAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
   // Fetch logs where user_id matches OR entity_id matches (actions BY or ON this user)
@@ -43,7 +44,8 @@ export async function GET(
     .order("created_at", { ascending: false })
     .limit(100);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error)
+    return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ logs: logs || [] });
 }

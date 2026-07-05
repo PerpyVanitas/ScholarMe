@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import Link from "next/link";
 import {
   Dialog,
   DialogContent,
@@ -17,11 +18,24 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Calendar, Star, CheckCircle2, XCircle, Clock, Loader2 } from "lucide-react";
+import {
+  Calendar,
+  Star,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Loader2,
+  PenTool,
+  CalendarPlus,
+} from "lucide-react";
 import { toast } from "sonner";
 import { SESSION_STATUS_COLORS } from "@/lib/constants";
 import { DEMO_USERS, getDemoUserFromCookie } from "@/scripts/demo";
 import type { Session, UserRole } from "@/lib/types";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SkeletonList } from "@/components/ui/skeleton-card";
+import { generateIcsFile, downloadIcs } from "@/lib/utils/calendar";
 
 export default function SessionsPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -35,7 +49,9 @@ export default function SessionsPage() {
   useEffect(() => {
     async function load() {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       // Determine user ID and role - support demo mode
       let userId = user?.id;
@@ -65,7 +81,8 @@ export default function SessionsPage() {
           .eq("user_id", userId)
           .maybeSingle();
 
-        const tutorId = tutor?.id || (userRole === "tutor" ? DEMO_USERS.tutor.tutorId : "");
+        const tutorId =
+          tutor?.id || (userRole === "tutor" ? DEMO_USERS.tutor.tutorId : "");
         query = supabase
           .from("sessions")
           .select("*, specializations(*), session_ratings(*)")
@@ -74,7 +91,9 @@ export default function SessionsPage() {
       } else {
         query = supabase
           .from("sessions")
-          .select("*, tutors(*, profiles(*)), specializations(*), session_ratings(*)")
+          .select(
+            "*, tutors(*, profiles(*)), specializations(*), session_ratings(*)",
+          )
           .eq("learner_id", userId)
           .order("scheduled_date", { ascending: false });
       }
@@ -87,8 +106,8 @@ export default function SessionsPage() {
   }, []);
 
   async function updateStatus(sessionId: string, status: string) {
-    const session = sessions.find(s => s.id === sessionId);
-    
+    const session = sessions.find((s) => s.id === sessionId);
+
     const res = await fetch(`/api/sessions/${sessionId}/status`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -97,27 +116,43 @@ export default function SessionsPage() {
 
     if (res.ok) {
       setSessions((prev) =>
-        prev.map((s) => (s.id === sessionId ? { ...s, status: status as Session["status"] } : s))
+        prev.map((s) =>
+          s.id === sessionId
+            ? { ...s, status: status as Session["status"] }
+            : s,
+        ),
       );
       toast.success(`Session ${status}`);
 
       // Earn XP if completing a session as a tutor
-      if (status === "completed" && role === "tutor" && session && session.start_time && session.end_time) {
+      if (
+        status === "completed" &&
+        role === "tutor" &&
+        session &&
+        session.start_time &&
+        session.end_time
+      ) {
         const startHour = parseInt(session.start_time.split(":")[0]);
         const startMin = parseInt(session.start_time.split(":")[1]);
         const endHour = parseInt(session.end_time.split(":")[0]);
         const endMin = parseInt(session.end_time.split(":")[1]);
-        const durationHours = (endHour + endMin / 60) - (startHour + startMin / 60);
-        
+        const durationHours =
+          endHour + endMin / 60 - (startHour + startMin / 60);
+
         // 25 XP per hour, minimum 1 hour if it's less
         const earnedXp = Math.max(25, Math.round(durationHours * 25));
 
         const { earnXp } = await import("@/lib/utils/gamification");
-        const xpData = await earnXp(earnedXp, `Tutoring Session (${durationHours.toFixed(1)} hrs)`);
-        
+        const xpData = await earnXp(
+          earnedXp,
+          `Tutoring Session (${durationHours.toFixed(1)} hrs)`,
+        );
+
         if (xpData.success) {
           toast.success(`🎉 +${earnedXp} XP Earned!`, {
-            description: xpData.current_level ? `You are now Level ${xpData.current_level}` : "Great job helping a fellow student!",
+            description: xpData.current_level
+              ? `You are now Level ${xpData.current_level}`
+              : "Great job helping a fellow student!",
           });
         }
       }
@@ -144,11 +179,18 @@ export default function SessionsPage() {
             ? {
                 ...s,
                 session_ratings: [
-                  { id: "", session_id: s.id, learner_id: "", rating: ratingValue, feedback: ratingFeedback, created_at: "" },
+                  {
+                    id: "",
+                    session_id: s.id,
+                    learner_id: "",
+                    rating: ratingValue,
+                    feedback: ratingFeedback,
+                    created_at: "",
+                  },
                 ],
               }
-            : s
-        )
+            : s,
+        ),
       );
       setRatingSession(null);
       setRatingValue(0);
@@ -159,13 +201,23 @@ export default function SessionsPage() {
     setRatingLoading(false);
   }
 
-  const upcoming = sessions.filter((s) => ["pending", "confirmed"].includes(s.status));
-  const past = sessions.filter((s) => ["completed", "cancelled"].includes(s.status));
+  const upcoming = sessions.filter((s) =>
+    ["pending", "confirmed"].includes(s.status),
+  );
+  const past = sessions.filter((s) =>
+    ["completed", "cancelled"].includes(s.status),
+  );
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="flex flex-col gap-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Sessions
+          </h1>
+          <p className="text-muted-foreground">Your tutoring sessions</p>
+        </div>
+        <SkeletonList rows={4} columns={4} />
       </div>
     );
   }
@@ -177,7 +229,9 @@ export default function SessionsPage() {
           {role === "tutor" ? "My Sessions" : "Sessions"}
         </h1>
         <p className="text-muted-foreground">
-          {role === "tutor" ? "Sessions assigned to you" : "Your tutoring sessions"}
+          {role === "tutor"
+            ? "Sessions assigned to you"
+            : "Your tutoring sessions"}
         </p>
       </div>
 
@@ -212,7 +266,10 @@ export default function SessionsPage() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={!!ratingSession} onOpenChange={() => setRatingSession(null)}>
+      <Dialog
+        open={!!ratingSession}
+        onOpenChange={() => setRatingSession(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Rate this Session</DialogTitle>
@@ -258,7 +315,10 @@ export default function SessionsPage() {
             <Button variant="outline" onClick={() => setRatingSession(null)}>
               Cancel
             </Button>
-            <Button onClick={submitRating} disabled={ratingLoading || ratingValue === 0}>
+            <Button
+              onClick={submitRating}
+              disabled={ratingLoading || ratingValue === 0}
+            >
               {ratingLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -288,22 +348,53 @@ function SessionList({
 }) {
   if (sessions.length === 0) {
     return (
-      <Card className="border-border/60">
-        <CardContent className="flex flex-col items-center gap-3 py-12">
-          <div className="rounded-full bg-muted p-3">
-            <Calendar className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <p className="text-sm text-muted-foreground">No sessions found</p>
-        </CardContent>
-      </Card>
+      <EmptyState
+        icon={Calendar}
+        title="No sessions found"
+        description={
+          role === "learner"
+            ? "Book your first tutoring session to get started."
+            : "No sessions have been assigned to you yet."
+        }
+        cta={
+          role === "learner"
+            ? { label: "Browse Tutors", href: "/dashboard/tutors" }
+            : undefined
+        }
+      />
     );
   }
+
+  const handleAddToCalendar = (session: Session) => {
+    const [startH, startM] = (session.start_time || "09:00:00").split(":");
+    const [endH, endM] = (session.end_time || "10:00:00").split(":");
+
+    const start = new Date(session.scheduled_date);
+    start.setHours(parseInt(startH), parseInt(startM));
+
+    const end = new Date(session.scheduled_date);
+    end.setHours(parseInt(endH), parseInt(endM));
+
+    const tutorName = session.tutors?.profiles?.full_name || "Tutor";
+
+    const ics = generateIcsFile({
+      title: `Tutoring Session with ${tutorName}`,
+      description: `ScholarMe Tutoring Session.\\nSpecialization: ${session.specializations?.name || "General"}`,
+      startTime: start,
+      endTime: end,
+      tutorName,
+    });
+
+    downloadIcs(`scholarme-session-${session.id.substring(0, 8)}`, ics);
+  };
 
   return (
     <div className="flex flex-col gap-3">
       {sessions.map((session) => {
-        const hasRating = session.session_ratings && session.session_ratings.length > 0;
-        const canRate = role === "learner" && session.status === "completed" && !hasRating;
+        const hasRating =
+          session.session_ratings && session.session_ratings.length > 0;
+        const canRate =
+          role === "learner" && session.status === "completed" && !hasRating;
 
         return (
           <Card key={session.id} className="border-border/60">
@@ -315,22 +406,29 @@ function SessionList({
                       ? `Session on ${new Date(session.scheduled_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
                       : session.tutors?.profiles?.full_name || "Tutor"}
                   </span>
-                  <Badge className={SESSION_STATUS_COLORS[session.status] || ""} variant="outline">
+                  <Badge
+                    className={SESSION_STATUS_COLORS[session.status] || ""}
+                    variant="outline"
+                  >
                     {session.status}
                   </Badge>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Calendar className="h-3.5 w-3.5" />
-                    {new Date(session.scheduled_date).toLocaleDateString("en-US", {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                    })}
+                    {new Date(session.scheduled_date).toLocaleDateString(
+                      "en-US",
+                      {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                      },
+                    )}
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="h-3.5 w-3.5" />
-                    {session.start_time?.slice(0, 5)} - {session.end_time?.slice(0, 5)}
+                    {session.start_time?.slice(0, 5)} -{" "}
+                    {session.end_time?.slice(0, 5)}
                   </span>
                 </div>
                 {session.specializations && (
@@ -377,23 +475,52 @@ function SessionList({
                 {role === "tutor" && session.status === "confirmed" && (
                   <Button
                     size="sm"
+                    variant="outline"
                     onClick={() => onUpdateStatus(session.id, "completed")}
                   >
                     <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
                     Mark Complete
                   </Button>
                 )}
+                {session.status === "confirmed" && (
+                  <>
+                    <Button size="sm" asChild>
+                      <Link
+                        href={`/dashboard/sessions/${session.id}/whiteboard`}
+                      >
+                        <PenTool className="mr-1 h-3.5 w-3.5" />
+                        Whiteboard
+                      </Link>
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleAddToCalendar(session)}
+                    >
+                      <CalendarPlus className="mr-1 h-3.5 w-3.5" />
+                      Calendar
+                    </Button>
+                  </>
+                )}
                 {session.status === "pending" && role === "learner" && (
+                  <ConfirmDialog
+                    trigger={
+                      <Button size="sm" variant="outline">
+                        Cancel
+                      </Button>
+                    }
+                    title="Cancel this session?"
+                    description="This will notify the tutor. Cancelled sessions cannot be reopened."
+                    confirmLabel="Yes, cancel"
+                    onConfirm={() => onUpdateStatus(session.id, "cancelled")}
+                  />
+                )}
+                {canRate && (
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => onUpdateStatus(session.id, "cancelled")}
+                    onClick={() => onRate(session)}
                   >
-                    Cancel
-                  </Button>
-                )}
-                {canRate && (
-                  <Button size="sm" variant="outline" onClick={() => onRate(session)}>
                     <Star className="mr-1 h-3.5 w-3.5" />
                     Rate
                   </Button>

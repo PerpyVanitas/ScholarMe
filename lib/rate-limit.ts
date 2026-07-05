@@ -22,20 +22,19 @@ interface RateLimitResult {
   reset: number; // Unix ms timestamp when window resets
 }
 
-interface WindowEntry {
-  identifier: string;
-  timestamps: number[];
-}
-
 export function rateLimit({ interval, limit }: RateLimitOptions) {
   return {
     async check(identifier: string): Promise<RateLimitResult> {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-      
+
       if (!supabaseUrl || !supabaseKey) {
         // Fallback to allow if env vars are missing (should be caught by lib/env.ts anyway)
-        return { success: true, remaining: limit - 1, reset: Date.now() + interval };
+        return {
+          success: true,
+          remaining: limit - 1,
+          reset: Date.now() + interval,
+        };
       }
 
       const supabase = createClient(supabaseUrl, supabaseKey);
@@ -44,9 +43,9 @@ export function rateLimit({ interval, limit }: RateLimitOptions) {
 
       // Fetch existing entry
       const { data } = await supabase
-        .from('ratelimit_windows')
-        .select('timestamps')
-        .eq('identifier', identifier)
+        .from("ratelimit_windows")
+        .select("timestamps")
+        .eq("identifier", identifier)
         .single();
 
       let timestamps: number[] = data?.timestamps || [];
@@ -63,12 +62,11 @@ export function rateLimit({ interval, limit }: RateLimitOptions) {
 
       // Upsert the updated timestamps
       await supabase
-        .from('ratelimit_windows')
-        .upsert({ identifier, timestamps }, { onConflict: 'identifier' });
+        .from("ratelimit_windows")
+        .upsert({ identifier, timestamps }, { onConflict: "identifier" });
 
-      const reset = timestamps.length > 0
-        ? timestamps[0] + interval
-        : now + interval;
+      const reset =
+        timestamps.length > 0 ? timestamps[0] + interval : now + interval;
 
       return { success, remaining: success ? remaining - 1 : 0, reset };
     },

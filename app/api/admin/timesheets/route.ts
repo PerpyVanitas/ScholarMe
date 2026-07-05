@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/create-client";
+import { isAdminRole } from "@/lib/utils/roles";
 
 // Helper to fetch active timesheet collection period
 async function getActivePeriod(supabase: any) {
@@ -17,8 +18,11 @@ async function getActivePeriod(supabase: any) {
 
 export async function GET(req: NextRequest) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user)
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
   // Verify admin role
   const { data: profile } = await supabase
@@ -30,7 +34,7 @@ export async function GET(req: NextRequest) {
   const roleName = Array.isArray(profile?.roles)
     ? profile.roles[0]?.name
     : (profile?.roles as any)?.name;
-  const isAdmin = roleName === "admin" || roleName === "administrator";
+  const isAdmin = isAdminRole(roleName as string);
 
   if (!profile || !isAdmin) {
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
@@ -40,14 +44,10 @@ export async function GET(req: NextRequest) {
   const startDateParam = searchParams.get("start_date");
   const endDateParam = searchParams.get("end_date");
 
-  let query = supabase
-    .from("timesheets")
-    .select("*, tutors(*, profiles(*))");
+  let query = supabase.from("timesheets").select("*, tutors(*, profiles(*))");
 
   if (startDateParam && endDateParam) {
-    query = query
-      .gte("clock_in", startDateParam)
-      .lte("clock_in", endDateParam);
+    query = query.gte("clock_in", startDateParam).lte("clock_in", endDateParam);
   } else {
     const config = await getActivePeriod(supabase);
     if (config && config.start_date && config.end_date) {
@@ -59,6 +59,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await query.order("clock_in", { ascending: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error)
+    return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
 }

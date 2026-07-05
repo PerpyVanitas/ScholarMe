@@ -1,10 +1,24 @@
 /** Learner dashboard -- session stats, upcoming sessions, and quick actions. */
 import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, BookOpen, Users, CheckCircle2, Clock, ArrowRight, Star, Trophy } from "lucide-react";
+import {
+  Calendar,
+  BookOpen,
+  Users,
+  CheckCircle2,
+  Clock,
+  ArrowRight,
+  Trophy,
+} from "lucide-react";
 import { SESSION_STATUS_COLORS } from "@/lib/constants";
 import type { Profile, Session } from "@/lib/types";
 
@@ -18,7 +32,11 @@ interface LearnerDashboardProps {
   };
 }
 
-export function LearnerDashboard({ profile, upcomingSessions, stats }: LearnerDashboardProps) {
+export function LearnerDashboard({
+  profile,
+  upcomingSessions,
+  stats,
+}: LearnerDashboardProps) {
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -40,19 +58,36 @@ export function LearnerDashboard({ profile, upcomingSessions, stats }: LearnerDa
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold uppercase tracking-wider text-primary">Level {profile.current_level || 1}</span>
-                  <Badge variant="secondary" className="text-[10px] h-5">Rank: {profile.total_xp && profile.total_xp > 5000 ? "Scholar" : "Learner"}</Badge>
+                  <span className="text-sm font-semibold uppercase tracking-wider text-primary">
+                    Level {profile.current_level || 1}
+                  </span>
+                  <Badge variant="secondary" className="text-[10px] h-5">
+                    Rank:{" "}
+                    {profile.total_xp && profile.total_xp > 5000
+                      ? "Scholar"
+                      : "Learner"}
+                  </Badge>
                 </div>
-                <h2 className="text-xl font-bold text-foreground">Academy Progress</h2>
+                <h2 className="text-xl font-bold text-foreground">
+                  Academy Progress
+                </h2>
               </div>
             </div>
             <div className="flex flex-col sm:items-end">
-              <span className="text-sm font-medium text-foreground">{profile.total_xp || 0} Total XP</span>
-              <span className="text-xs text-muted-foreground">{1000 - ((profile.total_xp || 0) % 1000)} XP to Level {(profile.current_level || 1) + 1}</span>
+              <span className="text-sm font-medium text-foreground">
+                {profile.total_xp || 0} Total XP
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {1000 - ((profile.total_xp || 0) % 1000)} XP to Level{" "}
+                {(profile.current_level || 1) + 1}
+              </span>
             </div>
           </div>
           <div className="mt-4 space-y-2">
-            <Progress value={((profile.total_xp || 0) % 1000) / 10} className="h-2" />
+            <Progress
+              value={((profile.total_xp || 0) % 1000) / 10}
+              className="h-2"
+            />
             <div className="flex justify-between text-[10px] font-medium text-muted-foreground uppercase tracking-tighter">
               <span>Current: Level {profile.current_level || 1}</span>
               <span>Next: Level {(profile.current_level || 1) + 1}</span>
@@ -87,7 +122,10 @@ export function LearnerDashboard({ profile, upcomingSessions, stats }: LearnerDa
               <CardDescription>Your next scheduled sessions</CardDescription>
             </div>
             <Button asChild variant="ghost" size="sm">
-              <Link href="/dashboard/sessions" className="flex items-center gap-1">
+              <Link
+                href="/dashboard/sessions"
+                className="flex items-center gap-1"
+              >
                 View all <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </Button>
@@ -98,7 +136,9 @@ export function LearnerDashboard({ profile, upcomingSessions, stats }: LearnerDa
                 <div className="rounded-full bg-muted p-3">
                   <Calendar className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <p className="text-sm text-muted-foreground">No upcoming sessions</p>
+                <p className="text-sm text-muted-foreground">
+                  No upcoming sessions
+                </p>
                 <Button asChild size="sm">
                   <Link href="/dashboard/tutors">Find a Tutor</Link>
                 </Button>
@@ -115,11 +155,14 @@ export function LearnerDashboard({ profile, upcomingSessions, stats }: LearnerDa
                         {session.tutors?.profiles?.full_name || "Tutor"}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {new Date(session.scheduled_date).toLocaleDateString("en-US", {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                        })}{" "}
+                        {new Date(session.scheduled_date).toLocaleDateString(
+                          "en-US",
+                          {
+                            weekday: "short",
+                            month: "short",
+                            day: "numeric",
+                          },
+                        )}{" "}
                         at {session.start_time?.slice(0, 5)}
                       </span>
                     </div>
@@ -129,7 +172,10 @@ export function LearnerDashboard({ profile, upcomingSessions, stats }: LearnerDa
                           {session.specializations.name}
                         </Badge>
                       )}
-                      <Badge className={SESSION_STATUS_COLORS[session.status] || ""} variant="outline">
+                      <Badge
+                        className={SESSION_STATUS_COLORS[session.status] || ""}
+                        variant="outline"
+                      >
                         {session.status}
                       </Badge>
                     </div>
@@ -146,36 +192,63 @@ export function LearnerDashboard({ profile, upcomingSessions, stats }: LearnerDa
             <CardDescription>Get started with these shortcuts</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href="/dashboard/tutors" className="flex items-center gap-3">
+            <Button
+              asChild
+              variant="outline"
+              className="justify-start h-auto py-3"
+            >
+              <Link
+                href="/dashboard/tutors"
+                className="flex items-center gap-3"
+              >
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
                   <Users className="h-4 w-4 text-primary" />
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
                   <span className="text-sm font-medium">Find a Tutor</span>
-                  <span className="text-xs text-muted-foreground">Browse available tutors</span>
+                  <span className="text-xs text-muted-foreground">
+                    Browse available tutors
+                  </span>
                 </div>
               </Link>
             </Button>
-            <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href="/dashboard/sessions" className="flex items-center gap-3">
+            <Button
+              asChild
+              variant="outline"
+              className="justify-start h-auto py-3"
+            >
+              <Link
+                href="/dashboard/sessions"
+                className="flex items-center gap-3"
+              >
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-success/10">
                   <Calendar className="h-4 w-4 text-success" />
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
                   <span className="text-sm font-medium">My Sessions</span>
-                  <span className="text-xs text-muted-foreground">View session history</span>
+                  <span className="text-xs text-muted-foreground">
+                    View session history
+                  </span>
                 </div>
               </Link>
             </Button>
-            <Button asChild variant="outline" className="justify-start h-auto py-3">
-              <Link href="/dashboard/resources" className="flex items-center gap-3">
+            <Button
+              asChild
+              variant="outline"
+              className="justify-start h-auto py-3"
+            >
+              <Link
+                href="/dashboard/resources"
+                className="flex items-center gap-3"
+              >
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/30">
                   <BookOpen className="h-4 w-4 text-accent-foreground" />
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
                   <span className="text-sm font-medium">Resources</span>
-                  <span className="text-xs text-muted-foreground">Study materials and guides</span>
+                  <span className="text-xs text-muted-foreground">
+                    Study materials and guides
+                  </span>
                 </div>
               </Link>
             </Button>

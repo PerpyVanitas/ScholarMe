@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
-import { Loader2, Camera, AlertCircle } from "lucide-react";
+import { Loader2, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ErrorAlert } from "@/components/ui/error-alert";
@@ -13,9 +13,14 @@ interface CardScannerProps {
   error?: string;
 }
 
-export function CardScanner({ onScanSuccess, isProcessing, error }: CardScannerProps) {
+export function CardScanner({
+  onScanSuccess,
+  isProcessing,
+  error,
+}: CardScannerProps) {
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
   const [scannerActive, setScannerActive] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [permissionError, setPermissionError] = useState(false);
 
   useEffect(() => {
@@ -31,20 +36,20 @@ export function CardScanner({ onScanSuccess, isProcessing, error }: CardScannerP
   const startScanner = () => {
     setScannerActive(true);
     setPermissionError(false);
-    
+
     // Small timeout to allow DOM to render the scanner div
     setTimeout(() => {
       if (scannerRef.current) return; // Already running
 
       scannerRef.current = new Html5QrcodeScanner(
         "qr-reader",
-        { 
+        {
           fps: 10,
           qrbox: { width: 250, height: 250 },
           aspectRatio: 1.0,
           supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
         },
-        false // verbose
+        false, // verbose
       );
 
       scannerRef.current.render(
@@ -66,12 +71,14 @@ export function CardScanner({ onScanSuccess, isProcessing, error }: CardScannerP
             }
           } catch (e) {
             console.error("QR Parse Error", e);
-            toast.error("Invalid QR Code format. Please scan a valid ScholarMe ID card.");
+            toast.error(
+              "Invalid QR Code format. Please scan a valid ScholarMe ID card.",
+            );
           }
         },
-        (errorMessage) => {
+        () => {
           // parse errors are normal (no qr code found in frame), ignore them
-        }
+        },
       );
     }, 100);
   };
@@ -96,7 +103,7 @@ export function CardScanner({ onScanSuccess, isProcessing, error }: CardScannerP
   return (
     <div className="flex flex-col gap-4">
       {error && <ErrorAlert error={error} />}
-      
+
       {!scannerActive ? (
         <div className="flex flex-col items-center justify-center p-8 gap-4 border rounded-lg bg-zinc-50 dark:bg-zinc-900 border-dashed">
           <div className="p-4 bg-primary/10 rounded-full">
