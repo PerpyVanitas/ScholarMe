@@ -1,5 +1,13 @@
 # Changelog
 
+## [2026-07-07] - Codebase Optimization & DDD Migration
+
+### Changed
+
+- **Domain-Driven Design (DDD) Migration**: Successfully migrated the application from a heavily nested `lib/` directory into a clean, modular `features/` architecture. This grouped database logic, components, and server actions by their respective domains (`admin`, `finance`, `profiles`, `quizzes`, `sessions`, `tutors`).
+- **Codebase Optimization**: Conducted a deep codebase cleanup pass removing orphaned files, single-use scripts (`fix-catches.js`, `fix-server-ts.mjs`), and empty directories (`docs`, `lib/prompts`) left over from the DDD migration.
+- **Documentation**: Updated the `README.md` to accurately reflect the new `features/` directory architecture and updated component structures.
+
 ## [2026-07-06] - Audit Remediation (Phase 3: Deep Dive)
 
 ### Added
@@ -13,6 +21,12 @@
 - Optimized database queries in `lib/tutors/db.ts`, `app/dashboard/availability/page.tsx`, and `app/dashboard/finance/page.tsx` by replacing blanket `.select("*")` calls with explicitly required columns.
 - Standardized the Design System by refactoring hardcoded tailwind colors in the landing page to use the global CSS Variables `hsl(var(--primary))`.
 - Improved the empty states on the Tutors browsing page.
+- Refactored `app/dashboard/voting/page.tsx` by extracting `CreatePollForm`, `EditPollDialog`, and `PollResultsDialog` and implemented dynamic loading.
+- Refactored `app/dashboard/admin/analytics/page.tsx` by extracting `TutorAnalyticsTab` and `SystemAnalyticsTab` into dedicated components and implemented dynamic loading to reduce bundle size.
+- Replaced wildcard `.select("*")` queries with explicit column selections in `/api/timesheets/periods`, `/api/resources/extract-topics`, `/api/quizzes/generate-from-resource`, `/api/admin/users/designations`, and `/api/admin/users/[id]/logs`.
+- Resolved critical `react-hooks/set-state-in-effect` warnings in `lib/user-context.tsx` and `use-realtime-messages.ts` that were causing unwanted cascading renders and potential UI tearing.
+- Swept the codebase to fix numerous `@typescript-eslint/no-explicit-any` violations in the `apiClient` library and `admin-charts` components.
+- Fixed non-performant `<img>` tags in `chat-interface.tsx`.
 
 ## [2026-07-06] - Audit Remediation (Phase 2: Refactoring)
 
@@ -21,6 +35,10 @@
 - Refactored `app/dashboard/admin/users/page.tsx` (God Object) by extracting all modal states into `components/user-create-dialog.tsx`, `components/user-edit-dialog.tsx`, `components/user-delete-dialog.tsx`, `components/user-logs-dialog.tsx`, `components/user-designations-dialog.tsx`, and `components/user-id-card-dialog.tsx`.
 - Refactored `app/dashboard/profile/page.tsx` (God Object) by extracting all modal states into `components/profile-edit-dialog.tsx`, `components/tutor-settings-dialog.tsx`, and `components/honor-society-designation-dialog.tsx`.
 - Ensured all refactored pages are completely type-safe.
+- Refactored `app/dashboard/finance/page.tsx` (God Object) by extracting all tabs into their own components (`budget-requests-tab.tsx`, `petty-cash-tab.tsx`, `liquidations-tab.tsx`, `scards-tab.tsx`).
+- Refactored `app/dashboard/quizzes/page.tsx`, `app/dashboard/flashcards/page.tsx`, and `app/dashboard/resources/page.tsx` (God Objects) by extracting large creation sheets and modals into modular components (`create-quiz-sheet.tsx`, `create-flashcards-sheet.tsx`, `resource-upload-sheet.tsx`, etc.).
+- Dynamically imported the newly extracted modal components in Quizzes, Flashcards, and Resources using `next/dynamic` for better lazy loading and reduced initial bundle size.
+- Improved TypeScript strictness by replacing unstructured `any` types in refactored components with explicit types and replacing empty `catch(e)` blocks with proper `unknown` typing.
 
 All notable changes to this project will be documented in this file.
 
@@ -102,3 +120,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added database indexes (`supabase/migrations/`) to optimize commonly queried columns on `sessions`, `auth_cards`, `resources`, and `analytics_logs`.
 - Created database migration (`20260706183030_schema_cleanup.sql`) to clean up duplicate columns in `study_sets`, enforce `ON DELETE CASCADE` for critical relational tables (e.g., polls, study set items), and added indexes on foreign keys to prevent full table scans and improve query speeds.
+
+## [2026-07-06] - Architecture & DDD Refactoring
+
+- **Refactor**: Reorganized project structure from layered (components/dashboard/, lib/ specific) to Domain-Driven Design under the eatures/ directory.
+- **Moved**: Extracted profiles, sessions, quizzes, study-sets, tutors, finance, and admin domains into eatures/ directory.
+- **Fixed**: Successfully remediated all import paths globally to fix sc and lint errors.
+- **Cleaned**: Removed dead code, optimized imports, and eliminated
+  eact-hooks/exhaustive-deps warnings across the dashboard.

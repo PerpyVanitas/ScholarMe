@@ -211,14 +211,18 @@ scholarme/
 │       ├── timesheet/            # Tutor timesheet clock-in/out
 │       ├── tutors/               # Find & browse tutors
 │       └── voting/               # Organization polls & voting
-├── components/                   # Reusable UI components
-│   ├── ui/                       # shadcn/ui primitives
-│   └── *.tsx                     # Feature-specific modal/dialog components
+├── components/                   # Reusable cross-cutting UI components
+│   ├── landing/                  # Landing page specific components
+│   └── ui/                       # shadcn/ui primitives
+├── features/                     # Domain-Driven Design (DDD) feature modules
+│   ├── admin/                    # Admin tools, user management, and roles
+│   ├── finance/                  # Finance module logic and SCARDS
+│   ├── profiles/                 # Profile management and onboarding
+│   ├── quizzes/                  # AI generation, flashcards, study sets
+│   ├── sessions/                 # Tutoring session booking and logic
+│   └── tutors/                   # Tutor availability and discovery
 ├── hooks/                        # Custom React hooks
 ├── lib/                          # Shared utilities & database clients
-│   ├── profiles/                 # Profile DB helpers
-│   ├── sessions/                 # Session DB helpers
-│   ├── tutors/                   # Tutor DB helpers
 │   ├── supabase*.ts              # Supabase client factories (server, client, admin)
 │   ├── user-context.tsx          # Global auth context provider
 │   ├── env.ts                    # Environment variable validation on startup
