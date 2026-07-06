@@ -84,12 +84,14 @@ function getNavItems(role: UserRole) {
   // Study items
   const studyItems = [
     { title: resourceTitle, href: "/dashboard/resources", icon: BookOpen },
+    { title: "Physical Library", href: "/dashboard/resources/library", icon: BookOpen },
     { title: "Study Quizzes", href: "/dashboard/quizzes", icon: Lightbulb },
     { title: "Flashcards", href: "/dashboard/flashcards", icon: FolderOpen },
   ];
 
   // Community items depending on role
   const communityItems = [
+    { title: "Events Calendar", href: "/dashboard/events", icon: Calendar },
     { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
     { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
     { title: "My Messages", href: "/dashboard/messages", icon: MessageSquare },
@@ -265,7 +267,7 @@ export function AppSidebar({
 
       <SidebarContent>
         {navGroups.map((group, index) => (
-          <Collapsible defaultOpen className="group/collapsible" key={index}>
+          <Collapsible defaultOpen={index === 0} className="group/collapsible" key={index}>
             <SidebarGroup>
               <SidebarGroupLabel asChild>
                 <CollapsibleTrigger>

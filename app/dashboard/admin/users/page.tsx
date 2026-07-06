@@ -45,6 +45,8 @@ import {
 } from "lucide-react";
 import type { Profile } from "@/lib/types";
 import { ExportCsvButton } from "@/components/export-csv-button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { BulkIdExporter } from "./components/bulk-id-exporter";
 
 // Import new modular components
 import { UserCreateDialog } from "./components/user-create-dialog";
@@ -93,6 +95,9 @@ function AdminUsersContent() {
 
   // Create state
   const [createOpen, setCreateOpen] = useState(false);
+
+  // Bulk selection state
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
 
   // Edit state
   const [editOpen, setEditOpen] = useState(false);
@@ -165,6 +170,24 @@ function AdminUsersContent() {
     setIdCardOpen(true);
   }
 
+  function toggleUserSelection(userId: string) {
+    const newSet = new Set(selectedUserIds);
+    if (newSet.has(userId)) {
+      newSet.delete(userId);
+    } else {
+      newSet.add(userId);
+    }
+    setSelectedUserIds(newSet);
+  }
+
+  function toggleAllSelection(filteredProfiles: Profile[]) {
+    if (selectedUserIds.size === filteredProfiles.length && filteredProfiles.length > 0) {
+      setSelectedUserIds(new Set());
+    } else {
+      setSelectedUserIds(new Set(filteredProfiles.map((p) => p.id)));
+    }
+  }
+
   const filtered = profiles.filter((p) => {
     const nameMatch =
       !search ||
@@ -195,6 +218,10 @@ function AdminUsersContent() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <BulkIdExporter 
+            selectedUsers={profiles.filter(p => selectedUserIds.has(p.id))} 
+            onClearSelection={() => setSelectedUserIds(new Set())} 
+          />
           <ExportCsvButton
             data={filtered.map((p) => ({
               Name: p.full_name,
@@ -300,6 +327,13 @@ function AdminUsersContent() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">
+                      <Checkbox 
+                        checked={filtered.length > 0 && selectedUserIds.size === filtered.length}
+                        onCheckedChange={() => toggleAllSelection(filtered)}
+                        aria-label="Select all"
+                      />
+                    </TableHead>
                     <TableHead>User</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
@@ -312,6 +346,13 @@ function AdminUsersContent() {
                 <TableBody>
                   {filtered.map((p) => (
                     <TableRow key={p.id}>
+                      <TableCell>
+                        <Checkbox 
+                          checked={selectedUserIds.has(p.id)}
+                          onCheckedChange={() => toggleUserSelection(p.id)}
+                          aria-label={`Select ${p.full_name}`}
+                        />
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8">

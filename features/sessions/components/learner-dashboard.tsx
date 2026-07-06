@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { SESSION_STATUS_COLORS } from "@/lib/constants";
 import type { Profile, Session } from "@/lib/types";
+import { TutorOfTheMonth } from "./tutor-of-the-month";
 
 interface LearnerDashboardProps {
   profile: Profile;
@@ -254,6 +255,8 @@ export function LearnerDashboard({
             </Button>
           </CardContent>
         </Card>
+
+        <TutorOfTheMonth />
       </div>
     </div>
   );

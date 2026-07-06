@@ -578,7 +578,7 @@ export default function ProfilePage() {
                   {roleName}
                 </Badge>
                 <Badge
-                  className={`w-fit mx-auto sm:mx-0 ${getLevelColor(profile.current_level || 1).split(" ")[1]}`}
+                  className={`w-fit mx-auto sm:mx-0 ${getLevelColor(profile.current_level || 1)}`}
                 >
                   Level {profile.current_level || 1} •{" "}
                   {getLevelTitle(profile.current_level || 1)}

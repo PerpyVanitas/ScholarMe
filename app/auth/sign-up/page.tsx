@@ -15,6 +15,7 @@ import {
   Eye,
   EyeOff,
   CheckCircle2,
+  MailCheck,
 } from "lucide-react";
 import { TosLink, PrivacyLink } from "@/components/legal-modals";
 import { toast } from "sonner";
@@ -106,6 +107,7 @@ export default function SignUpPage() {
   const [selectedRole, setSelectedRole] = useState<"learner" | "tutor">(
     "learner",
   );
+  const [showEmailSent, setShowEmailSent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     first_name: "",
@@ -179,8 +181,15 @@ export default function SignUpPage() {
       setLoading(false);
       return;
     }
-    toast.success("Account created! Setting up your profile...");
-    window.location.href = "/auth/setup-profile";
+
+    if (result?.emailConfirmRequired) {
+      setShowEmailSent(true);
+      setLoading(false);
+      toast.success("Account created! Please check your email to verify.");
+    } else {
+      toast.success("Account created! Setting up your profile...");
+      window.location.href = "/auth/setup-profile";
+    }
   }
 
   const passwordStrength = (() => {
@@ -268,7 +277,27 @@ export default function SignUpPage() {
         </div>
 
         <div className="w-full max-w-md">
-          <div className="mb-8">
+          {showEmailSent ? (
+            <div className="flex flex-col items-center justify-center space-y-6 text-center py-10">
+              <div className="bg-primary/10 p-4 rounded-full">
+                <MailCheck className="h-12 w-12 text-primary" />
+              </div>
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                Check your email
+              </h1>
+              <p className="text-base text-muted-foreground">
+                We&apos;ve sent a verification link to <span className="font-medium text-foreground">{formData.email}</span>.
+                Please click the link to activate your account.
+              </p>
+              <div className="pt-4 flex flex-col gap-3 w-full">
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href="/auth/login">Return to sign in</Link>
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="mb-8">
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
               Create an account
             </h1>
@@ -699,6 +728,8 @@ export default function SignUpPage() {
               )}
             </Button>
           </form>
+            </>
+          )}
         </div>
       </div>
     </div>

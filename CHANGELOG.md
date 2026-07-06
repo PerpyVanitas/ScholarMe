@@ -1,5 +1,19 @@
 # Changelog
 
+## [2026-07-07] - QoL Feature Audit (Phases 1-4)
+
+### Added
+- **Global Command Palette**: Implemented `cmdk` for lightning-fast global navigation (Cmd+K).
+- **Gamification Enhancements**: Added daily study streak tracking, customized level badge contrast, and integrated `canvas-confetti` and `driver.js` for an interactive product tour.
+- **Physical Library Catalog**: Created a new database schema and UI to search and track physical book inventory (`physical_books`).
+- **Announcement Calendar**: Added a dynamic calendar view for tracking facility events (`facility_events`), integrating `date-fns` and Shadcn's Calendar.
+- **Bulk ID Exporter**: Admin can now select multiple users and export their ScholarMe ID cards simultaneously as a single PDF using `html2canvas` and `jspdf`.
+- **Discord Webhook Integration**: Created an API route `/api/webhooks/discord` to broadcast system notifications (new users, announcements, resources) to external channels.
+
+### Changed
+- **Sidebar De-bloating**: Reorganized the main App Sidebar to neatly group Study Tools, Community, and Admin management for better UX.
+- **Loading UI**: Introduced modern `Skeleton` loaders across dashboard views to improve perceived performance.
+
 ## [2026-07-07] - Codebase Optimization & DDD Migration
 
 ### Changed

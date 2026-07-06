@@ -49,20 +49,21 @@ export async function signUp(formData: FormData) {
   const roleId = await resolveRoleId(adminClient, selectedRole);
 
   const { data: created, error: createError } =
-    await adminClient.auth.admin.createUser({
+    await supabase.auth.signUp({
       email,
       password,
-      email_confirm: true,
-      user_metadata: {
-        full_name: fullName,
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        phone_number: phoneNumber,
-        date_of_birth: dateOfBirth,
-        role_id: roleId,
-        role_name: selectedRole,
-        academic_year_joined: academicYearJoined,
-        esas_scholar: esasScholar,
+      options: {
+        data: {
+          full_name: fullName,
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          phone_number: phoneNumber,
+          date_of_birth: dateOfBirth,
+          role_id: roleId,
+          role_name: selectedRole,
+          academic_year_joined: academicYearJoined,
+          esas_scholar: esasScholar,
+        },
       },
     });
   if (createError) return { error: createError.message };
@@ -88,13 +89,18 @@ export async function signUp(formData: FormData) {
     if (profileError) return { error: profileError.message };
   }
 
-  const { error: signInError } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-  if (signInError) return { error: signInError.message };
+  const emailConfirmRequired = !created?.session && !!created?.user;
 
-  return { success: true };
+  // Only attempt manual sign-in if email confirmation is NOT required and session is somehow missing
+  if (!emailConfirmRequired && !created?.session) {
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (signInError) return { error: signInError.message };
+  }
+
+  return { success: true, emailConfirmRequired };
 }
 
 export async function signOut() {

@@ -12,9 +12,13 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { FeedbackButton } from "@/components/feedback-button";
 import { UserProvider, useUser } from "@/lib/user-context";
 import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { BreadcrumbNav } from "@/components/breadcrumb-nav";
 import { ScrollToTop } from "@/components/scroll-to-top";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { CommandMenu } from "@/components/command-menu";
+import { StreakIndicator } from "@/components/streak-indicator";
+import { OnboardingTour } from "@/components/onboarding-tour";
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const { profile, role, loading, notificationCount } = useUser();
@@ -23,8 +27,30 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="flex h-screen bg-background">
+        {/* Sidebar Skeleton */}
+        <div className="hidden md:flex w-64 flex-col border-r border-border/60 p-4 gap-4">
+          <Skeleton className="h-10 w-full rounded-lg" />
+          <div className="space-y-2 mt-4">
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-8 w-[80%]" />
+            <Skeleton className="h-8 w-[90%]" />
+          </div>
+        </div>
+        {/* Main Content Skeleton */}
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="flex h-14 items-center gap-2 border-b border-border/60 px-4">
+            <Skeleton className="h-6 w-32" />
+            <div className="ml-auto flex items-center gap-2">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <Skeleton className="h-8 w-8 rounded-full" />
+            </div>
+          </header>
+          <div className="p-6">
+            <Skeleton className="h-8 w-[250px] mb-4" />
+            <Skeleton className="h-[200px] w-full rounded-xl" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -44,7 +70,13 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
             className="mr-2 h-4 hidden md:flex"
           />
           <BreadcrumbNav />
+          <div id="tour-command-menu" className="flex-1 flex justify-center max-w-md mx-auto hidden md:flex">
+            <CommandMenu />
+          </div>
           <div className="ml-auto flex items-center gap-2">
+            <div id="tour-streak-indicator">
+              <StreakIndicator currentStreak={3} />
+            </div>
             <FeedbackButton />
             <ThemeToggle />
           </div>
@@ -53,6 +85,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
           {children}
         </div>
         <ScrollToTop />
+        <OnboardingTour />
         <MobileBottomNav />
       </SidebarInset>
     </SidebarProvider>

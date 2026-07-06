@@ -1,3 +1,25 @@
+import confetti from "canvas-confetti";
+
+export function triggerConfetti() {
+  const duration = 3 * 1000;
+  const animationEnd = Date.now() + duration;
+  const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
+
+  const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+  const interval: any = setInterval(function() {
+    const timeLeft = animationEnd - Date.now();
+
+    if (timeLeft <= 0) {
+      return clearInterval(interval);
+    }
+
+    const particleCount = 50 * (timeLeft / duration);
+    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+  }, 250);
+}
+
 export function getLevelTitle(level: number): string {
   if (level < 5) return "Novice";
   if (level < 10) return "Scholar";
@@ -7,11 +29,11 @@ export function getLevelTitle(level: number): string {
 }
 
 export function getLevelColor(level: number): string {
-  if (level < 5) return "border-slate-700 bg-slate-900"; // Novice: Basic dark border
-  if (level < 10) return "border-amber-700 bg-amber-900/30"; // Scholar: Bronze
-  if (level < 20) return "border-slate-300 bg-slate-200/30"; // Prodigy: Silver
-  if (level < 50) return "border-yellow-500 bg-yellow-500/20"; // Master: Gold
-  return "border-purple-500 bg-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.5)]"; // Grandmaster: Glowing Purple
+  if (level < 5) return "border-slate-500 bg-slate-500/20 text-slate-200"; // Novice: Grey
+  if (level < 10) return "border-amber-600 bg-amber-600/20 text-amber-500"; // Scholar: Bronze
+  if (level < 20) return "border-slate-300 bg-slate-300/20 text-slate-300"; // Prodigy: Silver
+  if (level < 50) return "border-yellow-400 bg-yellow-400/20 text-yellow-400"; // Master: Gold
+  return "border-purple-400 bg-purple-400/20 text-purple-400 shadow-[0_0_15px_rgba(192,132,252,0.3)]"; // Grandmaster: Glowing Purple
 }
 
 export function getNextLevelXp(currentLevel: number): number {

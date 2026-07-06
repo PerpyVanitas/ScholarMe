@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, Calendar, BookOpen, Clock } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useUser } from "@/lib/user-context";
 import { getDemoProfileId, getDemoTutorId } from "@/scripts/demo";
 import { AdminDashboard } from "@/features/admin/components/admin-dashboard";
@@ -161,9 +162,21 @@ export default function DashboardView() {
   // Show loading while user context or dashboard data loads
   if (userLoading || dataLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Loading dashboard...</p>
+      <div className="flex flex-col gap-6 w-full animate-in fade-in duration-500">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-8 w-[250px]" />
+          <Skeleton className="h-4 w-[350px]" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Skeleton className="h-[120px] w-full rounded-xl" />
+          <Skeleton className="h-[120px] w-full rounded-xl" />
+          <Skeleton className="h-[120px] w-full rounded-xl" />
+          <Skeleton className="h-[120px] w-full rounded-xl" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+          <Skeleton className="h-[400px] w-full rounded-xl lg:col-span-4" />
+          <Skeleton className="h-[400px] w-full rounded-xl lg:col-span-3" />
+        </div>
       </div>
     );
   }
