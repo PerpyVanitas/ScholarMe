@@ -16,7 +16,7 @@ import {
   Camera,
 } from "lucide-react";
 import Link from "next/link";
-import { AdminCharts } from "@/components/admin-charts";
+import { AdminCharts } from "@/features/admin/components/admin-charts";
 
 export const metadata = {
   title: "Admin Dashboard | ScholarMe",

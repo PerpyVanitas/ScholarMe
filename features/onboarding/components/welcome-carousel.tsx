@@ -90,8 +90,8 @@ export function WelcomeCarousel() {
             Welcome to ScholarMe! 🎉
           </DialogTitle>
           <DialogDescription>
-            Let's quickly set up your profile so you can get the most out of the
-            platform.
+            Let&apos;s quickly set up your profile so you can get the most out
+            of the platform.
           </DialogDescription>
         </DialogHeader>
 

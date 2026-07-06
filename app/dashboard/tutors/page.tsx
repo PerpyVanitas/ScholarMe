@@ -48,6 +48,7 @@ export default function TutorsPage() {
   }, []);
 
   const filtered = tutors.filter((t) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const roles: any = t.profiles?.roles;
     const roleName = Array.isArray(roles) ? roles[0]?.name : roles?.name;
     if (roleName !== "tutor" && roleName !== "officer") return false;

@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Search, Loader2, ShieldAlert, History } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { assignRole, getRoleHistory } from "@/app/actions/roles";
+import { assignRole, getRoleHistory } from "@/features/profiles/actions/roles";
 import { toast } from "sonner";
 import { SkeletonList } from "@/components/ui/skeleton-card";
 import {

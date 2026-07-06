@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/create-client";
-import { ensureTutorRow } from "@/lib/tutors/db";
+import { ensureTutorRow } from "@/features/tutors/api/db";
 
 // Helper to fetch active timesheet collection period
 async function getActivePeriod(supabase: any) {
@@ -18,8 +18,11 @@ async function getActivePeriod(supabase: any) {
 
 export async function GET() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user)
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
   const config = await getActivePeriod(supabase);
   if (!config || !config.start_date || !config.end_date) {
@@ -29,26 +32,33 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("timesheets")
-    .select("*")
+    .select("id, tutor_id, user_id, clock_in, clock_out")
     .eq("user_id", user.id)
     .gte("clock_in", config.start_date)
     .lte("clock_in", config.end_date)
     .order("clock_in", { ascending: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error)
+    return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
 }
 
 export async function POST(req: Request) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user)
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
   const config = await getActivePeriod(supabase);
   if (!config || !config.start_date || !config.end_date) {
     return NextResponse.json(
-      { error: "The administrator has not set a timesheet collection duration yet." },
-      { status: 400 }
+      {
+        error:
+          "The administrator has not set a timesheet collection duration yet.",
+      },
+      { status: 400 },
     );
   }
 
@@ -69,8 +79,11 @@ export async function POST(req: Request) {
     // Verify current time is within boundaries
     if (nowTime < startTime || nowTime > endTime) {
       return NextResponse.json(
-        { error: "Current date is outside the active timesheet collection period." },
-        { status: 400 }
+        {
+          error:
+            "Current date is outside the active timesheet collection period.",
+        },
+        { status: 400 },
       );
     }
 
@@ -82,40 +95,47 @@ export async function POST(req: Request) {
       .is("clock_out", null)
       .maybeSingle();
 
-    if (open) return NextResponse.json({ error: "Already clocked in" }, { status: 400 });
+    if (open)
+      return NextResponse.json(
+        { error: "Already clocked in" },
+        { status: 400 },
+      );
 
     const { data, error } = await supabase
       .from("timesheets")
-      .insert({ 
-        tutor_id: tutor.id, 
+      .insert({
+        tutor_id: tutor.id,
         user_id: user.id,
-        clock_in: now.toISOString()
+        clock_in: now.toISOString(),
       })
-      .select()
+      .select("id, tutor_id, user_id, clock_in, clock_out")
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data);
   }
 
   if (action === "clock_out") {
     const { data: open } = await supabase
       .from("timesheets")
-      .select("*")
+      .select("id")
       .eq("user_id", user.id)
       .is("clock_out", null)
       .maybeSingle();
 
-    if (!open) return NextResponse.json({ error: "Not clocked in" }, { status: 400 });
+    if (!open)
+      return NextResponse.json({ error: "Not clocked in" }, { status: 400 });
 
     const { data, error } = await supabase
       .from("timesheets")
       .update({ clock_out: now.toISOString() })
       .eq("id", open.id)
-      .select()
+      .select("id, tutor_id, user_id, clock_in, clock_out")
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data);
   }
 

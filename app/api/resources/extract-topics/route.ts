@@ -12,7 +12,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createSupabaseAdmin } from "@supabase/supabase-js";
-import { STRUCTURE_EXTRACTION_PROMPT } from "@/lib/prompts/structure-extraction";
+import { STRUCTURE_EXTRACTION_PROMPT } from "@/features/quizzes/api/structure-extraction";
 import {
   getAIClient,
   GEMINI_MODEL,
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     // Fetch resource metadata
     const { data: resource, error } = await supabaseAdmin
       .from("resources")
-      .select("*")
+      .select("id, url")
       .eq("id", resource_id)
       .single();
 

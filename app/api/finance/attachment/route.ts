@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSecureAttachmentUrl } from "@/app/actions/finance";
+import { getSecureAttachmentUrl } from "@/features/finance/actions/finance-actions";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);

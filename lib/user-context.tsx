@@ -12,7 +12,7 @@ import { createClient } from "@/lib/supabase/client";
 import { type RealtimeChannel } from "@supabase/supabase-js";
 import type { Profile, UserRole } from "@/lib/types";
 import { DEMO_USERS, getDemoUserFromCookie } from "@/scripts/demo";
-import { resolveRoleId } from "@/lib/profiles/db";
+import { resolveRoleId } from "@/features/profiles/api/db";
 import { toast } from "sonner";
 
 interface UserContextType {
@@ -219,6 +219,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, [profile]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadUserData();
 
     const supabase = createClient();

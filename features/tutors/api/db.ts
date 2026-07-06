@@ -1,5 +1,5 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
-import { ensureProfileRow } from "@/lib/profiles/db";
+import { ensureProfileRow } from "@/features/profiles/api/db";
 
 export type TutorRow = {
   id: string;

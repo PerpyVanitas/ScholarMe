@@ -1,24 +1,26 @@
-"use server"
+"use server";
 
-import { createClient } from "@/lib/supabase/server"
-import { revalidatePath } from "next/cache"
-import { birthdateFields } from "@/lib/profiles/db"
-import { getRoleName } from "@/lib/utils/roles"
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
+import { birthdateFields } from "@/features/profiles/api/db";
+import { getRoleName } from "@/lib/utils/roles";
 
 export async function updateProfile(data: {
-  firstName: string
-  lastName: string
-  birthdate: string | null
-  avatarPathname: string | null
-  membershipNumber: string | null
-  selectedSpecs: string[]
+  firstName: string;
+  lastName: string;
+  birthdate: string | null;
+  avatarPathname: string | null;
+  membershipNumber: string | null;
+  selectedSpecs: string[];
 }) {
-  const supabase = await createClient()
+  const supabase = await createClient();
 
   // Securely get the user from the session
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
-    throw new Error("Unauthorized")
+    throw new Error("Unauthorized");
   }
 
   // Fetch the actual role securely
@@ -26,10 +28,12 @@ export async function updateProfile(data: {
     .from("profiles")
     .select("roles(name)")
     .eq("id", user.id)
-    .single()
+    .single();
 
-  const roleName = profile ? getRoleName(profile as Parameters<typeof getRoleName>[0]) : "learner"
-  const isTutor = roleName === "tutor"
+  const roleName = profile
+    ? getRoleName(profile as Parameters<typeof getRoleName>[0])
+    : "learner";
+  const isTutor = roleName === "tutor";
 
   // Update profile
   const { error: profileError } = await supabase
@@ -40,12 +44,12 @@ export async function updateProfile(data: {
       full_name: `${data.firstName.trim()} ${data.lastName.trim()}`,
       ...birthdateFields(data.birthdate),
       avatar_url: data.avatarPathname || null,
-      membership_number: isTutor ? (data.membershipNumber?.trim() || null) : null,
+      membership_number: isTutor ? data.membershipNumber?.trim() || null : null,
       profile_completed: true,
     })
-    .eq("id", user.id)
+    .eq("id", user.id);
 
-  if (profileError) throw profileError
+  if (profileError) throw profileError;
 
   // If the server confirms this user is a tutor, handle tutor-specific tables
   if (isTutor) {
@@ -53,15 +57,15 @@ export async function updateProfile(data: {
       .from("tutors")
       .select("id")
       .eq("user_id", user.id)
-      .maybeSingle()
+      .maybeSingle();
 
     if (!tutorRow) {
       const { data: newTutor } = await supabase
         .from("tutors")
         .insert({ user_id: user.id })
         .select("id")
-        .single()
-      tutorRow = newTutor
+        .single();
+      tutorRow = newTutor;
     }
 
     if (tutorRow) {
@@ -69,22 +73,20 @@ export async function updateProfile(data: {
       await supabase
         .from("tutor_specializations")
         .delete()
-        .eq("tutor_id", tutorRow.id)
+        .eq("tutor_id", tutorRow.id);
 
       // Insert new ones securely
       if (data.selectedSpecs && data.selectedSpecs.length > 0) {
-        await supabase
-          .from("tutor_specializations")
-          .insert(
-            data.selectedSpecs.map(specId => ({
-              tutor_id: tutorRow!.id,
-              specialization_id: specId,
-            }))
-          )
+        await supabase.from("tutor_specializations").insert(
+          data.selectedSpecs.map((specId) => ({
+            tutor_id: tutorRow!.id,
+            specialization_id: specId,
+          })),
+        );
       }
     }
   }
 
-  revalidatePath("/dashboard")
-  return { success: true }
+  revalidatePath("/dashboard");
+  return { success: true };
 }

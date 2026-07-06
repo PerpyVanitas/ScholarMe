@@ -57,6 +57,24 @@ import {
 } from "recharts";
 import { ExportCsvButton } from "@/components/export-csv-button";
 
+import dynamic from "next/dynamic";
+
+const TutorAnalyticsTab = dynamic(
+  () =>
+    import("./components/tutor-analytics-tab").then(
+      (mod) => mod.TutorAnalyticsTab,
+    ),
+  { ssr: false },
+);
+
+const SystemAnalyticsTab = dynamic(
+  () =>
+    import("./components/system-analytics-tab").then(
+      (mod) => mod.SystemAnalyticsTab,
+    ),
+  { ssr: false },
+);
+
 const CHART_COLORS = [
   "oklch(0.5 0.02 255)", // primary
   "oklch(0.6 0.1 140)", // success
@@ -718,105 +736,7 @@ export default function AdminAnalyticsPage() {
           value="compliance"
           className="flex flex-col gap-6 print:block"
         >
-          {noSemester && (
-            <div className="flex flex-col items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 px-6 py-8 text-center">
-              <Calendar className="h-8 w-8 text-amber-500" />
-              <h3 className="font-bold text-lg">
-                No Active Semester Configured
-              </h3>
-              <p className="text-sm text-muted-foreground max-w-sm">
-                The 90-hour compliance tracker requires an active semester to be
-                set. Click <strong>Config Semester</strong> in the header to
-                lock in the start and end dates for the current semester.
-              </p>
-            </div>
-          )}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="bg-primary/5 border-primary/20">
-              <CardContent className="p-6 text-center">
-                <p className="text-sm font-medium text-primary uppercase">
-                  Total Semester Hours
-                </p>
-                <p className="text-4xl font-black mt-2 text-primary">
-                  {(totalMinutes / 60).toFixed(0)}{" "}
-                  <span className="text-lg font-normal">hrs</span>
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="bg-success/5 border-success/20">
-              <CardContent className="p-6 text-center">
-                <p className="text-sm font-medium text-success uppercase">
-                  Compliance Rate
-                </p>
-                <p className="text-4xl font-black mt-2 text-success">
-                  {totalTutors
-                    ? Math.round((compliantCount / totalTutors) * 100)
-                    : 0}
-                  %
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="bg-destructive/5 border-destructive/20">
-              <CardContent className="p-6 text-center">
-                <p className="text-sm font-medium text-destructive uppercase">
-                  At Risk (&lt; 50%)
-                </p>
-                <p className="text-4xl font-black mt-2 text-destructive">
-                  {
-                    stats.compliance.filter((c) => c.progress_percentage < 50)
-                      .length
-                  }
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>90-Hour Tracking</CardTitle>
-              <CardDescription>
-                Progress towards the 5,400 minute requirement.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col gap-6">
-                {stats.compliance
-                  .sort((a, b) => b.progress_percentage - a.progress_percentage)
-                  .map((tutor) => (
-                    <div key={tutor.tutor_id} className="flex flex-col gap-2">
-                      <div className="flex justify-between items-end">
-                        <div>
-                          <span className="font-bold">{tutor.full_name}</span>
-                          <span className="text-xs text-muted-foreground ml-2">
-                            {tutor.sessions_count} sessions
-                          </span>
-                        </div>
-                        <div className="text-sm font-medium">
-                          {(tutor.total_minutes / 60).toFixed(1)} / 90 hrs (
-                          {tutor.progress_percentage}%)
-                        </div>
-                      </div>
-                      <Progress
-                        value={tutor.progress_percentage}
-                        className="h-2"
-                        indicatorColor={
-                          tutor.progress_percentage >= 100
-                            ? "bg-success"
-                            : tutor.progress_percentage > 50
-                              ? "bg-warning"
-                              : "bg-destructive"
-                        }
-                      />
-                    </div>
-                  ))}
-                {stats.compliance.length === 0 && (
-                  <p className="text-center text-muted-foreground">
-                    No active tutors found this semester.
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <TutorAnalyticsTab stats={stats} noSemester={noSemester} />
         </TabsContent>
 
         <TabsContent value="records" className="print:block">
@@ -1007,49 +927,7 @@ export default function AdminAnalyticsPage() {
         </TabsContent>
 
         <TabsContent value="system" className="print:block">
-          <Card>
-            <CardHeader>
-              <CardTitle>Subject Supply vs. Demand</CardTitle>
-              <CardDescription>
-                Number of tutors holding a specialization (Supply) vs. sessions
-                requested (Demand).
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-96">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart
-                    data={stats.supply_demand}
-                    margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-                  >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      className="stroke-muted"
-                    />
-                    <XAxis dataKey="subject_name" className="text-xs" />
-                    <YAxis className="text-xs" />
-                    <Tooltip cursor={{ fill: "transparent" }} />
-                    <Legend />
-                    <Bar
-                      dataKey="supply_count"
-                      name="Available Tutors"
-                      barSize={30}
-                      fill="var(--color-chart-1)"
-                      radius={[4, 4, 0, 0]}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="demand_count"
-                      name="Sessions Demanded"
-                      stroke="var(--color-chart-5)"
-                      strokeWidth={3}
-                      dot={{ r: 6 }}
-                    />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+          <SystemAnalyticsTab stats={stats} />
         </TabsContent>
       </Tabs>
 

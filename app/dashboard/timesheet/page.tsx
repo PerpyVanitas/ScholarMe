@@ -119,7 +119,7 @@ export default function TimesheetPage() {
     refreshInterval: 10000,
   });
   const [clockLoading, setClockLoading] = useState(false);
-  const [now, setNow] = useState<number>(0);
+  const [now, setNow] = useState<number>(() => Date.now());
   const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>("all");
   const [correctionOpen, setCorrectionOpen] = useState(false);
   const [correctionEntry, setCorrectionEntry] = useState<Timesheet | null>(
@@ -137,16 +137,14 @@ export default function TimesheetPage() {
   // Timer: update every second when clocked in
   useEffect(() => {
     if (!isClockedIn) {
-      setNow(Date.now());
       return;
     }
-    setNow(Date.now());
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, [isClockedIn]);
 
   const hasConfig = config && config.start_date && config.end_date;
-  const nowTime = Date.now();
+  const nowTime = now;
   const startTime = config?.start_date
     ? new Date(config.start_date).getTime()
     : 0;

@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
       .from("polls")
       .select(
         `
-        *,
+        id, title, description, status, created_by, end_date, allow_multiple_votes, is_anonymous, is_hidden, created_at, updated_at,
         profiles:created_by(id, full_name, avatar_url),
         poll_options(id, option_text, display_order)
       `,
@@ -177,7 +177,9 @@ export async function POST(request: NextRequest) {
         is_anonymous: is_anonymous || false,
         is_hidden: false,
       })
-      .select()
+      .select(
+        "id, title, description, status, created_by, end_date, allow_multiple_votes, is_anonymous, is_hidden, created_at, updated_at",
+      )
       .single();
 
     if (pollError) {

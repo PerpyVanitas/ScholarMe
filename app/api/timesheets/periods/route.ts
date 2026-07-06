@@ -14,7 +14,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from("semester_configs")
-      .select("*")
+      .select("id, name, start_date, end_date, is_active")
       .order("start_date", { ascending: false });
 
     if (error) {
@@ -76,7 +76,7 @@ export async function POST(req: Request) {
         end_date: new Date(end_date).toISOString(),
         is_active: false, // default to false, admin will activate it explicitly
       })
-      .select()
+      .select("id, name, start_date, end_date, is_active")
       .single();
 
     if (error) {

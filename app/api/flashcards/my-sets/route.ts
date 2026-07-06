@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-import { STUDY_SET_LIST_SELECT } from "@/lib/study-sets/db";
+import { STUDY_SET_LIST_SELECT } from "@/features/quizzes/api/study-sets-db";
 
 export async function GET() {
   try {

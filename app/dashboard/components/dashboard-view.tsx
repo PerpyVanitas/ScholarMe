@@ -1,153 +1,162 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { createClient } from "@/lib/supabase/client"
-import { Loader2 } from "lucide-react"
-import { useUser } from "@/lib/user-context"
-import { getDemoProfileId, getDemoTutorId } from "@/scripts/demo"
-import { AdminDashboard } from "@/components/dashboard/admin-dashboard"
-import { TutorDashboard } from "@/components/dashboard/tutor-dashboard"
-import { LearnerDashboard } from "@/components/dashboard/learner-dashboard"
-import type { Session, Tutor } from "@/lib/types"
-import { ensureTutor } from "@/app/dashboard/profile/actions"
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { Loader2 } from "lucide-react";
+import { useUser } from "@/lib/user-context";
+import { getDemoProfileId, getDemoTutorId } from "@/scripts/demo";
+import { AdminDashboard } from "@/features/admin/components/admin-dashboard";
+import { TutorDashboard } from "@/features/tutors/components/tutor-dashboard";
+import { LearnerDashboard } from "@/features/sessions/components/learner-dashboard";
+import type { Session, Tutor } from "@/lib/types";
+import { ensureTutor } from "@/app/dashboard/profile/actions";
 
 interface DashboardData {
   adminStats?: {
-    pendingSessions: number
-    clockedInTutors: number
-    activeTutors: number
-    sessionsToday: number
-  }
-  recentSessions?: Session[]
-  tutor?: Tutor | null
-  upcomingSessions?: Session[]
+    pendingSessions: number;
+    clockedInTutors: number;
+    activeTutors: number;
+    sessionsToday: number;
+  };
+  recentSessions?: Session[];
+  tutor?: Tutor | null;
+  upcomingSessions?: Session[];
   tutorStats?: {
-    completedSessions: number
-    upcomingSessions: number
-    rating: number
-    totalRatings: number
-  }
+    completedSessions: number;
+    upcomingSessions: number;
+    rating: number;
+    totalRatings: number;
+  };
   learnerStats?: {
-    totalSessions: number
-    completedSessions: number
-    upcomingSessions: number
-  }
+    totalSessions: number;
+    completedSessions: number;
+    upcomingSessions: number;
+  };
 }
 
 export default function DashboardView() {
-  const { profile, role, loading: userLoading, isAuthenticated } = useUser()
-  const [dashboardData, setDashboardData] = useState<DashboardData>({})
-  const [dataLoading, setDataLoading] = useState(true)
-  const [error, setError] = useState(false)
+  const { profile, role, loading: userLoading, isAuthenticated } = useUser();
+  const [dashboardData, setDashboardData] = useState<DashboardData>({});
+  const [dataLoading, setDataLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     // Don't load dashboard data until user context is ready
-    if (userLoading || !profile) return
+    if (userLoading || !profile) return;
 
     async function loadDashboardData() {
       try {
-        const supabase = createClient()
-        const extra: DashboardData = {}
+        const supabase = createClient();
+        const extra: DashboardData = {};
 
         if (role === "administrator") {
           // Admin stats via server API (needs admin client)
           try {
-            const res = await fetch("/api/admin/dashboard-stats")
+            const res = await fetch("/api/admin/dashboard-stats");
             if (res.ok) {
-              const stats = await res.json()
-              extra.adminStats = stats.adminStats
-              extra.recentSessions = stats.recentSessions
+              const stats = await res.json();
+              extra.adminStats = stats.adminStats;
+              extra.recentSessions = stats.recentSessions;
             }
           } catch {
             // Fallback to empty stats
           }
           if (!extra.adminStats) {
-            extra.adminStats = { pendingSessions: 0, clockedInTutors: 0, activeTutors: 0, sessionsToday: 0 }
-            extra.recentSessions = []
+            extra.adminStats = {
+              pendingSessions: 0,
+              clockedInTutors: 0,
+              activeTutors: 0,
+              sessionsToday: 0,
+            };
+            extra.recentSessions = [];
           }
         } else if (role === "tutor") {
-          const userId = isAuthenticated && profile ? profile.id : getDemoProfileId("tutor")
+          const userId =
+            isAuthenticated && profile ? profile.id : getDemoProfileId("tutor");
 
           if (isAuthenticated && profile) {
-            await ensureTutor()
+            await ensureTutor();
           }
 
           const { data: tutor } = await supabase
             .from("tutors")
             .select("*")
             .eq("user_id", userId)
-            .maybeSingle()
+            .maybeSingle();
 
-          const tutorId = tutor?.id || getDemoTutorId("tutor") || "none"
+          const tutorId = tutor?.id || getDemoTutorId("tutor") || "none";
           const { data: sessions } = await supabase
             .from("sessions")
             .select("*, specializations(*)")
             .eq("tutor_id", tutorId)
             .in("status", ["pending", "confirmed"])
             .order("scheduled_date", { ascending: true })
-            .limit(5)
+            .limit(5);
 
           const { count: completedCount } = await supabase
             .from("sessions")
             .select("*", { count: "exact", head: true })
             .eq("tutor_id", tutorId)
-            .eq("status", "completed")
+            .eq("status", "completed");
 
           const { count: upcomingCount } = await supabase
             .from("sessions")
             .select("*", { count: "exact", head: true })
             .eq("tutor_id", tutorId)
-            .in("status", ["pending", "confirmed"])
+            .in("status", ["pending", "confirmed"]);
 
-          extra.tutor = tutor
-          extra.upcomingSessions = sessions || []
+          extra.tutor = tutor;
+          extra.upcomingSessions = sessions || [];
           extra.tutorStats = {
             completedSessions: completedCount || 0,
             upcomingSessions: upcomingCount || 0,
             rating: tutor?.rating || 0,
             totalRatings: tutor?.total_ratings || 0,
-          }
+          };
         } else {
           // Learner
-          const learnerId = isAuthenticated && profile ? profile.id : getDemoProfileId("learner")
+          const learnerId =
+            isAuthenticated && profile
+              ? profile.id
+              : getDemoProfileId("learner");
           const { data: sessions } = await supabase
             .from("sessions")
             .select("*, tutors(*, profiles(*)), specializations(*)")
             .eq("learner_id", learnerId)
             .in("status", ["pending", "confirmed"])
             .order("scheduled_date", { ascending: true })
-            .limit(5)
+            .limit(5);
 
           const { count: completedCount } = await supabase
             .from("sessions")
             .select("*", { count: "exact", head: true })
             .eq("learner_id", learnerId)
-            .eq("status", "completed")
+            .eq("status", "completed");
 
           const { count: totalCount } = await supabase
             .from("sessions")
             .select("*", { count: "exact", head: true })
-            .eq("learner_id", learnerId)
+            .eq("learner_id", learnerId);
 
-          extra.upcomingSessions = sessions || []
+          extra.upcomingSessions = sessions || [];
           extra.learnerStats = {
             totalSessions: totalCount || 0,
             completedSessions: completedCount || 0,
             upcomingSessions: sessions?.length || 0,
-          }
+          };
         }
 
-        setDashboardData(extra)
+        setDashboardData(extra);
       } catch (err) {
-        console.error("Dashboard load error:", err)
-        setError(true)
+        console.error("Dashboard load error:", err);
+        setError(true);
       } finally {
-        setDataLoading(false)
+        setDataLoading(false);
       }
     }
 
-    loadDashboardData()
-  }, [profile, role, userLoading, isAuthenticated])
+    loadDashboardData();
+  }, [profile, role, userLoading, isAuthenticated]);
 
   // Show loading while user context or dashboard data loads
   if (userLoading || dataLoading) {
@@ -156,25 +165,34 @@ export default function DashboardView() {
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         <p className="text-sm text-muted-foreground">Loading dashboard...</p>
       </div>
-    )
+    );
   }
 
   if (error || !profile) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
-        <p className="text-sm text-muted-foreground">Unable to load dashboard. Please try refreshing.</p>
+        <p className="text-sm text-muted-foreground">
+          Unable to load dashboard. Please try refreshing.
+        </p>
       </div>
-    )
+    );
   }
 
   if (role === "administrator") {
     return (
       <AdminDashboard
         profile={profile}
-        stats={dashboardData.adminStats || { pendingSessions: 0, clockedInTutors: 0, activeTutors: 0, sessionsToday: 0 }}
+        stats={
+          dashboardData.adminStats || {
+            pendingSessions: 0,
+            clockedInTutors: 0,
+            activeTutors: 0,
+            sessionsToday: 0,
+          }
+        }
         recentSessions={dashboardData.recentSessions || []}
       />
-    )
+    );
   }
 
   if (role === "tutor") {
@@ -183,16 +201,29 @@ export default function DashboardView() {
         profile={profile}
         tutor={dashboardData.tutor || null}
         upcomingSessions={dashboardData.upcomingSessions || []}
-        stats={dashboardData.tutorStats || { completedSessions: 0, upcomingSessions: 0, rating: 0, totalRatings: 0 }}
+        stats={
+          dashboardData.tutorStats || {
+            completedSessions: 0,
+            upcomingSessions: 0,
+            rating: 0,
+            totalRatings: 0,
+          }
+        }
       />
-    )
+    );
   }
 
   return (
     <LearnerDashboard
       profile={profile}
       upcomingSessions={dashboardData.upcomingSessions || []}
-      stats={dashboardData.learnerStats || { totalSessions: 0, completedSessions: 0, upcomingSessions: 0 }}
+      stats={
+        dashboardData.learnerStats || {
+          totalSessions: 0,
+          completedSessions: 0,
+          upcomingSessions: 0,
+        }
+      }
     />
-  )
+  );
 }

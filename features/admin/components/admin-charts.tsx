@@ -24,8 +24,8 @@ export function AdminCharts({
   userGrowthData,
   sessionActivityData,
 }: {
-  userGrowthData: any[];
-  sessionActivityData: any[];
+  userGrowthData: { date: string; users: number }[];
+  sessionActivityData: { status: string; count: number }[];
 }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";

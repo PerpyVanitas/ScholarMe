@@ -143,7 +143,7 @@ export function ChatInterface({
       if (data.success) {
         setUsers(data.data || []);
       }
-    } catch (e) {
+    } catch {
       // Error toast is handled by apiClient
     } finally {
       setLoadingUsers(false);
@@ -177,7 +177,7 @@ export function ChatInterface({
         setShowNewChatDialog(false);
         setUserSearch("");
       }
-    } catch (e) {
+    } catch {
       // Error toast is handled by apiClient
     }
   };
@@ -360,7 +360,8 @@ export function ChatInterface({
                               >
                                 {Array.isArray(u.roles)
                                   ? u.roles[0]?.name
-                                  : (u.roles as any)?.name || "user"}
+                                  : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                    (u.roles as any)?.name || "user"}
                               </Badge>
                             </div>
                             <p className="text-xs text-muted-foreground truncate">
@@ -522,6 +523,7 @@ export function ChatInterface({
                         {msg.file_url && (
                           <div className="mb-2">
                             {msg.file_type?.startsWith("image/") ? (
+                              // eslint-disable-next-line @next/next/no-img-element
                               <img
                                 src={msg.file_url}
                                 alt={msg.file_name || "attachment"}
@@ -594,6 +596,7 @@ export function ChatInterface({
                     </Button>
                     {attachment.type.startsWith("image/") ? (
                       <div className="h-10 w-10 shrink-0 overflow-hidden rounded bg-background border flex items-center justify-center">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={URL.createObjectURL(attachment)}
                           alt="preview"

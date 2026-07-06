@@ -2,8 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { birthdateFields, ensureProfileRow } from "@/lib/profiles/db";
-import { ensureTutorRow } from "@/lib/tutors/db";
+import { birthdateFields, ensureProfileRow } from "@/features/profiles/api/db";
+import { ensureTutorRow } from "@/features/tutors/api/db";
 
 export interface UpdateProfileData {
   first_name: string;
@@ -20,9 +20,12 @@ export interface UpdateProfileData {
 
 export async function updateProfile(data: UpdateProfileData) {
   const supabase = await createClient();
-  
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
   if (authError || !user) {
     return { success: false, error: "Not authenticated" };
   }
@@ -54,11 +57,19 @@ export async function updateProfile(data: UpdateProfileData) {
 
   if (error) {
     console.error("Profile update error:", error);
-    return { success: false, error: error.message, details: error.details, hint: error.hint };
+    return {
+      success: false,
+      error: error.message,
+      details: error.details,
+      hint: error.hint,
+    };
   }
 
   if (!updated) {
-    return { success: false, error: "Profile row could not be updated (RLS or no rows matched)" };
+    return {
+      success: false,
+      error: "Profile row could not be updated (RLS or no rows matched)",
+    };
   }
 
   revalidatePath("/dashboard/profile");
@@ -112,9 +123,12 @@ export async function ensureTutor() {
 
 export async function updateAvatar(avatarUrl: string) {
   const supabase = await createClient();
-  
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
   if (authError || !user) {
     return { success: false, error: "Not authenticated" };
   }
@@ -153,9 +167,12 @@ export interface UpdateTutorData {
 
 export async function updateTutorInfo(data: UpdateTutorData) {
   const supabase = await createClient();
-  
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
   if (authError || !user) {
     return { success: false, error: "Not authenticated" };
   }
@@ -194,10 +211,10 @@ export async function updateTutorInfo(data: UpdateTutorData) {
       const { error: specError } = await supabase
         .from("tutor_specializations")
         .insert(
-          data.specialization_ids.map(spec_id => ({
+          data.specialization_ids.map((spec_id) => ({
             tutor_id: tutorId,
             specialization_id: spec_id,
-          }))
+          })),
         );
 
       if (specError) {

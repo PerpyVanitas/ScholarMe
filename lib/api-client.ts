@@ -31,9 +31,11 @@ export async function apiClient<T = any>(
     }
 
     return data as T;
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (showErrorToast) {
-      toast.error(error.message || "An unexpected error occurred");
+      toast.error(
+        error instanceof Error ? error.message : "An unexpected error occurred",
+      );
     }
     throw error;
   }

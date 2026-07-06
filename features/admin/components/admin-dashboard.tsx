@@ -22,7 +22,7 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { SESSION_STATUS_COLORS } from "@/lib/constants";
-import { AdminStatModal } from "@/components/dashboard/admin-stat-modal";
+import { AdminStatModal } from "@/features/admin/components/admin-stat-modal";
 import type { Profile, Session } from "@/lib/types";
 
 type StatType = "clocked_in" | "tutors" | "today" | "pending";
@@ -38,11 +38,7 @@ interface AdminDashboardProps {
   recentSessions: Session[];
 }
 
-export function AdminDashboard({
-  profile: _profile,
-  stats,
-  recentSessions,
-}: AdminDashboardProps) {
+export function AdminDashboard({ stats, recentSessions }: AdminDashboardProps) {
   const [modalType, setModalType] = useState<StatType | null>(null);
 
   const statCards: {

@@ -12,7 +12,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createSupabaseAdmin } from "@supabase/supabase-js";
-import { ASSESSMENT_ENGINE_PROMPT } from "@/lib/prompts/assessment-engine";
+import { ASSESSMENT_ENGINE_PROMPT } from "@/features/quizzes/api/assessment-engine";
 import {
   getAIClient,
   GEMINI_MODEL,
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     // Fetch resource metadata
     const { data: resource, error } = await supabaseAdmin
       .from("resources")
-      .select("*")
+      .select("id, url, title")
       .eq("id", resource_id)
       .single();
 

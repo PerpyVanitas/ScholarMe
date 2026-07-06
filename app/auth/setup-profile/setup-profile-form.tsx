@@ -17,7 +17,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { GraduationCap, Camera, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import { birthdateFields } from "@/lib/profiles/db";
+import { birthdateFields } from "@/features/profiles/api/db";
 
 interface Specialization {
   id: string;

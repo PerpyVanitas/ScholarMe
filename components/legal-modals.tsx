@@ -174,7 +174,7 @@ function TermsContent() {
             "Upload or share content that is defamatory, harassing, or abusive",
             "Impersonate any individual, tutor, or Honor Society officer",
             "Submit fraudulent session logs, timesheets, or QR attendance records",
-            "Access or attempt to access another user's account without authorization",
+            "Access or attempt to access another user&apos;s account without authorization",
             "Introduce malware, viruses, or harmful scripts into the platform",
             "Scrape or harvest data from ScholarMe without written permission",
             "Engage in any activity that disrupts platform performance or availability",
@@ -184,8 +184,9 @@ function TermsContent() {
 
       <Section title="4. Tutoring Sessions & Session Logs">
         <p>
-          Sessions booked through ScholarMe are governed by the Honor Society's
-          academic tutoring guidelines. Both tutors and learners agree that:
+          Sessions booked through ScholarMe are governed by the Honor
+          Society&apos;s academic tutoring guidelines. Both tutors and learners
+          agree that:
         </p>
         <BulletList
           items={[

@@ -121,7 +121,9 @@ export async function PATCH(
     .from("polls")
     .update(updatePayload)
     .eq("id", pollId)
-    .select()
+    .select(
+      "id, title, description, end_date, is_hidden, status, created_by, created_at, updated_at",
+    )
     .single();
 
   if (error) {

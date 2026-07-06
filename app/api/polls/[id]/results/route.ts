@@ -5,7 +5,7 @@ import { createSuccessResponse, createErrorResponse } from "@/lib/api-errors";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id: pollId } = await params;
   const supabase = await createClient();
@@ -13,18 +13,20 @@ export async function GET(
   // Get poll with options
   const { data: poll, error: pollError } = await supabase
     .from("polls")
-    .select(`
-      *,
+    .select(
+      `
+      id, title, description, status, created_by, end_date, allow_multiple_votes, is_anonymous, is_hidden, created_at, updated_at,
       profiles:created_by(id, full_name, avatar_url),
       poll_options(id, option_text, display_order)
-    `)
+    `,
+    )
     .eq("id", pollId)
     .single();
 
   if (pollError || !poll) {
     return NextResponse.json(
       createErrorResponse("DB_001_NOT_FOUND", "Poll not found"),
-      { status: 404 }
+      { status: 404 },
     );
   }
 
@@ -43,9 +45,11 @@ export async function GET(
   const totalVotes = voteCounts?.length || 0;
 
   // Get current user's vote(s)
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   let userVotes: string[] = [];
-  
+
   if (user) {
     const { data: votes } = await supabase
       .from("user_votes")
@@ -56,11 +60,17 @@ export async function GET(
   }
 
   // Attach vote counts to options
-  const optionsWithCounts = poll.poll_options?.map((opt: { id: string; option_text: string; display_order: number }) => ({
-    ...opt,
-    vote_count: countMap[opt.id] || 0,
-    percentage: totalVotes > 0 ? Math.round((countMap[opt.id] || 0) / totalVotes * 100) : 0,
-  })) || [];
+  const optionsWithCounts =
+    poll.poll_options?.map(
+      (opt: { id: string; option_text: string; display_order: number }) => ({
+        ...opt,
+        vote_count: countMap[opt.id] || 0,
+        percentage:
+          totalVotes > 0
+            ? Math.round(((countMap[opt.id] || 0) / totalVotes) * 100)
+            : 0,
+      }),
+    ) || [];
 
   return NextResponse.json(
     createSuccessResponse({
@@ -71,6 +81,6 @@ export async function GET(
       totalVotes,
       userVotes,
       hasVoted: userVotes.length > 0,
-    })
+    }),
   );
 }

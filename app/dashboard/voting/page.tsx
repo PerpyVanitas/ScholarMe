@@ -12,31 +12,19 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Loader2,
   Vote,
-  CheckCircle2,
   Clock,
   Plus,
-  BarChart3,
   History,
   Pencil,
-  X,
-  GripVertical,
-  RefreshCw,
   Trash2,
   EyeOff,
   Eye,
-  ShieldAlert,
 } from "lucide-react";
 import { toast } from "sonner";
-import { formatDistanceToNow, format } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import type { Poll, PollOption } from "@/lib/types";
 import {
   Dialog,
@@ -45,7 +33,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -58,6 +45,27 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import dynamic from "next/dynamic";
+
+const CreatePollForm = dynamic(
+  () =>
+    import("./components/create-poll-form").then((mod) => mod.CreatePollForm),
+  { ssr: false },
+);
+
+const EditPollDialog = dynamic(
+  () =>
+    import("./components/edit-poll-dialog").then((mod) => mod.EditPollDialog),
+  { ssr: false },
+);
+
+const PollResultsDialog = dynamic(
+  () =>
+    import("./components/poll-results-dialog").then(
+      (mod) => mod.PollResultsDialog,
+    ),
+  { ssr: false },
+);
 
 interface PollWithResults extends Poll {
   poll_options: (PollOption & { vote_count: number; percentage: number })[];
@@ -70,21 +78,7 @@ interface PollResultsData {
   hasVoted: boolean;
 }
 
-/** True when poll's end_date is still in the future */
-function isPollActive(poll: Poll): boolean {
-  return new Date(poll.end_date) > new Date() && poll.status !== "closed";
-}
-
-/** Utility: format timezone-aware date string */
-function formatEndDate(dateStr: string) {
-  const d = new Date(dateStr);
-  const localStr = format(d, "MMM d, yyyy 'at' h:mm a");
-  const offset = -d.getTimezoneOffset();
-  const sign = offset >= 0 ? "+" : "-";
-  const absOffset = Math.abs(offset);
-  const tzLabel = `UTC${sign}${Math.floor(absOffset / 60)}${absOffset % 60 !== 0 ? `:${absOffset % 60}` : ""}`;
-  return `${localStr} (${tzLabel})`;
-}
+import { isPollActive, formatEndDate } from "./utils";
 
 export default function VotingPage() {
   const { role } = useUser();
@@ -150,6 +144,7 @@ export default function VotingPage() {
       supabase.removeChannel(channel);
       realtimeChannelRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showDetailDialog, selectedPoll?.poll.id]);
 
   async function loadPolls() {
@@ -578,168 +573,18 @@ export default function VotingPage() {
       </div>
 
       {/* Poll Details Dialog */}
-      <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
-        <DialogContent className="sm:max-w-[520px]">
-          <DialogTitle className="sr-only">
-            {selectedPoll?.poll?.title || "Poll Details"}
-          </DialogTitle>
-          {loadingResults ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : selectedPoll ? (
-            <>
-              <DialogHeader>
-                <h2 className="text-lg font-semibold text-foreground">
-                  {selectedPoll.poll.title}
-                </h2>
-                {selectedPoll.poll.description && (
-                  <DialogDescription className="text-sm mt-1">
-                    {selectedPoll.poll.description}
-                  </DialogDescription>
-                )}
-                <p className="text-xs text-muted-foreground mt-1">
-                  {isPollActive(selectedPoll.poll)
-                    ? `Closes: ${formatEndDate(selectedPoll.poll.end_date)}`
-                    : `Ended: ${formatEndDate(selectedPoll.poll.end_date)}`}
-                </p>
-                <div className="flex flex-wrap items-center gap-2 pt-2">
-                  <Badge variant="outline">
-                    <BarChart3 className="h-3 w-3 mr-1" />
-                    {selectedPoll.totalVotes} vote
-                    {selectedPoll.totalVotes !== 1 ? "s" : ""}
-                  </Badge>
-                  {selectedPoll.hasVoted && (
-                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
-                      <CheckCircle2 className="h-3 w-3 mr-1" />
-                      You voted
-                    </Badge>
-                  )}
-                  {!isPollActive(selectedPoll.poll) && (
-                    <Badge variant="destructive">Closed</Badge>
-                  )}
-                  {isPollActive(selectedPoll.poll) && (
-                    <Badge
-                      variant="outline"
-                      className="text-[10px] border-green-500/30 text-green-600 bg-green-500/10"
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full bg-green-500 mr-1 animate-pulse inline-block" />
-                      Live
-                    </Badge>
-                  )}
-                  {isAdmin && selectedPoll.poll.is_hidden && (
-                    <Badge
-                      variant="outline"
-                      className="text-[10px] px-1.5 py-0 border-amber-500/40 text-amber-600 bg-amber-500/10"
-                    >
-                      <EyeOff className="h-2.5 w-2.5 mr-1" />
-                      Hidden from members
-                    </Badge>
-                  )}
-                </div>
-              </DialogHeader>
-
-              <div className="space-y-4 py-4">
-                {selectedPoll.hasVoted || !isPollActive(selectedPoll.poll) ? (
-                  <div className="space-y-3">
-                    {selectedPoll.poll.poll_options
-                      .sort((a, b) => a.display_order - b.display_order)
-                      .map((option) => (
-                        <div key={option.id} className="space-y-1">
-                          <div className="flex items-center justify-between text-sm">
-                            <span
-                              className={
-                                selectedPoll.userVotes.includes(option.id)
-                                  ? "font-medium"
-                                  : ""
-                              }
-                            >
-                              {option.option_text}
-                              {selectedPoll.userVotes.includes(option.id) && (
-                                <CheckCircle2 className="h-3 w-3 inline ml-1 text-green-600" />
-                              )}
-                            </span>
-                            <span className="text-muted-foreground text-xs">
-                              {option.vote_count} ({option.percentage}%)
-                            </span>
-                          </div>
-                          <Progress value={option.percentage} className="h-2" />
-                        </div>
-                      ))}
-                  </div>
-                ) : (
-                  <RadioGroup
-                    value={selectedOption}
-                    onValueChange={setSelectedOption}
-                  >
-                    {selectedPoll.poll.poll_options
-                      .sort((a, b) => a.display_order - b.display_order)
-                      .map((option) => (
-                        <div
-                          key={option.id}
-                          className="flex items-center space-x-2 py-2 px-3 rounded-md hover:bg-muted/50 transition-colors"
-                        >
-                          <RadioGroupItem
-                            value={option.id}
-                            id={`opt-${option.id}`}
-                          />
-                          <Label
-                            htmlFor={`opt-${option.id}`}
-                            className="flex-1 cursor-pointer text-sm"
-                          >
-                            {option.option_text}
-                          </Label>
-                        </div>
-                      ))}
-                  </RadioGroup>
-                )}
-              </div>
-
-              <DialogFooter className="gap-2 sm:gap-0 flex-wrap">
-                {/* Change Vote — active poll, already voted */}
-                {selectedPoll.hasVoted && isPollActive(selectedPoll.poll) && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleChangeVote}
-                    className="w-full sm:w-auto"
-                  >
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Change Vote
-                  </Button>
-                )}
-                {/* Submit Vote */}
-                {!selectedPoll.hasVoted && isPollActive(selectedPoll.poll) && (
-                  <Button
-                    onClick={handleVote}
-                    disabled={!selectedOption || voting}
-                    className="w-full sm:w-auto"
-                  >
-                    {voting ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Submitting...
-                      </>
-                    ) : (
-                      <>
-                        <Vote className="h-4 w-4 mr-2" />
-                        Submit Vote
-                      </>
-                    )}
-                  </Button>
-                )}
-                <Button
-                  variant="outline"
-                  onClick={() => setShowDetailDialog(false)}
-                  className="w-full sm:w-auto"
-                >
-                  Close
-                </Button>
-              </DialogFooter>
-            </>
-          ) : null}
-        </DialogContent>
-      </Dialog>
+      <PollResultsDialog
+        showDetailDialog={showDetailDialog}
+        setShowDetailDialog={setShowDetailDialog}
+        loadingResults={loadingResults}
+        selectedPoll={selectedPoll}
+        isAdmin={isAdmin}
+        selectedOption={selectedOption}
+        setSelectedOption={setSelectedOption}
+        handleChangeVote={handleChangeVote}
+        handleVote={handleVote}
+        voting={voting}
+      />
 
       {/* Edit Poll Dialog (admin only) */}
       {editPoll && (
@@ -781,9 +626,9 @@ function ConfirmDeleteButton({
           <AlertDialogTitle>Delete Poll</AlertDialogTitle>
           <AlertDialogDescription>
             Are you sure you want to delete{" "}
-            <span className="font-medium">"{pollTitle}"</span>? This will
-            permanently remove the poll and all votes. This action cannot be
-            undone.
+            <span className="font-medium">&quot;{pollTitle}&quot;</span>? This
+            will permanently remove the poll and all votes. This action cannot
+            be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -797,311 +642,5 @@ function ConfirmDeleteButton({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
-}
-
-// ─── Create Poll Form ─────────────────────────────────────────────────────────
-function CreatePollForm({ onSuccess }: { onSuccess: () => void }) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [options, setOptions] = useState(["", ""]);
-  const [allowMultiple, setAllowMultiple] = useState(false);
-  const [isAnonymous, setIsAnonymous] = useState(false);
-  const [creating, setCreating] = useState(false);
-
-  function addOption() {
-    setOptions((prev) => [...prev, ""]);
-  }
-
-  function removeOption(idx: number) {
-    if (options.length <= 2) return;
-    setOptions((prev) => prev.filter((_, i) => i !== idx));
-  }
-
-  function updateOption(idx: number, value: string) {
-    setOptions((prev) => {
-      const next = [...prev];
-      next[idx] = value;
-      return next;
-    });
-  }
-
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
-    const validOptions = options.map((o) => o.trim()).filter(Boolean);
-    if (validOptions.length < 2) {
-      toast.error("At least 2 options are required");
-      return;
-    }
-
-    setCreating(true);
-    try {
-      const res = await fetch("/api/polls", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: title.trim(),
-          description: description.trim() || null,
-          end_date: new Date(endDate).toISOString(),
-          options: validOptions,
-          allow_multiple_votes: allowMultiple,
-          is_anonymous: isAnonymous,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success("Poll created successfully!");
-        onSuccess();
-      } else {
-        toast.error(data.error?.message || "Failed to create poll");
-      }
-    } catch {
-      toast.error("Failed to create poll");
-    } finally {
-      setCreating(false);
-    }
-  }
-
-  return (
-    <form onSubmit={handleCreate} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="poll-title">Title *</Label>
-        <Input
-          id="poll-title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="What should we decide?"
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="poll-description">Description (optional)</Label>
-        <Textarea
-          id="poll-description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Provide more context..."
-          rows={2}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="poll-end-date">End Date *</Label>
-        <Input
-          id="poll-end-date"
-          type="datetime-local"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-          required
-        />
-        {endDate && (
-          <p className="text-xs text-muted-foreground">
-            Closes: {formatEndDate(endDate)}
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label>Options *</Label>
-        <div className="space-y-2">
-          {options.map((opt, idx) => (
-            <div key={idx} className="flex gap-2 items-center">
-              <GripVertical className="h-4 w-4 text-muted-foreground/40 shrink-0" />
-              <Input
-                value={opt}
-                onChange={(e) => updateOption(idx, e.target.value)}
-                placeholder={`Option ${idx + 1}`}
-                className="flex-1"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
-                onClick={() => removeOption(idx)}
-                disabled={options.length <= 2}
-                title={
-                  options.length <= 2
-                    ? "Minimum 2 options required"
-                    : "Remove option"
-                }
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
-        </div>
-        <Button type="button" variant="outline" size="sm" onClick={addOption}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Option
-        </Button>
-      </div>
-
-      <div className="space-y-3 pt-1">
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="allowMultiple"
-            checked={allowMultiple}
-            onCheckedChange={(c) => setAllowMultiple(c === true)}
-          />
-          <Label htmlFor="allowMultiple">Allow multiple votes per user</Label>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="isAnonymous"
-            checked={isAnonymous}
-            onCheckedChange={(c) => setIsAnonymous(c === true)}
-          />
-          <Label htmlFor="isAnonymous">Anonymous voting</Label>
-        </div>
-      </div>
-
-      <Button type="submit" className="w-full" disabled={creating}>
-        {creating ? (
-          <>
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Creating...
-          </>
-        ) : (
-          "Create Poll"
-        )}
-      </Button>
-    </form>
-  );
-}
-
-// ─── Edit Poll Dialog (admin only) ────────────────────────────────────────────
-function EditPollDialog({
-  poll,
-  open,
-  onOpenChange,
-  onSave,
-  canEdit,
-  isSuperAdmin,
-}: {
-  poll: Poll;
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  onSave: (
-    id: string,
-    updates: {
-      title: string;
-      description: string;
-      end_date: string;
-      is_hidden?: boolean;
-    },
-  ) => Promise<void>;
-  /** True when the poll is in its active window, or the user is super_admin */
-  canEdit: boolean;
-  isSuperAdmin: boolean;
-}) {
-  const [title, setTitle] = useState(poll.title);
-  const [description, setDescription] = useState(poll.description || "");
-  const [endDate, setEndDate] = useState(
-    poll.end_date ? new Date(poll.end_date).toISOString().slice(0, 16) : "",
-  );
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    setTitle(poll.title);
-    setDescription(poll.description || "");
-    setEndDate(
-      poll.end_date ? new Date(poll.end_date).toISOString().slice(0, 16) : "",
-    );
-  }, [poll]);
-
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault();
-    if (!canEdit) return;
-    setSaving(true);
-    await onSave(poll.id, {
-      title: title.trim(),
-      description: description.trim(),
-      end_date: new Date(endDate).toISOString(),
-    });
-    setSaving(false);
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[440px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {canEdit ? "Edit Poll" : "View Poll (Read-only)"}
-            {isSuperAdmin && !isPollActive(poll) && (
-              <Badge
-                variant="outline"
-                className="text-[10px] border-purple-500/40 text-purple-600 bg-purple-500/10"
-              >
-                <ShieldAlert className="h-2.5 w-2.5 mr-1" />
-                Super Admin Override
-              </Badge>
-            )}
-          </DialogTitle>
-          <DialogDescription>
-            {canEdit
-              ? "Update the poll title, description, or end date. Options cannot be changed after creation."
-              : "This poll has ended. Only super admins can edit closed polls."}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSave} className="space-y-4 py-2">
-          <div className="space-y-2">
-            <Label htmlFor="edit-title">Title *</Label>
-            <Input
-              id="edit-title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-              disabled={!canEdit}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="edit-description">Description</Label>
-            <Textarea
-              id="edit-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={2}
-              disabled={!canEdit}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="edit-end-date">End Date *</Label>
-            <Input
-              id="edit-end-date"
-              type="datetime-local"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              required
-              disabled={!canEdit}
-            />
-            {endDate && canEdit && (
-              <p className="text-xs text-muted-foreground">
-                Closes: {formatEndDate(endDate)}
-              </p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              {canEdit ? "Cancel" : "Close"}
-            </Button>
-            {canEdit && (
-              <Button type="submit" disabled={saving}>
-                {saving ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : null}
-                Save Changes
-              </Button>
-            )}
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
   );
 }

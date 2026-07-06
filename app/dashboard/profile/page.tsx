@@ -61,6 +61,21 @@ import { getRoleName } from "@/lib/utils/roles";
 import { ProfileEditDialog } from "./components/profile-edit-dialog";
 import { TutorSettingsDialog } from "./components/tutor-settings-dialog";
 import { HonorSocietyDesignationDialog } from "./components/honor-society-designation-dialog";
+import dynamic from "next/dynamic";
+
+const DesignationCard = dynamic(
+  () =>
+    import("./components/designation-card").then((mod) => mod.DesignationCard),
+  { ssr: false },
+);
+
+const SecuritySettings = dynamic(
+  () =>
+    import("./components/security-settings").then(
+      (mod) => mod.SecuritySettings,
+    ),
+  { ssr: false },
+);
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -85,16 +100,6 @@ export default function ProfilePage() {
   const [editYearLevel, setEditYearLevel] = useState("");
   const [editAvatarUrl, setEditAvatarUrl] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-
-  // Password change state
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [changingPassword, setChangingPassword] = useState(false);
-  const [showPasswords, setShowPasswords] = useState(false);
-
-  // Delete account state
-  const [deleting, setDeleting] = useState(false);
 
   // Tutor settings state
   const [tutorSettingsOpen, setTutorSettingsOpen] = useState(false);
@@ -142,7 +147,9 @@ export default function ProfilePage() {
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("*, roles(name)")
+        .select(
+          "id, first_name, last_name, full_name, email, phone_number, birthdate, date_of_birth, membership_number, degree_program, year_level, total_xp, current_level, avatar_url, created_at, roles(name)",
+        )
         .eq("id", user.id)
         .maybeSingle();
 
@@ -155,12 +162,14 @@ export default function ProfilePage() {
         if (heal.success) {
           const { data: healed } = await supabase
             .from("profiles")
-            .select("*, roles(name)")
+            .select(
+              "id, first_name, last_name, full_name, email, phone_number, birthdate, date_of_birth, membership_number, degree_program, year_level, total_xp, current_level, avatar_url, created_at, roles(name)",
+            )
             .eq("id", user.id)
             .maybeSingle();
           if (healed) {
-            setProfile(healed);
-            setRoleName(getRoleName(healed));
+            setProfile(healed as unknown as Profile);
+            setRoleName(getRoleName(healed as unknown as Profile));
             setLoading(false);
             return;
           }
@@ -189,7 +198,7 @@ export default function ProfilePage() {
           derivedLastName = parts.slice(1).join(" ") || "";
         }
 
-        const fallbackProfile: Record<string, unknown> = {
+        const fallbackProfile: Profile = {
           id: user.id,
           role_id: null,
           full_name: fullNameStr,
@@ -207,14 +216,14 @@ export default function ProfilePage() {
           current_level: 1,
           profile_completed: false,
           created_at: user.created_at || new Date().toISOString(),
-          roles: { name: fallbackRole },
+          roles: [{ id: "fallback-role-id", name: fallbackRole }],
         };
 
-        setProfile(fallbackProfile as unknown as Profile);
+        setProfile(fallbackProfile);
         setRoleName(fallbackRole);
       } else {
-        setProfile(data);
-        const loadedRole = getRoleName(data);
+        setProfile(data as unknown as Profile);
+        const loadedRole = getRoleName(data as unknown as Profile);
         setRoleName(loadedRole);
 
         if (loadedRole === "tutor") {
@@ -256,10 +265,12 @@ export default function ProfilePage() {
 
         const { data: desigData } = await supabase
           .from("hs_designations")
-          .select("*")
+          .select(
+            "id, user_id, designation, position, academic_year, is_current, created_at",
+          )
           .eq("user_id", user.id)
           .order("created_at", { ascending: false });
-        if (desigData) setDesignations(desigData);
+        if (desigData) setDesignations(desigData as HsDesignation[]);
       }
       setLoading(false);
     }
@@ -431,45 +442,6 @@ export default function ProfilePage() {
       toast.error(result.error || "Failed to update profile");
     }
     setSaving(false);
-  };
-
-  const handleChangePassword = async () => {
-    if (!currentPassword || !newPassword) {
-      toast.error("Please fill in all password fields");
-      return;
-    }
-    if (newPassword.length < 8) {
-      toast.error("New password must be at least 8 characters");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      toast.error("New passwords do not match");
-      return;
-    }
-    setChangingPassword(true);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) {
-      toast.error(error.message || "Failed to change password");
-    } else {
-      toast.success("Password changed successfully");
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    }
-    setChangingPassword(false);
-  };
-
-  const handleDeleteAccount = async () => {
-    setDeleting(true);
-    const res = await fetch("/api/account", { method: "DELETE" });
-    if (res.ok) {
-      toast.success("Account deleted successfully");
-      router.push("/");
-    } else {
-      const data = await res.json();
-      toast.error(data.error || "Failed to delete account");
-      setDeleting(false);
-    }
   };
 
   const handleSaveDesignation = async () => {
@@ -799,259 +771,17 @@ export default function ProfilePage() {
             </Card>
           )}
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Crown className="h-5 w-5" />
-                  Honor Society Designation
-                </CardTitle>
-                <CardDescription>
-                  Your current and past designations in the Honor Society
-                </CardDescription>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => {
-                  setEditingDesignation(null);
-                  setDesigType("member");
-                  setDesigPosition("");
-                  setDesigAcademicYear("2024-2025");
-                  setDesigIsCurrent(designations.length === 0);
-                  setDesignationDialogOpen(true);
-                }}
-              >
-                <Plus className="h-4 w-4" />
-                Add
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {designations.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center">
-                  No designations added yet.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {[...designations]
-                    .sort((a, b) => {
-                      if (a.is_current && !b.is_current) return -1;
-                      if (!a.is_current && b.is_current) return 1;
-                      return b.academic_year.localeCompare(a.academic_year);
-                    })
-                    .map((d) => (
-                      <div
-                        key={d.id}
-                        className={`flex items-center justify-between p-3 rounded-lg border ${
-                          d.is_current
-                            ? "border-primary/30 bg-primary/5"
-                            : "border-muted bg-muted/20"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`p-2 rounded-full ${
-                              d.designation === "esas_scholar"
-                                ? "bg-amber-500/10 text-amber-500"
-                                : d.designation === "officer"
-                                  ? "bg-blue-500/10 text-blue-500"
-                                  : d.designation === "administrator"
-                                    ? "bg-red-500/10 text-red-500"
-                                    : "bg-muted text-muted-foreground"
-                            }`}
-                          >
-                            {d.designation === "officer" ? (
-                              <Shield className="h-4 w-4" />
-                            ) : d.designation === "esas_scholar" ? (
-                              <GraduationCap className="h-4 w-4" />
-                            ) : d.designation === "administrator" ? (
-                              <Crown className="h-4 w-4" />
-                            ) : (
-                              <Award className="h-4 w-4" />
-                            )}
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold text-sm capitalize">
-                                {d.designation === "esas_scholar"
-                                  ? "ESAS Scholar"
-                                  : d.designation === "officer"
-                                    ? d.position || "Officer"
-                                    : d.designation.charAt(0).toUpperCase() +
-                                      d.designation.slice(1)}
-                              </span>
-                              {d.is_current && (
-                                <Badge
-                                  variant="secondary"
-                                  className="text-[10px] px-1.5 py-0"
-                                >
-                                  Current
-                                </Badge>
-                              )}
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                              AY {d.academic_year}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 px-2"
-                            onClick={() => {
-                              setEditingDesignation(d);
-                              setDesigType(d.designation);
-                              setDesigPosition(d.position || "");
-                              setDesigAcademicYear(d.academic_year);
-                              setDesigIsCurrent(d.is_current);
-                              setDesignationDialogOpen(true);
-                            }}
-                          >
-                            <Edit2 className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 px-2 text-destructive hover:text-destructive"
-                            onClick={async () => {
-                              const { error } = await supabase
-                                .from("hs_designations")
-                                .delete()
-                                .eq("id", d.id);
-                              if (error) {
-                                toast.error("Failed to delete");
-                              } else {
-                                setDesignations((prev) =>
-                                  prev.filter((x) => x.id !== d.id),
-                                );
-                                toast.success("Removed");
-                              }
-                            }}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Key className="h-5 w-5" />
-                Change Password
-              </CardTitle>
-              <CardDescription>Update your account password</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="currentPassword">Current Password</Label>
-                <div className="relative">
-                  <Input
-                    id="currentPassword"
-                    type={showPasswords ? "text" : "password"}
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    placeholder="Enter current password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPasswords(!showPasswords)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showPasswords ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword">New Password</Label>
-                  <Input
-                    id="newPassword"
-                    type={showPasswords ? "text" : "password"}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Min. 8 characters"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    type={showPasswords ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Repeat new password"
-                  />
-                </div>
-              </div>
-              {newPassword &&
-                confirmPassword &&
-                newPassword !== confirmPassword && (
-                  <p className="text-sm text-destructive">
-                    Passwords do not match
-                  </p>
-                )}
-              <Button
-                onClick={handleChangePassword}
-                disabled={
-                  changingPassword ||
-                  !currentPassword ||
-                  !newPassword ||
-                  newPassword !== confirmPassword
-                }
-              >
-                {changingPassword ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  "Update Password"
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="border-destructive/30">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-destructive">
-                <AlertTriangle className="h-5 w-5" />
-                Danger Zone
-              </CardTitle>
-              <CardDescription>
-                Irreversible actions for your account
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                variant="destructive"
-                onClick={handleDeleteAccount}
-                disabled={deleting}
-              >
-                {deleting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete Account
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
+          <DesignationCard
+            designations={designations}
+            setDesignations={setDesignations}
+            setEditingDesignation={setEditingDesignation}
+            setDesigType={setDesigType}
+            setDesigPosition={setDesigPosition}
+            setDesigAcademicYear={setDesigAcademicYear}
+            setDesigIsCurrent={setDesigIsCurrent}
+            setDesignationDialogOpen={setDesignationDialogOpen}
+          />
+          <SecuritySettings />
         </div>
       </div>
 

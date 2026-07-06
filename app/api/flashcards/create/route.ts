@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   buildStudySetInsert,
   buildStudySetItemInsert,
-} from "@/lib/study-sets/db";
+} from "@/features/quizzes/api/study-sets-db";
 
 export async function POST(request: NextRequest) {
   try {

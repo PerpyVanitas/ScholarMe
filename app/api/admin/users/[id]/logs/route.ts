@@ -39,7 +39,7 @@ export async function GET(
   // Fetch logs where user_id matches OR entity_id matches (actions BY or ON this user)
   const { data: logs, error } = await adminClient
     .from("analytics_logs")
-    .select("*")
+    .select("id, created_at, user_id, action, entity_type, entity_id, metadata")
     .or(`user_id.eq.${id},entity_id.eq.${id}`)
     .order("created_at", { ascending: false })
     .limit(100);

@@ -1,6 +1,6 @@
 "use client";
 
-import DashboardView from "@/components/dashboard/dashboard-view";
+import DashboardView from "@/app/dashboard/components/dashboard-view";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { Suspense } from "react";
 import { WelcomeCarousel } from "@/features/onboarding/components/welcome-carousel";

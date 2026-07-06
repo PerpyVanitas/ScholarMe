@@ -1,8 +1,11 @@
 import { get } from "@vercel/blob";
 import { createClient } from "@/lib/supabase/server";
 import { type NextRequest, NextResponse } from "next/server";
-import { ensureProfileRow } from "@/lib/profiles/db";
-import { deleteStoredAvatar, uploadAvatarForUser } from "@/lib/profiles/avatar-upload";
+import { ensureProfileRow } from "@/features/profiles/api/db";
+import {
+  deleteStoredAvatar,
+  uploadAvatarForUser,
+} from "@/features/profiles/api/avatar-upload";
 
 // GET /api/avatar - Serve private avatar image
 export async function GET(request: NextRequest) {
@@ -15,7 +18,9 @@ export async function GET(request: NextRequest) {
 
     // Intercept and serve base64 data URIs directly
     if (pathname.startsWith("data:image/")) {
-      const matches = pathname.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
+      const matches = pathname.match(
+        /^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/,
+      );
       if (matches && matches[1] && matches[2]) {
         const contentType = matches[1];
         const base64Data = matches[2];
@@ -57,7 +62,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error serving avatar:", error);
-    return NextResponse.json({ error: "Failed to serve avatar" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to serve avatar" },
+      { status: 500 },
+    );
   }
 }
 
@@ -65,7 +73,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -81,15 +91,18 @@ export async function POST(request: NextRequest) {
     const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { error: "Invalid file type. Please upload a JPEG, PNG, GIF, or WebP image." },
-        { status: 400 }
+        {
+          error:
+            "Invalid file type. Please upload a JPEG, PNG, GIF, or WebP image.",
+        },
+        { status: 400 },
       );
     }
 
     if (file.size > 5 * 1024 * 1024) {
       return NextResponse.json(
         { error: "File too large. Maximum size is 5MB." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -110,7 +123,8 @@ export async function POST(request: NextRequest) {
     try {
       pathname = await uploadAvatarForUser(supabase, user.id, file);
     } catch (uploadErr) {
-      const message = uploadErr instanceof Error ? uploadErr.message : "Upload failed";
+      const message =
+        uploadErr instanceof Error ? uploadErr.message : "Upload failed";
       return NextResponse.json({ error: message }, { status: 500 });
     }
 
@@ -127,7 +141,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (!updated) {
-      return NextResponse.json({ error: "Profile row could not be updated" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Profile row could not be updated" },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({ pathname });
@@ -142,7 +159,9 @@ export async function POST(request: NextRequest) {
 export async function DELETE() {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -173,7 +192,10 @@ export async function DELETE() {
     }
 
     if (!updated) {
-      return NextResponse.json({ error: "Profile row could not be updated" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Profile row could not be updated" },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({ success: true });

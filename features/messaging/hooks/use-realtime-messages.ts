@@ -14,6 +14,7 @@ export function useRealtimeMessages(
 
   useEffect(() => {
     if (!conversationId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMessages([]);
       return;
     }
@@ -120,7 +121,7 @@ export function useRealtimeMessages(
         const fileExt = fileName.split(".").pop();
         const filePath = `${currentUserId}/${Date.now()}.${fileExt}`;
 
-        const { data, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from("chat-attachments")
           .upload(filePath, file);
 
@@ -138,6 +139,7 @@ export function useRealtimeMessages(
       }
 
       // Optimistic UI Update
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const optimisticMessage: any = {
         id: `opt-${Date.now()}`,
         conversation_id: conversationId,

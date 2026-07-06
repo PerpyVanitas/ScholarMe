@@ -8,7 +8,7 @@ import {
   buildStudySetItemInsert,
   STUDY_SET_LIST_SELECT,
   STUDY_SET_DETAIL_SELECT,
-} from "@/lib/study-sets/db";
+} from "@/features/quizzes/api/study-sets-db";
 
 // ============================================
 // Study Set CRUD Operations

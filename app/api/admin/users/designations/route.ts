@@ -50,7 +50,9 @@ export async function GET(request: Request) {
 
   const { data, error } = await adminClient
     .from("hs_designations")
-    .select("*")
+    .select(
+      "id, user_id, designation, position, academic_year, is_current, created_at",
+    )
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
@@ -97,7 +99,9 @@ export async function POST(request: Request) {
       academic_year,
       is_current,
     })
-    .select()
+    .select(
+      "id, user_id, designation, position, academic_year, is_current, created_at",
+    )
     .single();
 
   if (error) {
@@ -163,7 +167,9 @@ export async function PATCH(request: Request) {
       is_current,
     })
     .eq("id", designation_id)
-    .select()
+    .select(
+      "id, user_id, designation, position, academic_year, is_current, created_at",
+    )
     .single();
 
   if (error) {
