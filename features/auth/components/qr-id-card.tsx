@@ -33,6 +33,7 @@ function getPresidentName(academicYear: string | null | undefined): string {
   if (academicYear === "2023-2024") return "Jeshiah Vivienne Narca";
   if (academicYear === "2024-2025") return "Van Woodroe Perpetua";
   if (academicYear === "2025-2026") return "Aljane Faith Crisostomo";
+  if (academicYear === "2026-2027") return "Mary Joy Jabagat";
   return "Honor Society President";
 }
 
@@ -48,6 +49,8 @@ function getDesignationLabel(
       return "ESAS SCHOLAR";
     case "administrator":
       return "ADMINISTRATOR";
+    case "super_admin":
+      return "SUPER ADMIN";
     case "member":
     default:
       return "MEMBER";
@@ -69,6 +72,8 @@ function getDesignationBadgeClass(
       return `bg-gradient-to-r from-[#FFD700] to-[#FFA500] hover:from-[#FFD700] hover:to-[#FFA500] text-black border border-black/20 font-black ${base}`;
     case "administrator":
       return `bg-gradient-to-r from-red-600 to-red-500 hover:from-red-600 hover:to-red-500 text-white border border-red-800/30 font-black ${base}`;
+    case "super_admin":
+      return `bg-gradient-to-r from-red-900 to-red-700 hover:from-red-900 hover:to-red-700 text-white border border-red-500 font-black tracking-widest ${base}`;
     case "member":
     default:
       return `bg-black/60 hover:bg-black/60 text-[#FFD700] border border-[#FFD700]/30 font-bold ${base}`;
@@ -111,8 +116,9 @@ export function QrIdCard({
   const month = now.getMonth() + 1; // 1-indexed
   const year = now.getFullYear();
   const currentAcademicYear =
-    month >= 8 ? `${year}-${year + 1}` : `${year - 1}-${year}`;
-  const presidentName = getPresidentName(currentAcademicYear);
+    month >= 6 ? `${year}-${year + 1}` : `${year - 1}-${year}`;
+  const displayAy = currentAcademicYear;
+  const presidentName = getPresidentName(displayAy);
   const formattedRole = designationLabel;
 
   const birthdateStr = profile.birthdate || profile.date_of_birth;
@@ -297,7 +303,7 @@ export function QrIdCard({
               HONOR SOCIETY PRESIDENT
             </span>
             <span className="text-[6px] text-zinc-500 font-mono mt-0.5">
-              AY {profile.academic_year_joined || "2024-2025"}
+              AY {displayAy}
             </span>
           </div>
         </div>
@@ -434,7 +440,7 @@ export function QrIdCard({
               HONOR SOCIETY PRESIDENT
             </span>
             <span className="text-[6px] text-zinc-500 font-mono mt-0.5">
-              AY {profile.academic_year_joined || "2024-2025"}
+              AY {displayAy}
             </span>
           </div>
         </div>

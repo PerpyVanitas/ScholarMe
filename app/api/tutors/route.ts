@@ -13,7 +13,9 @@ export async function GET(request: Request) {
   // tutors -> tutor_specializations -> specializations (subjects they teach)
   const query = supabase
     .from("tutors")
-    .select("*, profiles(*), tutor_specializations(specializations(*))")
+    .select(
+      "*, profiles(*, roles(name)), tutor_specializations(specializations(*))",
+    )
     .order("rating", { ascending: false });
 
   const { data: tutors, error } = await query;
@@ -24,13 +26,21 @@ export async function GET(request: Request) {
 
   let filtered = tutors || [];
 
+  // Filter out learners, admins, super_admins (only tutors and officers should appear)
+  filtered = filtered.filter((t: any) => {
+    const roleName = Array.isArray(t.profiles?.roles)
+      ? t.profiles.roles[0]?.name
+      : t.profiles?.roles?.name;
+    return roleName === "tutor" || roleName === "officer";
+  });
+
   // Client-side search filter: match against tutor name or bio
   if (search) {
     const lower = search.toLowerCase();
     filtered = filtered.filter(
       (t) =>
         t.profiles?.full_name?.toLowerCase().includes(lower) ||
-        t.bio?.toLowerCase().includes(lower)
+        t.bio?.toLowerCase().includes(lower),
     );
   }
 
@@ -39,8 +49,8 @@ export async function GET(request: Request) {
     filtered = filtered.filter((t) =>
       t.tutor_specializations?.some(
         (ts: { specializations: { name: string } }) =>
-          ts.specializations?.name === specialization
-      )
+          ts.specializations?.name === specialization,
+      ),
     );
   }
 

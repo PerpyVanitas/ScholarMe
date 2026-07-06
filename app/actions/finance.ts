@@ -90,12 +90,16 @@ export async function createBudgetRequest(formData: FormData) {
     console.error("[finance] Failed to parse breakdown:", e);
   }
 
+  const actionType = formData.get("action_type") as string;
+  const status = actionType === "draft" ? "draft" : "pending";
+
   const { error } = await supabase.from("finance_budget_requests").insert({
     activity_title,
     objectives,
     amount,
     attachment_url: attachmentUrl,
     user_id: user.id,
+    status,
   });
 
   if (error) throw new Error(error.message);
@@ -122,6 +126,30 @@ export async function updateBudgetRequestStatus(
     .from("finance_budget_requests")
     .update({ status })
     .eq("id", requestId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/dashboard/finance");
+}
+
+/**
+ * Submits a drafted budget request for review (submitter only)
+ */
+export async function submitBudgetRequestForReview(requestId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const canSubmit = await checkCanSubmitFinance(supabase, user.id);
+  if (!canSubmit) throw new Error("Unauthorized");
+
+  const { error } = await supabase
+    .from("finance_budget_requests")
+    .update({ status: "pending" })
+    .eq("id", requestId)
+    .eq("status", "draft")
+    .eq("user_id", user.id);
 
   if (error) throw new Error(error.message);
   revalidatePath("/dashboard/finance");
@@ -168,7 +196,10 @@ export async function createPettyCash(formData: FormData) {
   const recentTotal =
     recentRequests?.reduce((sum, req) => sum + Number(req.amount), 0) || 0;
 
-  const status = "pending";
+  const actionType = formData.get("action_type") as string;
+  const initialStatus = actionType === "draft" ? "draft" : "pending";
+  const status = recentTotal + amount > 300 ? initialStatus : initialStatus; // Logic to flag could be modified if needed, but we keep the status as is, justification already flagged.
+
   if (recentTotal + amount > 300) {
     // Flag for auditor by prepending to justification
     justification = `[FLAGGED: >300 within 24h] ` + justification;
@@ -205,6 +236,30 @@ export async function approvePettyCash(
       status,
     })
     .eq("id", id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/dashboard/finance");
+}
+
+/**
+ * Submits a drafted petty cash request for review (submitter only)
+ */
+export async function submitPettyCashForReview(id: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const canSubmit = await checkCanSubmitFinance(supabase, user.id);
+  if (!canSubmit) throw new Error("Unauthorized");
+
+  const { error } = await supabase
+    .from("finance_petty_cash")
+    .update({ status: "pending" })
+    .eq("id", id)
+    .eq("status", "draft")
+    .eq("user_id", user.id);
 
   if (error) throw new Error(error.message);
   revalidatePath("/dashboard/finance");

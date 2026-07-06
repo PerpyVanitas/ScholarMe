@@ -909,14 +909,14 @@ Q: What is 2+2? A: 4"
                     </div>
 
                     {extractingTopics ? (
-                      <div className="flex items-center gap-2 p-4 text-sm text-zinc-400 bg-zinc-900/30 rounded-lg">
+                      <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground bg-muted/50 rounded-lg">
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        Scanning document...
+                        Scanning document for chapters and topics...
                       </div>
                     ) : extractedTopics.length > 0 ? (
                       <div className="space-y-2">
-                        <Label>Select Topics</Label>
-                        <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto p-2 border border-border/50 rounded-md bg-zinc-950">
+                        <Label>Select Topics to Include</Label>
+                        <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto p-2 border border-border/50 rounded-md bg-muted/50">
                           {extractedTopics.map((topic) => (
                             <div
                               key={topic}

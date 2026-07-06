@@ -32,20 +32,31 @@ async function getAdminUser(
   const isAdmin = isAdminRole(roleName);
 
   if (!isAdmin) return null;
-  return user;
+  return { user, roleName };
 }
 
 export async function POST(request: Request) {
   const supabase = await createClient();
-  const admin = await getAdminUser(supabase);
-  if (!admin)
+  const adminData = await getAdminUser(supabase);
+  if (!adminData)
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+
+  const { user: admin, roleName: adminRoleName } = adminData;
 
   const { email, password, full_name, role_name } = await request.json();
   if (!email || !password || !full_name) {
     return NextResponse.json(
       { error: "Missing required fields" },
       { status: 400 },
+    );
+  }
+
+  if (role_name && role_name !== "learner" && adminRoleName !== "super_admin") {
+    return NextResponse.json(
+      {
+        error: "Only super administrators can assign roles other than learner",
+      },
+      { status: 403 },
     );
   }
 
@@ -92,9 +103,11 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   const supabase = await createClient();
-  const admin = await getAdminUser(supabase);
-  if (!admin)
+  const adminData = await getAdminUser(supabase);
+  if (!adminData)
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+
+  const { user: admin, roleName: adminRoleName } = adminData;
 
   const { user_id, full_name, email, role_name, password } =
     await request.json();
@@ -142,6 +155,13 @@ export async function PATCH(request: Request) {
 
   // Update role
   if (role_name) {
+    if (adminRoleName !== "super_admin") {
+      return NextResponse.json(
+        { error: "Only super administrators can change roles" },
+        { status: 403 },
+      );
+    }
+
     const { data: roleData } = await adminClient
       .from("roles")
       .select("id")
@@ -205,9 +225,11 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   const supabase = await createClient();
-  const admin = await getAdminUser(supabase);
-  if (!admin)
+  const adminData = await getAdminUser(supabase);
+  if (!adminData)
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+
+  const { user: admin } = adminData;
 
   const { user_id } = await request.json();
   if (!user_id)

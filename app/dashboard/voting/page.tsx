@@ -30,6 +30,10 @@ import {
   X,
   GripVertical,
   RefreshCw,
+  Trash2,
+  EyeOff,
+  Eye,
+  ShieldAlert,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow, format } from "date-fns";
@@ -43,6 +47,17 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface PollWithResults extends Poll {
   poll_options: (PollOption & { vote_count: number; percentage: number })[];
@@ -55,11 +70,15 @@ interface PollResultsData {
   hasVoted: boolean;
 }
 
-// Utility: format timezone-aware date string
+/** True when poll's end_date is still in the future */
+function isPollActive(poll: Poll): boolean {
+  return new Date(poll.end_date) > new Date() && poll.status !== "closed";
+}
+
+/** Utility: format timezone-aware date string */
 function formatEndDate(dateStr: string) {
   const d = new Date(dateStr);
   const localStr = format(d, "MMM d, yyyy 'at' h:mm a");
-  // Show offset
   const offset = -d.getTimezoneOffset();
   const sign = offset >= 0 ? "+" : "-";
   const absOffset = Math.abs(offset);
@@ -79,6 +98,7 @@ export default function VotingPage() {
   const [voting, setVoting] = useState(false);
   const [loadingResults, setLoadingResults] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editPoll, setEditPoll] = useState<Poll | null>(null);
@@ -87,6 +107,7 @@ export default function VotingPage() {
   > | null>(null);
 
   const isAdmin = role === "administrator" || role === "super_admin";
+  const isSuperAdmin = role === "super_admin";
 
   useEffect(() => {
     loadPolls();
@@ -119,7 +140,6 @@ export default function VotingPage() {
           filter: `poll_id=eq.${selectedPoll.poll.id}`,
         },
         () => {
-          // Refresh results silently on new vote
           loadPollResults(selectedPoll.poll.id, true);
         },
       )
@@ -199,7 +219,6 @@ export default function VotingPage() {
 
   async function handleChangeVote() {
     if (!selectedPoll) return;
-    // Reset the hasVoted state locally to allow re-voting UI
     setSelectedPoll((prev) =>
       prev ? { ...prev, hasVoted: false, userVotes: [] } : prev,
     );
@@ -209,7 +228,12 @@ export default function VotingPage() {
 
   async function handleEditPoll(
     pollId: string,
-    updates: { title: string; description: string; end_date: string },
+    updates: {
+      title: string;
+      description: string;
+      end_date: string;
+      is_hidden?: boolean;
+    },
   ) {
     try {
       const res = await fetch(`/api/polls/${pollId}`, {
@@ -230,6 +254,51 @@ export default function VotingPage() {
       }
     } catch {
       toast.error("Failed to update poll");
+    }
+  }
+
+  async function handleDeletePoll(pollId: string) {
+    try {
+      const res = await fetch(`/api/polls/${pollId}`, { method: "DELETE" });
+      if (res.status === 204) {
+        toast.success("Poll deleted successfully!");
+        loadPolls();
+        setShowDetailDialog(false);
+      } else {
+        const data = await res.json();
+        toast.error(data.error?.message || "Failed to delete poll");
+      }
+    } catch {
+      toast.error("Failed to delete poll");
+    }
+  }
+
+  async function handleToggleVisibility(poll: Poll) {
+    const newHidden = !poll.is_hidden;
+    try {
+      const res = await fetch(`/api/polls/${poll.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: poll.title,
+          description: poll.description || "",
+          end_date: poll.end_date,
+          is_hidden: newHidden,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(
+          newHidden
+            ? "Poll hidden from members."
+            : "Poll is now visible to members.",
+        );
+        loadPolls();
+      } else {
+        toast.error(data.error?.message || "Failed to update visibility");
+      }
+    } catch {
+      toast.error("Failed to update visibility");
     }
   }
 
@@ -293,115 +362,205 @@ export default function VotingPage() {
             </Card>
           ) : (
             <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-              {activePolls.map((poll) => (
-                <Card
-                  key={poll.id}
-                  className="cursor-pointer transition-all hover:border-primary/50 hover:shadow-md flex flex-col justify-between"
-                  onClick={() => loadPollResults(poll.id)}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="text-base flex-1 line-clamp-2">
-                        {poll.title}
-                      </CardTitle>
-                      <div className="flex items-center gap-1 shrink-0">
-                        {isAdmin && (
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-7 w-7"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditPoll(poll);
-                              setShowEditDialog(true);
-                            }}
+              {activePolls.map((poll) => {
+                const pollIsActive = isPollActive(poll);
+                return (
+                  <Card
+                    key={poll.id}
+                    className="cursor-pointer transition-all hover:border-primary/50 hover:shadow-md flex flex-col justify-between"
+                    onClick={() => loadPollResults(poll.id)}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <CardTitle className="text-base flex-1 line-clamp-2">
+                          {poll.title}
+                        </CardTitle>
+                        {isAdmin && pollIsActive && (
+                          <div
+                            className="flex items-center gap-1 shrink-0"
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            <Pencil className="h-3 w-3" />
-                          </Button>
+                            {/* Edit */}
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7"
+                              title="Edit poll"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditPoll(poll);
+                                setShowEditDialog(true);
+                              }}
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                            {/* Delete */}
+                            <ConfirmDeleteButton
+                              pollTitle={poll.title}
+                              onConfirm={() => handleDeletePoll(poll.id)}
+                            />
+                          </div>
                         )}
                       </div>
-                    </div>
-                    {poll.description && (
-                      <CardDescription className="line-clamp-2 mt-1">
-                        {poll.description}
-                      </CardDescription>
-                    )}
-                  </CardHeader>
-                  <CardContent className="pt-0 space-y-2">
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      <span>
-                        Closes{" "}
-                        {formatDistanceToNow(new Date(poll.end_date), {
-                          addSuffix: true,
-                        })}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-muted-foreground italic">
-                      {formatEndDate(poll.end_date)}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                      <span className="text-xs text-muted-foreground">
-                        {poll.poll_options?.length || 0} options
-                      </span>
-                      {poll.allow_multiple_votes && (
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] px-1.5 py-0"
-                        >
-                          Multiple
-                        </Badge>
+                      {poll.description && (
+                        <CardDescription className="line-clamp-2 mt-1">
+                          {poll.description}
+                        </CardDescription>
                       )}
-                      {poll.is_anonymous && (
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] px-1.5 py-0"
-                        >
-                          Anonymous
-                        </Badge>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardHeader>
+                    <CardContent className="pt-0 space-y-2">
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        <span>
+                          Closes{" "}
+                          {formatDistanceToNow(new Date(poll.end_date), {
+                            addSuffix: true,
+                          })}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground italic">
+                        {formatEndDate(poll.end_date)}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                        <span className="text-xs text-muted-foreground">
+                          {poll.poll_options?.length || 0} options
+                        </span>
+                        {poll.allow_multiple_votes && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] px-1.5 py-0"
+                          >
+                            Multiple
+                          </Badge>
+                        )}
+                        {poll.is_anonymous && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] px-1.5 py-0"
+                          >
+                            Anonymous
+                          </Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>
 
-        {/* Poll History */}
-        <div className="space-y-4 pt-6 border-t border-border/40">
-          <div className="flex items-center gap-2">
-            <History className="h-5 w-5 text-muted-foreground" />
-            <h2 className="text-lg font-medium">Poll History</h2>
-          </div>
-          {closedPolls.length === 0 ? (
-            <Card className="border-border/60">
-              <CardContent className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground text-sm">
-                No historical polls found
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="border-border/60">
-              <CardContent className="p-0">
+        {/* Poll History Button */}
+        <div className="pt-6 border-t border-border/40 flex justify-center">
+          <Button
+            variant="outline"
+            onClick={() => setShowHistoryModal(true)}
+            className="gap-2"
+          >
+            <History className="h-4 w-4" />
+            View Poll History
+          </Button>
+        </div>
+
+        {/* Poll History Modal */}
+        <Dialog open={showHistoryModal} onOpenChange={setShowHistoryModal}>
+          <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <History className="h-5 w-5 text-muted-foreground" />
+                Poll History
+              </DialogTitle>
+              <DialogDescription>
+                View past polls and their results.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="overflow-y-auto pr-2">
+              {closedPolls.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground text-sm">
+                  No historical polls found
+                </div>
+              ) : (
                 <div className="divide-y divide-border/60">
                   {closedPolls.map((poll) => (
                     <div
                       key={poll.id}
-                      onClick={() => loadPollResults(poll.id)}
-                      className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => {
+                        setShowHistoryModal(false);
+                        loadPollResults(poll.id);
+                      }}
+                      className="flex items-center justify-between py-4 cursor-pointer hover:bg-muted/50 transition-colors"
                     >
-                      <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                        <span className="font-medium text-foreground text-sm sm:text-base truncate">
-                          {poll.title}
-                        </span>
+                      <div className="flex flex-col gap-0.5 min-w-0 flex-1 px-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-foreground text-sm sm:text-base truncate">
+                            {poll.title}
+                          </span>
+                          {isAdmin && poll.is_hidden && (
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] px-1.5 py-0 shrink-0 border-amber-500/40 text-amber-600 bg-amber-500/10"
+                            >
+                              <EyeOff className="h-2.5 w-2.5 mr-1" />
+                              Hidden
+                            </Badge>
+                          )}
+                        </div>
                         <span className="text-xs text-muted-foreground truncate">
                           {poll.description || "No description provided"}
                         </span>
                       </div>
-                      <div className="flex items-center gap-3 shrink-0 ml-4">
+                      <div
+                        className="flex items-center gap-2 shrink-0 ml-4 px-2"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <span className="text-xs text-muted-foreground hidden sm:inline">
                           Ended {new Date(poll.end_date).toLocaleDateString()}
                         </span>
+                        {isAdmin && (
+                          <>
+                            {isSuperAdmin && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7"
+                                title="Edit poll (super admin)"
+                                onClick={() => {
+                                  setShowHistoryModal(false);
+                                  setEditPoll(poll);
+                                  setShowEditDialog(true);
+                                }}
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                            )}
+                            {isSuperAdmin && (
+                              <ConfirmDeleteButton
+                                pollTitle={poll.title}
+                                onConfirm={() => {
+                                  setShowHistoryModal(false);
+                                  handleDeletePoll(poll.id);
+                                }}
+                              />
+                            )}
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7"
+                              title={
+                                poll.is_hidden
+                                  ? "Unhide poll (make visible to members)"
+                                  : "Hide poll from members"
+                              }
+                              onClick={() => handleToggleVisibility(poll)}
+                            >
+                              {poll.is_hidden ? (
+                                <Eye className="h-3 w-3" />
+                              ) : (
+                                <EyeOff className="h-3 w-3" />
+                              )}
+                            </Button>
+                          </>
+                        )}
                         <Badge
                           variant="secondary"
                           className="text-xs font-normal"
@@ -412,10 +571,10 @@ export default function VotingPage() {
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Poll Details Dialog */}
@@ -439,9 +598,8 @@ export default function VotingPage() {
                     {selectedPoll.poll.description}
                   </DialogDescription>
                 )}
-                {/* Timezone-aware end date */}
                 <p className="text-xs text-muted-foreground mt-1">
-                  {selectedPoll.poll.status === "active"
+                  {isPollActive(selectedPoll.poll)
                     ? `Closes: ${formatEndDate(selectedPoll.poll.end_date)}`
                     : `Ended: ${formatEndDate(selectedPoll.poll.end_date)}`}
                 </p>
@@ -457,11 +615,10 @@ export default function VotingPage() {
                       You voted
                     </Badge>
                   )}
-                  {selectedPoll.poll.status === "closed" && (
+                  {!isPollActive(selectedPoll.poll) && (
                     <Badge variant="destructive">Closed</Badge>
                   )}
-                  {/* Live update indicator */}
-                  {selectedPoll.poll.status === "active" && (
+                  {isPollActive(selectedPoll.poll) && (
                     <Badge
                       variant="outline"
                       className="text-[10px] border-green-500/30 text-green-600 bg-green-500/10"
@@ -470,12 +627,20 @@ export default function VotingPage() {
                       Live
                     </Badge>
                   )}
+                  {isAdmin && selectedPoll.poll.is_hidden && (
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] px-1.5 py-0 border-amber-500/40 text-amber-600 bg-amber-500/10"
+                    >
+                      <EyeOff className="h-2.5 w-2.5 mr-1" />
+                      Hidden from members
+                    </Badge>
+                  )}
                 </div>
               </DialogHeader>
 
               <div className="space-y-4 py-4">
-                {selectedPoll.hasVoted ||
-                selectedPoll.poll.status === "closed" ? (
+                {selectedPoll.hasVoted || !isPollActive(selectedPoll.poll) ? (
                   <div className="space-y-3">
                     {selectedPoll.poll.poll_options
                       .sort((a, b) => a.display_order - b.display_order)
@@ -532,39 +697,37 @@ export default function VotingPage() {
 
               <DialogFooter className="gap-2 sm:gap-0 flex-wrap">
                 {/* Change Vote — active poll, already voted */}
-                {selectedPoll.hasVoted &&
-                  selectedPoll.poll.status === "active" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleChangeVote}
-                      className="w-full sm:w-auto"
-                    >
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Change Vote
-                    </Button>
-                  )}
+                {selectedPoll.hasVoted && isPollActive(selectedPoll.poll) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleChangeVote}
+                    className="w-full sm:w-auto"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Change Vote
+                  </Button>
+                )}
                 {/* Submit Vote */}
-                {!selectedPoll.hasVoted &&
-                  selectedPoll.poll.status === "active" && (
-                    <Button
-                      onClick={handleVote}
-                      disabled={!selectedOption || voting}
-                      className="w-full sm:w-auto"
-                    >
-                      {voting ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Submitting...
-                        </>
-                      ) : (
-                        <>
-                          <Vote className="h-4 w-4 mr-2" />
-                          Submit Vote
-                        </>
-                      )}
-                    </Button>
-                  )}
+                {!selectedPoll.hasVoted && isPollActive(selectedPoll.poll) && (
+                  <Button
+                    onClick={handleVote}
+                    disabled={!selectedOption || voting}
+                    className="w-full sm:w-auto"
+                  >
+                    {voting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Vote className="h-4 w-4 mr-2" />
+                        Submit Vote
+                      </>
+                    )}
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   onClick={() => setShowDetailDialog(false)}
@@ -585,9 +748,55 @@ export default function VotingPage() {
           open={showEditDialog}
           onOpenChange={setShowEditDialog}
           onSave={handleEditPoll}
+          canEdit={isPollActive(editPoll) || isSuperAdmin}
+          isSuperAdmin={isSuperAdmin}
         />
       )}
     </div>
+  );
+}
+
+// ─── Confirm Delete Button ────────────────────────────────────────────────────
+function ConfirmDeleteButton({
+  pollTitle,
+  onConfirm,
+}: {
+  pollTitle: string;
+  onConfirm: () => void;
+}) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+          title="Delete poll"
+        >
+          <Trash2 className="h-3 w-3" />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Poll</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete{" "}
+            <span className="font-medium">"{pollTitle}"</span>? This will
+            permanently remove the poll and all votes. This action cannot be
+            undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={onConfirm}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
@@ -769,14 +978,24 @@ function EditPollDialog({
   open,
   onOpenChange,
   onSave,
+  canEdit,
+  isSuperAdmin,
 }: {
   poll: Poll;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onSave: (
     id: string,
-    updates: { title: string; description: string; end_date: string },
+    updates: {
+      title: string;
+      description: string;
+      end_date: string;
+      is_hidden?: boolean;
+    },
   ) => Promise<void>;
+  /** True when the poll is in its active window, or the user is super_admin */
+  canEdit: boolean;
+  isSuperAdmin: boolean;
 }) {
   const [title, setTitle] = useState(poll.title);
   const [description, setDescription] = useState(poll.description || "");
@@ -795,6 +1014,7 @@ function EditPollDialog({
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
+    if (!canEdit) return;
     setSaving(true);
     await onSave(poll.id, {
       title: title.trim(),
@@ -808,10 +1028,22 @@ function EditPollDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[440px]">
         <DialogHeader>
-          <DialogTitle>Edit Poll</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            {canEdit ? "Edit Poll" : "View Poll (Read-only)"}
+            {isSuperAdmin && !isPollActive(poll) && (
+              <Badge
+                variant="outline"
+                className="text-[10px] border-purple-500/40 text-purple-600 bg-purple-500/10"
+              >
+                <ShieldAlert className="h-2.5 w-2.5 mr-1" />
+                Super Admin Override
+              </Badge>
+            )}
+          </DialogTitle>
           <DialogDescription>
-            Update the poll title, description, or end date. Options cannot be
-            changed after creation.
+            {canEdit
+              ? "Update the poll title, description, or end date. Options cannot be changed after creation."
+              : "This poll has ended. Only super admins can edit closed polls."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSave} className="space-y-4 py-2">
@@ -822,6 +1054,7 @@ function EditPollDialog({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
+              disabled={!canEdit}
             />
           </div>
           <div className="space-y-2">
@@ -831,6 +1064,7 @@ function EditPollDialog({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
+              disabled={!canEdit}
             />
           </div>
           <div className="space-y-2">
@@ -841,8 +1075,9 @@ function EditPollDialog({
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               required
+              disabled={!canEdit}
             />
-            {endDate && (
+            {endDate && canEdit && (
               <p className="text-xs text-muted-foreground">
                 Closes: {formatEndDate(endDate)}
               </p>
@@ -854,14 +1089,16 @@ function EditPollDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {canEdit ? "Cancel" : "Close"}
             </Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : null}
-              Save Changes
-            </Button>
+            {canEdit && (
+              <Button type="submit" disabled={saving}>
+                {saving ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : null}
+                Save Changes
+              </Button>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>

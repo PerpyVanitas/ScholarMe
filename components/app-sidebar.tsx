@@ -52,6 +52,12 @@ import {
   Trophy,
   ShieldAlert,
   ChevronRight,
+  FileText,
+  HelpCircle,
+  Bug,
+  BarChart,
+  Camera,
+  UserCog,
 } from "lucide-react";
 import { signOut } from "@/app/auth/actions";
 import { HonorSocietyLogo } from "@/components/honsoc-logo";
@@ -111,11 +117,21 @@ function getNavItems(role: UserRole) {
         href: "/dashboard/admin",
         icon: LayoutDashboard,
       },
+      {
+        title: "Tutor Analytics",
+        href: "/dashboard/admin/tutor-stats",
+        icon: BarChart,
+      },
       { title: "User Management", href: "/dashboard/admin/users", icon: Users },
       {
         title: "System Logs",
         href: "/dashboard/admin/logs",
         icon: ShieldAlert,
+      },
+      {
+        title: "QR Scanner",
+        href: "/dashboard/admin/scanner",
+        icon: Camera,
       },
     ];
     if (role === "super_admin") {
@@ -123,6 +139,16 @@ function getNavItems(role: UserRole) {
         title: "Message Audit",
         href: "/dashboard/admin/messages",
         icon: MessageSquare,
+      });
+      managementItems.push({
+        title: "User Feedback",
+        href: "/dashboard/admin/feedback",
+        icon: Bug,
+      });
+      managementItems.push({
+        title: "Role Management",
+        href: "/dashboard/admin/roles",
+        icon: UserCog,
       });
     }
   } else if (
@@ -132,12 +158,42 @@ function getNavItems(role: UserRole) {
     role === "committee_head" ||
     role === "faculty_adviser"
   ) {
-    managementItems = [];
+    managementItems = [
+      {
+        title: "Finance Dashboard",
+        href: "/dashboard/finance",
+        icon: FileText,
+      },
+    ];
     if (role === "auditor") {
+      managementItems.push(
+        {
+          title: "Reports Hub",
+          href: "/dashboard/admin/reports",
+          icon: FileText,
+        },
+        {
+          title: "User Feedback",
+          href: "/dashboard/admin/feedback",
+          icon: Bug,
+        },
+      );
+    }
+  }
+
+  // Add Team Workspace to relevant roles
+  if (
+    role === "officer" ||
+    role === "president" ||
+    role === "committee_head" ||
+    role === "super_admin" ||
+    role === "administrator"
+  ) {
+    if (!managementItems.some((item) => item.title === "Team Workspace")) {
       managementItems.push({
-        title: "Reports Hub",
-        href: "/dashboard/admin/reports",
-        icon: BookOpen,
+        title: "Team Workspace",
+        href: "/dashboard/team",
+        icon: Users,
       });
     }
   }
@@ -166,6 +222,7 @@ const roleLabels: Record<UserRole, string> = {
   committee_head: "Committee",
   faculty_adviser: "Adviser",
   super_admin: "Super Admin",
+  officer: "Officer",
 };
 
 export function AppSidebar({

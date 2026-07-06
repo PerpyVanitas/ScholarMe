@@ -3,9 +3,9 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useUser } from "@/lib/user-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -15,32 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,7 +31,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 import {
   Search,
   Plus,
@@ -67,19 +40,19 @@ import {
   Pencil,
   Trash2,
   History,
-  UserPlus,
-  UserMinus,
-  Settings,
-  LogIn,
   FileText,
-  Eye,
-  EyeOff,
+  Award,
 } from "lucide-react";
-import { toast } from "sonner";
 import type { Profile } from "@/lib/types";
-import { QrIdCard } from "@/features/auth/components/qr-id-card";
-import { HonorSocietyLogo } from "@/components/honsoc-logo";
 import { ExportCsvButton } from "@/components/export-csv-button";
+
+// Import new modular components
+import { UserCreateDialog } from "./components/user-create-dialog";
+import { UserEditDialog } from "./components/user-edit-dialog";
+import { UserDeleteDialog } from "./components/user-delete-dialog";
+import { UserLogsDialog } from "./components/user-logs-dialog";
+import { UserDesignationsDialog } from "./components/user-designations-dialog";
+import { UserIdCardDialog } from "./components/user-id-card-dialog";
 
 const roleColors: Record<string, string> = {
   super_admin: "bg-red-500/10 text-red-500 border-red-500/30",
@@ -94,38 +67,6 @@ const roleColors: Record<string, string> = {
   learner: "bg-success/10 text-success border-success/30",
 };
 
-interface LogEntry {
-  id: string;
-  user_id: string;
-  action: string;
-  entity_type: string | null;
-  entity_id: string | null;
-  metadata: Record<string, unknown> | null;
-  created_at: string;
-}
-
-const actionIcons: Record<string, typeof UserPlus> = {
-  user_created: UserPlus,
-  user_edited: Settings,
-  user_deleted: UserMinus,
-  account_deleted: UserMinus,
-  login: LogIn,
-  session_created: FileText,
-  session_completed: FileText,
-};
-
-const actionLabels: Record<string, string> = {
-  user_created: "Account Created",
-  user_edited: "Account Edited",
-  user_deleted: "Account Deleted",
-  account_deleted: "Self-Deleted Account",
-  login: "Logged In",
-  session_created: "Session Created",
-  session_completed: "Session Completed",
-  resource_uploaded: "Resource Uploaded",
-  repository_created: "Repository Created",
-};
-
 function getInitials(name: string | null | undefined) {
   if (!name) return "?";
   return name
@@ -136,6 +77,13 @@ function getInitials(name: string | null | undefined) {
     .slice(0, 2);
 }
 
+function getUserRoleName(roles: any): string {
+  if (Array.isArray(roles) && roles.length > 0) return roles[0].name;
+  if (roles && typeof roles === "object" && !Array.isArray(roles))
+    return roles.name;
+  return "learner";
+}
+
 function AdminUsersContent() {
   const searchParams = useSearchParams();
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -143,35 +91,30 @@ function AdminUsersContent() {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
 
-  // Create user
+  // Create state
   const [createOpen, setCreateOpen] = useState(false);
-  const [createLoading, setCreateLoading] = useState(false);
-  const [newEmail, setNewEmail] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [newName, setNewName] = useState("");
-  const [newRole, setNewRole] = useState("learner");
 
-  // Edit user
+  // Edit state
   const [editOpen, setEditOpen] = useState(false);
-  const [editLoading, setEditLoading] = useState(false);
   const [editUser, setEditUser] = useState<Profile | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editEmail, setEditEmail] = useState("");
-  const [editRole, setEditRole] = useState("");
-  const [editPassword, setEditPassword] = useState("");
-  const [showCreatePassword, setShowCreatePassword] = useState(false);
-  const [showEditPassword, setShowEditPassword] = useState(false);
 
-  // Delete user
+  // Delete state
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteUser, setDeleteUser] = useState<Profile | null>(null);
 
-  // Activity logs
+  // Logs state
   const [logsOpen, setLogsOpen] = useState(false);
-  const [logsLoading, setLogsLoading] = useState(false);
   const [logsUser, setLogsUser] = useState<Profile | null>(null);
-  const [logs, setLogs] = useState<LogEntry[]>([]);
+
+  // Designations state
+  const [designationsOpen, setDesignationsOpen] = useState(false);
+  const [designationsUser, setDesignationsUser] = useState<Profile | null>(
+    null,
+  );
+
+  // ID Card state
+  const [idCardOpen, setIdCardOpen] = useState(false);
+  const [idCardUser, setIdCardUser] = useState<Profile | null>(null);
 
   async function loadProfiles() {
     const supabase = createClient();
@@ -182,21 +125,12 @@ function AdminUsersContent() {
 
     setProfiles(data || []);
 
-    // Check for userId in query params to auto-open logs
     const userId = searchParams.get("userId");
     if (userId && data) {
       const p = data.find((u) => u.id === userId);
       if (p) {
-        // Need to define openLogs inside or before use
         setLogsUser(p);
         setLogsOpen(true);
-        setLogsLoading(true);
-        const res = await fetch(`/api/admin/users/${p.id}/logs`);
-        if (res.ok) {
-          const logData = await res.json();
-          setLogs(logData.logs || []);
-        }
-        setLogsLoading(false);
       }
     }
     setLoading(false);
@@ -206,80 +140,9 @@ function AdminUsersContent() {
     loadProfiles();
   }, [searchParams]);
 
-  async function handleCreateUser() {
-    if (!newEmail || !newPassword || !newName) {
-      toast.error("Please fill all fields");
-      return;
-    }
-    setCreateLoading(true);
-    const res = await fetch("/api/admin/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: newEmail,
-        password: newPassword,
-        full_name: newName,
-        role_name: newRole,
-      }),
-    });
-    if (res.ok) {
-      toast.success("User created successfully");
-      setCreateOpen(false);
-      setNewEmail("");
-      setNewPassword("");
-      setNewName("");
-      setNewRole("learner");
-      loadProfiles();
-    } else {
-      const data = await res.json();
-      toast.error(data.error || "Failed to create user");
-    }
-    setCreateLoading(false);
-  }
-
   function openEdit(p: Profile) {
     setEditUser(p);
-    setEditName(p.full_name || "");
-    setEditEmail(p.email || "");
-    setEditRole(
-      Array.isArray(p.roles) && p.roles.length > 0
-        ? p.roles[0].name
-        : "learner",
-    );
-    setEditPassword("");
-    setShowEditPassword(false);
     setEditOpen(true);
-  }
-
-  async function handleEditUser() {
-    if (!editUser) return;
-    setEditLoading(true);
-    const res = await fetch("/api/admin/users", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: editUser.id,
-        full_name: editName,
-        email: editEmail !== editUser.email ? editEmail : undefined,
-        role_name:
-          editRole !==
-          (Array.isArray(editUser.roles) && editUser.roles.length > 0
-            ? editUser.roles[0].name
-            : "learner")
-            ? editRole
-            : undefined,
-        password: editPassword ? editPassword : undefined,
-      }),
-    });
-    if (res.ok) {
-      toast.success("User updated successfully");
-      setEditOpen(false);
-      loadProfiles();
-    } else {
-      const data = await res.json();
-      toast.error(data.error || "Failed to update user");
-    }
-    setEditLoading(false);
   }
 
   function openDelete(p: Profile) {
@@ -287,98 +150,29 @@ function AdminUsersContent() {
     setDeleteOpen(true);
   }
 
-  async function handleDeleteUser() {
-    if (!deleteUser) return;
-    setDeleteLoading(true);
-    const res = await fetch("/api/admin/users", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: deleteUser.id }),
-    });
-    if (res.ok) {
-      toast.success("User deleted successfully");
-      setDeleteOpen(false);
-      setDeleteUser(null);
-      loadProfiles();
-    } else {
-      const data = await res.json();
-      toast.error(data.error || "Failed to delete user");
-    }
-    setDeleteLoading(false);
-  }
-
-  async function openLogs(p: Profile) {
+  function openLogs(p: Profile) {
     setLogsUser(p);
     setLogsOpen(true);
-    setLogsLoading(true);
-    setLogs([]);
-    const res = await fetch(`/api/admin/users/${p.id}/logs`);
-    if (res.ok) {
-      const data = await res.json();
-      setLogs(data.logs || []);
-    } else {
-      toast.error("Failed to load activity logs");
-    }
-    setLogsLoading(false);
   }
 
-  // QrIdCard / Card Management States
-  const [idCardOpen, setIdCardOpen] = useState(false);
-  const [idCardUser, setIdCardUser] = useState<Profile | null>(null);
-  const [updatingCard, setUpdatingCard] = useState(false);
+  function openDesignations(p: Profile) {
+    setDesignationsUser(p);
+    setDesignationsOpen(true);
+  }
 
-  const openPrintId = (profile: Profile) => {
-    setIdCardUser(profile);
+  function openPrintId(p: Profile) {
+    setIdCardUser(p);
     setIdCardOpen(true);
-  };
-
-  async function handleToggleStatus() {
-    if (!idCardUser) return;
-    const newStatus = !idCardUser.is_card_issued;
-    setUpdatingCard(true);
-    try {
-      const res = await fetch("/api/admin/cards", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: idCardUser.id,
-          is_card_issued: newStatus,
-        }),
-      });
-      if (res.ok) {
-        setIdCardUser({ ...idCardUser, is_card_issued: newStatus });
-        setProfiles((prev) =>
-          prev.map((p) =>
-            p.id === idCardUser.id ? { ...p, is_card_issued: newStatus } : p,
-          ),
-        );
-        toast.success(
-          `Card marked as ${newStatus ? "Issued" : "Not Issued"} successfully!`,
-        );
-      } else {
-        const data = await res.json();
-        toast.error(data.error || "Failed to update card status");
-      }
-    } catch (err) {
-      toast.error("Failed to update status");
-    } finally {
-      setUpdatingCard(false);
-    }
   }
-
-  // PIN update removed as cards are now automatically issued without manual PIN entry
 
   const filtered = profiles.filter((p) => {
     const nameMatch =
       !search ||
       p.full_name?.toLowerCase().includes(search.toLowerCase()) ||
       p.email?.toLowerCase().includes(search.toLowerCase());
-    const roleMatch =
-      roleFilter === "all" ||
-      (Array.isArray(p.roles) &&
-        p.roles.length > 0 &&
-        p.roles[0].name === roleFilter);
-    return nameMatch && roleMatch;
+    const matchesRole =
+      roleFilter === "all" || getUserRoleName(p.roles) === roleFilter;
+    return nameMatch && matchesRole;
   });
 
   if (loading) {
@@ -405,10 +199,7 @@ function AdminUsersContent() {
             data={filtered.map((p) => ({
               Name: p.full_name,
               Email: p.email,
-              Role: Array.isArray(p.roles)
-                ? p.roles[0]?.name
-                : ((p.roles as { name: string } | undefined)?.name ??
-                  "learner"),
+              Role: getUserRoleName(p.roles),
               "Member #": p.membership_number ?? "",
               Program: p.degree_program ?? "",
               "Year Level": p.year_level ?? "",
@@ -416,107 +207,13 @@ function AdminUsersContent() {
             }))}
             filename="users_export"
           />
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Create User
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New User</DialogTitle>
-                <DialogDescription>
-                  Create an account for a learner, tutor, or administrator.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="flex flex-col gap-4 py-4">
-                <div className="flex flex-col gap-2">
-                  <Label>Full Name</Label>
-                  <Input
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    placeholder="John Doe"
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label>Email</Label>
-                  <Input
-                    value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
-                    type="email"
-                    placeholder="john@example.com"
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label>Password</Label>
-                  <div className="relative">
-                    <Input
-                      value={newPassword}
-                      onChange={(e: any) => setNewPassword(e.target.value)}
-                      type={showCreatePassword ? "text" : "password"}
-                      placeholder="Minimum 6 characters"
-                      className="pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowCreatePassword(!showCreatePassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showCreatePassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label>Role</Label>
-                  <Select value={newRole} onValueChange={setNewRole}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="learner">Learner</SelectItem>
-                      <SelectItem value="tutor">Tutor</SelectItem>
-                      <SelectItem value="committee_head">
-                        Committee Head
-                      </SelectItem>
-                      <SelectItem value="administrator">
-                        Administrator
-                      </SelectItem>
-                      <SelectItem value="finance_manager">
-                        Finance Manager
-                      </SelectItem>
-                      <SelectItem value="treasurer">Treasurer</SelectItem>
-                      <SelectItem value="auditor">Auditor</SelectItem>
-                      <SelectItem value="president">President</SelectItem>
-                      <SelectItem value="faculty_adviser">
-                        Faculty Adviser
-                      </SelectItem>
-                      <SelectItem value="super_admin">Super Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setCreateOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleCreateUser} disabled={createLoading}>
-                  {createLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : null}
-                  Create User
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => setCreateOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create User
+          </Button>
         </div>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -578,11 +275,9 @@ function AdminUsersContent() {
                     <div className="flex items-center gap-2 mt-1">
                       <Badge
                         variant="outline"
-                        className={`text-[10px] ${roleColors[Array.isArray(p.roles) && p.roles.length > 0 ? p.roles[0].name : "learner"]}`}
+                        className={`text-[10px] ${roleColors[getUserRoleName(p.roles)]}`}
                       >
-                        {Array.isArray(p.roles) && p.roles.length > 0
-                          ? p.roles[0].name
-                          : "learner"}
+                        {getUserRoleName(p.roles)}
                       </Badge>
                     </div>
                   </div>
@@ -592,6 +287,7 @@ function AdminUsersContent() {
                     onDelete={openDelete}
                     onLogs={openLogs}
                     onPrintId={openPrintId}
+                    onDesignations={openDesignations}
                   />
                 </CardContent>
               </Card>
@@ -600,7 +296,7 @@ function AdminUsersContent() {
 
           {/* Desktop table */}
           <Card className="border-border/60 hidden md:block">
-            <CardContent className="p-0">
+            <CardContent className="p-0 overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -634,17 +330,9 @@ function AdminUsersContent() {
                       <TableCell>
                         <Badge
                           variant="outline"
-                          className={
-                            roleColors[
-                              Array.isArray(p.roles) && p.roles.length > 0
-                                ? p.roles[0].name
-                                : "learner"
-                            ]
-                          }
+                          className={roleColors[getUserRoleName(p.roles)]}
                         >
-                          {Array.isArray(p.roles) && p.roles.length > 0
-                            ? p.roles[0].name
-                            : "learner"}
+                          {getUserRoleName(p.roles)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
@@ -661,6 +349,7 @@ function AdminUsersContent() {
                           onDelete={openDelete}
                           onLogs={openLogs}
                           onPrintId={openPrintId}
+                          onDesignations={openDesignations}
                         />
                       </TableCell>
                     </TableRow>
@@ -672,299 +361,59 @@ function AdminUsersContent() {
         </>
       )}
 
-      {/* Edit Dialog */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>
-              Update account details for {editUser?.full_name || "this user"}.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col gap-4 py-4">
-            <div className="flex flex-col gap-2">
-              <Label>Full Name</Label>
-              <Input
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label>Email</Label>
-              <Input
-                value={editEmail}
-                onChange={(e) => setEditEmail(e.target.value)}
-                type="email"
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label>Role</Label>
-              <Select value={editRole} onValueChange={setEditRole}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="learner">Learner</SelectItem>
-                  <SelectItem value="tutor">Tutor</SelectItem>
-                  <SelectItem value="committee_head">Committee Head</SelectItem>
-                  <SelectItem value="administrator">Administrator</SelectItem>
-                  <SelectItem value="finance_manager">
-                    Finance Manager
-                  </SelectItem>
-                  <SelectItem value="treasurer">Treasurer</SelectItem>
-                  <SelectItem value="auditor">Auditor</SelectItem>
-                  <SelectItem value="president">President</SelectItem>
-                  <SelectItem value="faculty_adviser">
-                    Faculty Adviser
-                  </SelectItem>
-                  <SelectItem value="super_admin">Super Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label>New Password</Label>
-              <div className="relative">
-                <Input
-                  value={editPassword}
-                  onChange={(e: any) => setEditPassword(e.target.value)}
-                  type={showEditPassword ? "text" : "password"}
-                  placeholder="Leave blank to keep current password"
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowEditPassword(!showEditPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showEditPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleEditUser} disabled={editLoading}>
-              {editLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : null}
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation */}
-      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete User</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to permanently delete{" "}
-              <span className="font-semibold text-foreground">
-                {deleteUser?.full_name || deleteUser?.email}
-              </span>
-              ? This will remove their profile, sessions, and all associated
-              data. This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteUser}
-              disabled={deleteLoading}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleteLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Trash2 className="mr-2 h-4 w-4" />
-              )}
-              Delete User
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Activity Logs Sheet */}
-      <Sheet open={logsOpen} onOpenChange={setLogsOpen}>
-        <SheetContent className="sm:max-w-lg overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>Activity History</SheetTitle>
-            <SheetDescription>
-              Action history for{" "}
-              {logsUser?.full_name || logsUser?.email || "this user"}.
-            </SheetDescription>
-          </SheetHeader>
-          <div className="mt-6">
-            {logsLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              </div>
-            ) : logs.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-12">
-                <History className="h-8 w-8 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  No activity recorded yet
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-0">
-                {logs.map((log, i) => {
-                  const Icon = actionIcons[log.action] || History;
-                  return (
-                    <div key={log.id}>
-                      <div className="flex gap-3 py-3">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
-                          <Icon className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <div className="flex flex-col gap-0.5 min-w-0">
-                          <span className="text-sm font-medium text-foreground">
-                            {actionLabels[log.action] || log.action}
-                          </span>
-                          {log.metadata &&
-                            Object.keys(log.metadata).length > 0 && (
-                              <div className="flex flex-wrap gap-1 mt-0.5">
-                                {Object.entries(log.metadata).map(
-                                  ([key, value]) =>
-                                    value ? (
-                                      <span
-                                        key={key}
-                                        className="text-[11px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded"
-                                      >
-                                        {key.replace(/_/g, " ")}:{" "}
-                                        {String(value)}
-                                      </span>
-                                    ) : null,
-                                )}
-                              </div>
-                            )}
-                          <span className="text-[11px] text-muted-foreground mt-0.5">
-                            {new Date(log.created_at).toLocaleString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                              hour: "numeric",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                        </div>
-                      </div>
-                      {i < logs.length - 1 && <Separator />}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* Print Preview & Card Management Dialog */}
-      <Dialog
-        open={idCardOpen}
-        onOpenChange={(open) => {
-          setIdCardOpen(open);
-          if (!open) setIdCardUser(null);
+      {/* Extracted Modular Dialogs */}
+      <UserCreateDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={() => {
+          setCreateOpen(false);
+          loadProfiles();
         }}
-      >
-        <DialogContent className="sm:max-w-2xl bg-zinc-950 border-zinc-800 text-white p-6 outline-none relative">
-          <div className="absolute inset-0 opacity-[0.03] pointer-events-none flex items-center justify-center">
-            <HonorSocietyLogo variant="white" className="w-[500px] h-[500px]" />
-          </div>
+      />
 
-          <div className="flex flex-col md:flex-row items-stretch gap-6 relative z-10">
-            {/* Left panel: ID Card display */}
-            <div className="flex-1 flex flex-col items-center justify-center">
-              {idCardUser && (
-                <QrIdCard
-                  profile={idCardUser}
-                  role={
-                    Array.isArray(idCardUser.roles) &&
-                    idCardUser.roles.length > 0
-                      ? idCardUser.roles[0].name
-                      : "learner"
-                  }
-                  showCompactPreview={false}
-                />
-              )}
-            </div>
+      <UserEditDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        user={editUser}
+        onEdited={() => {
+          setEditOpen(false);
+          loadProfiles();
+        }}
+      />
 
-            {/* Vertical divider on desktop */}
-            <div className="hidden md:block w-px bg-zinc-800 self-stretch my-2"></div>
+      <UserDeleteDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        user={deleteUser}
+        onDeleted={() => {
+          setDeleteOpen(false);
+          loadProfiles();
+        }}
+      />
 
-            {/* Right panel: Card Management Actions */}
-            <div className="flex-1 flex flex-col justify-start space-y-4 text-left">
-              <div>
-                <DialogTitle className="text-xl font-bold tracking-widest text-[#FFD700] uppercase">
-                  CARD MANAGEMENT
-                </DialogTitle>
-                <DialogDescription className="text-zinc-400 text-xs font-medium mt-1">
-                  Manage the physical card status for{" "}
-                  {idCardUser?.full_name || "this user"}.
-                </DialogDescription>
-              </div>
+      <UserLogsDialog
+        open={logsOpen}
+        onOpenChange={setLogsOpen}
+        user={logsUser}
+      />
 
-              <Separator className="bg-zinc-800" />
+      <UserDesignationsDialog
+        open={designationsOpen}
+        onOpenChange={setDesignationsOpen}
+        user={designationsUser}
+      />
 
-              <div className="space-y-4 flex-1 flex flex-col justify-between">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-zinc-400">
-                      Card Status:
-                    </span>
-                    <Badge
-                      variant="outline"
-                      className={
-                        idCardUser?.is_card_issued
-                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 font-bold uppercase text-[10px]"
-                          : "bg-rose-500/10 text-rose-400 border-rose-500/20 font-bold uppercase text-[10px]"
-                      }
-                    >
-                      {idCardUser?.is_card_issued ? "Issued" : "Not Issued"}
-                    </Badge>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-zinc-400">
-                      Unique ID:
-                    </span>
-                    <span className="font-mono text-xs text-zinc-200 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded">
-                      {idCardUser?.unique_id_number || "PENDING"}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="pt-4 mt-auto">
-                  <Button
-                    onClick={handleToggleStatus}
-                    disabled={updatingCard || !idCardUser?.unique_id_number}
-                    variant={idCardUser?.is_card_issued ? "outline" : "default"}
-                    className={
-                      idCardUser?.is_card_issued
-                        ? "w-full border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
-                        : "w-full bg-[#FFD700] hover:bg-[#FFD700]/90 text-black font-semibold text-sm"
-                    }
-                  >
-                    {updatingCard ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : idCardUser?.is_card_issued ? (
-                      "Mark as Not Issued"
-                    ) : (
-                      "Mark as Issued"
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <UserIdCardDialog
+        open={idCardOpen}
+        onOpenChange={setIdCardOpen}
+        user={idCardUser}
+        onUpdateUser={(updated) => {
+          setProfiles((prev) =>
+            prev.map((p) => (p.id === updated.id ? updated : p)),
+          );
+          setIdCardUser(updated);
+        }}
+      />
     </div>
   );
 }
@@ -983,19 +432,20 @@ export default function AdminUsersPage() {
   );
 }
 
-// -- Actions dropdown used in both mobile and desktop views --
 function UserActionsMenu({
   profile,
   onEdit,
   onDelete,
   onLogs,
   onPrintId,
+  onDesignations,
 }: {
   profile: Profile;
   onEdit: (p: Profile) => void;
   onDelete: (p: Profile) => void;
   onLogs: (p: Profile) => void;
   onPrintId: (p: Profile) => void;
+  onDesignations: (p: Profile) => void;
 }) {
   return (
     <DropdownMenu>
@@ -1017,6 +467,10 @@ function UserActionsMenu({
         <DropdownMenuItem onClick={() => onLogs(profile)}>
           <History className="mr-2 h-4 w-4" />
           View Activity
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onDesignations(profile)}>
+          <Award className="mr-2 h-4 w-4" />
+          Manage Status
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

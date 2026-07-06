@@ -73,7 +73,7 @@ export default async function SystemLogsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border overflow-hidden">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader className="bg-muted/50">
                 <TableRow>

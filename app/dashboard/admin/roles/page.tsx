@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useUser } from "@/lib/user-context";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -45,6 +46,7 @@ const ALL_ROLES: { value: UserRole; label: string }[] = [
 ];
 
 export default function AdminRolesPage() {
+  const { role: currentAdminRole } = useUser();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -163,7 +165,18 @@ export default function AdminRolesPage() {
         </div>
       </div>
 
-      <div className="relative max-w-sm">
+      {currentAdminRole !== "super_admin" && (
+        <Card className="border-destructive/50 bg-destructive/10">
+          <CardContent className="flex items-center gap-2 p-4 text-destructive">
+            <ShieldAlert className="h-5 w-5" />
+            <p className="text-sm font-medium">
+              You must be a Super Admin to assign or change user roles.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="relative flex-1 sm:w-80 sm:flex-none">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="Search users..."
@@ -223,7 +236,9 @@ export default function AdminRolesPage() {
                       onValueChange={(val) =>
                         setSelectedRoles({ ...selectedRoles, [u.id]: val })
                       }
-                      disabled={isUpdating}
+                      disabled={
+                        isUpdating || currentAdminRole !== "super_admin"
+                      }
                     >
                       <SelectTrigger className="w-[180px]">
                         <SelectValue />

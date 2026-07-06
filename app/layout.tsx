@@ -1,6 +1,7 @@
 /** Root layout -- fonts, theme provider, analytics, and global styles. Build v2. */
 import "@/lib/env";
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -35,14 +36,16 @@ export const viewport: Viewport = {
   userScalable: true,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const nonce = (await headers()).get("x-nonce") || undefined;
   return (
     <html
       lang="en"
       suppressHydrationWarning
       className={`${inter.variable} ${jetbrainsMono.variable}`}
+      nonce={nonce}
     >
       <body className="font-sans antialiased">
         <ThemeProvider

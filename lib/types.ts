@@ -10,10 +10,11 @@ export type UserRole =
   | "treasurer"
   | "committee_head"
   | "faculty_adviser"
-  | "super_admin";
+  | "super_admin"
+  | "officer";
 
 export type DesignationType =
-  "member" | "esas_scholar" | "officer" | "administrator";
+  "member" | "esas_scholar" | "officer" | "administrator" | "super_admin";
 
 export interface HsDesignation {
   id: string;
@@ -83,6 +84,10 @@ export interface Tutor {
   total_ratings: number;
   years_experience: number | null;
   hourly_rate: number | null;
+  total_sessions_completed?: number;
+  total_students_helped?: number;
+  response_rate?: number;
+  total_hours_tutored?: number;
   created_at: string;
   profiles: Profile;
   tutor_specializations: { specializations: Specialization }[];
@@ -201,6 +206,7 @@ export interface Poll {
   end_date: string;
   allow_multiple_votes: boolean;
   is_anonymous: boolean;
+  is_hidden: boolean;
   created_at: string;
   updated_at: string;
   profiles?: Profile;

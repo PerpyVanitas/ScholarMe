@@ -17,14 +17,14 @@ export async function assignRole(
     return { error: "Unauthorized" };
   }
 
-  // Basic admin check (could be expanded)
-  const { data: isAdmin } = await supabase.rpc("has_role", {
+  // Basic admin check (restricted to super_admin)
+  const { data: isSuperAdmin } = await supabase.rpc("has_role", {
     user_id: user.id,
-    allowed_roles: ["administrator"],
+    allowed_roles: ["super_admin"],
   });
 
-  if (!isAdmin) {
-    return { error: "Only administrators can assign roles" };
+  if (!isSuperAdmin) {
+    return { error: "Only super administrators can assign roles" };
   }
 
   try {

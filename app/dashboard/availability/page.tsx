@@ -3,12 +3,24 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Clock, Plus, Trash2, Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
@@ -33,7 +45,9 @@ export default function AvailabilityPage() {
   useEffect(() => {
     async function load() {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       // Support demo mode - use seeded tutor profile ID
       const userId = user?.id || DEMO_USERS.tutor.profileId;
@@ -44,19 +58,19 @@ export default function AvailabilityPage() {
 
       const { data: tutorData } = await supabase
         .from("tutors")
-        .select("*")
+        .select("id, bio")
         .eq("user_id", userId)
         .maybeSingle();
 
       if (tutorData) {
-        setTutor(tutorData);
+        setTutor(tutorData as Tutor);
         setBio(tutorData.bio || "");
         const { data: slotsData } = await supabase
           .from("tutor_availability")
-          .select("*")
+          .select("id, tutor_id, day_of_week, start_time, end_time")
           .eq("tutor_id", tutorData.id)
           .order("day_of_week");
-        setSlots(slotsData || []);
+        setSlots((slotsData || []) as TutorAvailability[]);
       }
       setLoading(false);
     }
@@ -81,14 +95,19 @@ export default function AvailabilityPage() {
     if (error) {
       toast.error("Failed to add slot");
     } else if (data) {
-      setSlots((prev: any) => [...prev, data].sort((a: any, b: any) => a.day_of_week - b.day_of_week));
+      setSlots((prev: any) =>
+        [...prev, data].sort((a: any, b: any) => a.day_of_week - b.day_of_week),
+      );
       toast.success("Availability slot added");
     }
   }
 
   async function removeSlot(id: string) {
     const supabase = createClient();
-    const { error } = await supabase.from("tutor_availability").delete().eq("id", id);
+    const { error } = await supabase
+      .from("tutor_availability")
+      .delete()
+      .eq("id", id);
 
     if (!error) {
       setSlots((prev: any) => prev.filter((s: any) => s.id !== id));
@@ -125,7 +144,8 @@ export default function AvailabilityPage() {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-16">
         <p className="max-w-md text-center text-sm text-muted-foreground">
-          We could not load your tutor record yet. Open Profile to finish setup, then return here.
+          We could not load your tutor record yet. Open Profile to finish setup,
+          then return here.
         </p>
         <Button asChild>
           <Link href="/dashboard/profile">Go to Profile</Link>
@@ -143,14 +163,20 @@ export default function AvailabilityPage() {
   return (
     <div className="flex flex-col gap-6 max-w-3xl">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Manage Availability</h1>
-        <p className="text-muted-foreground">Set your weekly schedule and profile bio.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          Manage Availability
+        </h1>
+        <p className="text-muted-foreground">
+          Set your weekly schedule and profile bio.
+        </p>
       </div>
 
       <Card className="border-border/60">
         <CardHeader>
           <CardTitle className="text-base">Tutor Bio</CardTitle>
-          <CardDescription>Tell learners about yourself and your teaching style.</CardDescription>
+          <CardDescription>
+            Tell learners about yourself and your teaching style.
+          </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <Textarea
@@ -159,8 +185,17 @@ export default function AvailabilityPage() {
             placeholder="I specialize in making complex topics simple..."
             rows={3}
           />
-          <Button onClick={saveBio} disabled={saving} size="sm" className="w-fit">
-            {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+          <Button
+            onClick={saveBio}
+            disabled={saving}
+            size="sm"
+            className="w-fit"
+          >
+            {saving ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-4 w-4" />
+            )}
             Save Bio
           </Button>
         </CardContent>
@@ -192,11 +227,19 @@ export default function AvailabilityPage() {
             </div>
             <div className="flex flex-col gap-2">
               <Label>Start</Label>
-              <Input type="time" value={newStart} onChange={(e: any) => setNewStart(e.target.value)} />
+              <Input
+                type="time"
+                value={newStart}
+                onChange={(e: any) => setNewStart(e.target.value)}
+              />
             </div>
             <div className="flex flex-col gap-2">
               <Label>End</Label>
-              <Input type="time" value={newEnd} onChange={(e: any) => setNewEnd(e.target.value)} />
+              <Input
+                type="time"
+                value={newEnd}
+                onChange={(e: any) => setNewEnd(e.target.value)}
+              />
             </div>
             <Button onClick={addSlot}>
               <Plus className="mr-2 h-4 w-4" />
@@ -221,8 +264,13 @@ export default function AvailabilityPage() {
               {groupedSlots
                 .filter((g) => g.slots.length > 0)
                 .map(({ day, slots: daySlots }) => (
-                  <div key={day} className="flex flex-col gap-2 rounded-lg border border-border/60 p-3 sm:flex-row sm:items-start sm:gap-4">
-                    <span className="text-sm font-medium text-foreground sm:w-24 sm:pt-1">{day}</span>
+                  <div
+                    key={day}
+                    className="flex flex-col gap-2 rounded-lg border border-border/60 p-3 sm:flex-row sm:items-start sm:gap-4"
+                  >
+                    <span className="text-sm font-medium text-foreground sm:w-24 sm:pt-1">
+                      {day}
+                    </span>
                     <div className="flex flex-wrap gap-2">
                       {daySlots.map((slot: any) => (
                         <Badge
@@ -230,7 +278,8 @@ export default function AvailabilityPage() {
                           variant="secondary"
                           className="flex items-center gap-1.5 text-xs pr-1"
                         >
-                          {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
+                          {slot.start_time.slice(0, 5)} -{" "}
+                          {slot.end_time.slice(0, 5)}
                           <button
                             onClick={() => removeSlot(slot.id)}
                             className="ml-1 rounded-full p-0.5 hover:bg-destructive/20 hover:text-destructive"

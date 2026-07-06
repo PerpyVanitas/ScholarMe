@@ -45,6 +45,9 @@ export default function SetupProfilePage() {
   const [lastName, setLastName] = useState("");
   const [membershipNumber, setMembershipNumber] = useState("");
   const [selectedSpecs, setSelectedSpecs] = useState<string[]>([]);
+  const [bio, setBio] = useState("");
+  const [hourlyRate, setHourlyRate] = useState<number | "">("");
+  const [yearsExperience, setYearsExperience] = useState<number | "">("");
 
   // Data
   const [specializations, setSpecializations] = useState<Specialization[]>([]);
@@ -205,10 +208,26 @@ export default function SetupProfilePage() {
         if (!tutorRow) {
           const { data: newTutor } = await supabase
             .from("tutors")
-            .insert({ user_id: userId })
+            .insert({
+              user_id: userId,
+              bio: bio.trim() || null,
+              hourly_rate: hourlyRate !== "" ? Number(hourlyRate) : null,
+              years_experience:
+                yearsExperience !== "" ? Number(yearsExperience) : null,
+            })
             .select("id")
             .single();
           tutorRow = newTutor;
+        } else {
+          await supabase
+            .from("tutors")
+            .update({
+              bio: bio.trim() || null,
+              hourly_rate: hourlyRate !== "" ? Number(hourlyRate) : null,
+              years_experience:
+                yearsExperience !== "" ? Number(yearsExperience) : null,
+            })
+            .eq("id", tutorRow.id);
         }
 
         if (tutorRow) {
@@ -367,9 +386,46 @@ export default function SetupProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Specializations</Label>
+                <Label htmlFor="bio">Tutor Bio *</Label>
+                <textarea
+                  id="bio"
+                  value={bio}
+                  onChange={(e: any) => setBio(e.target.value)}
+                  placeholder="Tell students about your teaching experience and style..."
+                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="hourlyRate">Hourly Rate (₱)</Label>
+                  <Input
+                    id="hourlyRate"
+                    type="number"
+                    min="0"
+                    value={hourlyRate}
+                    onChange={(e: any) => setHourlyRate(e.target.value)}
+                    placeholder="e.g. 250"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="yearsExperience">Years Experience</Label>
+                  <Input
+                    id="yearsExperience"
+                    type="number"
+                    min="0"
+                    value={yearsExperience}
+                    onChange={(e: any) => setYearsExperience(e.target.value)}
+                    placeholder="e.g. 2"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Specializations *</Label>
                 <p className="text-xs text-muted-foreground">
-                  Select the subjects you can tutor
+                  Select at least one subject you can tutor
                 </p>
                 <div className="flex flex-wrap gap-2 pt-1">
                   {specializations.map((spec: any) => {
@@ -397,7 +453,12 @@ export default function SetupProfilePage() {
 
           <Button
             onClick={handleSave}
-            disabled={saving || !firstName.trim() || !lastName.trim()}
+            disabled={
+              saving ||
+              !firstName.trim() ||
+              !lastName.trim() ||
+              (isTutor && (!bio.trim() || selectedSpecs.length === 0))
+            }
             className="w-full"
             size="lg"
           >
@@ -411,14 +472,16 @@ export default function SetupProfilePage() {
             )}
           </Button>
 
-          <button
-            type="button"
-            onClick={handleSkip}
-            disabled={saving}
-            className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-          >
-            Skip for now — finish later in Profile
-          </button>
+          {!isTutor && (
+            <button
+              type="button"
+              onClick={handleSkip}
+              disabled={saving}
+              className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+            >
+              Skip for now — finish later in Profile
+            </button>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -9,9 +9,11 @@ import {
   type ReactNode,
 } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { type RealtimeChannel } from "@supabase/supabase-js";
 import type { Profile, UserRole } from "@/lib/types";
 import { DEMO_USERS, getDemoUserFromCookie } from "@/scripts/demo";
 import { resolveRoleId } from "@/lib/profiles/db";
+import { toast } from "sonner";
 
 interface UserContextType {
   profile: Profile | null;
@@ -81,7 +83,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
         try {
           roleId = await resolveRoleId(supabase, fallbackRole);
         } catch (e) {
-          console.error("Failed to fetch role ID for fallback role:", e);
+          toast.error(
+            e instanceof Error
+              ? e.message
+              : "Failed to fetch role ID for fallback role",
+          );
           roleId = "";
         }
 
@@ -231,7 +237,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     });
 
     // Listen for real-time role updates
-    let roleSubscription: any = null;
+    let roleSubscription: RealtimeChannel | null = null;
 
     const setupRealtime = async () => {
       const {

@@ -18,24 +18,9 @@ import {
 } from "@/components/ui/card";
 import { getAvatarUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
@@ -53,8 +38,6 @@ import {
   EyeOff,
   Trash2,
   AlertTriangle,
-  Camera,
-  X,
   BookOpen,
   Star,
   Crown,
@@ -73,6 +56,11 @@ import {
 import { useUser } from "@/lib/user-context";
 import { QrIdCard } from "@/features/auth/components/qr-id-card";
 import { getRoleName } from "@/lib/utils/roles";
+
+// Import modular components
+import { ProfileEditDialog } from "./components/profile-edit-dialog";
+import { TutorSettingsDialog } from "./components/tutor-settings-dialog";
+import { HonorSocietyDesignationDialog } from "./components/honor-society-designation-dialog";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -119,7 +107,9 @@ export default function ProfilePage() {
   const [allSpecializations, setAllSpecializations] = useState<
     Specialization[]
   >([]);
-  const [tutorData, setTutorData] = useState<any>(null);
+  const [tutorData, setTutorData] = useState<Record<string, unknown> | null>(
+    null,
+  );
   const [savingTutor, setSavingTutor] = useState(false);
 
   const isTutor = roleName === "tutor";
@@ -199,7 +189,7 @@ export default function ProfilePage() {
           derivedLastName = parts.slice(1).join(" ") || "";
         }
 
-        const fallbackProfile: any = {
+        const fallbackProfile: Record<string, unknown> = {
           id: user.id,
           role_id: null,
           full_name: fullNameStr,
@@ -220,25 +210,19 @@ export default function ProfilePage() {
           roles: { name: fallbackRole },
         };
 
-        setProfile(fallbackProfile);
+        setProfile(fallbackProfile as unknown as Profile);
         setRoleName(fallbackRole);
       } else {
         setProfile(data);
         const loadedRole = getRoleName(data);
         setRoleName(loadedRole);
 
-        // Load tutor data and specializations if tutor
         if (loadedRole === "tutor") {
-          // Load all available specializations
           const { data: allSpecs } = await supabase
             .from("specializations")
             .select("id, name");
+          if (allSpecs) setAllSpecializations(allSpecs);
 
-          if (allSpecs) {
-            setAllSpecializations(allSpecs);
-          }
-
-          // Load tutor-specific data
           const { data: tutorInfo } = await supabase
             .from("tutors")
             .select(
@@ -255,20 +239,21 @@ export default function ProfilePage() {
 
             if (tutorInfo.tutor_specializations) {
               const specs = tutorInfo.tutor_specializations
-                .map((ts: any) => {
-                  const specs = Array.isArray(ts.specializations)
+                .map((ts: { specializations: unknown | unknown[] }) => {
+                  const s = Array.isArray(ts.specializations)
                     ? ts.specializations
                     : [];
-                  return specs.length > 0 ? specs[0] : null;
+                  return s.length > 0 ? s[0] : null;
                 })
                 .filter(Boolean);
               setSpecializations(specs);
-              setSelectedSpecializations(specs.map((s: any) => s.id));
+              setSelectedSpecializations(
+                specs.map((s: { id: string }) => s.id),
+              );
             }
           }
         }
 
-        // Load Honor Society designation history
         const { data: desigData } = await supabase
           .from("hs_designations")
           .select("*")
@@ -282,11 +267,9 @@ export default function ProfilePage() {
     loadProfile();
   }, [supabase, router]);
 
-  // Open edit modal with current values
   const openEditModal = useCallback(() => {
     if (!profile) return;
 
-    // Parse name from full_name if first/last not set
     let fn = profile.first_name || "";
     let ln = profile.last_name || "";
     if ((!fn || !ln) && profile.full_name) {
@@ -302,7 +285,6 @@ export default function ProfilePage() {
     setEditMembershipNumber(profile.membership_number || "");
     setEditDegreeProgram(profile.degree_program || "");
     setEditYearLevel(profile.year_level?.toString() || "");
-    // Set avatar URL - convert pathname to API route if needed
     if (profile.avatar_url?.startsWith("avatars/")) {
       setEditAvatarUrl(
         `/api/avatar?pathname=${encodeURIComponent(profile.avatar_url)}`,
@@ -313,7 +295,6 @@ export default function ProfilePage() {
     setEditOpen(true);
   }, [profile]);
 
-  // Handle avatar file selection — open cropper first
   const handleAvatarFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -332,11 +313,9 @@ export default function ProfilePage() {
       setCropperOpen(true);
     };
     reader.readAsDataURL(file);
-    // Reset input so the same file can be selected again
     e.target.value = "";
   };
 
-  // Upload the cropped blob to the server
   const handleCroppedUpload = async (blob: Blob) => {
     setCropperOpen(false);
     setUploadingAvatar(true);
@@ -358,76 +337,17 @@ export default function ProfilePage() {
         setProfile(updated as Profile);
       }
       toast.success("Photo updated!");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to upload photo");
-    } finally {
-      setUploadingAvatar(false);
-    }
-  };
-
-  // Handle avatar upload (legacy — kept for backward compat, now routes through cropper)
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-    if (!allowedTypes.includes(file.type)) {
-      toast.error("Please upload a JPEG, PNG, GIF, or WebP image");
-      return;
-    }
-
-    // Validate file size (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be less than 5MB");
-      return;
-    }
-
-    setUploadingAvatar(true);
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await fetch("/api/avatar", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Upload failed");
-      }
-
-      // Update the avatar URL in the edit modal
-      const newAvatarUrl = `/api/avatar?pathname=${encodeURIComponent(data.pathname)}`;
-      setEditAvatarUrl(newAvatarUrl);
-
-      // Update the profile state immediately
-      setProfile((prev) =>
-        prev ? { ...prev, avatar_url: data.pathname } : null,
-      );
-
-      // Refresh the user context so sidebar updates
-      await refreshProfile();
-
-      toast.success("Photo uploaded successfully");
-    } catch (error) {
+    } catch (err) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to upload photo",
+        err instanceof Error ? err.message : "Failed to upload photo",
       );
     } finally {
       setUploadingAvatar(false);
-      // Reset the input
-      e.target.value = "";
     }
   };
 
-  // Handle tutor settings save
   const handleSaveTutorSettings = async () => {
     setSavingTutor(true);
-
     try {
       const result = await updateTutorInfo({
         bio: tutorBio.trim() || null,
@@ -435,11 +355,7 @@ export default function ProfilePage() {
         years_experience: yearsExperience,
         specialization_ids: selectedSpecializations,
       });
-
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
+      if (!result.success) throw new Error(result.error);
       toast.success("Tutor settings updated successfully");
       setTutorSettingsOpen(false);
       await refreshProfile();
@@ -454,24 +370,17 @@ export default function ProfilePage() {
     }
   };
 
-  // Handle avatar removal
   const handleRemoveAvatar = async () => {
     setUploadingAvatar(true);
-
     try {
       const res = await fetch("/api/avatar", { method: "DELETE" });
-
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Failed to remove photo");
       }
-
       setEditAvatarUrl(null);
       setProfile((prev) => (prev ? { ...prev, avatar_url: null } : null));
-
-      // Refresh the user context so sidebar updates
       await refreshProfile();
-
       toast.success("Photo removed");
     } catch (error) {
       toast.error(
@@ -482,15 +391,12 @@ export default function ProfilePage() {
     }
   };
 
-  // Save profile changes using server action
   const handleSaveProfile = async () => {
     if (!editFirstName.trim() || !editLastName.trim()) {
       toast.error("First name and last name are required");
       return;
     }
-
     setSaving(true);
-
     const updateData: UpdateProfileData = {
       first_name: editFirstName.trim(),
       last_name: editLastName.trim(),
@@ -500,11 +406,8 @@ export default function ProfilePage() {
       degree_program: !isTutor ? editDegreeProgram.trim() || null : null,
       year_level: !isTutor ? parseInt(editYearLevel) || null : null,
     };
-
     const result = await updateProfile(updateData);
-
     if (result.success) {
-      // Update local state
       setProfile((prev) =>
         prev
           ? {
@@ -521,18 +424,15 @@ export default function ProfilePage() {
             }
           : null,
       );
-
       toast.success("Profile updated successfully");
       setEditOpen(false);
       await refreshProfile();
     } else {
       toast.error(result.error || "Failed to update profile");
     }
-
     setSaving(false);
   };
 
-  // Change password
   const handleChangePassword = async () => {
     if (!currentPassword || !newPassword) {
       toast.error("Please fill in all password fields");
@@ -546,11 +446,8 @@ export default function ProfilePage() {
       toast.error("New passwords do not match");
       return;
     }
-
     setChangingPassword(true);
-
     const { error } = await supabase.auth.updateUser({ password: newPassword });
-
     if (error) {
       toast.error(error.message || "Failed to change password");
     } else {
@@ -559,11 +456,9 @@ export default function ProfilePage() {
       setNewPassword("");
       setConfirmPassword("");
     }
-
     setChangingPassword(false);
   };
 
-  // Delete account
   const handleDeleteAccount = async () => {
     setDeleting(true);
     const res = await fetch("/api/account", { method: "DELETE" });
@@ -577,7 +472,64 @@ export default function ProfilePage() {
     }
   };
 
-  // Format date for display
+  const handleSaveDesignation = async () => {
+    setSavingDesignation(true);
+    try {
+      if (editingDesignation) {
+        const { error } = await supabase
+          .from("hs_designations")
+          .update({
+            designation: desigType,
+            position: desigType === "officer" ? desigPosition : null,
+            academic_year: desigAcademicYear,
+            is_current: desigIsCurrent,
+          })
+          .eq("id", editingDesignation.id);
+        if (error) throw error;
+        setDesignations((prev) =>
+          prev.map((d) =>
+            d.id === editingDesignation.id
+              ? {
+                  ...d,
+                  designation: desigType,
+                  position: desigType === "officer" ? desigPosition : null,
+                  academic_year: desigAcademicYear,
+                  is_current: desigIsCurrent,
+                }
+              : desigIsCurrent
+                ? { ...d, is_current: false }
+                : d,
+          ),
+        );
+        toast.success("Designation updated");
+      } else {
+        const { data, error } = await supabase
+          .from("hs_designations")
+          .insert({
+            user_id: profile?.id,
+            designation: desigType,
+            position: desigType === "officer" ? desigPosition : null,
+            academic_year: desigAcademicYear,
+            is_current: desigIsCurrent,
+          })
+          .select()
+          .single();
+        if (error) throw error;
+        setDesignations((prev) =>
+          desigIsCurrent
+            ? [data, ...prev.map((d) => ({ ...d, is_current: false }))]
+            : [data, ...prev],
+        );
+        toast.success("Designation added");
+      }
+      setDesignationDialogOpen(false);
+    } catch {
+      toast.error("Failed to save designation");
+    } finally {
+      setSavingDesignation(false);
+    }
+  };
+
   const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return "Not set";
     try {
@@ -591,7 +543,6 @@ export default function ProfilePage() {
     }
   };
 
-  // Get initials for avatar fallback
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -698,7 +649,6 @@ export default function ProfilePage() {
         </div>
 
         <div className="lg:col-span-2 space-y-6">
-          {/* Profile Details */}
           <Card>
             <CardHeader>
               <CardTitle>Profile Information</CardTitle>
@@ -717,7 +667,6 @@ export default function ProfilePage() {
                     </p>
                   </div>
                 </div>
-
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                   <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
@@ -727,7 +676,6 @@ export default function ProfilePage() {
                     </p>
                   </div>
                 </div>
-
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                   <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
@@ -737,7 +685,6 @@ export default function ProfilePage() {
                     </p>
                   </div>
                 </div>
-
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                   <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
@@ -747,7 +694,6 @@ export default function ProfilePage() {
                     </p>
                   </div>
                 </div>
-
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                   <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
@@ -757,7 +703,6 @@ export default function ProfilePage() {
                     </p>
                   </div>
                 </div>
-
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                   <Award className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
@@ -767,7 +712,6 @@ export default function ProfilePage() {
                     </p>
                   </div>
                 </div>
-
                 {!isTutor && (
                   <>
                     <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
@@ -794,7 +738,6 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
 
-          {/* Tutor Settings */}
           {isTutor && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0">
@@ -856,7 +799,6 @@ export default function ProfilePage() {
             </Card>
           )}
 
-          {/* Honor Society Designation History */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <div>
@@ -998,7 +940,6 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
 
-          {/* Password Change */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -1031,7 +972,6 @@ export default function ProfilePage() {
                   </button>
                 </div>
               </div>
-
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="newPassword">New Password</Label>
@@ -1054,7 +994,6 @@ export default function ProfilePage() {
                   />
                 </div>
               </div>
-
               {newPassword &&
                 confirmPassword &&
                 newPassword !== confirmPassword && (
@@ -1062,7 +1001,6 @@ export default function ProfilePage() {
                     Passwords do not match
                   </p>
                 )}
-
               <Button
                 onClick={handleChangePassword}
                 disabled={
@@ -1084,7 +1022,6 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
 
-          {/* Danger Zone */}
           <Card className="border-destructive/30">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-destructive">
@@ -1118,245 +1055,47 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Edit Profile Modal */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Profile</DialogTitle>
-            <DialogDescription>
-              Update your personal information
-            </DialogDescription>
-          </DialogHeader>
+      <ProfileEditDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        saving={saving}
+        editFirstName={editFirstName}
+        setEditFirstName={setEditFirstName}
+        editLastName={editLastName}
+        setEditLastName={setEditLastName}
+        editPhone={editPhone}
+        setEditPhone={setEditPhone}
+        editBirthdate={editBirthdate}
+        setEditBirthdate={setEditBirthdate}
+        editMembershipNumber={editMembershipNumber}
+        setEditMembershipNumber={setEditMembershipNumber}
+        editDegreeProgram={editDegreeProgram}
+        setEditDegreeProgram={setEditDegreeProgram}
+        editYearLevel={editYearLevel}
+        setEditYearLevel={setEditYearLevel}
+        editAvatarUrl={editAvatarUrl}
+        uploadingAvatar={uploadingAvatar}
+        isTutor={isTutor}
+        displayName={displayName}
+        getInitials={getInitials}
+        handleAvatarFileSelect={handleAvatarFileSelect}
+        handleRemoveAvatar={handleRemoveAvatar}
+        handleSaveProfile={handleSaveProfile}
+      />
 
-          <div className="space-y-4 py-4">
-            {/* Avatar Upload */}
-            <div className="flex flex-col items-center gap-3">
-              <div className="relative">
-                <Avatar className="h-20 w-20 border-2 border-muted">
-                  <AvatarImage src={editAvatarUrl || undefined} alt="Profile" />
-                  <AvatarFallback className="text-xl bg-primary text-primary-foreground">
-                    {getInitials(displayName)}
-                  </AvatarFallback>
-                </Avatar>
-                {uploadingAvatar && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-full">
-                    <Loader2 className="h-6 w-6 animate-spin" />
-                  </div>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="gap-1"
-                  disabled={uploadingAvatar}
-                  onClick={() =>
-                    document.getElementById("avatar-upload")?.click()
-                  }
-                >
-                  <Camera className="h-4 w-4" />
-                  {editAvatarUrl ? "Change" : "Upload"}
-                </Button>
-                {editAvatarUrl && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="gap-1"
-                    disabled={uploadingAvatar}
-                    onClick={handleRemoveAvatar}
-                  >
-                    <X className="h-4 w-4" />
-                    Remove
-                  </Button>
-                )}
-                <input
-                  id="avatar-upload"
-                  type="file"
-                  accept="image/jpeg,image/png,image/gif,image/webp"
-                  className="hidden"
-                  onChange={handleAvatarFileSelect}
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                JPEG, PNG, GIF or WebP. Max 5MB.
-              </p>
-            </div>
+      <TutorSettingsDialog
+        open={tutorSettingsOpen}
+        onOpenChange={setTutorSettingsOpen}
+        tutorBio={tutorBio}
+        setTutorBio={setTutorBio}
+        hourlyRate={hourlyRate}
+        setHourlyRate={setHourlyRate}
+        yearsExperience={yearsExperience}
+        setYearsExperience={setYearsExperience}
+        savingTutor={savingTutor}
+        handleSaveTutorSettings={handleSaveTutorSettings}
+      />
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="editFirstName">First Name *</Label>
-                <Input
-                  id="editFirstName"
-                  value={editFirstName}
-                  onChange={(e) => setEditFirstName(e.target.value)}
-                  placeholder="First name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="editLastName">Last Name *</Label>
-                <Input
-                  id="editLastName"
-                  value={editLastName}
-                  onChange={(e) => setEditLastName(e.target.value)}
-                  placeholder="Last name"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="editPhone">Phone Number</Label>
-              <Input
-                id="editPhone"
-                type="tel"
-                value={editPhone}
-                onChange={(e) => setEditPhone(e.target.value)}
-                placeholder="Enter phone number"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="editBirthdate">Birthday</Label>
-              <Input
-                id="editBirthdate"
-                type="date"
-                value={editBirthdate}
-                onChange={(e) => setEditBirthdate(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="editMembershipNumber">Student ID Number</Label>
-              <Input
-                id="editMembershipNumber"
-                value={editMembershipNumber}
-                onChange={(e) => setEditMembershipNumber(e.target.value)}
-                placeholder="e.g. 21-1234-567"
-              />
-            </div>
-
-            {!isTutor && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="editDegreeProgram">Degree Program</Label>
-                  <Input
-                    id="editDegreeProgram"
-                    value={editDegreeProgram}
-                    onChange={(e) => setEditDegreeProgram(e.target.value)}
-                    placeholder="e.g. BS Computer Science"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="editYearLevel">Year Level</Label>
-                  <Input
-                    id="editYearLevel"
-                    type="number"
-                    value={editYearLevel}
-                    onChange={(e) => setEditYearLevel(e.target.value)}
-                    placeholder="e.g. 1"
-                  />
-                </div>
-              </>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setEditOpen(false)}
-              disabled={saving}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleSaveProfile} disabled={saving}>
-              {saving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Save Changes"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Tutor Settings Dialog */}
-      <Dialog open={tutorSettingsOpen} onOpenChange={setTutorSettingsOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Tutor Settings</DialogTitle>
-            <DialogDescription>
-              Update your bio, rate, and specializations
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="tutorBio">Bio</Label>
-              <textarea
-                id="tutorBio"
-                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={tutorBio}
-                onChange={(e) => setTutorBio(e.target.value)}
-                placeholder="Tell students about your expertise..."
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
-                <Input
-                  id="hourlyRate"
-                  type="number"
-                  value={hourlyRate || ""}
-                  onChange={(e) =>
-                    setHourlyRate(
-                      e.target.value ? Number(e.target.value) : null,
-                    )
-                  }
-                  placeholder="e.g. 50"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="yearsExperience">Years of Experience</Label>
-                <Input
-                  id="yearsExperience"
-                  type="number"
-                  value={yearsExperience || ""}
-                  onChange={(e) =>
-                    setYearsExperience(
-                      e.target.value ? Number(e.target.value) : null,
-                    )
-                  }
-                  placeholder="e.g. 5"
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setTutorSettingsOpen(false)}
-              disabled={savingTutor}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleSaveTutorSettings} disabled={savingTutor}>
-              {savingTutor ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Save Settings"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Image Cropper */}
       {cropperImageSrc && (
         <ImageCropper
           imageSrc={cropperImageSrc}
@@ -1371,160 +1110,22 @@ export default function ProfilePage() {
         />
       )}
 
-      {/* Honor Society Designation Dialog */}
-      <Dialog
+      <HonorSocietyDesignationDialog
         open={designationDialogOpen}
         onOpenChange={setDesignationDialogOpen}
-      >
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>
-              {editingDesignation ? "Edit Designation" : "Add Designation"}
-            </DialogTitle>
-            <DialogDescription>
-              {editingDesignation
-                ? "Update your Honor Society designation."
-                : "Add a designation or role you held."}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="desigType">Designation Type</Label>
-              <Select
-                value={desigType}
-                onValueChange={(v) => setDesigType(v as DesignationType)}
-              >
-                <SelectTrigger id="desigType">
-                  <SelectValue placeholder="Select designation" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="member">Member</SelectItem>
-                  <SelectItem value="officer">Officer</SelectItem>
-                  <SelectItem value="administrator">Administrator</SelectItem>
-                  <SelectItem value="esas_scholar">ESAS Scholar</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {desigType === "officer" && (
-              <div className="grid gap-2">
-                <Label htmlFor="desigPosition">Position Title</Label>
-                <Input
-                  id="desigPosition"
-                  value={desigPosition}
-                  onChange={(e) => setDesigPosition(e.target.value)}
-                  placeholder="e.g. President, Secretary"
-                />
-              </div>
-            )}
-            <div className="grid gap-2">
-              <Label htmlFor="desigAcademicYear">Academic Year</Label>
-              <Input
-                id="desigAcademicYear"
-                value={desigAcademicYear}
-                onChange={(e) => setDesigAcademicYear(e.target.value)}
-                placeholder="e.g. 2024-2025"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="desigIsCurrent"
-                checked={desigIsCurrent}
-                onChange={(e) => setDesigIsCurrent(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300"
-              />
-              <Label htmlFor="desigIsCurrent" className="font-normal">
-                This is my current designation
-              </Label>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDesignationDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              disabled={
-                savingDesignation || (desigType === "officer" && !desigPosition)
-              }
-              onClick={async () => {
-                setSavingDesignation(true);
-                try {
-                  if (editingDesignation) {
-                    const { error } = await supabase
-                      .from("hs_designations")
-                      .update({
-                        designation: desigType,
-                        position:
-                          desigType === "officer" ? desigPosition : null,
-                        academic_year: desigAcademicYear,
-                        is_current: desigIsCurrent,
-                      })
-                      .eq("id", editingDesignation.id);
-                    if (error) throw error;
-                    setDesignations((prev) =>
-                      prev.map((d) =>
-                        d.id === editingDesignation.id
-                          ? {
-                              ...d,
-                              designation: desigType,
-                              position:
-                                desigType === "officer" ? desigPosition : null,
-                              academic_year: desigAcademicYear,
-                              is_current: desigIsCurrent,
-                            }
-                          : desigIsCurrent
-                            ? { ...d, is_current: false }
-                            : d,
-                      ),
-                    );
-                    toast.success("Designation updated");
-                  } else {
-                    const { data, error } = await supabase
-                      .from("hs_designations")
-                      .insert({
-                        user_id: profile?.id,
-                        designation: desigType,
-                        position:
-                          desigType === "officer" ? desigPosition : null,
-                        academic_year: desigAcademicYear,
-                        is_current: desigIsCurrent,
-                      })
-                      .select()
-                      .single();
-                    if (error) throw error;
-                    setDesignations((prev) =>
-                      desigIsCurrent
-                        ? [
-                            data,
-                            ...prev.map((d) => ({ ...d, is_current: false })),
-                          ]
-                        : [data, ...prev],
-                    );
-                    toast.success("Designation added");
-                  }
-                  setDesignationDialogOpen(false);
-                } catch {
-                  toast.error("Failed to save designation");
-                } finally {
-                  setSavingDesignation(false);
-                }
-              }}
-            >
-              {savingDesignation ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Save"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        editingDesignation={editingDesignation}
+        desigType={desigType}
+        setDesigType={setDesigType}
+        desigPosition={desigPosition}
+        setDesigPosition={setDesigPosition}
+        desigAcademicYear={desigAcademicYear}
+        setDesigAcademicYear={setDesigAcademicYear}
+        desigIsCurrent={desigIsCurrent}
+        setDesigIsCurrent={setDesigIsCurrent}
+        savingDesignation={savingDesignation}
+        roleName={roleName}
+        handleSaveDesignation={handleSaveDesignation}
+      />
     </div>
   );
 }

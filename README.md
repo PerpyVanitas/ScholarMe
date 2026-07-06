@@ -8,6 +8,7 @@ A high-performance academic management ecosystem built exclusively as a **Web Ap
 
 ## 📖 Table of Contents
 
+- [What's New](#whats-new-latest-updates)
 - [Features](#features)
 - [Architecture & Tech Stack](#architecture--tech-stack)
 - [Project Structure](#project-structure)
@@ -16,6 +17,17 @@ A high-performance academic management ecosystem built exclusively as a **Web Ap
 - [Gamification Engine](#gamification-engine)
 - [Error Handling](#error-handling)
 - [Enterprise Standards & Testing](#enterprise-standards--testing)
+
+---
+
+## 🆕 What's New (Latest Updates)
+
+- **Enterprise Security & RLS**: Completely locked down organizational financial data by implementing strict PostgreSQL Row Level Security (RLS) on all `finance_*` tables. Patched IDOR/BOLA vulnerabilities in the Teamwork tracker.
+- **Architectural Refactoring**: Eliminated massive "God Objects" (`admin/users/page.tsx` and `profile/page.tsx`) by adopting a modular, component-driven approach for all modals and states.
+- **Tutor Analytics System**: Introduced database triggers to automatically track tutor metrics (sessions completed, hours tutored, students helped) and real-time XP gamification logic.
+- **Query Optimization & Type Safety**: Replaced blanket `SELECT *` queries with strict explicit selections across database calls and enforced rigorous TypeScript schemas in place of `any` overrides.
+- **Finance Drafts**: Implement "Save Draft" functionalities for Petty Cash and Budget requests, empowering a more robust review workflow.
+- **Global Design System**: Abstracted hardcoded Tailwind colors to dynamically adaptive CSS variables (`hsl(var(--primary))`) ensuring optimal cross-mode aesthetics.
 
 ---
 
@@ -29,15 +41,22 @@ A high-performance academic management ecosystem built exclusively as a **Web Ap
 - **Resource Repository**: Secure knowledge sharing with role-based access control.
 - **In-App Notifications**: Real-time activity feeds with unread badge tracking via Web Push.
 - **Admin Command Center**: Centralized oversight for users, sessions, and system analytics.
+- **Finance Module**: Comprehensive RBAC-gated management for Budget Requests, Petty Cash, Liquidations, and SCARDS Audits.
+- **Teamwork Tracker**: Collaborative task tracking and timeline management exclusive to organizational officers.
 
 ### 🎮 Engagement & Growth (SSD SHOULD/COULD-HAVE)
 
 - **Gamification Engine**: XP-based progression, leveling system, and global leaderboards.
 - **Real-Time Messaging**: WebSocket-driven chat with instant web sync.
-- **Organization Voting**: Transparent poll management for organizational decisions.
+- **Organization Voting**: Transparent poll management for organizational decisions, featuring secure RBAC (hidden past polls for learners, editable by admins).
 - **Study & Quiz Suite**: Automated flashcard and quiz generation from study sets.
 - **Push Notification Engine**: Web Push (VAPID) for browser-based alerts.
 - **Identity Scanner**: Web-based QR scanner for instant student verification via device cameras.
+
+### 💼 RBAC & Roles (SSD MUST-HAVE)
+
+- **Strict Role-Based Access Control**: Securely limits administrative commands (e.g., role assignment and Super Admin designation assignment) strictly to `super_admin` users, guarding against privilege escalation.
+- **Dynamic ID Cards**: ID Cards dynamically adapt their prefix (e.g. `MJJ-2627-`) and President display based on the current active Academic Year, ensuring seamless organizational transitions year-over-year.
 
 ### 💻 Web-First Experience
 

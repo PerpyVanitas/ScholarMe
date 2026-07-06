@@ -7,7 +7,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Users, BookOpen, Clock, ShieldAlert } from "lucide-react";
+import {
+  Users,
+  BookOpen,
+  Clock,
+  ShieldAlert,
+  UserCog,
+  Camera,
+} from "lucide-react";
+import Link from "next/link";
 import { AdminCharts } from "@/components/admin-charts";
 
 export const metadata = {
@@ -45,12 +53,14 @@ export default async function AdminDashboardPage() {
     usersCount,
     sessionsCount,
     resourcesCount,
+    tutorsCount,
     { data: allUsers },
     { data: allSessions },
   ] = await Promise.all([
     supabase.from("profiles").select("*", { count: "exact", head: true }),
     supabase.from("sessions").select("*", { count: "exact", head: true }),
     supabase.from("resources").select("*", { count: "exact", head: true }),
+    supabase.from("tutors").select("*", { count: "exact", head: true }),
     supabase.from("profiles").select("created_at"),
     supabase.from("sessions").select("status"),
   ]);
@@ -145,6 +155,52 @@ export default async function AdminDashboardPage() {
             </p>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Tutors</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{tutorsCount.count || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              Approved platform tutors
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Link href="/dashboard/admin/roles">
+          <Card className="hover:bg-muted/50 transition-colors cursor-pointer border-border/60">
+            <CardHeader className="flex flex-row items-center gap-4 space-y-0">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <UserCog className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-base">Role Management</CardTitle>
+                <CardDescription>
+                  Assign or revoke platform access levels
+                </CardDescription>
+              </div>
+            </CardHeader>
+          </Card>
+        </Link>
+        <Link href="/dashboard/admin/scanner">
+          <Card className="hover:bg-muted/50 transition-colors cursor-pointer border-border/60">
+            <CardHeader className="flex flex-row items-center gap-4 space-y-0">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Camera className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-base">ID Card Scanner</CardTitle>
+                <CardDescription>
+                  Scan digital IDs to view student audit logs
+                </CardDescription>
+              </div>
+            </CardHeader>
+          </Card>
+        </Link>
       </div>
 
       {/* Additional admin widgets could go here */}

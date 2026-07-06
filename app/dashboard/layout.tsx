@@ -9,6 +9,7 @@ import {
 import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { FeedbackButton } from "@/components/feedback-button";
 import { UserProvider, useUser } from "@/lib/user-context";
 import { Loader2 } from "lucide-react";
 import { BreadcrumbNav } from "@/components/breadcrumb-nav";
@@ -43,7 +44,8 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
             className="mr-2 h-4 hidden md:flex"
           />
           <BreadcrumbNav />
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            <FeedbackButton />
             <ThemeToggle />
           </div>
         </header>

@@ -24,6 +24,8 @@ import {
   createBudgetRequest,
   createPettyCash,
   updateBudgetRequestStatus,
+  submitBudgetRequestForReview,
+  submitPettyCashForReview,
   submitLiquidation,
   saveScards,
   cosignScards,
@@ -60,32 +62,40 @@ export default async function FinanceDashboard() {
 
   const { data: budgetReqs } = await supabase
     .from("finance_budget_requests")
-    .select("*, profiles(full_name)")
+    .select(
+      "id, activity_title, amount, status, created_at, attachment_url, profiles(full_name)",
+    )
     .order("created_at", { ascending: false });
   const { data: pettyCash } = await supabase
     .from("finance_petty_cash")
-    .select("*, profiles(full_name)")
+    .select(
+      "id, amount, justification, status, created_at, attachment_url, profiles(full_name)",
+    )
     .order("created_at", { ascending: false });
   const { data: lateLiquidations } = await supabase
     .from("finance_liquidations")
     .select(
-      "*, finance_budget_requests(activity_title, amount), profiles(full_name)",
+      "id, submitted_at, finance_budget_requests(activity_title, amount), profiles(full_name)",
     )
     .eq("is_late", true)
     .order("submitted_at", { ascending: true });
 
   const { data: approvedRequests } = await supabase
     .from("finance_budget_requests")
-    .select("*")
+    .select("id, activity_title, amount")
     .eq("status", "president_approved")
     .order("created_at", { ascending: false });
   const { data: allLiquidations } = await supabase
     .from("finance_liquidations")
-    .select("*, finance_budget_requests(activity_title), profiles(full_name)")
+    .select(
+      "id, submitted_at, is_late, receipt_urls, proof_of_payment_urls, finance_budget_requests(activity_title), profiles(full_name)",
+    )
     .order("submitted_at", { ascending: false });
   const { data: scards } = await supabase
     .from("finance_scards")
-    .select("*, profiles(full_name)")
+    .select(
+      "id, event_id, version, receipts_total, disbursements_total, balance, status, created_at, attachment_url, cosigned_by, cosigned_at, profiles(full_name)",
+    )
     .order("created_at", { ascending: false });
 
   return (
@@ -142,7 +152,24 @@ export default async function FinanceDashboard() {
                       required
                     />
                   </div>
-                  <Button type="submit">Submit Request</Button>
+                  <div className="flex gap-2">
+                    <Button
+                      type="submit"
+                      name="action_type"
+                      value="submit"
+                      variant="default"
+                    >
+                      Submit Request
+                    </Button>
+                    <Button
+                      type="submit"
+                      name="action_type"
+                      value="draft"
+                      variant="outline"
+                    >
+                      Save Draft
+                    </Button>
+                  </div>
                 </form>
               </CardContent>
             </Card>
@@ -193,6 +220,20 @@ export default async function FinanceDashboard() {
                       </a>
                     )}
 
+                    {req.status === "draft" && (
+                      <div className="flex gap-2 mt-4">
+                        <form
+                          action={async () => {
+                            "use server";
+                            await submitBudgetRequestForReview(req.id);
+                          }}
+                        >
+                          <Button size="sm" variant="default">
+                            Submit for Review
+                          </Button>
+                        </form>
+                      </div>
+                    )}
                     {isManager && req.status === "pending" && (
                       <div className="flex gap-2 mt-4">
                         <form
@@ -273,7 +314,24 @@ export default async function FinanceDashboard() {
                       required
                     />
                   </div>
-                  <Button type="submit">Submit Petty Cash</Button>
+                  <div className="flex gap-2">
+                    <Button
+                      type="submit"
+                      name="action_type"
+                      value="submit"
+                      variant="default"
+                    >
+                      Submit Petty Cash
+                    </Button>
+                    <Button
+                      type="submit"
+                      name="action_type"
+                      value="draft"
+                      variant="outline"
+                    >
+                      Save Draft
+                    </Button>
+                  </div>
                 </form>
               </CardContent>
             </Card>
@@ -329,6 +387,20 @@ export default async function FinanceDashboard() {
                     >
                       {req.status}
                     </span>
+                    {req.status === "draft" && (
+                      <div className="mt-2 text-right">
+                        <form
+                          action={async () => {
+                            "use server";
+                            await submitPettyCashForReview(req.id);
+                          }}
+                        >
+                          <Button size="sm" variant="default">
+                            Submit for Review
+                          </Button>
+                        </form>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

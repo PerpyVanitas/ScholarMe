@@ -5,7 +5,13 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -28,7 +34,9 @@ export default function TutorsPage() {
       const [tutorRes, specRes] = await Promise.all([
         supabase
           .from("tutors")
-          .select("*, profiles(*), tutor_specializations(specializations(*))")
+          .select(
+            "*, profiles(*, roles(name)), tutor_specializations(specializations(*))",
+          )
           .order("rating", { ascending: false }),
         supabase.from("specializations").select("*").order("name"),
       ]);
@@ -40,11 +48,18 @@ export default function TutorsPage() {
   }, []);
 
   const filtered = tutors.filter((t) => {
-    const nameMatch = !search || t.profiles?.full_name?.toLowerCase().includes(search.toLowerCase());
+    const roles: any = t.profiles?.roles;
+    const roleName = Array.isArray(roles) ? roles[0]?.name : roles?.name;
+    if (roleName !== "tutor" && roleName !== "officer") return false;
+
+    const nameMatch =
+      !search ||
+      t.profiles?.full_name?.toLowerCase().includes(search.toLowerCase());
     const specMatch =
       selectedSpec === "all" ||
       t.tutor_specializations?.some(
-        (ts: { specializations: Specialization }) => ts.specializations?.name === selectedSpec
+        (ts: { specializations: Specialization }) =>
+          ts.specializations?.name === selectedSpec,
       );
     return nameMatch && specMatch;
   });
@@ -60,8 +75,12 @@ export default function TutorsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Find a Tutor</h1>
-        <p className="text-muted-foreground">Browse tutors by name or specialization.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          Find a Tutor
+        </h1>
+        <p className="text-muted-foreground">
+          Browse tutors by name or specialization.
+        </p>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -90,14 +109,35 @@ export default function TutorsPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <Card className="border-border/60">
-          <CardContent className="flex flex-col items-center gap-3 py-12">
-            <div className="rounded-full bg-muted p-4">
-              <Users className="h-6 w-6 text-muted-foreground" />
+        <Card className="border-border/60 bg-muted/20">
+          <CardContent className="flex flex-col items-center gap-4 py-16 text-center">
+            <div className="rounded-full bg-primary/10 p-5 ring-4 ring-primary/5">
+              <Users className="h-8 w-8 text-primary" />
             </div>
-            <p className="text-sm text-muted-foreground">
-              {tutors.length === 0 ? "No tutors available yet" : "No tutors match your search"}
-            </p>
+            <div className="space-y-1">
+              <h3 className="font-semibold text-lg">
+                {tutors.length === 0
+                  ? "No Tutors Available"
+                  : "No Tutors Found"}
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-sm">
+                {tutors.length === 0
+                  ? "We are currently onboarding new tutors. Please check back later!"
+                  : "We couldn't find any tutors matching your current search criteria. Try adjusting your filters."}
+              </p>
+            </div>
+            {tutors.length > 0 && (search || selectedSpec !== "all") && (
+              <Button
+                variant="outline"
+                className="mt-2"
+                onClick={() => {
+                  setSearch("");
+                  setSelectedSpec("all");
+                }}
+              >
+                Clear Filters
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -112,11 +152,15 @@ export default function TutorsPage() {
               .slice(0, 2);
             const specs =
               tutor.tutor_specializations?.map(
-                (ts: { specializations: Specialization }) => ts.specializations?.name
+                (ts: { specializations: Specialization }) =>
+                  ts.specializations?.name,
               ) || [];
 
             return (
-              <Card key={tutor.id} className="border-border/60 hover:border-primary/30 transition-colors flex flex-col h-full">
+              <Card
+                key={tutor.id}
+                className="border-border/60 hover:border-primary/30 transition-colors flex flex-col h-full"
+              >
                 <CardContent className="flex flex-col gap-4 p-5 flex-1">
                   {/* Header Section - Fixed Height */}
                   <div className="flex items-center gap-3">
@@ -126,12 +170,15 @@ export default function TutorsPage() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col flex-1">
-                      <span className="font-semibold text-foreground line-clamp-1">{name}</span>
+                      <span className="font-semibold text-foreground line-clamp-1">
+                        {name}
+                      </span>
                       <div className="flex items-center gap-1">
                         <Star className="h-3.5 w-3.5 fill-accent text-accent flex-shrink-0" />
                         <span className="text-sm text-muted-foreground">
                           {tutor.rating > 0 ? tutor.rating.toFixed(1) : "New"}{" "}
-                          {tutor.total_ratings > 0 && `(${tutor.total_ratings})`}
+                          {tutor.total_ratings > 0 &&
+                            `(${tutor.total_ratings})`}
                         </span>
                       </div>
                     </div>
@@ -140,9 +187,13 @@ export default function TutorsPage() {
                   {/* Bio Section - Fixed Height */}
                   <div className="h-10 flex items-start">
                     {tutor.bio ? (
-                      <p className="text-sm text-muted-foreground line-clamp-2">{tutor.bio}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {tutor.bio}
+                      </p>
                     ) : (
-                      <p className="text-sm text-muted-foreground/50 italic">No bio available</p>
+                      <p className="text-sm text-muted-foreground/50 italic">
+                        No bio available
+                      </p>
                     )}
                   </div>
 
@@ -151,13 +202,19 @@ export default function TutorsPage() {
                     {specs.length > 0 ? (
                       <div className="flex flex-wrap gap-1.5">
                         {specs.map((s: string) => (
-                          <Badge key={s} variant="secondary" className="text-xs">
+                          <Badge
+                            key={s}
+                            variant="secondary"
+                            className="text-xs"
+                          >
                             {s}
                           </Badge>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-muted-foreground/50">No specializations listed</p>
+                      <p className="text-xs text-muted-foreground/50">
+                        No specializations listed
+                      </p>
                     )}
                   </div>
                 </CardContent>

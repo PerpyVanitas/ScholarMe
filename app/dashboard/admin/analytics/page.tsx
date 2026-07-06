@@ -168,7 +168,9 @@ export default function AdminAnalyticsPage() {
   // Hall of Fame State
   const [hofStartDate, setHofStartDate] = useState<string>("");
   const [hofEndDate, setHofEndDate] = useState<string>("");
-  const [hofData, setHofData] = useState<any>(null);
+  const [hofData, setHofData] = useState<AdvancedStats["hall_of_fame"] | null>(
+    null,
+  );
   const [hofLoading, setHofLoading] = useState(false);
 
   const loadStats = async () => {
@@ -210,8 +212,12 @@ export default function AdminAnalyticsPage() {
         setHofStartDate(jsonAdv.data.semester.start_date);
         setHofEndDate(jsonAdv.data.semester.end_date);
       }
-    } catch (e: any) {
-      setPageError({ type: "generic", message: e.message ?? "Unknown error" });
+    } catch (e) {
+      const error = e as Error;
+      setPageError({
+        type: "generic",
+        message: error.message ?? "Unknown error",
+      });
     } finally {
       setLoading(false);
     }
@@ -279,8 +285,9 @@ export default function AdminAnalyticsPage() {
         password: "",
         confirmPassword: "",
       });
-    } catch (e: any) {
-      setAdminFormError(e.message);
+    } catch (e) {
+      const error = e as Error;
+      setAdminFormError(error.message);
     } finally {
       setCreating(false);
     }
@@ -299,8 +306,9 @@ export default function AdminAnalyticsPage() {
       toast.success("Semester configured successfully");
       setSemesterDialog(false);
       loadStats();
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (e) {
+      const error = e as Error;
+      toast.error(error.message);
     } finally {
       setConfiguring(false);
     }
@@ -445,7 +453,7 @@ export default function AdminAnalyticsPage() {
                     placeholder="Fall 2026"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label>Start Date</Label>
                     <Input
@@ -560,7 +568,7 @@ export default function AdminAnalyticsPage() {
       </div>
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 print:hidden mb-4">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 print:hidden mb-4 h-auto">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="compliance">Scholar Compliance</TabsTrigger>
           <TabsTrigger value="records">Hall of Fame</TabsTrigger>
@@ -574,7 +582,7 @@ export default function AdminAnalyticsPage() {
           {generalStats && (
             <>
               {/* Stat cards */}
-              <div className="grid grid-cols-2 gap-4 lg:grid-cols-2 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <StatCard
                   icon={<Users className="h-5 w-5 text-primary" />}
                   label="Total Users"
@@ -588,7 +596,7 @@ export default function AdminAnalyticsPage() {
               </div>
 
               {/* Primary Stat cards */}
-              <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard
                   icon={<GraduationCap className="h-5 w-5 text-success" />}
                   label="Active Tutors"
@@ -865,20 +873,15 @@ export default function AdminAnalyticsPage() {
                 ) : (
                   <>
                     <p className="text-2xl font-black">
-                      {hofData?.best_week?.full_name || "N/A"}
+                      {hofData?.most_hours_week?.full_name || "N/A"}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {(hofData?.best_week?.value
-                        ? hofData.best_week.value / 60
+                      {(hofData?.most_hours_week?.value
+                        ? hofData.most_hours_week.value / 60
                         : 0
                       ).toFixed(1)}{" "}
                       Hours
                     </p>
-                    {hofData?.best_week?.period_label && (
-                      <p className="text-xs text-yellow-600 dark:text-yellow-500 mt-1 font-medium">
-                        {hofData.best_week.period_label}
-                      </p>
-                    )}
                   </>
                 )}
               </CardContent>
@@ -899,20 +902,15 @@ export default function AdminAnalyticsPage() {
                 ) : (
                   <>
                     <p className="text-2xl font-black">
-                      {hofData?.best_month?.full_name || "N/A"}
+                      {hofData?.most_hours_month?.full_name || "N/A"}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {(hofData?.best_month?.value
-                        ? hofData.best_month.value / 60
+                      {(hofData?.most_hours_month?.value
+                        ? hofData.most_hours_month.value / 60
                         : 0
                       ).toFixed(1)}{" "}
                       Hours
                     </p>
-                    {hofData?.best_month?.period_label && (
-                      <p className="text-xs text-yellow-600 dark:text-yellow-500 mt-1 font-medium">
-                        {hofData.best_month.period_label}
-                      </p>
-                    )}
                   </>
                 )}
               </CardContent>
@@ -933,11 +931,11 @@ export default function AdminAnalyticsPage() {
                 ) : (
                   <>
                     <p className="text-2xl font-black">
-                      {hofData?.most_hours_overall?.full_name || "N/A"}
+                      {hofData?.most_hours_semester?.full_name || "N/A"}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {(hofData?.most_hours_overall?.value
-                        ? hofData.most_hours_overall.value / 60
+                      {(hofData?.most_hours_semester?.value
+                        ? hofData.most_hours_semester.value / 60
                         : 0
                       ).toFixed(1)}{" "}
                       Hours

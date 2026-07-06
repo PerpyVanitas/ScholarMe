@@ -24,6 +24,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { FeedbackButton } from "@/components/feedback-button";
 import { HonorSocietyLogo } from "@/components/honsoc-logo";
 import { TosLink, PrivacyLink } from "@/components/legal-modals";
 
@@ -182,11 +183,11 @@ function AnimatedStat({
   const display = isNaN(numericPart) ? value : `${count}${suffix}`;
 
   return (
-    <div className="group text-center p-6 rounded-2xl border border-border/40 bg-card/50 backdrop-blur-sm hover:border-amber-500/50 dark:hover:border-[#FFD700]/50 transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/10">
-      <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-amber-500/10 dark:bg-[#FFD700]/10 mb-4 group-hover:scale-110 transition-transform duration-300">
-        <Icon className="h-6 w-6 text-amber-600 dark:text-[#FFD700]" />
+    <div className="group text-center p-6 rounded-2xl border border-border/40 bg-card/50 backdrop-blur-sm hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/10">
+      <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 mb-4 group-hover:scale-110 transition-transform duration-300">
+        <Icon className="h-6 w-6 text-primary" />
       </div>
-      <div className="text-3xl lg:text-4xl font-black text-amber-600 dark:text-[#FFD700] mb-1 tabular-nums">
+      <div className="text-3xl lg:text-4xl font-black text-primary mb-1 tabular-nums">
         {display}
       </div>
       <p className="text-xs text-muted-foreground font-semibold tracking-wide uppercase">
@@ -246,12 +247,12 @@ export default function HomePage() {
       >
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="h-9 w-9 bg-zinc-950 dark:bg-zinc-900 border border-[#FFD700]/40 group-hover:border-[#FFD700] rounded-xl flex items-center justify-center shadow-md transition-all duration-300 group-hover:shadow-[0_0_12px_rgba(255,215,0,0.3)]">
+            <div className="h-9 w-9 bg-zinc-950 dark:bg-zinc-900 border border-primary/40 group-hover:border-primary rounded-xl flex items-center justify-center shadow-md transition-all duration-300 group-hover:shadow-[0_0_12px_hsl(var(--primary)/0.3)]">
               <HonorSocietyLogo variant="gold" className="h-5 w-5" />
             </div>
             <span className="font-extrabold text-lg tracking-tight">
               ScholarMe{" "}
-              <span className="text-[10px] text-amber-500 dark:text-[#FFD700] font-bold hidden sm:inline tracking-widest uppercase ml-1 opacity-70">
+              <span className="text-[10px] text-primary font-bold hidden sm:inline tracking-widest uppercase ml-1 opacity-70">
                 HonSoc
               </span>
             </span>
@@ -287,6 +288,7 @@ export default function HomePage() {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
+            <FeedbackButton />
             <ThemeToggle />
             <Link
               href={isLoggedIn ? "/dashboard" : "/auth/login"}
@@ -296,7 +298,7 @@ export default function HomePage() {
             </Link>
             <Link
               href={isLoggedIn ? "/dashboard" : "/auth/sign-up"}
-              className="text-sm font-bold px-4 py-2 bg-zinc-950 text-white dark:bg-[#FFD700] dark:text-black rounded-xl hover:opacity-90 transition-all duration-200 shadow-md"
+              className="text-sm font-bold px-4 py-2 bg-primary text-primary-foreground rounded-xl hover:opacity-90 transition-all duration-200 shadow-md"
             >
               Get Started
             </Link>
@@ -328,6 +330,10 @@ export default function HomePage() {
                 How It Works
               </a>
               <div className="border-t border-border/20 pt-4 flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Feedback</span>
+                <FeedbackButton />
+              </div>
+              <div className="pt-4 flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">
                   Appearance
                 </span>
@@ -335,7 +341,7 @@ export default function HomePage() {
               </div>
               <Link
                 href={isLoggedIn ? "/dashboard" : "/auth/sign-up"}
-                className="block text-center px-4 py-3 bg-zinc-950 text-white dark:bg-[#FFD700] dark:text-black rounded-xl font-extrabold"
+                className="block text-center px-4 py-3 bg-primary text-primary-foreground rounded-xl font-extrabold"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {isLoggedIn ? "Go to Dashboard" : "Get Started Free"}
@@ -349,15 +355,15 @@ export default function HomePage() {
       <section className="relative pt-32 pb-24 px-6 overflow-hidden">
         {/* Background decoration */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[600px] bg-gradient-to-b from-amber-500/8 dark:from-[#FFD700]/5 to-transparent rounded-full blur-3xl" />
-          <div className="absolute top-20 left-1/4 w-64 h-64 bg-amber-400/5 dark:bg-[#FFD700]/3 rounded-full blur-2xl" />
-          <div className="absolute top-40 right-1/4 w-96 h-96 bg-amber-300/5 dark:bg-[#FFD700]/3 rounded-full blur-3xl" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[600px] bg-gradient-to-b from-primary/10 dark:from-[#FFD700]/5 to-transparent rounded-full blur-3xl" />
+          <div className="absolute top-20 left-1/4 w-64 h-64 bg-primary/5 dark:bg-primary/5 rounded-full blur-2xl" />
+          <div className="absolute top-40 right-1/4 w-96 h-96 bg-primary/5 dark:bg-primary/5 rounded-full blur-3xl" />
         </div>
 
         <div className="max-w-6xl mx-auto relative z-10">
           {/* Top badge */}
           <div className="flex justify-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 dark:bg-[#FFD700]/10 border border-amber-500/30 dark:border-[#FFD700]/30 text-amber-700 dark:text-[#FFD700] text-xs font-bold uppercase tracking-widest animate-fade-in-up">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs font-bold uppercase tracking-widest animate-fade-in-up">
               <Sparkles className="h-3.5 w-3.5" />
               CIT-U Honor Society Official Platform
             </div>
@@ -389,14 +395,14 @@ export default function HomePage() {
           >
             <Link
               href={isLoggedIn ? "/dashboard" : "/auth/sign-up"}
-              className="group inline-flex items-center gap-2 px-8 py-4 bg-zinc-950 text-white dark:bg-[#FFD700] dark:text-black rounded-2xl font-extrabold text-base shadow-xl hover:shadow-2xl hover:shadow-amber-500/20 dark:hover:shadow-[#FFD700]/20 transition-all duration-300 hover:-translate-y-0.5"
+              className="group inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-2xl font-extrabold text-base shadow-xl hover:shadow-2xl hover:shadow-primary/20 transition-all duration-300 hover:-translate-y-0.5"
             >
               {isLoggedIn ? "Go to Dashboard" : "Start Learning Free"}
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
             </Link>
             <Link
               href="#how"
-              className="inline-flex items-center gap-2 px-8 py-4 border border-border hover:border-amber-500/60 dark:hover:border-[#FFD700]/60 rounded-2xl font-bold text-base bg-background/50 backdrop-blur-sm hover:bg-secondary/30 transition-all duration-300"
+              className="inline-flex items-center gap-2 px-8 py-4 border border-border hover:border-primary/60 rounded-2xl font-bold text-base bg-background/50 backdrop-blur-sm hover:bg-secondary/30 transition-all duration-300"
             >
               See how it works
               <ChevronRight className="h-4 w-4 opacity-60" />
@@ -437,7 +443,7 @@ export default function HomePage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                 <div className="absolute bottom-2 left-3">
-                  <span className="text-[9px] sm:text-[10px] text-[#FFD700] font-bold uppercase tracking-wider">
+                  <span className="text-[9px] sm:text-[10px] text-primary font-bold uppercase tracking-wider">
                     {img.tag}
                   </span>
                 </div>
@@ -463,14 +469,12 @@ export default function HomePage() {
       <section id="features" className="py-24 px-6 relative">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16 space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-[#FFD700] text-xs font-bold uppercase tracking-widest">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-widest">
               Platform Features
             </div>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight">
               Everything you need to{" "}
-              <span className="text-amber-600 dark:text-[#FFD700]">
-                excel academically
-              </span>
+              <span className="text-primary">excel academically</span>
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               ScholarMe isn&apos;t just a tutoring app — it&apos;s a complete
@@ -508,7 +512,7 @@ export default function HomePage() {
       >
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16 space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-[#FFD700] text-xs font-bold uppercase tracking-widest">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-widest">
               Student Stories
             </div>
             <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
@@ -524,13 +528,13 @@ export default function HomePage() {
             {TESTIMONIALS.map((t, i) => (
               <div
                 key={i}
-                className="p-6 rounded-2xl border border-border/50 bg-card/70 backdrop-blur-sm hover:border-amber-500/40 dark:hover:border-[#FFD700]/40 hover:shadow-lg transition-all duration-300"
+                className="p-6 rounded-2xl border border-border/50 bg-card/70 backdrop-blur-sm hover:border-primary/40 hover:shadow-lg transition-all duration-300"
               >
                 <div className="flex gap-1 mb-4">
                   {Array.from({ length: t.rating }).map((_, j) => (
                     <Star
                       key={j}
-                      className="h-4 w-4 fill-amber-500 text-amber-500 dark:fill-[#FFD700] dark:text-[#FFD700]"
+                      className="h-4 w-4 fill-primary text-primary"
                     />
                   ))}
                 </div>
@@ -538,7 +542,7 @@ export default function HomePage() {
                   &ldquo;{t.text}&rdquo;
                 </p>
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-amber-500/20 dark:bg-[#FFD700]/20 flex items-center justify-center font-bold text-amber-700 dark:text-[#FFD700] text-sm">
+                  <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary text-sm">
                     {t.avatar}
                   </div>
                   <div>
@@ -566,7 +570,7 @@ export default function HomePage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
                   <div className="p-4 w-full">
-                    <p className="text-[#FFD700] font-bold text-xs uppercase tracking-wider">
+                    <p className="text-primary font-bold text-xs uppercase tracking-wider">
                       {img.title}
                     </p>
                     <p className="text-white/80 text-xs mt-0.5">{img.alt}</p>
@@ -586,7 +590,7 @@ export default function HomePage() {
 
         <div className="max-w-5xl mx-auto relative z-10">
           <div className="text-center mb-16 space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-[#FFD700] text-xs font-bold uppercase tracking-widest">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-widest">
               Simple Process
             </div>
             <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
@@ -604,8 +608,8 @@ export default function HomePage() {
             {STEPS.map((step, i) => (
               <div key={i} className="group relative text-center">
                 <div className="relative inline-flex mb-6">
-                  <div className="w-16 h-16 rounded-2xl bg-amber-500/10 dark:bg-[#FFD700]/10 border border-amber-500/30 dark:border-[#FFD700]/30 flex items-center justify-center group-hover:bg-amber-500/20 dark:group-hover:bg-[#FFD700]/20 transition-colors duration-300 group-hover:scale-110 transition-transform">
-                    <step.icon className="h-7 w-7 text-amber-600 dark:text-[#FFD700]" />
+                  <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/30 flex items-center justify-center group-hover:bg-amber-500/20 dark:group-hover:bg-[#FFD700]/20 transition-colors duration-300 group-hover:scale-110 transition-transform">
+                    <step.icon className="h-7 w-7 text-primary" />
                   </div>
                   <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-zinc-950 dark:bg-[#FFD700] text-white dark:text-black text-[10px] font-black flex items-center justify-center">
                     {i + 1}
@@ -654,8 +658,8 @@ export default function HomePage() {
                 ))}
               </ul>
             </div>
-            <div className="p-6 rounded-2xl border border-amber-500/30 dark:border-[#FFD700]/30 bg-amber-500/5 dark:bg-[#FFD700]/5">
-              <h3 className="font-bold text-amber-600 dark:text-[#FFD700] mb-4 flex items-center gap-2">
+            <div className="p-6 rounded-2xl border border-primary/30 bg-amber-500/5 dark:bg-[#FFD700]/5">
+              <h3 className="font-bold text-primary mb-4 flex items-center gap-2">
                 <CheckCircle className="h-5 w-5" /> With ScholarMe
               </h3>
               <ul className="space-y-3 text-sm text-muted-foreground">
@@ -667,9 +671,7 @@ export default function HomePage() {
                   "Leaderboard, XP, and gamified academic progress",
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-2">
-                    <span className="text-amber-600 dark:text-[#FFD700] mt-0.5 shrink-0">
-                      ✓
-                    </span>{" "}
+                    <span className="text-primary mt-0.5 shrink-0">✓</span>{" "}
                     {item}
                   </li>
                 ))}
@@ -683,19 +685,17 @@ export default function HomePage() {
       <section className="py-28 px-6 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute inset-0 bg-gradient-to-br from-amber-500/8 via-transparent to-yellow-500/5 dark:from-[#FFD700]/8 dark:to-yellow-400/5" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-amber-400/10 dark:bg-[#FFD700]/8 blur-3xl rounded-full" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-primary/10 blur-3xl rounded-full" />
         </div>
 
         <div className="max-w-3xl mx-auto text-center relative z-10 space-y-8">
           <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/15 dark:bg-[#FFD700]/10 border border-amber-500/30 dark:border-[#FFD700]/25 text-amber-700 dark:text-[#FFD700] text-xs font-bold uppercase tracking-widest">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/15 dark:bg-[#FFD700]/10 border border-amber-500/30 dark:border-[#FFD700]/25 text-primary text-xs font-bold uppercase tracking-widest">
               Join ScholarMe Today
             </div>
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight">
               Your academic breakthrough{" "}
-              <span className="text-amber-600 dark:text-[#FFD700]">
-                starts here.
-              </span>
+              <span className="text-primary">starts here.</span>
             </h2>
             <p className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
               Join hundreds of CIT-U students already excelling with Honor
@@ -706,14 +706,14 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href={isLoggedIn ? "/dashboard" : "/auth/sign-up"}
-              className="group inline-flex items-center justify-center gap-2 px-10 py-4 bg-zinc-950 text-white dark:bg-[#FFD700] dark:text-black rounded-2xl font-extrabold text-base shadow-xl hover:shadow-2xl hover:shadow-amber-500/30 dark:hover:shadow-[#FFD700]/25 transition-all duration-300 hover:-translate-y-0.5"
+              className="group inline-flex items-center justify-center gap-2 px-10 py-4 bg-primary text-primary-foreground rounded-2xl font-extrabold text-base shadow-xl hover:shadow-2xl hover:shadow-primary/30 transition-all duration-300 hover:-translate-y-0.5"
             >
               {isLoggedIn ? "Go to Dashboard" : "Get Started — It's Free"}
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
             </Link>
             <Link
               href={isLoggedIn ? "/dashboard" : "/auth/login"}
-              className="inline-flex items-center justify-center gap-2 px-10 py-4 border border-border hover:border-amber-500/50 dark:hover:border-[#FFD700]/50 rounded-2xl font-bold text-base hover:bg-secondary/30 transition-all duration-300"
+              className="inline-flex items-center justify-center gap-2 px-10 py-4 border border-border hover:border-primary/50 rounded-2xl font-bold text-base hover:bg-secondary/30 transition-all duration-300"
             >
               {isLoggedIn ? "View Profile" : "Sign In"}
             </Link>
@@ -732,7 +732,7 @@ export default function HomePage() {
           <div className="grid md:grid-cols-4 gap-10 mb-12">
             <div className="space-y-4">
               <div className="flex items-center gap-2.5">
-                <div className="h-8 w-8 bg-zinc-950 dark:bg-zinc-900 border border-[#FFD700]/40 rounded-xl flex items-center justify-center">
+                <div className="h-8 w-8 bg-zinc-950 dark:bg-zinc-900 border border-primary/40 rounded-xl flex items-center justify-center">
                   <HonorSocietyLogo variant="gold" className="h-4 w-4" />
                 </div>
                 <span className="font-extrabold tracking-tight">ScholarMe</span>
@@ -743,10 +743,7 @@ export default function HomePage() {
               </p>
               <div className="flex gap-1">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className="h-3 w-3 fill-amber-500 text-amber-500 dark:fill-[#FFD700] dark:text-[#FFD700]"
-                  />
+                  <Star key={i} className="h-3 w-3 fill-primary text-primary" />
                 ))}
                 <span className="text-xs text-muted-foreground ml-1">
                   5.0 rated
@@ -776,7 +773,7 @@ export default function HomePage() {
               },
             ].map((col, i) => (
               <div key={i}>
-                <h3 className="font-bold mb-4 text-xs uppercase tracking-wider text-amber-600 dark:text-[#FFD700]">
+                <h3 className="font-bold mb-4 text-xs uppercase tracking-wider text-primary">
                   {col.title}
                 </h3>
                 <ul className="space-y-2.5">
@@ -794,7 +791,7 @@ export default function HomePage() {
               </div>
             ))}
             <div>
-              <h3 className="font-bold mb-4 text-xs uppercase tracking-wider text-amber-600 dark:text-[#FFD700]">
+              <h3 className="font-bold mb-4 text-xs uppercase tracking-wider text-primary">
                 Support
               </h3>
               <ul className="space-y-2.5">
@@ -829,8 +826,7 @@ export default function HomePage() {
               &copy; 2026 CIT-U Honor Society. All rights reserved.
             </p>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              Built with{" "}
-              <span className="text-amber-500 dark:text-[#FFD700]">♥</span> for
+              Built with <span className="text-primary">♥</span> for
               Technologians
             </p>
           </div>

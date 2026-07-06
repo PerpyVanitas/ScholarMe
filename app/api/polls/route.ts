@@ -1,4 +1,13 @@
-/** GET /api/polls?page=1&limit=20 -- List active polls with pagination */
+/**
+ * GET /api/polls?status=active|closed&page=1&limit=20
+ *
+ * "active"  = end_date is in the future AND status != 'closed'
+ * "closed"  = end_date is in the past OR status == 'closed'
+ *
+ * Hidden polls are filtered out for non-admins automatically via RLS.
+ * The `status` column in the DB is kept for reference but the real
+ * source-of-truth for lifecycle is end_date vs now().
+ */
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { createSuccessResponse, createErrorResponse } from "@/lib/api-errors";
@@ -6,6 +15,7 @@ import {
   parsePaginationParams,
   createPaginatedResponse,
 } from "@/lib/api/pagination";
+import { isAdminRole, getRoleName } from "@/lib/utils/roles";
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,16 +25,34 @@ export async function GET(request: NextRequest) {
       20,
     );
 
-    const status = (searchParams.get("status") as string) || "active";
+    // "active" = polls whose end_date is still in the future
+    // "closed" = polls that have passed their end_date (or were manually closed)
+    const statusParam =
+      (searchParams.get("status") as "active" | "closed") || "active";
 
     const supabase = await createClient();
 
-    // Get paginated polls with count
+    // Determine if the caller is an admin (for hidden-poll visibility)
     const {
-      data: polls,
-      error,
-      count,
-    } = await supabase
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    let isAdmin = false;
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("roles(name)")
+        .eq("id", user.id)
+        .single();
+      const roleName = Array.isArray(profile?.roles)
+        ? profile.roles[0]?.name
+        : (profile?.roles as any)?.name;
+      isAdmin = isAdminRole(roleName);
+    }
+
+    const now = new Date().toISOString();
+
+    let query = supabase
       .from("polls")
       .select(
         `
@@ -34,9 +62,26 @@ export async function GET(request: NextRequest) {
       `,
         { count: "exact" },
       )
-      .eq("status", status)
-      .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
+      .order("end_date", { ascending: statusParam === "closed" });
+
+    if (statusParam === "active") {
+      // Active: end_date in the future AND not manually closed
+      query = query.gt("end_date", now).neq("status", "closed");
+    } else {
+      // Closed: end_date has passed OR manually set to closed
+      query = query.or(`end_date.lte.${now},status.eq.closed`);
+    }
+
+    // Non-admins: only show visible polls (RLS also enforces this, but belt-and-suspenders)
+    if (!isAdmin) {
+      query = query.eq("is_hidden", false);
+    }
+
+    const {
+      data: polls,
+      error,
+      count,
+    } = await query.range(offset, offset + limit - 1);
 
     if (error) {
       return NextResponse.json(
@@ -130,6 +175,7 @@ export async function POST(request: NextRequest) {
         end_date,
         allow_multiple_votes: allow_multiple_votes || false,
         is_anonymous: is_anonymous || false,
+        is_hidden: false,
       })
       .select()
       .single();

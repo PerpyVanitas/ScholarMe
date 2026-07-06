@@ -5,7 +5,13 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -28,7 +34,9 @@ export default function AdminSessionsPage() {
       const supabase = createClient();
       const { data } = await supabase
         .from("sessions")
-        .select("*, tutors(*, profiles(full_name)), specializations(name), session_ratings(rating)")
+        .select(
+          "*, tutors(*, profiles(full_name)), specializations(name), session_ratings(rating)",
+        )
         .order("scheduled_date", { ascending: false })
         .limit(100);
       setSessions(data || []);
@@ -37,9 +45,10 @@ export default function AdminSessionsPage() {
     load();
   }, []);
 
-  const filtered = statusFilter === "all"
-    ? sessions
-    : sessions.filter((s) => s.status === statusFilter);
+  const filtered =
+    statusFilter === "all"
+      ? sessions
+      : sessions.filter((s) => s.status === statusFilter);
 
   if (loading) {
     return (
@@ -53,8 +62,12 @@ export default function AdminSessionsPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">All Sessions</h1>
-          <p className="text-muted-foreground">Overview of all tutoring sessions across the organization.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            All Sessions
+          </h1>
+          <p className="text-muted-foreground">
+            Overview of all tutoring sessions across the organization.
+          </p>
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-40">
@@ -80,56 +93,66 @@ export default function AdminSessionsPage() {
               <p className="text-sm text-muted-foreground">No sessions found</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tutor</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Time</TableHead>
-                  <TableHead>Subject</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Rating</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((session) => (
-                  <TableRow key={session.id}>
-                    <TableCell className="font-medium text-foreground">
-                      {session.tutors?.profiles?.full_name || "Unknown"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(session.scheduled_date).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {session.start_time?.slice(0, 5)} - {session.end_time?.slice(0, 5)}
-                    </TableCell>
-                    <TableCell>
-                      {session.specializations ? (
-                        <Badge variant="secondary" className="text-xs">
-                          {session.specializations.name}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={SESSION_STATUS_COLORS[session.status]}>
-                        {session.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {session.session_ratings && session.session_ratings.length > 0
-                        ? `${session.session_ratings[0].rating}/5`
-                        : "-"}
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tutor</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Time</TableHead>
+                    <TableHead>Subject</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Rating</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((session) => (
+                    <TableRow key={session.id}>
+                      <TableCell className="font-medium text-foreground">
+                        {session.tutors?.profiles?.full_name || "Unknown"}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {new Date(session.scheduled_date).toLocaleDateString(
+                          "en-US",
+                          {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          },
+                        )}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {session.start_time?.slice(0, 5)} -{" "}
+                        {session.end_time?.slice(0, 5)}
+                      </TableCell>
+                      <TableCell>
+                        {session.specializations ? (
+                          <Badge variant="secondary" className="text-xs">
+                            {session.specializations.name}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={SESSION_STATUS_COLORS[session.status]}
+                        >
+                          {session.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {session.session_ratings &&
+                        session.session_ratings.length > 0
+                          ? `${session.session_ratings[0].rating}/5`
+                          : "-"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
