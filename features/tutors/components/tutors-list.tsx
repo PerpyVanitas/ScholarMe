@@ -1,42 +1,58 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Search, Star, Users } from "lucide-react"
-import { TutorDetailModal } from "@/features/tutors/components/tutor-detail-modal"
-import type { Tutor, Specialization } from "@/lib/types"
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Search, Star, Users } from "lucide-react";
+import { TutorDetailModal } from "@/features/tutors/components/tutor-detail-modal";
+import type { Tutor, Specialization } from "@/lib/types";
 
 interface TutorsListProps {
-  initialTutors: Tutor[]
-  specializations: Specialization[]
+  initialTutors: Tutor[];
+  specializations: Specialization[];
 }
 
-export function TutorsList({ initialTutors, specializations }: TutorsListProps) {
-  const [search, setSearch] = useState("")
-  const [selectedSpec, setSelectedSpec] = useState("all")
-  const [selectedTutor, setSelectedTutor] = useState<Tutor | null>(null)
-  const [modalOpen, setModalOpen] = useState(false)
+export function TutorsList({
+  initialTutors,
+  specializations,
+}: TutorsListProps) {
+  const [search, setSearch] = useState("");
+  const [selectedSpec, setSelectedSpec] = useState("all");
+  const [selectedTutor, setSelectedTutor] = useState<Tutor | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const filtered = initialTutors.filter((t) => {
-    const nameMatch = !search || t.profiles?.full_name?.toLowerCase().includes(search.toLowerCase())
+    const nameMatch =
+      !search ||
+      t.profiles?.full_name?.toLowerCase().includes(search.toLowerCase());
     const specMatch =
       selectedSpec === "all" ||
       t.tutor_specializations?.some(
-        (ts: { specializations: Specialization }) => ts.specializations?.name === selectedSpec
-      )
-    return nameMatch && specMatch
-  })
+        (ts: { specializations: Specialization }) =>
+          ts.specializations?.name === selectedSpec,
+      );
+    return nameMatch && specMatch;
+  });
 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Find a Tutor</h1>
-        <p className="text-muted-foreground">Browse tutors by name or specialization.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          Find a Tutor
+        </h1>
+        <p className="text-muted-foreground">
+          Browse tutors by name or specialization.
+        </p>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -71,27 +87,33 @@ export function TutorsList({ initialTutors, specializations }: TutorsListProps) 
               <Users className="h-6 w-6 text-muted-foreground" />
             </div>
             <p className="text-sm text-muted-foreground">
-              {initialTutors.length === 0 ? "No tutors available yet" : "No tutors match your search"}
+              {initialTutors.length === 0
+                ? "No tutors available yet"
+                : "No tutors match your search"}
             </p>
           </CardContent>
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((tutor) => {
-            const name = tutor.profiles?.full_name || "Tutor"
+            const name = tutor.profiles?.full_name || "Tutor";
             const initials = name
               .split(" ")
               .map((n: string) => n[0])
               .join("")
               .toUpperCase()
-              .slice(0, 2)
+              .slice(0, 2);
             const specs =
               tutor.tutor_specializations?.map(
-                (ts: { specializations: Specialization }) => ts.specializations?.name
-              ) || []
+                (ts: { specializations: Specialization }) =>
+                  ts.specializations?.name,
+              ) || [];
 
             return (
-              <Card key={tutor.id} className="border-border/60 hover:border-primary/30 transition-colors flex flex-col h-full">
+              <Card
+                key={tutor.id}
+                className="border-border/60 hover:border-primary/30 transition-colors flex flex-col h-full"
+              >
                 <CardContent className="flex flex-col gap-4 p-5 flex-1">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-12 w-12">
@@ -100,12 +122,15 @@ export function TutorsList({ initialTutors, specializations }: TutorsListProps) 
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col flex-1">
-                      <span className="font-semibold text-foreground line-clamp-1">{name}</span>
+                      <span className="font-semibold text-foreground line-clamp-1">
+                        {name}
+                      </span>
                       <div className="flex items-center gap-1">
                         <Star className="h-3.5 w-3.5 fill-accent text-accent flex-shrink-0" />
                         <span className="text-sm text-muted-foreground">
                           {tutor.rating > 0 ? tutor.rating.toFixed(1) : "New"}{" "}
-                          {tutor.total_ratings > 0 && `(${tutor.total_ratings})`}
+                          {tutor.total_ratings > 0 &&
+                            `(${tutor.total_ratings})`}
                         </span>
                       </div>
                     </div>
@@ -113,9 +138,13 @@ export function TutorsList({ initialTutors, specializations }: TutorsListProps) 
 
                   <div className="h-10 flex items-start">
                     {tutor.bio ? (
-                      <p className="text-sm text-muted-foreground line-clamp-2">{tutor.bio}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {tutor.bio}
+                      </p>
                     ) : (
-                      <p className="text-sm text-muted-foreground/50 italic">No bio available</p>
+                      <p className="text-sm text-muted-foreground/50 italic">
+                        No bio available
+                      </p>
                     )}
                   </div>
 
@@ -123,13 +152,19 @@ export function TutorsList({ initialTutors, specializations }: TutorsListProps) 
                     {specs.length > 0 ? (
                       <div className="flex flex-wrap gap-1.5">
                         {specs.map((s: string) => (
-                          <Badge key={s} variant="secondary" className="text-xs">
+                          <Badge
+                            key={s}
+                            variant="secondary"
+                            className="text-xs"
+                          >
                             {s}
                           </Badge>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-muted-foreground/50">No specializations listed</p>
+                      <p className="text-xs text-muted-foreground/50">
+                        No specializations listed
+                      </p>
                     )}
                   </div>
                 </CardContent>
@@ -139,15 +174,15 @@ export function TutorsList({ initialTutors, specializations }: TutorsListProps) 
                     size="sm"
                     className="w-full"
                     onClick={() => {
-                      setSelectedTutor(tutor)
-                      setModalOpen(true)
+                      setSelectedTutor(tutor);
+                      setModalOpen(true);
                     }}
                   >
                     View Profile
                   </Button>
                 </div>
               </Card>
-            )
+            );
           })}
         </div>
       )}
@@ -156,9 +191,10 @@ export function TutorsList({ initialTutors, specializations }: TutorsListProps) 
         <TutorDetailModal
           open={modalOpen}
           onOpenChange={setModalOpen}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           tutor={selectedTutor as any}
         />
       )}
     </div>
-  )
+  );
 }

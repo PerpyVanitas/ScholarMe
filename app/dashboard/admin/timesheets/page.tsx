@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from "react";
 import useSWR from "swr";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,9 +19,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Timer, Clock, Users, Search, CalendarDays, Loader2, Play, Square, Trash2, Eye } from "lucide-react";
+import {
+  Timer,
+  Clock,
+  Users,
+  Search,
+  CalendarDays,
+  Loader2,
+  Play,
+  Square,
+  Trash2,
+  Eye,
+  Printer,
+} from "lucide-react";
 import { toast } from "sonner";
 import type { Timesheet } from "@/lib/types";
+import { ExportCsvButton } from "@/components/export-csv-button";
 
 const fetcher = async (url: string) => {
   const r = await fetch(url);
@@ -54,7 +73,20 @@ interface TutorSummary {
 
 function fmtDate(d: string) {
   const dt = new Date(d);
-  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
   return `${months[dt.getUTCMonth()]} ${dt.getUTCDate()}, ${dt.getUTCFullYear()}`;
 }
 
@@ -63,22 +95,45 @@ function fmtTime(d: string) {
   const h = dt.getUTCHours();
   const m = dt.getUTCMinutes().toString().padStart(2, "0");
   const ampm = h >= 12 ? "PM" : "AM";
-  return `${(h % 12) || 12}:${m} ${ampm}`;
+  return `${h % 12 || 12}:${m} ${ampm}`;
 }
 
 export default function AdminTimesheetsPage() {
-  const { data: config, mutate: mutateConfig, isLoading: configLoading } = useSWR<{ id: string | null; name: string | null; start_date: string | null; end_date: string | null }>("/api/timesheets/config", configFetcher);
-  const { data: periods, mutate: mutatePeriods, isLoading: periodsLoading } = useSWR<any[]>("/api/timesheets/periods", fetcher);
-  const { data: entries, mutate: mutateEntries, isLoading } = useSWR<Timesheet[]>("/api/admin/timesheets", fetcher, { refreshInterval: 30000 });
+  const {
+    data: config,
+    mutate: mutateConfig,
+    isLoading: configLoading,
+  } = useSWR<{
+    id: string | null;
+    name: string | null;
+    start_date: string | null;
+    end_date: string | null;
+  }>("/api/timesheets/config", configFetcher);
+  const {
+    data: periods,
+    mutate: mutatePeriods,
+    isLoading: periodsLoading,
+  } = useSWR<any[]>("/api/timesheets/periods", fetcher);
+  const {
+    data: entries,
+    mutate: mutateEntries,
+    isLoading,
+  } = useSWR<Timesheet[]>("/api/admin/timesheets", fetcher, {
+    refreshInterval: 30000,
+  });
 
   // Modal Details View
   const [detailPeriod, setDetailPeriod] = useState<any | null>(null);
   const [search, setSearch] = useState("");
   const [modalSearch, setModalSearch] = useState("");
 
-  const { data: modalEntries, isLoading: modalEntriesLoading } = useSWR<Timesheet[]>( 
-    detailPeriod ? `/api/admin/timesheets?start_date=${detailPeriod.start_date}&end_date=${detailPeriod.end_date}` : null,
-    fetcher
+  const { data: modalEntries, isLoading: modalEntriesLoading } = useSWR<
+    Timesheet[]
+  >(
+    detailPeriod
+      ? `/api/admin/timesheets?start_date=${detailPeriod.start_date}&end_date=${detailPeriod.end_date}`
+      : null,
+    fetcher,
   );
 
   // Aggregate current period data per tutor
@@ -105,17 +160,22 @@ export default function AdminTimesheetsPage() {
     }
   }
 
-  const tutors = Array.from(tutorMap.values()).sort((a, b) => b.totalMinutes - a.totalMinutes);
+  const tutors = Array.from(tutorMap.values()).sort(
+    (a, b) => b.totalMinutes - a.totalMinutes,
+  );
   const filteredTutors = tutors.filter(
     (t) =>
       t.name.toLowerCase().includes(search.toLowerCase()) ||
-      t.email.toLowerCase().includes(search.toLowerCase())
+      t.email.toLowerCase().includes(search.toLowerCase()),
   );
 
   const filteredEntries = safeEntries.filter((e) => {
     const name = e.tutors?.profiles?.full_name || "";
     const email = e.tutors?.profiles?.email || "";
-    return name.toLowerCase().includes(search.toLowerCase()) || email.toLowerCase().includes(search.toLowerCase());
+    return (
+      name.toLowerCase().includes(search.toLowerCase()) ||
+      email.toLowerCase().includes(search.toLowerCase())
+    );
   });
 
   const totalOverall = tutors.reduce((sum, t) => sum + t.totalMinutes, 0);
@@ -144,28 +204,44 @@ export default function AdminTimesheetsPage() {
     }
   }
 
-  const modalTutors = Array.from(modalTutorMap.values()).sort((a, b) => b.totalMinutes - a.totalMinutes);
-  const modalTotalOverall = modalTutors.reduce((sum, t) => sum + t.totalMinutes, 0);
+  const modalTutors = Array.from(modalTutorMap.values()).sort(
+    (a, b) => b.totalMinutes - a.totalMinutes,
+  );
+  const modalTotalOverall = modalTutors.reduce(
+    (sum, t) => sum + t.totalMinutes,
+    0,
+  );
 
   const filteredModalEntries = safeModalEntries.filter((e) => {
     const name = e.tutors?.profiles?.full_name || "";
     const email = e.tutors?.profiles?.email || "";
-    return name.toLowerCase().includes(modalSearch.toLowerCase()) || email.toLowerCase().includes(modalSearch.toLowerCase());
+    return (
+      name.toLowerCase().includes(modalSearch.toLowerCase()) ||
+      email.toLowerCase().includes(modalSearch.toLowerCase())
+    );
   });
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Tutor Timesheets</h1>
-          <p className="text-muted-foreground">View and manage timesheet records and semester configurations.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Tutor Timesheets
+          </h1>
+          <p className="text-muted-foreground">
+            View and manage timesheet records and semester configurations.
+          </p>
         </div>
         <div>
           {configLoading ? (
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           ) : config && config.start_date && config.end_date ? (
-            <Badge variant="outline" className="border-green-500/20 bg-green-500/5 text-green-600 dark:text-green-400 py-1 px-3">
-              Active Period: {config.name || "Semester"} ({fmtDate(config.start_date!)} – {fmtDate(config.end_date!)})
+            <Badge
+              variant="outline"
+              className="border-green-500/20 bg-green-500/5 text-green-600 dark:text-green-400 py-1 px-3"
+            >
+              Active Period: {config.name || "Semester"} (
+              {fmtDate(config.start_date!)} – {fmtDate(config.end_date!)})
             </Badge>
           ) : (
             <Badge variant="destructive" className="py-1 px-3">
@@ -183,35 +259,53 @@ export default function AdminTimesheetsPage() {
               Collection History
             </CardTitle>
             <CardDescription>
-              Inspect historical logs. Semester activity configurations are managed in the <strong className="text-foreground">Analytics</strong> tab.
+              Inspect historical logs. Semester activity configurations are
+              managed in the{" "}
+              <strong className="text-foreground">Analytics</strong> tab.
             </CardDescription>
           </CardHeader>
           <CardContent>
             {periodsLoading ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">Loading periods...</p>
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                Loading periods...
+              </p>
             ) : !periods || periods.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">No periods configured yet.</p>
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                No periods configured yet.
+              </p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border/60 text-left">
-                      <th className="pb-2 pr-4 font-medium text-muted-foreground">Semester Name</th>
-                      <th className="pb-2 pr-4 font-medium text-muted-foreground">Duration</th>
-                      <th className="pb-2 pr-4 font-medium text-muted-foreground">Status</th>
-                      <th className="pb-2 text-right font-medium text-muted-foreground">Actions</th>
+                      <th className="pb-2 pr-4 font-medium text-muted-foreground">
+                        Semester Name
+                      </th>
+                      <th className="pb-2 pr-4 font-medium text-muted-foreground">
+                        Duration
+                      </th>
+                      <th className="pb-2 pr-4 font-medium text-muted-foreground">
+                        Status
+                      </th>
+                      <th className="pb-2 text-right font-medium text-muted-foreground">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {periods.map((p) => (
                       <tr key={p.id} className="border-b border-border/30">
-                        <td className="py-3 pr-4 font-medium text-foreground">{p.name}</td>
+                        <td className="py-3 pr-4 font-medium text-foreground">
+                          {p.name}
+                        </td>
                         <td className="py-3 pr-4 text-muted-foreground text-xs font-mono">
                           {fmtDate(p.start_date)} – {fmtDate(p.end_date)}
                         </td>
                         <td className="py-3 pr-4">
                           {p.is_active ? (
-                            <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">Active</Badge>
+                            <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">
+                              Active
+                            </Badge>
                           ) : (
                             <Badge variant="secondary">Inactive</Badge>
                           )}
@@ -243,8 +337,12 @@ export default function AdminTimesheetsPage() {
       {config && config.start_date && config.end_date && (
         <>
           <div className="flex flex-col gap-1 mt-2">
-            <h2 className="text-lg font-semibold text-foreground">Current Active Period Analytics</h2>
-            <p className="text-xs text-muted-foreground">Aggregations matching {config.name || "the active semester"}</p>
+            <h2 className="text-lg font-semibold text-foreground">
+              Current Active Period Analytics
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Aggregations matching {config.name || "the active semester"}
+            </p>
           </div>
           {/* Summary Cards */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -254,8 +352,12 @@ export default function AdminTimesheetsPage() {
                   <Users className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-2xl font-bold text-foreground">{tutors.length}</span>
-                  <span className="text-xs text-muted-foreground">Tutors Logging Hours</span>
+                  <span className="text-2xl font-bold text-foreground">
+                    {tutors.length}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    Tutors Logging Hours
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -265,8 +367,12 @@ export default function AdminTimesheetsPage() {
                   <Clock className="h-5 w-5 text-green-600 dark:text-green-400" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-2xl font-bold text-foreground">{tutors.filter((t) => t.isActive).length}</span>
-                  <span className="text-xs text-muted-foreground">Currently Active</span>
+                  <span className="text-2xl font-bold text-foreground">
+                    {tutors.filter((t) => t.isActive).length}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    Currently Active
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -276,63 +382,118 @@ export default function AdminTimesheetsPage() {
                   <Timer className="h-5 w-5 text-accent-foreground" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-2xl font-bold text-foreground">{(totalOverall / 60).toFixed(1)}h</span>
-                  <span className="text-xs text-muted-foreground">Semester Hours Total</span>
+                  <span className="text-2xl font-bold text-foreground">
+                    {(totalOverall / 60).toFixed(1)}h
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    Semester Hours Total
+                  </span>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Search */}
-          <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search by tutor name or email..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
+          {/* Search + Export */}
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search by tutor name or email..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <ExportCsvButton
+              data={filteredTutors.map((t) => ({
+                Name: t.name,
+                Email: t.email,
+                Entries: t.entries,
+                "Total Minutes": Math.round(t.totalMinutes),
+                "Total Hours": (t.totalMinutes / 60).toFixed(2),
+                Status: t.isActive ? "Active" : "Completed",
+              }))}
+              filename={`timesheets_${config?.name ?? "semester"}`}
             />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.print()}
+              title="Print timesheet report"
+            >
+              <Printer className="mr-2 h-3.5 w-3.5" />
+              Print
+            </Button>
           </div>
 
           {/* Per-Tutor Summary */}
           <Card className="border-border/60">
             <CardHeader>
               <CardTitle className="text-base">Tutor Summary</CardTitle>
-              <CardDescription>Aggregated hours per tutor for the current active period</CardDescription>
+              <CardDescription>
+                Aggregated hours per tutor for the current active period
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {isLoading ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">Loading...</p>
+                <p className="py-8 text-center text-sm text-muted-foreground">
+                  Loading...
+                </p>
               ) : filteredTutors.length === 0 ? (
                 <div className="flex flex-col items-center gap-3 py-8 text-center">
-                  <div className="rounded-full bg-muted p-3"><Timer className="h-5 w-5 text-muted-foreground" /></div>
-                  <p className="text-sm text-muted-foreground">No timesheet data recorded for this period.</p>
+                  <div className="rounded-full bg-muted p-3">
+                    <Timer className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    No timesheet data recorded for this period.
+                  </p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border/60 text-left">
-                        <th className="pb-2 pr-4 font-medium text-muted-foreground">Tutor</th>
-                        <th className="pb-2 pr-4 font-medium text-muted-foreground">Entries</th>
-                        <th className="pb-2 pr-4 font-medium text-muted-foreground">Total Hours</th>
-                        <th className="pb-2 font-medium text-muted-foreground">Status</th>
+                        <th className="pb-2 pr-4 font-medium text-muted-foreground">
+                          Tutor
+                        </th>
+                        <th className="pb-2 pr-4 font-medium text-muted-foreground">
+                          Entries
+                        </th>
+                        <th className="pb-2 pr-4 font-medium text-muted-foreground">
+                          Total Hours
+                        </th>
+                        <th className="pb-2 font-medium text-muted-foreground">
+                          Status
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredTutors.map((t) => (
-                        <tr key={t.tutorId} className="border-b border-border/30">
+                        <tr
+                          key={t.tutorId}
+                          className="border-b border-border/30"
+                        >
                           <td className="py-3 pr-4">
                             <div className="flex flex-col">
-                              <span className="font-medium text-foreground">{t.name}</span>
-                              <span className="text-xs text-muted-foreground">{t.email}</span>
+                              <span className="font-medium text-foreground">
+                                {t.name}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {t.email}
+                              </span>
                             </div>
                           </td>
-                          <td className="py-3 pr-4 text-foreground">{t.entries}</td>
-                          <td className="py-3 pr-4 font-mono text-foreground">{formatDuration(t.totalMinutes)}</td>
+                          <td className="py-3 pr-4 text-foreground">
+                            {t.entries}
+                          </td>
+                          <td className="py-3 pr-4 font-mono text-foreground">
+                            {formatDuration(t.totalMinutes)}
+                          </td>
                           <td className="py-3">
                             {t.isActive ? (
-                              <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">Clocked In</Badge>
+                              <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">
+                                Clocked In
+                              </Badge>
                             ) : (
                               <Badge variant="secondary">Offline</Badge>
                             )}
@@ -350,33 +511,59 @@ export default function AdminTimesheetsPage() {
           <Card className="border-border/60">
             <CardHeader>
               <CardTitle className="text-base">All Entries</CardTitle>
-              <CardDescription>Complete clock-in/out log for the current active period</CardDescription>
+              <CardDescription>
+                Complete clock-in/out log for the current active period
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {isLoading ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">Loading...</p>
+                <p className="py-8 text-center text-sm text-muted-foreground">
+                  Loading...
+                </p>
               ) : filteredEntries.length === 0 ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">No entries found.</p>
+                <p className="py-8 text-center text-sm text-muted-foreground">
+                  No entries found.
+                </p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border/60 text-left">
-                        <th className="pb-2 pr-4 font-medium text-muted-foreground">Tutor</th>
-                        <th className="pb-2 pr-4 font-medium text-muted-foreground">Date</th>
-                        <th className="pb-2 pr-4 font-medium text-muted-foreground">Clock In</th>
-                        <th className="pb-2 pr-4 font-medium text-muted-foreground">Clock Out</th>
-                        <th className="pb-2 pr-4 font-medium text-muted-foreground">Duration</th>
-                        <th className="pb-2 font-medium text-muted-foreground">Status</th>
+                        <th className="pb-2 pr-4 font-medium text-muted-foreground">
+                          Tutor
+                        </th>
+                        <th className="pb-2 pr-4 font-medium text-muted-foreground">
+                          Date
+                        </th>
+                        <th className="pb-2 pr-4 font-medium text-muted-foreground">
+                          Clock In
+                        </th>
+                        <th className="pb-2 pr-4 font-medium text-muted-foreground">
+                          Clock Out
+                        </th>
+                        <th className="pb-2 pr-4 font-medium text-muted-foreground">
+                          Duration
+                        </th>
+                        <th className="pb-2 font-medium text-muted-foreground">
+                          Status
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredEntries.map((entry) => {
-                        const mins = calcMinutes(entry.clock_in, entry.clock_out);
+                        const mins = calcMinutes(
+                          entry.clock_in,
+                          entry.clock_out,
+                        );
                         const profile = entry.tutors?.profiles;
                         return (
-                          <tr key={entry.id} className="border-b border-border/30">
-                            <td className="py-3 pr-4 text-foreground">{profile?.full_name || "Unknown"}</td>
+                          <tr
+                            key={entry.id}
+                            className="border-b border-border/30"
+                          >
+                            <td className="py-3 pr-4 text-foreground">
+                              {profile?.full_name || "Unknown"}
+                            </td>
                             <td className="py-3 pr-4 text-foreground">
                               {fmtDate(entry.clock_in)}
                             </td>
@@ -384,14 +571,20 @@ export default function AdminTimesheetsPage() {
                               {fmtTime(entry.clock_in)}
                             </td>
                             <td className="py-3 pr-4 font-mono text-foreground">
-                              {entry.clock_out ? fmtTime(entry.clock_out) : "--:--"}
+                              {entry.clock_out
+                                ? fmtTime(entry.clock_out)
+                                : "--:--"}
                             </td>
-                            <td className="py-3 pr-4 font-mono text-foreground">{formatDuration(mins)}</td>
+                            <td className="py-3 pr-4 font-mono text-foreground">
+                              {formatDuration(mins)}
+                            </td>
                             <td className="py-3">
                               {entry.clock_out ? (
                                 <Badge variant="secondary">Completed</Badge>
                               ) : (
-                                <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">Active</Badge>
+                                <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">
+                                  Active
+                                </Badge>
                               )}
                             </td>
                           </tr>
@@ -407,7 +600,12 @@ export default function AdminTimesheetsPage() {
       )}
 
       {/* History Inspection Modal */}
-      <Dialog open={!!detailPeriod} onOpenChange={(open) => { if (!open) setDetailPeriod(null); }}>
+      <Dialog
+        open={!!detailPeriod}
+        onOpenChange={(open) => {
+          if (!open) setDetailPeriod(null);
+        }}
+      >
         <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -415,7 +613,8 @@ export default function AdminTimesheetsPage() {
               {detailPeriod?.name || "Period Details"}
             </DialogTitle>
             <DialogDescription className="font-mono text-xs">
-              Configured: {detailPeriod && fmtDate(detailPeriod.start_date)} – {detailPeriod && fmtDate(detailPeriod.end_date)}
+              Configured: {detailPeriod && fmtDate(detailPeriod.start_date)} –{" "}
+              {detailPeriod && fmtDate(detailPeriod.end_date)}
             </DialogDescription>
           </DialogHeader>
 
@@ -433,8 +632,12 @@ export default function AdminTimesheetsPage() {
                       <Users className="h-5 w-5 text-primary" />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-xl font-bold text-foreground">{modalTutors.length}</span>
-                      <span className="text-xs text-muted-foreground font-medium">Tutors Active</span>
+                      <span className="text-xl font-bold text-foreground">
+                        {modalTutors.length}
+                      </span>
+                      <span className="text-xs text-muted-foreground font-medium">
+                        Tutors Active
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
@@ -444,8 +647,12 @@ export default function AdminTimesheetsPage() {
                       <Clock className="h-5 w-5 text-success animate-pulse" />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-xl font-bold text-foreground">{safeModalEntries.length}</span>
-                      <span className="text-xs text-muted-foreground font-medium">Total Entries</span>
+                      <span className="text-xl font-bold text-foreground">
+                        {safeModalEntries.length}
+                      </span>
+                      <span className="text-xs text-muted-foreground font-medium">
+                        Total Entries
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
@@ -455,8 +662,12 @@ export default function AdminTimesheetsPage() {
                       <Timer className="h-5 w-5 text-accent-foreground" />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-xl font-bold text-foreground">{(modalTotalOverall / 60).toFixed(1)}h</span>
-                      <span className="text-xs text-muted-foreground font-medium">Total Duration</span>
+                      <span className="text-xl font-bold text-foreground">
+                        {(modalTotalOverall / 60).toFixed(1)}h
+                      </span>
+                      <span className="text-xs text-muted-foreground font-medium">
+                        Total Duration
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
@@ -465,7 +676,9 @@ export default function AdminTimesheetsPage() {
               {/* Modal Search Log */}
               <div className="flex flex-col gap-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-semibold text-foreground">Semester Log Records</h3>
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Semester Log Records
+                  </h3>
                   <div className="relative w-64">
                     <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
                     <Input
@@ -478,41 +691,82 @@ export default function AdminTimesheetsPage() {
                 </div>
 
                 {filteredModalEntries.length === 0 ? (
-                  <p className="text-center text-sm py-8 text-muted-foreground">No logs found matching search criteria.</p>
+                  <p className="text-center text-sm py-8 text-muted-foreground">
+                    No logs found matching search criteria.
+                  </p>
                 ) : (
                   <div className="overflow-x-auto border rounded-lg max-h-[40vh] overflow-y-auto">
                     <table className="w-full text-xs">
                       <thead className="bg-muted/40 sticky top-0">
                         <tr className="border-b text-left">
-                          <th className="p-3 font-medium text-muted-foreground">Tutor</th>
-                          <th className="p-3 font-medium text-muted-foreground">Date</th>
-                          <th className="p-3 font-medium text-muted-foreground">Clock In</th>
-                          <th className="p-3 font-medium text-muted-foreground">Clock Out</th>
-                          <th className="p-3 font-medium text-muted-foreground">Duration</th>
-                          <th className="p-3 font-medium text-muted-foreground">Status</th>
+                          <th className="p-3 font-medium text-muted-foreground">
+                            Tutor
+                          </th>
+                          <th className="p-3 font-medium text-muted-foreground">
+                            Date
+                          </th>
+                          <th className="p-3 font-medium text-muted-foreground">
+                            Clock In
+                          </th>
+                          <th className="p-3 font-medium text-muted-foreground">
+                            Clock Out
+                          </th>
+                          <th className="p-3 font-medium text-muted-foreground">
+                            Duration
+                          </th>
+                          <th className="p-3 font-medium text-muted-foreground">
+                            Status
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {filteredModalEntries.map((entry) => {
-                          const mins = calcMinutes(entry.clock_in, entry.clock_out);
+                          const mins = calcMinutes(
+                            entry.clock_in,
+                            entry.clock_out,
+                          );
                           const profile = entry.tutors?.profiles;
                           return (
-                            <tr key={entry.id} className="border-b last:border-0 hover:bg-muted/10">
+                            <tr
+                              key={entry.id}
+                              className="border-b last:border-0 hover:bg-muted/10"
+                            >
                               <td className="p-3">
                                 <div className="flex flex-col">
-                                  <span className="font-semibold text-foreground">{profile?.full_name || "Unknown"}</span>
-                                  <span className="text-[10px] text-muted-foreground">{profile?.email || ""}</span>
+                                  <span className="font-semibold text-foreground">
+                                    {profile?.full_name || "Unknown"}
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {profile?.email || ""}
+                                  </span>
                                 </div>
                               </td>
-                              <td className="p-3 text-foreground">{fmtDate(entry.clock_in)}</td>
-                              <td className="p-3 font-mono">{fmtTime(entry.clock_in)}</td>
-                              <td className="p-3 font-mono">{entry.clock_out ? fmtTime(entry.clock_out) : "--:--"}</td>
-                              <td className="p-3 font-mono">{formatDuration(mins)}</td>
+                              <td className="p-3 text-foreground">
+                                {fmtDate(entry.clock_in)}
+                              </td>
+                              <td className="p-3 font-mono">
+                                {fmtTime(entry.clock_in)}
+                              </td>
+                              <td className="p-3 font-mono">
+                                {entry.clock_out
+                                  ? fmtTime(entry.clock_out)
+                                  : "--:--"}
+                              </td>
+                              <td className="p-3 font-mono">
+                                {formatDuration(mins)}
+                              </td>
                               <td className="p-3">
                                 {entry.clock_out ? (
-                                  <Badge variant="secondary" className="text-[10px] py-0 px-1">Completed</Badge>
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-[10px] py-0 px-1"
+                                  >
+                                    Completed
+                                  </Badge>
                                 ) : (
-                                  <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 text-[10px] py-0 px-1">Active</Badge>
+                                  <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 text-[10px] py-0 px-1">
+                                    Active
+                                  </Badge>
                                 )}
                               </td>
                             </tr>

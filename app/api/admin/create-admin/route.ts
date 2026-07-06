@@ -6,12 +6,18 @@ import { createSuccessResponse, createErrorResponse } from "@/lib/api-errors";
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json(
-        createErrorResponse("AUTH_002_TOKEN_EXPIRED", "Authentication required"),
-        { status: 401 }
+        createErrorResponse(
+          "AUTH_002_TOKEN_EXPIRED",
+          "Authentication required",
+        ),
+        { status: 401 },
       );
     }
 
@@ -23,13 +29,22 @@ export async function POST(request: NextRequest) {
       .single();
 
     const isAdmin = Array.isArray(callerProfile?.roles)
-      ? callerProfile.roles.some((role: any) => role.name === "administrator")
-      : (callerProfile?.roles as any)?.name === "administrator";
-    
+      ? callerProfile.roles.some(
+          (role: any) =>
+            ["administrator", "super_admin"].includes(role.name) ||
+            role.name === "super_admin",
+        )
+      : ["administrator", "super_admin"].includes(
+          (callerProfile?.roles as any)?.name,
+        );
+
     if (callerError || !isAdmin) {
       return NextResponse.json(
-        createErrorResponse("AUTH_003_ADMIN_ONLY", "Only administrators can create admin accounts"),
-        { status: 403 }
+        createErrorResponse(
+          "AUTH_003_ADMIN_ONLY",
+          "Only administrators can create admin accounts",
+        ),
+        { status: 403 },
       );
     }
 
@@ -38,15 +53,21 @@ export async function POST(request: NextRequest) {
 
     if (!email || !password || !full_name) {
       return NextResponse.json(
-        createErrorResponse("VALID_001_GENERAL", "Email, password, and full name are required"),
-        { status: 400 }
+        createErrorResponse(
+          "VALID_001_GENERAL",
+          "Email, password, and full name are required",
+        ),
+        { status: 400 },
       );
     }
 
     if (password.length < 8) {
       return NextResponse.json(
-        createErrorResponse("VALID_001_PASSWORD_WEAK", "Password must be at least 8 characters"),
-        { status: 400 }
+        createErrorResponse(
+          "VALID_001_PASSWORD_WEAK",
+          "Password must be at least 8 characters",
+        ),
+        { status: 400 },
       );
     }
 
@@ -61,8 +82,11 @@ export async function POST(request: NextRequest) {
 
     if (roleError || !roleRow) {
       return NextResponse.json(
-        createErrorResponse("DB_001_NOT_FOUND", "Could not resolve administrator role"),
-        { status: 500 }
+        createErrorResponse(
+          "DB_001_NOT_FOUND",
+          "Could not resolve administrator role",
+        ),
+        { status: 500 },
       );
     }
 
@@ -75,40 +99,53 @@ export async function POST(request: NextRequest) {
 
     if (existing) {
       return NextResponse.json(
-        createErrorResponse("VALID_001_EMAIL_EXISTS", "An account with this email already exists"),
-        { status: 409 }
+        createErrorResponse(
+          "VALID_001_EMAIL_EXISTS",
+          "An account with this email already exists",
+        ),
+        { status: 409 },
       );
     }
 
     // Create auth user. The Postgres trigger 'on_auth_user_created' will automatically
     // handle the atomic insertion into the public.profiles table.
-    const { data: created, error: createError } = await adminClient.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: {
-        full_name,
-        role_id: roleRow.id,
-        role_name: "administrator",
-      },
-    });
+    const { data: created, error: createError } =
+      await adminClient.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          full_name,
+          role_id: roleRow.id,
+          role_name: "administrator",
+        },
+      });
 
     if (createError || !created?.user) {
       return NextResponse.json(
-        createErrorResponse("SYSTEM_001_INTERNAL_ERROR", createError?.message || "Failed to create user"),
-        { status: 500 }
+        createErrorResponse(
+          "SYSTEM_001_INTERNAL_ERROR",
+          createError?.message || "Failed to create user",
+        ),
+        { status: 500 },
       );
     }
 
     return NextResponse.json(
-      createSuccessResponse({ message: "Administrator account created successfully", userId: created.user.id }),
-      { status: 201 }
+      createSuccessResponse({
+        message: "Administrator account created successfully",
+        userId: created.user.id,
+      }),
+      { status: 201 },
     );
   } catch (err) {
     console.error("create-admin error:", err);
     return NextResponse.json(
-      createErrorResponse("SYSTEM_001_UNKNOWN_ERROR", "An unexpected error occurred"),
-      { status: 500 }
+      createErrorResponse(
+        "SYSTEM_001_UNKNOWN_ERROR",
+        "An unexpected error occurred",
+      ),
+      { status: 500 },
     );
   }
 }

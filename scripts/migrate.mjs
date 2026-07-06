@@ -15,15 +15,10 @@ if (!supabaseUrl || !supabaseServiceKey) {
   process.exit(1);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-async function executeSql(sql) {
-  const { data, error } = await supabase.rpc('exec_sql', { sql_text: sql });
-  if (error) {
-    throw new Error(`SQL execution failed: ${error.message}`);
-  }
-  return data;
-}
+
 
 async function main() {
   try {

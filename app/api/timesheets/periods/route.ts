@@ -1,10 +1,13 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { isAdminRole } from "@/lib/utils/roles";
 
 export async function GET() {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
@@ -22,6 +25,7 @@ export async function GET() {
 
     return NextResponse.json(data || []);
   } catch (error: any) {
+    console.error("[API Error]", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -29,7 +33,9 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
@@ -44,15 +50,21 @@ export async function POST(req: Request) {
     const roleName = Array.isArray(profile?.roles)
       ? profile.roles[0]?.name
       : (profile?.roles as any)?.name;
-    const isAdmin = roleName === "admin" || roleName === "administrator";
+    const isAdmin = isAdminRole(roleName as string);
 
     if (!profile || !isAdmin) {
-      return NextResponse.json({ error: "Access denied - admin only" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Access denied - admin only" },
+        { status: 403 },
+      );
     }
 
     const { name, start_date, end_date } = await req.json();
     if (!name || !start_date || !end_date) {
-      return NextResponse.json({ error: "Name, start date, and end date are required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Name, start date, and end date are required" },
+        { status: 400 },
+      );
     }
 
     const adminClient = await createAdminClient();
@@ -62,7 +74,7 @@ export async function POST(req: Request) {
         name,
         start_date: new Date(start_date).toISOString(),
         end_date: new Date(end_date).toISOString(),
-        is_active: false // default to false, admin will activate it explicitly
+        is_active: false, // default to false, admin will activate it explicitly
       })
       .select()
       .single();
@@ -73,6 +85,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(data);
   } catch (error: any) {
+    console.error("[API Error]", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

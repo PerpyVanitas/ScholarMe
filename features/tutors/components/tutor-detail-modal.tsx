@@ -1,8 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { getAvatarUrl } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Star, Mail, BookOpen, MessageSquare } from "lucide-react";
@@ -36,9 +42,12 @@ interface TutorDetailModalProps {
   };
 }
 
-export function TutorDetailModal({ open, onOpenChange, tutor }: TutorDetailModalProps) {
+export function TutorDetailModal({
+  open,
+  onOpenChange,
+  tutor,
+}: TutorDetailModalProps) {
   const [hasBooked, setHasBooked] = useState(false);
-  const [loading, setLoading] = useState(false);
   const supabase = createClient();
 
   // Check if user has booked this tutor
@@ -47,7 +56,9 @@ export function TutorDetailModal({ open, onOpenChange, tutor }: TutorDetailModal
 
     const checkBookingHistory = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (!user) return;
 
         const { data } = await supabase
@@ -66,21 +77,13 @@ export function TutorDetailModal({ open, onOpenChange, tutor }: TutorDetailModal
     checkBookingHistory();
   }, [open, tutor.id, supabase]);
 
-  const getAvatarUrl = (avatarUrl: string | null | undefined) => {
-    if (!avatarUrl) return undefined;
-    if (avatarUrl.startsWith("avatars/")) {
-      return `/api/avatar?pathname=${encodeURIComponent(avatarUrl)}`;
-    }
-    return avatarUrl;
-  };
-
   const specs = tutor.tutor_specializations
-    .map(ts => ts.specializations?.name)
+    .map((ts) => ts.specializations?.name)
     .filter(Boolean);
 
   const initials = tutor.profiles.full_name
     .split(" ")
-    .map(n => n[0])
+    .map((n) => n[0])
     .join("")
     .toUpperCase()
     .slice(0, 2);
@@ -96,13 +99,18 @@ export function TutorDetailModal({ open, onOpenChange, tutor }: TutorDetailModal
           {/* Header with Avatar and Name */}
           <div className="flex items-start gap-4">
             <Avatar className="h-16 w-16">
-              <AvatarImage src={getAvatarUrl(tutor.profiles.avatar_url)} alt={tutor.profiles.full_name} />
+              <AvatarImage
+                src={getAvatarUrl(tutor.profiles.avatar_url)}
+                alt={tutor.profiles.full_name}
+              />
               <AvatarFallback className="text-lg bg-primary/10 text-primary">
                 {initials}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <h3 className="text-xl font-semibold">{tutor.profiles.full_name}</h3>
+              <h3 className="text-xl font-semibold">
+                {tutor.profiles.full_name}
+              </h3>
               <div className="flex items-center gap-2 mt-1">
                 <Star className="h-4 w-4 fill-accent text-accent" />
                 <span className="text-sm text-muted-foreground">
@@ -117,7 +125,9 @@ export function TutorDetailModal({ open, onOpenChange, tutor }: TutorDetailModal
           {tutor.bio && (
             <div className="space-y-2">
               <p className="text-sm font-medium">About</p>
-              <p className="text-sm text-muted-foreground leading-relaxed">{tutor.bio}</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {tutor.bio}
+              </p>
             </div>
           )}
 
@@ -125,14 +135,22 @@ export function TutorDetailModal({ open, onOpenChange, tutor }: TutorDetailModal
           <div className="grid grid-cols-2 gap-4">
             {tutor.years_experience && (
               <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground uppercase">Experience</p>
-                <p className="text-sm font-semibold">{tutor.years_experience} years</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase">
+                  Experience
+                </p>
+                <p className="text-sm font-semibold">
+                  {tutor.years_experience} years
+                </p>
               </div>
             )}
             {tutor.hourly_rate && (
               <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground uppercase">Rate</p>
-                <p className="text-sm font-semibold">${tutor.hourly_rate}/hour</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase">
+                  Rate
+                </p>
+                <p className="text-sm font-semibold">
+                  ${tutor.hourly_rate}/hour
+                </p>
               </div>
             )}
           </div>
@@ -142,7 +160,7 @@ export function TutorDetailModal({ open, onOpenChange, tutor }: TutorDetailModal
             <div className="space-y-2">
               <p className="text-sm font-medium">Specializations</p>
               <div className="flex flex-wrap gap-2">
-                {specs.map(spec => (
+                {specs.map((spec) => (
                   <Badge key={spec} variant="secondary">
                     {spec}
                   </Badge>
@@ -154,12 +172,18 @@ export function TutorDetailModal({ open, onOpenChange, tutor }: TutorDetailModal
           {/* Contact Info */}
           <div className="space-y-2 pt-2 border-t">
             <p className="text-sm font-medium">Contact</p>
-            <a href={`mailto:${tutor.profiles.email}`} className="flex items-center gap-2 text-sm text-primary hover:underline">
+            <a
+              href={`mailto:${tutor.profiles.email}`}
+              className="flex items-center gap-2 text-sm text-primary hover:underline"
+            >
               <Mail className="h-4 w-4" />
               {tutor.profiles.email}
             </a>
             {tutor.profiles.phone_number && (
-              <a href={`tel:${tutor.profiles.phone_number}`} className="flex items-center gap-2 text-sm text-primary hover:underline">
+              <a
+                href={`tel:${tutor.profiles.phone_number}`}
+                className="flex items-center gap-2 text-sm text-primary hover:underline"
+              >
                 <MessageSquare className="h-4 w-4" />
                 {tutor.profiles.phone_number}
               </a>

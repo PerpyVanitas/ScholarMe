@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  type ReactNode,
+} from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile, UserRole } from "@/lib/types";
 import { DEMO_USERS, getDemoUserFromCookie } from "@/scripts/demo";
@@ -27,30 +34,46 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const loadUserData = useCallback(async () => {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (user) {
       setIsAuthenticated(true);
       const { data: p } = await supabase
         .from("profiles")
-        .select("id, email, full_name, first_name, last_name, avatar_url, phone_number, birthdate, date_of_birth, membership_number, degree_program, year_level, total_xp, current_level, role_id, created_at, roles(id, name)")
+        .select(
+          "id, email, full_name, first_name, last_name, avatar_url, phone_number, birthdate, date_of_birth, membership_number, degree_program, year_level, total_xp, current_level, role_id, created_at, roles(id, name)",
+        )
         .eq("id", user.id)
         .maybeSingle();
 
       if (p) {
         setProfile({
           ...p,
-          roles: Array.isArray(p.roles) ? p.roles : p.roles ? [p.roles as any] : undefined,
+          roles: Array.isArray(p.roles)
+            ? p.roles
+            : p.roles
+              ? [p.roles as { name: string; id: string }]
+              : undefined,
         } as Profile);
-        const roleName = Array.isArray(p.roles) ? (p.roles[0]?.name ?? "learner") : ((p.roles as any)?.name ?? "learner");
+        const roleName = Array.isArray(p.roles)
+          ? (p.roles[0]?.name ?? "learner")
+          : ((p.roles as { name: string })?.name ?? "learner");
         setRole(roleName as UserRole);
       } else {
         // Profile not found in the database.
         // 1. Determine fallback role
         let fallbackRole: UserRole = "learner";
-        if (user.user_metadata?.role_name === "administrator" || user.user_metadata?.role === "administrator") {
+        if (
+          user.user_metadata?.role_name === "administrator" ||
+          user.user_metadata?.role === "administrator"
+        ) {
           fallbackRole = "administrator";
-        } else if (user.user_metadata?.role_name === "tutor" || user.user_metadata?.role === "tutor") {
+        } else if (
+          user.user_metadata?.role_name === "tutor" ||
+          user.user_metadata?.role === "tutor"
+        ) {
           fallbackRole = "tutor";
         }
 
@@ -63,7 +86,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
 
         // 3. Attempt to heal database by inserting the missing profile row
-        const fullNameStr = user.user_metadata?.full_name || (fallbackRole === "administrator" ? "System Admin" : user.email?.split("@")[0] || "User");
+        const fullNameStr =
+          user.user_metadata?.full_name ||
+          (fallbackRole === "administrator"
+            ? "System Admin"
+            : user.email?.split("@")[0] || "User");
         let derivedFirstName = user.user_metadata?.first_name || "";
         let derivedLastName = user.user_metadata?.last_name || "";
         if (!derivedFirstName && !derivedLastName) {
@@ -88,13 +115,19 @@ export function UserProvider({ children }: { children: ReactNode }) {
           const { data: insertedProfile } = await supabase
             .from("profiles")
             .insert(newProfileData)
-            .select("id, email, full_name, first_name, last_name, avatar_url, phone_number, birthdate, date_of_birth, membership_number, degree_program, year_level, total_xp, current_level, role_id, created_at, roles(id, name)")
+            .select(
+              "id, email, full_name, first_name, last_name, avatar_url, phone_number, birthdate, date_of_birth, membership_number, degree_program, year_level, total_xp, current_level, role_id, created_at, roles(id, name)",
+            )
             .maybeSingle();
 
           if (insertedProfile) {
             healedProfile = {
               ...insertedProfile,
-              roles: Array.isArray(insertedProfile.roles) ? insertedProfile.roles : insertedProfile.roles ? [insertedProfile.roles as any] : undefined,
+              roles: Array.isArray(insertedProfile.roles)
+                ? insertedProfile.roles
+                : insertedProfile.roles
+                  ? [insertedProfile.roles as { name: string; id: string }]
+                  : undefined,
             } as Profile;
           }
         } catch (e) {
@@ -126,22 +159,32 @@ export function UserProvider({ children }: { children: ReactNode }) {
     } else {
       // Demo mode fallback
       setIsAuthenticated(false);
-      const { role: demoRole, userId: demoUserId } = getDemoUserFromCookie("learner");
+      const { role: demoRole, userId: demoUserId } =
+        getDemoUserFromCookie("learner");
       const { data: demoProfile } = await supabase
         .from("profiles")
-        .select("id, email, full_name, avatar_url, degree_program, year_level, total_xp, current_level, role_id, created_at, roles(id, name)")
+        .select(
+          "id, email, full_name, avatar_url, degree_program, year_level, total_xp, current_level, role_id, created_at, roles(id, name)",
+        )
         .eq("id", demoUserId)
         .maybeSingle();
 
       if (demoProfile) {
         setProfile({
           ...demoProfile,
-          roles: Array.isArray(demoProfile.roles) ? demoProfile.roles : demoProfile.roles ? [demoProfile.roles as any] : undefined,
+          roles: Array.isArray(demoProfile.roles)
+            ? demoProfile.roles
+            : demoProfile.roles
+              ? [demoProfile.roles as { name: string; id: string }]
+              : undefined,
         } as Profile);
-        const roleName = Array.isArray(demoProfile.roles) ? (demoProfile.roles[0]?.name ?? demoRole) : ((demoProfile.roles as any)?.name ?? demoRole);
+        const roleName = Array.isArray(demoProfile.roles)
+          ? (demoProfile.roles[0]?.name ?? demoRole)
+          : ((demoProfile.roles as { name: string })?.name ?? demoRole);
         setRole(roleName as UserRole);
       } else {
-        const demoInfo = DEMO_USERS[demoRole as keyof typeof DEMO_USERS] || DEMO_USERS.learner;
+        const demoInfo =
+          DEMO_USERS[demoRole as keyof typeof DEMO_USERS] || DEMO_USERS.learner;
         setProfile({
           id: demoInfo.profileId,
           full_name: demoInfo.fullName,
@@ -167,20 +210,63 @@ export function UserProvider({ children }: { children: ReactNode }) {
       .eq("user_id", profile.id)
       .eq("is_read", false);
     setNotificationCount(count || 0);
-  }, [profile?.id]);
+  }, [profile]);
 
   useEffect(() => {
     loadUserData();
 
-    // Listen for auth state changes
     const supabase = createClient();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any) => {
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") {
+
+    // Listen for auth state changes
+    const {
+      data: { subscription: authSubscription },
+    } = supabase.auth.onAuthStateChange((event: string) => {
+      if (
+        event === "SIGNED_IN" ||
+        event === "SIGNED_OUT" ||
+        event === "TOKEN_REFRESHED"
+      ) {
         loadUserData();
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Listen for real-time role updates
+    let roleSubscription: any = null;
+
+    const setupRealtime = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        roleSubscription = supabase
+          .channel(
+            `user-roles-${user.id}-${Math.random().toString(36).substring(7)}`,
+          )
+          .on(
+            "postgres_changes",
+            {
+              event: "*",
+              schema: "public",
+              table: "profiles",
+              filter: `id=eq.${user.id}`,
+            },
+            (payload) => {
+              console.log("Role updated in real-time", payload);
+              loadUserData();
+            },
+          )
+          .subscribe();
+      }
+    };
+
+    setupRealtime();
+
+    return () => {
+      authSubscription.unsubscribe();
+      if (roleSubscription) {
+        supabase.removeChannel(roleSubscription);
+      }
+    };
   }, [loadUserData]);
 
   return (

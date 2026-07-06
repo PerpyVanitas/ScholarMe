@@ -18,6 +18,7 @@ import { useEffect, useCallback, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getAvatarUrl } from "@/lib/utils";
 import { X, MessageSquare } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -34,7 +35,9 @@ interface MessageToastProviderProps {
   currentUserId: string;
 }
 
-export function MessageToastProvider({ currentUserId }: MessageToastProviderProps) {
+export function MessageToastProvider({
+  currentUserId,
+}: MessageToastProviderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [toasts, setToasts] = useState<MessageToast[]>([]);
@@ -43,15 +46,18 @@ export function MessageToastProvider({ currentUserId }: MessageToastProviderProp
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  const addToast = useCallback((toast: MessageToast) => {
-    setToasts((prev) => {
-      const next = [...prev, toast];
-      // Keep max 3 toasts — drop oldest
-      return next.slice(-3);
-    });
-    // Auto-dismiss after 5s
-    setTimeout(() => dismiss(toast.id), 5000);
-  }, [dismiss]);
+  const addToast = useCallback(
+    (toast: MessageToast) => {
+      setToasts((prev) => {
+        const next = [...prev, toast];
+        // Keep max 3 toasts — drop oldest
+        return next.slice(-3);
+      });
+      // Auto-dismiss after 5s
+      setTimeout(() => dismiss(toast.id), 5000);
+    },
+    [dismiss],
+  );
 
   useEffect(() => {
     // Don't show toasts if already on the messages page
@@ -105,7 +111,7 @@ export function MessageToastProvider({ currentUserId }: MessageToastProviderProp
             content: msg.content,
             arrivedAt: new Date(msg.created_at),
           });
-        }
+        },
       )
       .subscribe();
 
@@ -129,9 +135,17 @@ export function MessageToastProvider({ currentUserId }: MessageToastProviderProp
         >
           {/* Avatar */}
           <Avatar className="h-9 w-9 shrink-0 mt-0.5">
-            <AvatarImage src={toast.senderAvatar ?? undefined} alt={toast.senderName} />
+            <AvatarImage
+              src={getAvatarUrl(toast.senderAvatar) ?? undefined}
+              alt={toast.senderName}
+            />
             <AvatarFallback className="bg-primary/10 text-primary text-xs">
-              {toast.senderName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
+              {toast.senderName
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .toUpperCase()
+                .slice(0, 2)}
             </AvatarFallback>
           </Avatar>
 
@@ -139,7 +153,9 @@ export function MessageToastProvider({ currentUserId }: MessageToastProviderProp
           <button
             className="flex-1 min-w-0 text-left"
             onClick={() => {
-              router.push(`/dashboard/messages?conversation=${toast.conversationId}`);
+              router.push(
+                `/dashboard/messages?conversation=${toast.conversationId}`,
+              );
               dismiss(toast.id);
             }}
           >

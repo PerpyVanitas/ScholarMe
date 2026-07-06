@@ -6,15 +6,25 @@
  * and the single-object shape (used in inline profile constructions).
  */
 
-import type { Role, Profile, UserRole } from "@/lib/types"
+import type { Role, Profile, UserRole } from "@/lib/types";
 
-export function normalizeRole(raw: Role | Role[] | undefined | null): Role | undefined {
-  if (!raw) return undefined
-  if (Array.isArray(raw)) return (raw[0] as Role) ?? undefined
-  return raw
+export const ADMIN_ROLES = ["administrator", "super_admin"] as const;
+
+export function isAdminRole(
+  role: string | null | undefined,
+): role is (typeof ADMIN_ROLES)[number] {
+  return ADMIN_ROLES.includes(role as (typeof ADMIN_ROLES)[number]);
+}
+
+export function normalizeRole(
+  raw: Role | Role[] | undefined | null,
+): Role | undefined {
+  if (!raw) return undefined;
+  if (Array.isArray(raw)) return (raw[0] as Role) ?? undefined;
+  return raw;
 }
 
 export function getRoleName(profile: Pick<Profile, "roles">): UserRole {
-  const role = normalizeRole(profile.roles as Role | Role[] | undefined)
-  return (role?.name ?? "learner") as UserRole
+  const role = normalizeRole(profile.roles as Role | Role[] | undefined);
+  return (role?.name ?? "learner") as UserRole;
 }

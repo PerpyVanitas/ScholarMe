@@ -1,21 +1,26 @@
-import { createClient } from "@/lib/supabase/server"
-import { NextRequest, NextResponse } from "next/server"
+import { createClient } from "@/lib/supabase/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     if (!user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const body = await request.json()
+    const body = await request.json();
     // We ignore the 'score' and 'total_questions' passed by the client to prevent manipulation
-    const { study_set_id, answers, time_spent_seconds } = body
+    const { study_set_id, answers, time_spent_seconds } = body;
 
     if (!study_set_id || !answers) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 },
+      );
     }
 
     // Fetch the correct answers from the database securely
@@ -25,7 +30,10 @@ export async function POST(request: NextRequest) {
       .eq("study_set_id", study_set_id);
 
     if (fetchError || !studySetItems) {
-      return NextResponse.json({ error: "Failed to validate answers" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to validate answers" },
+        { status: 500 },
+      );
     }
 
     let calculatedScore = 0;
@@ -34,7 +42,10 @@ export async function POST(request: NextRequest) {
     // The client answers map is expected to be { [item_id]: "User's string answer" }
     for (const item of studySetItems) {
       const userAnswer = answers[item.id];
-      if (userAnswer && String(userAnswer).toLowerCase() === String(item.answer).toLowerCase()) {
+      if (
+        userAnswer &&
+        String(userAnswer).toLowerCase() === String(item.answer).toLowerCase()
+      ) {
         calculatedScore += 1;
       }
     }
@@ -52,51 +63,63 @@ export async function POST(request: NextRequest) {
         completed_at: new Date().toISOString(),
       })
       .select()
-      .single()
+      .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ data })
+    return NextResponse.json({ data });
   } catch (error) {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("[API Error]", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     if (!user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url)
-    const studySetId = searchParams.get("study_set_id")
+    const { searchParams } = new URL(request.url);
+    const studySetId = searchParams.get("study_set_id");
 
     let query = supabase
       .from("quiz_attempts")
-      .select(`
+      .select(
+        `
         *,
         study_sets(title, type:generation_mode)
-      `)
+      `,
+      )
       .eq("user_id", user.id)
-      .order("completed_at", { ascending: false })
+      .order("completed_at", { ascending: false });
 
     if (studySetId) {
-      query = query.eq("study_set_id", studySetId)
+      query = query.eq("study_set_id", studySetId);
     }
 
-    const { data, error } = await query
+    const { data, error } = await query;
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ data: data || [] })
+    return NextResponse.json({ data: data || [] });
   } catch (error) {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("[API Error]", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

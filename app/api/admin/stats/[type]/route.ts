@@ -1,17 +1,20 @@
-import { createAdminClient } from "@/lib/supabase/create-client"
-import { NextResponse } from "next/server"
+import { createAdminClient } from "@/lib/supabase/create-client";
+import { NextResponse } from "next/server";
+import { isAdminRole } from "@/lib/utils/roles";
 
 export async function GET(
   _req: Request,
-  { params }: { params: Promise<{ type: string }> }
+  { params }: { params: Promise<{ type: string }> },
 ) {
-  const { type } = await params
-  const supabase = await createAdminClient()
+  const { type } = await params;
+  const supabase = await createAdminClient();
 
   // Verify user is authenticated
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   // Verify user is admin
@@ -19,22 +22,26 @@ export async function GET(
     .from("profiles")
     .select("role_id, roles(name)")
     .eq("id", user.id)
-    .single()
+    .single();
 
   const roleName = Array.isArray(profile?.roles)
     ? profile.roles[0]?.name
     : (profile?.roles as any)?.name;
-  const isAdmin = roleName === "admin" || roleName === "administrator";
-  
+  const isAdmin = isAdminRole(roleName as string);
+
   if (!profile || !isAdmin) {
-    return NextResponse.json({ error: "Access denied - admin only" }, { status: 403 })
+    return NextResponse.json(
+      { error: "Access denied - admin only" },
+      { status: 403 },
+    );
   }
 
   try {
     if (type === "clocked_in") {
       const { data, error } = await supabase
         .from("timesheets")
-        .select(`
+        .select(
+          `
           id, 
           clock_in, 
           tutors(
@@ -43,31 +50,35 @@ export async function GET(
             profiles(id, full_name, email, avatar_url), 
             tutor_specializations(specializations(name))
           )
-        `)
+        `,
+        )
         .is("clock_out", null)
         .order("clock_in", { ascending: false })
-        .limit(50)
+        .limit(50);
 
-      if (error) throw error
-      return NextResponse.json(data || [])
+      if (error) throw error;
+      return NextResponse.json(data || []);
     }
 
     if (type === "tutors") {
       const { data, error } = await supabase
         .from("tutors")
-        .select("id, user_id, rating, total_ratings, created_at, profiles(id, full_name, email, avatar_url), tutor_specializations(specializations(name))")
+        .select(
+          "id, user_id, rating, total_ratings, created_at, profiles(id, full_name, email, avatar_url), tutor_specializations(specializations(name))",
+        )
         .order("created_at", { ascending: false })
-        .limit(50)
+        .limit(50);
 
-      if (error) throw error
-      return NextResponse.json(data || [])
+      if (error) throw error;
+      return NextResponse.json(data || []);
     }
 
     if (type === "today") {
       const today = new Date().toISOString().split("T")[0];
       const { data, error } = await supabase
         .from("sessions")
-        .select(`
+        .select(
+          `
           id, 
           scheduled_date, 
           start_time, 
@@ -77,19 +88,21 @@ export async function GET(
           tutors(profiles(full_name)), 
           learner_profile:profiles!learner_id(full_name), 
           specializations(name)
-        `)
+        `,
+        )
         .eq("scheduled_date", today)
         .order("start_time", { ascending: true })
-        .limit(50)
+        .limit(50);
 
-      if (error) throw error
-      return NextResponse.json(data || [])
+      if (error) throw error;
+      return NextResponse.json(data || []);
     }
 
     if (type === "sessions") {
       const { data, error } = await supabase
         .from("sessions")
-        .select(`
+        .select(
+          `
           id, 
           scheduled_date, 
           start_time, 
@@ -99,18 +112,20 @@ export async function GET(
           tutors(profiles(full_name)), 
           learner_profile:profiles!learner_id(full_name), 
           specializations(name)
-        `)
+        `,
+        )
         .order("scheduled_date", { ascending: false })
-        .limit(50)
+        .limit(50);
 
-      if (error) throw error
-      return NextResponse.json(data || [])
+      if (error) throw error;
+      return NextResponse.json(data || []);
     }
 
     if (type === "pending") {
       const { data, error } = await supabase
         .from("sessions")
-        .select(`
+        .select(
+          `
           id, 
           scheduled_date, 
           start_time, 
@@ -120,18 +135,22 @@ export async function GET(
           tutors(profiles(full_name)), 
           learner_profile:profiles!learner_id(full_name), 
           specializations(name)
-        `)
+        `,
+        )
         .eq("status", "pending")
         .order("scheduled_date", { ascending: false })
-        .limit(50)
+        .limit(50);
 
-      if (error) throw error
-      return NextResponse.json(data || [])
+      if (error) throw error;
+      return NextResponse.json(data || []);
     }
 
-    return NextResponse.json({ error: "Invalid type" }, { status: 400 })
+    return NextResponse.json({ error: "Invalid type" }, { status: 400 });
   } catch (err) {
-    console.error("[admin-stats]", err)
-    return NextResponse.json({ error: "Failed to fetch data" }, { status: 500 })
+    console.error("[admin-stats]", err);
+    return NextResponse.json(
+      { error: "Failed to fetch data" },
+      { status: 500 },
+    );
   }
 }

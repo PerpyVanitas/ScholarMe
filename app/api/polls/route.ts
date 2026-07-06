@@ -2,28 +2,38 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { createSuccessResponse, createErrorResponse } from "@/lib/api-errors";
-import { parsePaginationParams, createPaginatedResponse } from "@/lib/api/pagination";
+import {
+  parsePaginationParams,
+  createPaginatedResponse,
+} from "@/lib/api/pagination";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const { page, limit, offset } = parsePaginationParams(
       Object.fromEntries(searchParams),
-      20
+      20,
     );
-    
+
     const status = (searchParams.get("status") as string) || "active";
 
     const supabase = await createClient();
 
     // Get paginated polls with count
-    const { data: polls, error, count } = await supabase
+    const {
+      data: polls,
+      error,
+      count,
+    } = await supabase
       .from("polls")
-      .select(`
+      .select(
+        `
         *,
         profiles:created_by(id, full_name, avatar_url),
         poll_options(id, option_text, display_order)
-      `, { count: "exact" })
+      `,
+        { count: "exact" },
+      )
       .eq("status", status)
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
@@ -31,17 +41,20 @@ export async function GET(request: NextRequest) {
     if (error) {
       return NextResponse.json(
         createErrorResponse("DB_001_NOT_FOUND", "Failed to fetch polls"),
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     return NextResponse.json(
-      createPaginatedResponse(polls || [], page, limit, count || 0)
+      createPaginatedResponse(polls || [], page, limit, count || 0),
     );
   } catch {
     return NextResponse.json(
-      createErrorResponse("SYSTEM_001_UNKNOWN_ERROR", "An unexpected error occurred"),
-      { status: 500 }
+      createErrorResponse(
+        "SYSTEM_001_UNKNOWN_ERROR",
+        "An unexpected error occurred",
+      ),
+      { status: 500 },
     );
   }
 }
@@ -49,13 +62,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
+
     // Check if user is admin
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         createErrorResponse("AUTH_002_SESSION_EXPIRED", "Session expired"),
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -66,27 +82,41 @@ export async function POST(request: NextRequest) {
       .single();
 
     const isAdmin = Array.isArray(profile?.roles)
-      ? profile.roles.some((role: any) => role.name === "administrator")
-      : (profile?.roles as any)?.name === "administrator";
-    
+      ? profile.roles.some((role: any) =>
+          ["administrator", "super_admin"].includes(role.name),
+        )
+      : ["administrator", "super_admin"].includes(
+          (profile?.roles as any)?.name,
+        );
+
     if (profileError || !isAdmin) {
       return NextResponse.json(
         createErrorResponse("AUTH_003_ADMIN_ONLY", "Admin access required"),
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     const body = await request.json();
-    const { title, description, end_date, options, allow_multiple_votes, is_anonymous } = body;
+    const {
+      title,
+      description,
+      end_date,
+      options,
+      allow_multiple_votes,
+      is_anonymous,
+    } = body;
 
     if (!title || !end_date || !options || options.length < 2) {
       return NextResponse.json(
         createErrorResponse("VALID_001_GENERAL", {
           title: !title ? "Title is required" : "",
           end_date: !end_date ? "End date is required" : "",
-          options: !options || options.length < 2 ? "At least 2 options are required" : "",
+          options:
+            !options || options.length < 2
+              ? "At least 2 options are required"
+              : "",
         }),
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -106,8 +136,11 @@ export async function POST(request: NextRequest) {
 
     if (pollError) {
       return NextResponse.json(
-        createErrorResponse("SYSTEM_001_INTERNAL_ERROR", "Failed to create poll"),
-        { status: 500 }
+        createErrorResponse(
+          "SYSTEM_001_INTERNAL_ERROR",
+          "Failed to create poll",
+        ),
+        { status: 500 },
       );
     }
 
@@ -126,16 +159,22 @@ export async function POST(request: NextRequest) {
       // Rollback poll creation
       await supabase.from("polls").delete().eq("id", poll.id);
       return NextResponse.json(
-        createErrorResponse("SYSTEM_001_INTERNAL_ERROR", "Failed to create poll options"),
-        { status: 500 }
+        createErrorResponse(
+          "SYSTEM_001_INTERNAL_ERROR",
+          "Failed to create poll options",
+        ),
+        { status: 500 },
       );
     }
 
     return NextResponse.json(createSuccessResponse(poll), { status: 201 });
   } catch {
     return NextResponse.json(
-      createErrorResponse("SYSTEM_001_UNKNOWN_ERROR", "An unexpected error occurred"),
-      { status: 500 }
+      createErrorResponse(
+        "SYSTEM_001_UNKNOWN_ERROR",
+        "An unexpected error occurred",
+      ),
+      { status: 500 },
     );
   }
 }

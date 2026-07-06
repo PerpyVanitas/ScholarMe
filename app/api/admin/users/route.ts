@@ -4,15 +4,18 @@
 import { createClient } from "@/lib/supabase/create-client";
 import { createClient as createBareAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { isAdminRole } from "@/lib/utils/roles";
 
 function getAdminSupabase() {
   return createBareAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 }
 
-async function getAdminUser(supabase: Awaited<ReturnType<typeof createClient>>) {
+async function getAdminUser(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -22,11 +25,12 @@ async function getAdminUser(supabase: Awaited<ReturnType<typeof createClient>>) 
     .select("roles(name)")
     .eq("id", user.id)
     .single();
-  
-  const isAdmin = Array.isArray(profile?.roles)
-    ? profile.roles.some((role: any) => role.name === "administrator")
-    : (profile?.roles as any)?.name === "administrator";
-  
+
+  const roleName = Array.isArray(profile?.roles)
+    ? profile.roles[0]?.name
+    : (profile?.roles as any)?.name;
+  const isAdmin = isAdminRole(roleName);
+
   if (!isAdmin) return null;
   return user;
 }
@@ -34,11 +38,15 @@ async function getAdminUser(supabase: Awaited<ReturnType<typeof createClient>>) 
 export async function POST(request: Request) {
   const supabase = await createClient();
   const admin = await getAdminUser(supabase);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  if (!admin)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
 
   const { email, password, full_name, role_name } = await request.json();
   if (!email || !password || !full_name) {
-    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing required fields" },
+      { status: 400 },
+    );
   }
 
   const adminClient = getAdminSupabase();
@@ -49,17 +57,25 @@ export async function POST(request: Request) {
     .eq("name", role_name || "learner")
     .single();
 
-  const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: { full_name, role_id: roleData?.id },
-  });
+  const { data: authData, error: authError } =
+    await adminClient.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name, role_id: roleData?.id },
+    });
 
-  if (authError) return NextResponse.json({ error: authError.message }, { status: 500 });
+  if (authError)
+    return NextResponse.json({ error: authError.message }, { status: 500 });
 
   if (role_name === "tutor" && authData.user) {
-    await adminClient.from("tutors").insert({ user_id: authData.user.id });
+    const { error: tutorError } = await adminClient
+      .from("tutors")
+      .insert({ user_id: authData.user.id });
+    if (tutorError) {
+      await adminClient.auth.admin.deleteUser(authData.user.id);
+      return NextResponse.json({ error: tutorError.message }, { status: 500 });
+    }
   }
 
   // Log action
@@ -77,29 +93,51 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   const supabase = await createClient();
   const admin = await getAdminUser(supabase);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  if (!admin)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
 
-  const { user_id, full_name, email, role_name, password } = await request.json();
-  if (!user_id) return NextResponse.json({ error: "Missing user_id" }, { status: 400 });
+  const { user_id, full_name, email, role_name, password } =
+    await request.json();
+  if (!user_id)
+    return NextResponse.json({ error: "Missing user_id" }, { status: 400 });
 
   const adminClient = getAdminSupabase();
 
   // Update profile name
   if (full_name !== undefined) {
-    await adminClient.from("profiles").update({ full_name }).eq("id", user_id);
+    const { error } = await adminClient
+      .from("profiles")
+      .update({ full_name })
+      .eq("id", user_id);
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
   // Update email via auth admin
   if (email) {
-    const { error } = await adminClient.auth.admin.updateUserById(user_id, { email });
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    await adminClient.from("profiles").update({ email }).eq("id", user_id);
+    const { error } = await adminClient.auth.admin.updateUserById(user_id, {
+      email,
+    });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    const { error: profileError } = await adminClient
+      .from("profiles")
+      .update({ email })
+      .eq("id", user_id);
+    if (profileError)
+      return NextResponse.json(
+        { error: profileError.message },
+        { status: 500 },
+      );
   }
 
   // Update password via auth admin
   if (password) {
-    const { error } = await adminClient.auth.admin.updateUserById(user_id, { password });
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const { error } = await adminClient.auth.admin.updateUserById(user_id, {
+      password,
+    });
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
   // Update role
@@ -110,15 +148,40 @@ export async function PATCH(request: Request) {
       .eq("name", role_name)
       .single();
 
-    if (roleData) {
-      await adminClient.from("profiles").update({ role_id: roleData.id }).eq("id", user_id);
+    if (!roleData) {
+      return NextResponse.json({ error: "Invalid role_name" }, { status: 400 });
+    }
 
-      // Create/remove tutor record
-      if (role_name === "tutor") {
-        await adminClient.from("tutors").upsert({ user_id }, { onConflict: "user_id" });
-      } else {
-        await adminClient.from("tutors").delete().eq("user_id", user_id);
-      }
+    const { error: profileError } = await adminClient
+      .from("profiles")
+      .update({ role_id: roleData.id })
+      .eq("id", user_id);
+    if (profileError)
+      return NextResponse.json(
+        { error: profileError.message },
+        { status: 500 },
+      );
+
+    // Create/remove tutor record
+    if (role_name === "tutor") {
+      const { error: tutorError } = await adminClient
+        .from("tutors")
+        .upsert({ user_id }, { onConflict: "user_id" });
+      if (tutorError)
+        return NextResponse.json(
+          { error: tutorError.message },
+          { status: 500 },
+        );
+    } else {
+      const { error: tutorError } = await adminClient
+        .from("tutors")
+        .delete()
+        .eq("user_id", user_id);
+      if (tutorError)
+        return NextResponse.json(
+          { error: tutorError.message },
+          { status: 500 },
+        );
     }
   }
 
@@ -128,7 +191,13 @@ export async function PATCH(request: Request) {
     action: "user_edited",
     entity_type: "user",
     entity_id: user_id,
-    metadata: { full_name, email, role_name, password_changed: !!password, edited_by: admin.email },
+    metadata: {
+      full_name,
+      email,
+      role_name,
+      password_changed: !!password,
+      edited_by: admin.email,
+    },
   });
 
   return NextResponse.json({ success: true });
@@ -137,13 +206,18 @@ export async function PATCH(request: Request) {
 export async function DELETE(request: Request) {
   const supabase = await createClient();
   const admin = await getAdminUser(supabase);
-  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  if (!admin)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
 
   const { user_id } = await request.json();
-  if (!user_id) return NextResponse.json({ error: "Missing user_id" }, { status: 400 });
+  if (!user_id)
+    return NextResponse.json({ error: "Missing user_id" }, { status: 400 });
 
   if (user_id === admin.id) {
-    return NextResponse.json({ error: "Cannot delete your own admin account" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Cannot delete your own admin account" },
+      { status: 400 },
+    );
   }
 
   const adminClient = getAdminSupabase();
@@ -169,10 +243,16 @@ export async function DELETE(request: Request) {
   });
 
   // Delete profile first (cascade), then auth user
-  await adminClient.from("profiles").delete().eq("id", user_id);
+  const { error: profileError } = await adminClient
+    .from("profiles")
+    .delete()
+    .eq("id", user_id);
+  if (profileError)
+    return NextResponse.json({ error: profileError.message }, { status: 500 });
   const { error } = await adminClient.auth.admin.deleteUser(user_id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error)
+    return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ success: true });
 }
