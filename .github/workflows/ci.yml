@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [ main, master, dev ]
 
+env:
+  NEXT_PUBLIC_SUPABASE_URL: "https://hrwqxdtoncwhukqhsdjb.supabase.co"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhyd3F4ZHRvbmN3aHVrcWhzZGpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2NjA2NzIsImV4cCI6MjA4NzIzNjY3Mn0.dUVYhlFQCHZrYUGSMqxmfF3uO-GemoratEp0qWWlQLE"
+  SUPABASE_SERVICE_ROLE_KEY: "dummy"
+  NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+
 jobs:
   secret-scan:
     runs-on: ubuntu-latest
@@ -115,7 +121,7 @@ jobs:
         with:
           version: latest
       - name: Push Database Migrations
-        run: supabase db push
+        run: supabase db push --include-all
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
