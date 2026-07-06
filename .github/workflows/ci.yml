@@ -82,7 +82,9 @@ jobs:
           node-version: '24'
           cache: 'pnpm'
       - name: Install axe-cli
-        run: npm install -g @axe-core/cli
+        run: |
+          npm install -g @axe-core/cli
+          npx browser-driver-manager install chrome
       - name: Build and Start Next.js Server
         run: |
           pnpm install --frozen-lockfile
@@ -108,21 +110,4 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel-args: '--prod'
 
-  # 6. Supabase Database Deployment
-  # Note: SUPABASE_ACCESS_TOKEN, SUPABASE_DB_PASSWORD, and SUPABASE_PROJECT_ID must be set in GitHub repository secrets
-  deploy-db:
-    needs: [secret-scan, web-build, web-test]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          version: latest
-      - name: Push Database Migrations
-        run: supabase db push --include-all
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
