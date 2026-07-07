@@ -1,8 +1,8 @@
 allowBuilds:
   '@firebase/util': true
   '@google/genai': true
-  core-js: set this to true or false
+  core-js: true
   protobufjs: true
   sharp: true
-  tesseract.js: set this to true or false
+  tesseract.js: false
   unrs-resolver: true
