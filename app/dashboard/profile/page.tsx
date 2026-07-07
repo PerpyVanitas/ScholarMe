@@ -42,8 +42,11 @@ import {
   Star,
   Crown,
   Shield,
+  ShieldCheck,
   GraduationCap,
   Plus,
+  Github,
+  Linkedin,
 } from "lucide-react";
 import { ImageCropper } from "@/components/image-cropper";
 import { useRouter } from "next/navigation";
@@ -61,6 +64,8 @@ import { getRoleName } from "@/lib/utils/roles";
 import { ProfileEditDialog } from "./components/profile-edit-dialog";
 import { TutorSettingsDialog } from "./components/tutor-settings-dialog";
 import { HonorSocietyDesignationDialog } from "./components/honor-society-designation-dialog";
+import { MasteryVerificationDialog } from "./components/mastery-verification-dialog";
+import { AchievementsCard } from "./components/achievements-card";
 import dynamic from "next/dynamic";
 
 const DesignationCard = dynamic(
@@ -99,6 +104,10 @@ export default function ProfilePage() {
   const [editDegreeProgram, setEditDegreeProgram] = useState("");
   const [editYearLevel, setEditYearLevel] = useState("");
   const [editAvatarUrl, setEditAvatarUrl] = useState<string | null>(null);
+  const [editPronouns, setEditPronouns] = useState("");
+  const [editStatusMessage, setEditStatusMessage] = useState("");
+  const [editGithubUrl, setEditGithubUrl] = useState("");
+  const [editLinkedinUrl, setEditLinkedinUrl] = useState("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   // Tutor settings state
@@ -106,6 +115,9 @@ export default function ProfilePage() {
   const [tutorBio, setTutorBio] = useState("");
   const [hourlyRate, setHourlyRate] = useState<number | null>(null);
   const [yearsExperience, setYearsExperience] = useState<number | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const [calendarSyncEnabled, setCalendarSyncEnabled] = useState(false);
+  const [autoApprovePastLearners, setAutoApprovePastLearners] = useState(false);
   const [selectedSpecializations, setSelectedSpecializations] = useState<
     string[]
   >([]);
@@ -122,6 +134,7 @@ export default function ProfilePage() {
   // Designation state
   const [designations, setDesignations] = useState<HsDesignation[]>([]);
   const [designationDialogOpen, setDesignationDialogOpen] = useState(false);
+  const [masteryVerificationOpen, setMasteryVerificationOpen] = useState(false);
   const [editingDesignation, setEditingDesignation] =
     useState<HsDesignation | null>(null);
   const [desigType, setDesigType] = useState<DesignationType>("member");
@@ -148,7 +161,7 @@ export default function ProfilePage() {
       const { data, error } = await supabase
         .from("profiles")
         .select(
-          "id, first_name, last_name, full_name, email, phone_number, birthdate, date_of_birth, membership_number, degree_program, year_level, total_xp, current_level, avatar_url, created_at, roles(name)",
+          "id, first_name, last_name, full_name, email, phone_number, birthdate, date_of_birth, membership_number, degree_program, year_level, total_xp, current_level, avatar_url, pronouns, status_message, social_links, created_at, roles(name)",
         )
         .eq("id", user.id)
         .maybeSingle();
@@ -163,7 +176,7 @@ export default function ProfilePage() {
           const { data: healed } = await supabase
             .from("profiles")
             .select(
-              "id, first_name, last_name, full_name, email, phone_number, birthdate, date_of_birth, membership_number, degree_program, year_level, total_xp, current_level, avatar_url, created_at, roles(name)",
+              "id, first_name, last_name, full_name, email, phone_number, birthdate, date_of_birth, membership_number, degree_program, year_level, total_xp, current_level, avatar_url, pronouns, status_message, social_links, created_at, roles(name)",
             )
             .eq("id", user.id)
             .maybeSingle();
@@ -235,7 +248,7 @@ export default function ProfilePage() {
           const { data: tutorInfo } = await supabase
             .from("tutors")
             .select(
-              "id, bio, hourly_rate, years_experience, tutor_specializations(specializations(id, name))",
+              "id, bio, hourly_rate, years_experience, is_paused, calendar_sync_enabled, auto_approve_past_learners, tutor_specializations(specializations(id, name))",
             )
             .eq("user_id", user.id)
             .single();
@@ -245,6 +258,9 @@ export default function ProfilePage() {
             setTutorBio(tutorInfo.bio || "");
             setHourlyRate(tutorInfo.hourly_rate);
             setYearsExperience(tutorInfo.years_experience);
+            setIsPaused(!!tutorInfo.is_paused);
+            setCalendarSyncEnabled(!!tutorInfo.calendar_sync_enabled);
+            setAutoApprovePastLearners(!!tutorInfo.auto_approve_past_learners);
 
             if (tutorInfo.tutor_specializations) {
               const specs = tutorInfo.tutor_specializations
@@ -278,16 +294,21 @@ export default function ProfilePage() {
     loadProfile();
   }, [supabase, router]);
 
-  const openEditModal = useCallback(() => {
-    if (!profile) return;
-
-    let fn = profile.first_name || "";
-    let ln = profile.last_name || "";
-    if ((!fn || !ln) && profile.full_name) {
-      const parts = profile.full_name.trim().split(/\s+/);
+  const getInitialNames = useCallback((prof: Profile) => {
+    let fn = prof.first_name || "";
+    let ln = prof.last_name || "";
+    if ((!fn || !ln) && prof.full_name) {
+      const parts = prof.full_name.trim().split(/\s+/);
       fn = fn || parts[0] || "";
       ln = ln || parts.slice(1).join(" ") || "";
     }
+    return { fn, ln };
+  }, []);
+
+  const openEditModal = useCallback(() => {
+    if (!profile) return;
+
+    const { fn, ln } = getInitialNames(profile);
 
     setEditFirstName(fn);
     setEditLastName(ln);
@@ -296,6 +317,10 @@ export default function ProfilePage() {
     setEditMembershipNumber(profile.membership_number || "");
     setEditDegreeProgram(profile.degree_program || "");
     setEditYearLevel(profile.year_level?.toString() || "");
+    setEditPronouns(profile.pronouns || "");
+    setEditStatusMessage(profile.status_message || "");
+    setEditGithubUrl(profile.social_links?.github || "");
+    setEditLinkedinUrl(profile.social_links?.linkedin || "");
     if (profile.avatar_url?.startsWith("avatars/")) {
       setEditAvatarUrl(
         `/api/avatar?pathname=${encodeURIComponent(profile.avatar_url)}`,
@@ -304,7 +329,68 @@ export default function ProfilePage() {
       setEditAvatarUrl(profile.avatar_url || null);
     }
     setEditOpen(true);
-  }, [profile]);
+  }, [profile, getInitialNames]);
+
+  const handleEditOpenChange = (open: boolean) => {
+    if (open) {
+      setEditOpen(true);
+      return;
+    }
+    if (profile) {
+      const { fn, ln } = getInitialNames(profile);
+      const hasUnsaved =
+        editFirstName.trim() !== fn ||
+        editLastName.trim() !== ln ||
+        editPhone.trim() !== (profile.phone_number || "") ||
+        (editBirthdate || "") !==
+          (profile.birthdate || profile.date_of_birth || "") ||
+        editMembershipNumber.trim() !== (profile.membership_number || "") ||
+        editDegreeProgram.trim() !== (profile.degree_program || "") ||
+        editYearLevel !== (profile.year_level?.toString() || "") ||
+        editPronouns.trim() !== (profile.pronouns || "") ||
+        editStatusMessage.trim() !== (profile.status_message || "") ||
+        editGithubUrl.trim() !== (profile.social_links?.github || "") ||
+        editLinkedinUrl.trim() !== (profile.social_links?.linkedin || "");
+
+      if (hasUnsaved) {
+        if (
+          !window.confirm(
+            "You have unsaved changes. Are you sure you want to close?",
+          )
+        ) {
+          return;
+        }
+      }
+    }
+    setEditOpen(false);
+  };
+
+  const handleTutorSettingsOpenChange = (open: boolean) => {
+    if (open) {
+      setTutorSettingsOpen(true);
+      return;
+    }
+    if (tutorData) {
+      const hasUnsaved =
+        tutorBio.trim() !== (tutorData.bio || "") ||
+        hourlyRate !== tutorData.hourly_rate ||
+        yearsExperience !== tutorData.years_experience ||
+        isPaused !== !!tutorData.is_paused ||
+        calendarSyncEnabled !== !!tutorData.calendar_sync_enabled ||
+        autoApprovePastLearners !== !!tutorData.auto_approve_past_learners;
+
+      if (hasUnsaved) {
+        if (
+          !window.confirm(
+            "You have unsaved changes. Are you sure you want to close?",
+          )
+        ) {
+          return;
+        }
+      }
+    }
+    setTutorSettingsOpen(false);
+  };
 
   const handleAvatarFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -365,6 +451,9 @@ export default function ProfilePage() {
         hourly_rate: hourlyRate,
         years_experience: yearsExperience,
         specialization_ids: selectedSpecializations,
+        is_paused: isPaused,
+        calendar_sync_enabled: calendarSyncEnabled,
+        auto_approve_past_learners: autoApprovePastLearners,
       });
       if (!result.success) throw new Error(result.error);
       toast.success("Tutor settings updated successfully");
@@ -416,6 +505,12 @@ export default function ProfilePage() {
       membership_number: editMembershipNumber.trim() || null,
       degree_program: !isTutor ? editDegreeProgram.trim() || null : null,
       year_level: !isTutor ? parseInt(editYearLevel) || null : null,
+      pronouns: editPronouns.trim() || null,
+      status_message: editStatusMessage.trim() || null,
+      social_links: {
+        github: editGithubUrl.trim(),
+        linkedin: editLinkedinUrl.trim(),
+      },
     };
     const result = await updateProfile(updateData);
     if (result.success) {
@@ -570,7 +665,14 @@ export default function ProfilePage() {
 
             <div className="flex-1 text-center sm:text-left space-y-2">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <h1 className="text-2xl font-bold">{displayName}</h1>
+                <h1 className="text-2xl font-bold">
+                  {displayName}
+                  {profile.pronouns && (
+                    <span className="text-sm font-normal text-muted-foreground ml-2">
+                      ({profile.pronouns})
+                    </span>
+                  )}
+                </h1>
                 <Badge
                   variant="secondary"
                   className="w-fit mx-auto sm:mx-0 capitalize"
@@ -585,6 +687,34 @@ export default function ProfilePage() {
                 </Badge>
               </div>
               <p className="text-muted-foreground">{profile.email}</p>
+              {profile.status_message && (
+                <p className="text-sm italic text-foreground/80 mt-1">
+                  "{profile.status_message}"
+                </p>
+              )}
+
+              <div className="flex items-center justify-center sm:justify-start gap-4 mt-2">
+                {profile.social_links?.github && (
+                  <a
+                    href={profile.social_links.github}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <Github className="h-5 w-5" />
+                  </a>
+                )}
+                {profile.social_links?.linkedin && (
+                  <a
+                    href={profile.social_links.linkedin}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <Linkedin className="h-5 w-5" />
+                  </a>
+                )}
+              </div>
 
               <div className="flex items-center justify-center sm:justify-start gap-2 pt-1 text-sm font-medium">
                 <Star className="h-4 w-4 text-yellow-500" />
@@ -757,8 +887,18 @@ export default function ProfilePage() {
                 )}
                 {specializations.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Specializations</p>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">Specializations</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setMasteryVerificationOpen(true)}
+                      >
+                        <ShieldCheck className="mr-2 h-3.5 w-3.5" />
+                        Verify Mastery
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
                       {specializations.map((spec) => (
                         <Badge key={spec.id} variant="secondary">
                           {spec.name}
@@ -781,13 +921,14 @@ export default function ProfilePage() {
             setDesigIsCurrent={setDesigIsCurrent}
             setDesignationDialogOpen={setDesignationDialogOpen}
           />
+          <AchievementsCard />
           <SecuritySettings />
         </div>
       </div>
 
       <ProfileEditDialog
         open={editOpen}
-        onOpenChange={setEditOpen}
+        onOpenChange={handleEditOpenChange}
         saving={saving}
         editFirstName={editFirstName}
         setEditFirstName={setEditFirstName}
@@ -804,6 +945,14 @@ export default function ProfilePage() {
         editYearLevel={editYearLevel}
         setEditYearLevel={setEditYearLevel}
         editAvatarUrl={editAvatarUrl}
+        editPronouns={editPronouns}
+        setEditPronouns={setEditPronouns}
+        editStatusMessage={editStatusMessage}
+        setEditStatusMessage={setEditStatusMessage}
+        editGithubUrl={editGithubUrl}
+        setEditGithubUrl={setEditGithubUrl}
+        editLinkedinUrl={editLinkedinUrl}
+        setEditLinkedinUrl={setEditLinkedinUrl}
         uploadingAvatar={uploadingAvatar}
         isTutor={isTutor}
         displayName={displayName}
@@ -815,15 +964,27 @@ export default function ProfilePage() {
 
       <TutorSettingsDialog
         open={tutorSettingsOpen}
-        onOpenChange={setTutorSettingsOpen}
+        onOpenChange={handleTutorSettingsOpenChange}
         tutorBio={tutorBio}
         setTutorBio={setTutorBio}
         hourlyRate={hourlyRate}
         setHourlyRate={setHourlyRate}
         yearsExperience={yearsExperience}
         setYearsExperience={setYearsExperience}
+        isPaused={isPaused}
+        setIsPaused={setIsPaused}
+        calendarSyncEnabled={calendarSyncEnabled}
+        setCalendarSyncEnabled={setCalendarSyncEnabled}
+        autoApprovePastLearners={autoApprovePastLearners}
+        setAutoApprovePastLearners={setAutoApprovePastLearners}
         savingTutor={savingTutor}
         handleSaveTutorSettings={handleSaveTutorSettings}
+      />
+
+      <MasteryVerificationDialog
+        open={masteryVerificationOpen}
+        onOpenChange={setMasteryVerificationOpen}
+        specializations={specializations}
       />
 
       {cropperImageSrc && (

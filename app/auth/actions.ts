@@ -3,14 +3,18 @@
 import { createClient, createAdminClient } from "@/lib/supabase/create-client";
 import { redirect } from "next/navigation";
 import { birthdateFields, resolveRoleId } from "@/features/profiles/api/db";
+import { recordLoginHistory } from "@/lib/utils/login-history";
 
 export async function loginWithEmail(formData: FormData) {
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email: formData.get("email") as string,
     password: formData.get("password") as string,
   });
   if (error) return { error: error.message };
+  if (data.user) {
+    await recordLoginHistory(supabase, data.user.id);
+  }
   return { success: true };
 }
 
@@ -48,24 +52,23 @@ export async function signUp(formData: FormData) {
 
   const roleId = await resolveRoleId(adminClient, selectedRole);
 
-  const { data: created, error: createError } =
-    await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
-          phone_number: phoneNumber,
-          date_of_birth: dateOfBirth,
-          role_id: roleId,
-          role_name: selectedRole,
-          academic_year_joined: academicYearJoined,
-          esas_scholar: esasScholar,
-        },
+  const { data: created, error: createError } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: fullName,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        phone_number: phoneNumber,
+        date_of_birth: dateOfBirth,
+        role_id: roleId,
+        role_name: selectedRole,
+        academic_year_joined: academicYearJoined,
+        esas_scholar: esasScholar,
       },
-    });
+    },
+  });
   if (createError) return { error: createError.message };
 
   if (created?.user) {

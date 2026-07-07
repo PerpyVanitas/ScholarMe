@@ -15,6 +15,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useEffect } from "react";
+import { Download } from "lucide-react";
+
+interface LoginHistory {
+  id: string;
+  ip_address: string;
+  user_agent: string;
+  created_at: string;
+}
 
 export function SecuritySettings() {
   const router = useRouter();
@@ -26,6 +35,26 @@ export function SecuritySettings() {
   const [changingPassword, setChangingPassword] = useState(false);
   const [showPasswords, setShowPasswords] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [loginHistory, setLoginHistory] = useState<LoginHistory[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+
+  useEffect(() => {
+    async function fetchHistory() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("login_history")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (data) setLoginHistory(data);
+      setLoadingHistory(false);
+    }
+    fetchHistory();
+  }, [supabase]);
 
   const handleChangePassword = async () => {
     if (!currentPassword || !newPassword) {
@@ -176,6 +205,74 @@ export function SecuritySettings() {
               </>
             )}
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Download className="h-5 w-5" />
+            Your Data
+          </CardTitle>
+          <CardDescription>
+            Download a copy of your personal data (GDPR Compliance)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="outline"
+            onClick={() => {
+              window.location.href = "/api/account/export";
+            }}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Download My Data (JSON)
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Login History</CardTitle>
+          <CardDescription>
+            Review the 5 most recent logins to your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loadingHistory ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading history...
+            </div>
+          ) : loginHistory.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No recent logins found.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {loginHistory.map((log) => (
+                <div
+                  key={log.id}
+                  className="flex justify-between items-center pb-4 border-b last:border-0 last:pb-0"
+                >
+                  <div>
+                    <p className="text-sm font-medium">
+                      {log.ip_address || "Unknown IP"}
+                    </p>
+                    <p
+                      className="text-xs text-muted-foreground max-w-xs truncate"
+                      title={log.user_agent}
+                    >
+                      {log.user_agent || "Unknown Browser"}
+                    </p>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {new Date(log.created_at).toLocaleString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </>

@@ -79,19 +79,43 @@ function QuizzesContent() {
     }
   };
 
-  const handleDeleteQuiz = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this study set?")) return;
+  const handleDeleteQuiz = (id: string) => {
+    const setToDelete = myStudySets.find((s) => s.id === id);
+    if (!setToDelete) return;
 
-    try {
-      const res = await fetch(`/api/quizzes/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete");
+    // Optimistically remove from UI
+    setMyStudySets((prev) => prev.filter((s) => s.id !== id));
 
-      toast.success("Study set deleted");
-      await loadStudySets();
-    } catch (error) {
-      console.error("Error deleting study set:", error);
-      toast.error("Failed to delete study set");
-    }
+    const timeoutId = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/quizzes/${id}`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Failed to delete");
+      } catch (error) {
+        console.error("Error deleting study set:", error);
+        toast.error("Failed to delete study set");
+        await loadStudySets(); // Revert on failure
+      }
+    }, 5000);
+
+    toast.success("Study set deleted", {
+      action: {
+        label: "Undo",
+        onClick: () => {
+          clearTimeout(timeoutId);
+          setMyStudySets((prev) => {
+            const restored = [...prev, setToDelete];
+            // Sort by created_at descending to maintain order
+            return restored.sort(
+              (a, b) =>
+                new Date(b.created_at).getTime() -
+                new Date(a.created_at).getTime(),
+            );
+          });
+          toast.success("Delete undone");
+        },
+      },
+      duration: 5000,
+    });
   };
 
   const getTypeLabel = (type: string) => {

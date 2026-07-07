@@ -18,10 +18,12 @@ import {
   Clock,
   ArrowRight,
   Trophy,
+  Flame,
 } from "lucide-react";
 import { SESSION_STATUS_COLORS } from "@/lib/constants";
 import type { Profile, Session } from "@/lib/types";
 import { TutorOfTheMonth } from "./tutor-of-the-month";
+import { SmartTutorRecommendations } from "./smart-tutor-recommendations";
 
 interface LearnerDashboardProps {
   profile: Profile;
@@ -75,6 +77,12 @@ export function LearnerDashboard({
               </div>
             </div>
             <div className="flex flex-col sm:items-end">
+              <div className="flex items-center gap-1 mb-1">
+                <Flame className="h-4 w-4 text-orange-500 fill-orange-500" />
+                <span className="text-sm font-bold text-orange-500">
+                  3 Day Streak
+                </span>
+              </div>
               <span className="text-sm font-medium text-foreground">
                 {profile.total_xp || 0} Total XP
               </span>
@@ -114,6 +122,8 @@ export function LearnerDashboard({
           value={stats.upcomingSessions}
         />
       </div>
+
+      <SmartTutorRecommendations />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card className="border-border/60">

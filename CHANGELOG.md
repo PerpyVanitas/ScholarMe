@@ -1,8 +1,94 @@
+## [2026-07-07] - Phase 29 QoL Sprint: Final Backlog Completion
+
+### Added
+
+- **Study Group Chat**: Real-time group messaging via `study_group_messages` with Supabase Realtime on the group detail page.
+- **Group Session Join Flow**: Learners can browse open group sessions and join via `/api/sessions/[id]/join`; sessions page shows an "Open Groups" tab.
+- **Real System Health Metrics**: `/api/admin/health` returns live row counts from key tables; health dashboard displays real data.
+- **Analytics Persistence**: `lib/analytics.ts` writes events to `analytics_logs` via `/api/analytics/track`; dashboard tracks page views.
+- **Peer Review Consolidation**: Tutor detail peer reviews now use `tutor_reviews`; migration backfills from legacy `tutor_peer_reviews`.
+
+### Changed
+
+- **Session RLS**: Added policies for browsing open group sessions and viewing joined participant sessions.
+- **Sessions Page**: Merges owned and participant sessions for learners.
+
+## [2026-07-07] - Phase 28 QoL Sprint: Missing Features Completion
+
+### Added
+
+- **Organization Forums (full CRUD)**: Users can create discussions, view post details, and reply. Linked in sidebar.
+- **Study Groups (create + detail)**: Enabled group creation, member detail page with DM links, sidebar navigation.
+- **Group Session Booking**: Learners can select group size (1–5) when booking; API respects `max_participants`.
+- **Prep Notes on Booking**: Separate prep notes field distinct from session notes in the booking dialog.
+- **Login History Recording**: Sign-in and OAuth callback now insert `login_history` rows.
+- **Automatic Badge Unlocking**: Quiz perfect scores, night-owl study, and 7-day streaks unlock badges.
+- **Tutor Strikes**: Incremented when a session is marked no-show.
+- **Syllabus Event Persistence**: AI-parsed syllabus events are saved to `facility_events`.
+- **QoL Tracker**: Recreated `unimplemented_qol_features.md` as a living backlog document.
+
+### Fixed
+
+- **Account Data Export**: Corrected table names (`study_sets`, `sessions`, `hs_designations`).
+- **Admin CSV Export**: Fixed `finance_budget_requests` table and column names to match schema.
+
+### Changed
+
+- **Sidebar Navigation**: Added Forums, Study Groups, Peer Reviews, Data Export, System Health, Mastery Verifications, and Cash Register links.
+
+## [2026-07-07] - Phase 27.5 QoL Sprint: Peer Review & Tutor Substitution
+
+### Added
+
+- **Peer Review & Mentorship**: Added is_lead_tutor flag and a dedicated /dashboard/tutors/reviews dashboard. Lead tutors can write evaluations (1-5 stars + feedback) for junior tutors to read.
+- **Tutor Substitution Flow**: Tutors can now initiate a "Substitute" request on a confirmed session, selecting another available tutor to take over. The target tutor receives a pending alert in their session list to accept or decline the transfer.
+- **Rescheduling Flow**: Improved the Tutor Reschedule action to send a proposed new time to the Learner instead of instantly overwriting the session. The learner can accept or decline the new proposed time.
+
+## [2026-07-07] - Phase 27 QoL Sprint: Tutor Experience Enhancements
+
+### Added
+
+- **Customizable Dashboard Layout**: Integrated @dnd-kit to allow tutors to drag-and-drop their dashboard widgets (Overdue Sessions, Clock-in, Stats, and Layout Grid). Layouts are automatically saved to their profile.
+- **Auto-Clock Out Protection Alert**: The Tutor Dashboard now visually alerts the user with a warning banner if they have been clocked in for more than 12 hours consecutively.
+- **Calendar Syncing**: Tutors can now generate a personal .ics Subscription URL for their confirmed sessions, exportable directly from their Profile Settings.
+- **Auto-Approve Past Learners**: Added a toggle for tutors to automatically approve session requests from learners they have previously had completed sessions with.
+- **Subject Mastery Verification**: Tutors can now submit "Verification Claims" for specific specializations (e.g., transcripts) which Admins can review and approve in a new dmin/verifications dashboard.
+
 # Changelog
+
+## [2026-07-07] - Phase 26 QoL Sprint: Announcements & Library Reminders
+
+### Added
+
+- **Automated Reminders API**: Created a serverless endpoint (`/api/admin/cron/reminders`) that functions as a Cron Job to sweep for upcoming Event RSVPs and Overdue Library Books.
+- **Email Notifications**: Integrated mock email capabilities (via Resend) to dispatch customized HTML emails alerting users of upcoming events and overdue checkouts.
+- **Admin Digest (Discord)**: Intercepts completion of the Cron job and posts a summary report to the Admin Discord Webhook.
+- **Manual Trigger UI**: Added a "Trigger Now" button to the System Health dashboard to allow Admins to manually run the reminder sweep.
+
+## [2026-07-07] - Phase 25 QoL Sprint: UI Polish
+
+### Added
+
+- **Illustrated Empty States**: Added Lucide icon illustrations with dynamic blur backgrounds to empty states in TutorDashboard.
+- **Form Warning (Unsaved Changes)**: Implemented a warning system for unsaved changes in `ProfileEditDialog` and `TutorSettingsDialog` to prevent accidental data loss.
+- **Tooltips for Icon Buttons**: Added Shadcn Tooltips to `ThemeToggle`, `FeedbackButton`, and `ScrollToTopFab` and registered a `TooltipProvider` globally in `app/layout.tsx`.
+
+## [2026-07-07] - Phase 21: Library Management & Learner QoL
+
+### Added
+
+- **Library Database Schema**: A new migration was created (`20260706195603_phase_21_library_and_waitlists.sql`) adding support for physical resources (`physical_resources`), tracking of checked out items (`resource_checkouts`), and session waitlists (`session_waitlists`).
+- **Library Catalog**: Created a new Library Catalog page (`/dashboard/resources/library`) featuring a complete inventory view, 'Add Resource' modal for Admins, and barcode scanning integration (`html5-qrcode`) for ISBN lookups.
+- **Resource Checkout Workflow**: Added a `CheckoutModal` allowing Admins to checkout resources to Learners with specified return dates, tracking available quantities in real-time.
+- **Smart Tutor Recommendations**: Integrated intelligent tutor matching in the Learner Dashboard (`SmartTutorRecommendations` component) based on subject availability.
+- **Quick Rebook**: Added a "Rebook" action within Learner Session History for rapid re-booking of previous tutors.
+- **Waitlists**: Built Server Actions and UI for users to join Waitlists when tutors are fully booked.
+- **Interactive Campus Map**: Built a `CampusMapModal` accessible from the Library Catalog page to visually guide users to physical resources and the tutoring center.
 
 ## [2026-07-07] - QoL Feature Audit (Phases 1-4)
 
 ### Added
+
 - **Global Command Palette**: Implemented `cmdk` for lightning-fast global navigation (Cmd+K).
 - **Gamification Enhancements**: Added daily study streak tracking, customized level badge contrast, and integrated `canvas-confetti` and `driver.js` for an interactive product tour.
 - **Physical Library Catalog**: Created a new database schema and UI to search and track physical book inventory (`physical_books`).
@@ -11,6 +97,7 @@
 - **Discord Webhook Integration**: Created an API route `/api/webhooks/discord` to broadcast system notifications (new users, announcements, resources) to external channels.
 
 ### Changed
+
 - **Sidebar De-bloating**: Reorganized the main App Sidebar to neatly group Study Tools, Community, and Admin management for better UX.
 - **Loading UI**: Introduced modern `Skeleton` loaders across dashboard views to improve perceived performance.
 
@@ -142,3 +229,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Fixed**: Successfully remediated all import paths globally to fix sc and lint errors.
 - **Cleaned**: Removed dead code, optimized imports, and eliminated
   eact-hooks/exhaustive-deps warnings across the dashboard.
+
+### 2026-07-07
+
+- Implemented Flashcard Spaced Repetition (SRS) integration in the frontend.
+- Implemented Study Groups feature with a new dashboard page for discovering and joining groups.
+- Implemented AI Quiz Flagging feature allowing users to flag inaccurate AI-generated questions.
+- Implemented Recurring Sessions functionality (repeating for 4 weeks) in the booking dialog.
+- Implemented Group Tutoring Sessions support via a new session_participants schema.
+- Implemented No-Show Penalties tracking and automatic suspension triggers.
+- Checked off all Learner Experience features in the unimplemented QoL features tracker.
+- Implemented Tutor Experience features: Bulk Availability Editing, Auto-Approve Sessions, Timesheet Auto-Clock Out Protection, Calendar Syncing toggles, and Meeting Link / Rescheduling functionalities.

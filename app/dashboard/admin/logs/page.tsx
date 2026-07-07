@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ShieldAlert } from "lucide-react";
+import { ExportCsvButton } from "@/components/export-csv-button";
 
 export const dynamic = "force-dynamic";
 
@@ -55,10 +56,26 @@ export default async function SystemLogsPage() {
     .order("created_at", { ascending: false })
     .limit(100);
 
+  const formattedLogsForExport =
+    logs?.map((log) => ({
+      Time: format(new Date(log.created_at), "yyyy-MM-dd HH:mm:ss"),
+      User: log.profiles?.full_name || "System",
+      Email: log.profiles?.email || "N/A",
+      Action: log.action,
+      "Entity Type": log.entity_type || "",
+      "Entity ID": log.entity_id || "",
+      Metadata: log.metadata ? JSON.stringify(log.metadata) : "",
+    })) || [];
+
   return (
     <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">System Logs</h2>
+        <ExportCsvButton
+          data={formattedLogsForExport}
+          filename="system_audit_logs"
+          label="Export Logs"
+        />
       </div>
 
       <Card>

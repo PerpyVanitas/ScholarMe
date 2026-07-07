@@ -26,6 +26,7 @@ import {
 import { Loader2, CheckCircle, BookOpen, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { CreateMLCEngine } from "@mlc-ai/web-llm";
 
 interface CreateQuizSheetProps {
   open: boolean;
@@ -74,6 +75,8 @@ export function CreateQuizSheet({
   const [aiCount] = useState(5);
   const [generating, setGenerating] = useState(false);
   const [creationMethod, setCreationMethod] = useState("manual");
+  const [useLocalAI, setUseLocalAI] = useState(false);
+  const [localAIProgress, setLocalAIProgress] = useState("");
 
   useEffect(() => {
     if (open) {
@@ -143,28 +146,53 @@ export function CreateQuizSheet({
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         enabledTypes.reduce((acc, [_, conf]) => acc + conf.count, 0) || aiCount;
 
-      const res = await fetch("/api/quizzes/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topic: aiPrompt,
-          type: derivedType,
-          count: totalCount,
-        }),
-      });
+      if (useLocalAI) {
+        setLocalAIProgress("Loading model... (This may take a minute)");
+        const engine = await CreateMLCEngine(
+          "Llama-3.2-1B-Instruct-q4f32_1-MLC",
+          {
+            initProgressCallback: (progress) => {
+              setLocalAIProgress(
+                `Loading Local AI: ${Math.round(progress.progress * 100)}%`,
+              );
+            },
+          },
+        );
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to generate questions");
-      }
+        setLocalAIProgress("Generating quiz...");
+        const systemPrompt = `You are an expert quiz generator. Given a topic, generate ${totalCount} questions.
+The types of questions are: ${enabledTypes.map((t) => t[0]).join(", ")}.
+Respond ONLY with a valid JSON array of objects.
+Each object must have:
+"question": string
+"answer": string
+"options": array of strings (if multiple choice)
+"item_type": string (one of the question types)
+No other text, markdown blocks, or explanations. Just the JSON array.`;
 
-      const data = await res.json();
-      if (data.data && Array.isArray(data.data)) {
-        const newContent = data.data
-          .map(
-            (item: Record<string, string>) =>
-              `Q: ${item.question}\nA: ${item.answer}`,
-          )
+        const reply = await engine.chat.completions.create({
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `Topic: ${aiPrompt}` },
+          ],
+          response_format: { type: "json_object" },
+        });
+
+        const rawContent = reply.choices[0]?.message.content || "[]";
+        let parsedData = [];
+        try {
+          parsedData = JSON.parse(rawContent);
+        } catch (e) {
+          const match = rawContent.match(/\[[\s\S]*\]/);
+          if (match) {
+            parsedData = JSON.parse(match[0]);
+          } else {
+            throw new Error("Failed to parse JSON from Local AI");
+          }
+        }
+
+        const newContent = parsedData
+          .map((item: any) => `Q: ${item.question}\nA: ${item.answer}`)
           .join("\n\n");
 
         setFormData((prev) => ({
@@ -174,14 +202,51 @@ export function CreateQuizSheet({
             : newContent,
         }));
 
-        toast.success("Questions generated successfully!");
+        toast.success("Questions generated locally successfully!");
         setCreationMethod("manual");
+        setLocalAIProgress("");
+      } else {
+        const res = await fetch("/api/quizzes/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            topic: aiPrompt,
+            type: derivedType,
+            count: totalCount,
+          }),
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || "Failed to generate questions");
+        }
+
+        const data = await res.json();
+        if (data.data && Array.isArray(data.data)) {
+          const newContent = data.data
+            .map(
+              (item: Record<string, string>) =>
+                `Q: ${item.question}\nA: ${item.answer}`,
+            )
+            .join("\n\n");
+
+          setFormData((prev) => ({
+            ...prev,
+            content: prev.content
+              ? prev.content + "\n\n" + newContent
+              : newContent,
+          }));
+
+          toast.success("Questions generated successfully!");
+          setCreationMethod("manual");
+        }
       }
     } catch (error) {
       console.error("Error generating questions:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to generate questions",
       );
+      setLocalAIProgress("");
     } finally {
       setGenerating(false);
     }
@@ -520,7 +585,23 @@ export function CreateQuizSheet({
             </TabsList>
 
             <TabsContent value="manual" className="space-y-2 mt-4">
-              <Label>Questions</Label>
+              <div className="flex items-center justify-between">
+                <Label>Questions</Label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs"
+                  onClick={() =>
+                    setFormData({
+                      ...formData,
+                      content:
+                        "Q: What is the capital of France?\nA: Paris\n\nQ: What is 2+2?\nA: 4\n\nQ: What is the largest planet in our solar system?\nA: Jupiter",
+                    })
+                  }
+                >
+                  Load Template
+                </Button>
+              </div>
               <p className="text-xs text-muted-foreground">
                 Format: Q: question text A: answer text (one per line)
               </p>
@@ -546,6 +627,27 @@ export function CreateQuizSheet({
                   rows={3}
                 />
               </div>
+              <div className="flex items-center space-x-2 border rounded-md p-4 bg-muted/20">
+                <Switch
+                  id="quiz-local-ai-mode"
+                  checked={useLocalAI}
+                  onCheckedChange={setUseLocalAI}
+                />
+                <Label
+                  htmlFor="quiz-local-ai-mode"
+                  className="flex-1 cursor-pointer"
+                >
+                  <div className="font-medium text-primary">
+                    Use Local AI (Free, Unlimited)
+                  </div>
+                  <div className="text-xs text-muted-foreground font-normal leading-tight">
+                    Generates quizzes directly on your device using WebGPU.
+                    Saves API costs and bypasses rate limits. First run
+                    downloads a ~1GB model.
+                  </div>
+                </Label>
+              </div>
+
               <Button
                 type="button"
                 onClick={handleGenerateQuiz}
@@ -555,7 +657,7 @@ export function CreateQuizSheet({
                 {generating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
-                    Generating...
+                    {localAIProgress ? localAIProgress : "Generating..."}
                   </>
                 ) : (
                   "Generate Questions"

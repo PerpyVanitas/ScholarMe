@@ -8,8 +8,10 @@ import type { Message } from "@/lib/types";
 export function useRealtimeMessages(
   conversationId: string | null,
   currentUserId: string | undefined,
+  currentUserName: string | undefined = "Someone",
 ) {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [typingUsers, setTypingUsers] = useState<Record<string, string>>({});
   const supabase = createClient();
 
   useEffect(() => {
@@ -96,6 +98,23 @@ export function useRealtimeMessages(
           });
         },
       )
+      .on("broadcast", { event: "typing" }, (payload) => {
+        if (payload.payload.userId !== currentUserId) {
+          setTypingUsers((prev) => ({
+            ...prev,
+            [payload.payload.userId]: payload.payload.userName,
+          }));
+
+          // Auto clear after 3 seconds
+          setTimeout(() => {
+            setTypingUsers((prev) => {
+              const next = { ...prev };
+              delete next[payload.payload.userId];
+              return next;
+            });
+          }, 3000);
+        }
+      })
       .subscribe();
 
     return () => {
@@ -172,9 +191,19 @@ export function useRealtimeMessages(
         );
         toast.error("Failed to send message");
       }
+      return optimisticMessage;
     },
     [conversationId, currentUserId, supabase],
   );
 
-  return { messages, sendMessage };
+  const sendTypingEvent = useCallback(() => {
+    if (!conversationId || !currentUserId) return;
+    supabase.channel(`conversation:${conversationId}`).send({
+      type: "broadcast",
+      event: "typing",
+      payload: { userId: currentUserId, userName: currentUserName },
+    });
+  }, [conversationId, currentUserId, currentUserName, supabase]);
+
+  return { messages, sendMessage, typingUsers, sendTypingEvent };
 }

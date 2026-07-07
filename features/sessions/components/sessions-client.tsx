@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -14,76 +14,129 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Calendar, Star, CheckCircle2, XCircle, Clock, Loader2 } from "lucide-react"
-import { toast } from "sonner"
-import { SESSION_STATUS_COLORS } from "@/lib/constants"
-import type { Session, UserRole } from "@/lib/types"
+} from "@/components/ui/dialog";
+import {
+  Calendar,
+  Star,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Loader2,
+} from "lucide-react";
+import { toast } from "sonner";
+import { SESSION_STATUS_COLORS } from "@/lib/constants";
+import type { Session, UserRole } from "@/lib/types";
+import Link from "next/link";
+import { RefreshCw, CalendarPlus, StickyNote } from "lucide-react";
+import { generateIcs } from "@/lib/utils";
 
 interface SessionsClientProps {
-  initialSessions: Session[]
-  role: UserRole
+  initialSessions: Session[];
+  role: UserRole;
 }
 
 export function SessionsClient({ initialSessions, role }: SessionsClientProps) {
-  const [sessions, setSessions] = useState<Session[]>(initialSessions)
-  const [ratingSession, setRatingSession] = useState<Session | null>(null)
-  const [ratingValue, setRatingValue] = useState(0)
-  const [ratingFeedback, setRatingFeedback] = useState("")
-  const [ratingLoading, setRatingLoading] = useState(false)
+  const [sessions, setSessions] = useState<Session[]>(initialSessions);
+  const [ratingSession, setRatingSession] = useState<Session | null>(null);
+  const [ratingValue, setRatingValue] = useState(0);
+  const [ratingFeedback, setRatingFeedback] = useState("");
+  const [ratingLoading, setRatingLoading] = useState(false);
+
+  const [memoSession, setMemoSession] = useState<Session | null>(null);
+  const [memoValue, setMemoValue] = useState("");
+  const [memoLoading, setMemoLoading] = useState(false);
 
   async function updateStatus(sessionId: string, status: string) {
     const res = await fetch(`/api/sessions/${sessionId}/status`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
-    })
+    });
 
     if (res.ok) {
       setSessions((prev) =>
-        prev.map((s) => (s.id === sessionId ? { ...s, status: status as Session["status"] } : s))
-      )
-      toast.success(`Session ${status}`)
+        prev.map((s) =>
+          s.id === sessionId
+            ? { ...s, status: status as Session["status"] }
+            : s,
+        ),
+      );
+      toast.success(`Session ${status}`);
     } else {
-      toast.error("Failed to update session")
+      toast.error("Failed to update session");
     }
   }
 
   async function submitRating() {
-    if (!ratingSession || ratingValue === 0) return
-    setRatingLoading(true)
+    if (!ratingSession || ratingValue === 0) return;
+    setRatingLoading(true);
 
     const res = await fetch(`/api/sessions/${ratingSession.id}/rate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ rating: ratingValue, feedback: ratingFeedback }),
-    })
+    });
 
     if (res.ok) {
-      toast.success("Rating submitted!")
+      toast.success("Rating submitted!");
       setSessions((prev) =>
         prev.map((s) =>
           s.id === ratingSession.id
             ? {
                 ...s,
                 session_ratings: [
-                  { id: "", session_id: s.id, learner_id: "", rating: ratingValue, feedback: ratingFeedback, created_at: "" },
+                  {
+                    id: "",
+                    session_id: s.id,
+                    learner_id: "",
+                    rating: ratingValue,
+                    feedback: ratingFeedback,
+                    created_at: "",
+                  },
                 ],
               }
-            : s
-        )
-      )
-      setRatingSession(null)
-      setRatingValue(0)
-      setRatingFeedback("")
+            : s,
+        ),
+      );
+      setRatingSession(null);
+      setRatingValue(0);
+      setRatingFeedback("");
     } else {
-      toast.error("Failed to submit rating")
+      toast.error("Failed to submit rating");
     }
-    setRatingLoading(false)
+    setRatingLoading(false);
   }
 
-  const upcoming = sessions.filter((s) => ["pending", "confirmed"].includes(s.status))
-  const past = sessions.filter((s) => ["completed", "cancelled"].includes(s.status))
+  async function submitMemo() {
+    if (!memoSession) return;
+    setMemoLoading(true);
+
+    const res = await fetch(`/api/sessions/${memoSession.id}/memo`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ memo: memoValue }),
+    });
+
+    if (res.ok) {
+      toast.success("Memo saved successfully");
+      setSessions((prev) =>
+        prev.map((s) =>
+          s.id === memoSession.id ? { ...s, tutor_memo: memoValue } : s,
+        ),
+      );
+      setMemoSession(null);
+    } else {
+      toast.error("Failed to save memo");
+    }
+    setMemoLoading(false);
+  }
+
+  const upcoming = sessions.filter((s) =>
+    ["pending", "confirmed"].includes(s.status),
+  );
+  const past = sessions.filter((s) =>
+    ["completed", "cancelled"].includes(s.status),
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -92,7 +145,9 @@ export function SessionsClient({ initialSessions, role }: SessionsClientProps) {
           {role === "tutor" ? "My Sessions" : "Sessions"}
         </h1>
         <p className="text-muted-foreground">
-          {role === "tutor" ? "Sessions assigned to you" : "Your tutoring sessions"}
+          {role === "tutor"
+            ? "Sessions assigned to you"
+            : "Your tutoring sessions"}
         </p>
       </div>
 
@@ -114,6 +169,10 @@ export function SessionsClient({ initialSessions, role }: SessionsClientProps) {
             role={role}
             onUpdateStatus={updateStatus}
             onRate={(s) => setRatingSession(s)}
+            onMemo={(s) => {
+              setMemoSession(s);
+              setMemoValue(s.tutor_memo || "");
+            }}
           />
         </TabsContent>
 
@@ -123,11 +182,18 @@ export function SessionsClient({ initialSessions, role }: SessionsClientProps) {
             role={role}
             onUpdateStatus={updateStatus}
             onRate={(s) => setRatingSession(s)}
+            onMemo={(s) => {
+              setMemoSession(s);
+              setMemoValue(s.tutor_memo || "");
+            }}
           />
         </TabsContent>
       </Tabs>
 
-      <Dialog open={!!ratingSession} onOpenChange={() => setRatingSession(null)}>
+      <Dialog
+        open={!!ratingSession}
+        onOpenChange={() => setRatingSession(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Rate this Session</DialogTitle>
@@ -173,7 +239,10 @@ export function SessionsClient({ initialSessions, role }: SessionsClientProps) {
             <Button variant="outline" onClick={() => setRatingSession(null)}>
               Cancel
             </Button>
-            <Button onClick={submitRating} disabled={ratingLoading || ratingValue === 0}>
+            <Button
+              onClick={submitRating}
+              disabled={ratingLoading || ratingValue === 0}
+            >
               {ratingLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -186,8 +255,45 @@ export function SessionsClient({ initialSessions, role }: SessionsClientProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <Dialog open={!!memoSession} onOpenChange={() => setMemoSession(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Private Session Memo</DialogTitle>
+            <DialogDescription>
+              Add private notes for this session. Only you can see these notes.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="memo">Memo</Label>
+              <Textarea
+                id="memo"
+                value={memoValue}
+                onChange={(e) => setMemoValue(e.target.value)}
+                placeholder="Write your private notes here..."
+                rows={5}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMemoSession(null)}>
+              Cancel
+            </Button>
+            <Button onClick={submitMemo} disabled={memoLoading}>
+              {memoLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Memo"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
-  )
+  );
 }
 
 function SessionList({
@@ -195,11 +301,13 @@ function SessionList({
   role,
   onUpdateStatus,
   onRate,
+  onMemo,
 }: {
-  sessions: Session[]
-  role: UserRole
-  onUpdateStatus: (id: string, status: string) => void
-  onRate: (session: Session) => void
+  sessions: Session[];
+  role: UserRole;
+  onUpdateStatus: (id: string, status: string) => void;
+  onRate: (session: Session) => void;
+  onMemo: (session: Session) => void;
 }) {
   if (sessions.length === 0) {
     return (
@@ -211,14 +319,16 @@ function SessionList({
           <p className="text-sm text-muted-foreground">No sessions found</p>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
     <div className="flex flex-col gap-3">
       {sessions.map((session) => {
-        const hasRating = session.session_ratings && session.session_ratings.length > 0
-        const canRate = role === "learner" && session.status === "completed" && !hasRating
+        const hasRating =
+          session.session_ratings && session.session_ratings.length > 0;
+        const canRate =
+          role === "learner" && session.status === "completed" && !hasRating;
 
         return (
           <Card key={session.id} className="border-border/60">
@@ -230,22 +340,29 @@ function SessionList({
                       ? `Session on ${new Date(session.scheduled_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
                       : session.tutors?.profiles?.full_name || "Tutor"}
                   </span>
-                  <Badge className={SESSION_STATUS_COLORS[session.status] || ""} variant="outline">
+                  <Badge
+                    className={SESSION_STATUS_COLORS[session.status] || ""}
+                    variant="outline"
+                  >
                     {session.status}
                   </Badge>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Calendar className="h-3.5 w-3.5" />
-                    {new Date(session.scheduled_date).toLocaleDateString("en-US", {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                    })}
+                    {new Date(session.scheduled_date).toLocaleDateString(
+                      "en-US",
+                      {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                      },
+                    )}
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="h-3.5 w-3.5" />
-                    {session.start_time?.slice(0, 5)} - {session.end_time?.slice(0, 5)}
+                    {session.start_time?.slice(0, 5)} -{" "}
+                    {session.end_time?.slice(0, 5)}
                   </span>
                 </div>
                 {session.specializations && (
@@ -265,6 +382,14 @@ function SessionList({
                         }`}
                       />
                     ))}
+                  </div>
+                )}
+                {role === "tutor" && session.tutor_memo && (
+                  <div className="mt-2 text-sm text-muted-foreground bg-muted p-2 rounded-md border border-border/50">
+                    <span className="font-semibold text-xs flex items-center gap-1 mb-1">
+                      <StickyNote className="h-3 w-3" /> Private Memo
+                    </span>
+                    <p className="whitespace-pre-wrap">{session.tutor_memo}</p>
                   </div>
                 )}
               </div>
@@ -298,6 +423,16 @@ function SessionList({
                     Mark Complete
                   </Button>
                 )}
+                {role === "tutor" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onMemo(session)}
+                  >
+                    <StickyNote className="mr-1 h-3.5 w-3.5" />
+                    {session.tutor_memo ? "Edit Memo" : "Add Memo"}
+                  </Button>
+                )}
                 {session.status === "pending" && role === "learner" && (
                   <Button
                     size="sm"
@@ -308,16 +443,54 @@ function SessionList({
                   </Button>
                 )}
                 {canRate && (
-                  <Button size="sm" variant="outline" onClick={() => onRate(session)}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onRate(session)}
+                  >
                     <Star className="mr-1 h-3.5 w-3.5" />
                     Rate
+                  </Button>
+                )}
+                {role === "learner" &&
+                  session.status === "completed" &&
+                  session.tutor_id && (
+                    <Button size="sm" asChild>
+                      <Link href={`/dashboard/tutors/${session.tutor_id}`}>
+                        <RefreshCw className="mr-1 h-3.5 w-3.5" />
+                        Rebook
+                      </Link>
+                    </Button>
+                  )}
+                {["pending", "confirmed"].includes(session.status) && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const startDate = new Date(
+                        `${session.scheduled_date}T${session.start_time}`,
+                      );
+                      const endDate = new Date(
+                        `${session.scheduled_date}T${session.end_time}`,
+                      );
+                      const title = `Tutoring Session with ${role === "tutor" ? session.learner_profile?.full_name || "Learner" : session.tutors?.profiles?.full_name || "Tutor"}`;
+                      generateIcs(
+                        title,
+                        "Tutoring Session via ScholarMe",
+                        startDate,
+                        endDate,
+                      );
+                    }}
+                  >
+                    <CalendarPlus className="mr-1 h-3.5 w-3.5" />
+                    Calendar
                   </Button>
                 )}
               </div>
             </CardContent>
           </Card>
-        )
+        );
       })}
     </div>
-  )
+  );
 }

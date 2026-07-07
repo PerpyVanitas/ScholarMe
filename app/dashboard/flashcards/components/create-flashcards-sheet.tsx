@@ -25,6 +25,7 @@ import {
 import { Loader2, CheckCircle, BookOpen, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { CreateMLCEngine } from "@mlc-ai/web-llm";
 
 interface CreateFlashcardsSheetProps {
   open: boolean;
@@ -64,7 +65,10 @@ export function CreateFlashcardsSheet({
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiCount, setAiCount] = useState(5);
   const [generating, setGenerating] = useState(false);
+  const [tagging, setTagging] = useState(false);
   const [creationMethod, setCreationMethod] = useState("manual");
+  const [useLocalAI, setUseLocalAI] = useState(false);
+  const [localAIProgress, setLocalAIProgress] = useState("");
 
   useEffect(() => {
     if (open) {
@@ -123,28 +127,49 @@ export function CreateFlashcardsSheet({
 
     try {
       setGenerating(true);
-      const res = await fetch("/api/flashcards/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topic: aiPrompt,
-          type: "flashcard",
-          count: aiCount,
-        }),
-      });
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to generate questions");
-      }
+      if (useLocalAI) {
+        setLocalAIProgress("Loading model... (This may take a minute)");
+        const engine = await CreateMLCEngine(
+          "Llama-3.2-1B-Instruct-q4f32_1-MLC",
+          {
+            initProgressCallback: (progress) => {
+              setLocalAIProgress(
+                `Loading Local AI: ${Math.round(progress.progress * 100)}%`,
+              );
+            },
+          },
+        );
 
-      const data = await res.json();
-      if (data.data && Array.isArray(data.data)) {
-        const newContent = data.data
-          .map(
-            (item: Record<string, string>) =>
-              `Q: ${item.question}\nA: ${item.answer}`,
-          )
+        setLocalAIProgress("Generating flashcards...");
+        const systemPrompt = `You are an expert flashcard generator. Given a topic, generate ${aiCount} flashcards. 
+Respond ONLY with a valid JSON array of objects, where each object has a "question" string and an "answer" string.
+No other text, markdown blocks, or explanations. Just the JSON array.`;
+
+        const reply = await engine.chat.completions.create({
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `Topic: ${aiPrompt}` },
+          ],
+          response_format: { type: "json_object" },
+        });
+
+        const rawContent = reply.choices[0]?.message.content || "[]";
+        let parsedData = [];
+        try {
+          parsedData = JSON.parse(rawContent);
+        } catch (e) {
+          // Fallback if the model wrapped it in markdown
+          const match = rawContent.match(/\[[\s\S]*\]/);
+          if (match) {
+            parsedData = JSON.parse(match[0]);
+          } else {
+            throw new Error("Failed to parse JSON from Local AI");
+          }
+        }
+
+        const newContent = parsedData
+          .map((item: any) => `Q: ${item.question}\nA: ${item.answer}`)
           .join("\n\n");
 
         setFormData((prev) => ({
@@ -153,17 +178,104 @@ export function CreateFlashcardsSheet({
             ? prev.content + "\n\n" + newContent
             : newContent,
         }));
-
-        toast.success("Questions generated successfully!");
+        toast.success("Questions generated locally successfully!");
         setCreationMethod("manual");
+        setLocalAIProgress("");
+      } else {
+        const res = await fetch("/api/flashcards/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            topic: aiPrompt,
+            type: "flashcard",
+            count: aiCount,
+          }),
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || "Failed to generate questions");
+        }
+
+        const data = await res.json();
+        if (data.data && Array.isArray(data.data)) {
+          const newContent = data.data
+            .map(
+              (item: Record<string, string>) =>
+                `Q: ${item.question}\nA: ${item.answer}`,
+            )
+            .join("\n\n");
+
+          setFormData((prev) => ({
+            ...prev,
+            content: prev.content
+              ? prev.content + "\n\n" + newContent
+              : newContent,
+          }));
+
+          toast.success("Questions generated successfully!");
+          setCreationMethod("manual");
+        }
       }
     } catch (error) {
       console.error("Error generating questions:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to generate questions",
       );
+      setLocalAIProgress("");
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleAutoTag = async () => {
+    if (!formData.content) {
+      toast.error("Please add some flashcards first before auto-tagging.");
+      return;
+    }
+
+    try {
+      setTagging(true);
+      setLocalAIProgress("Loading model for auto-tagging...");
+      const engine = await CreateMLCEngine(
+        "Llama-3.2-1B-Instruct-q4f32_1-MLC",
+        {
+          initProgressCallback: (progress) => {
+            setLocalAIProgress(
+              `Loading Local AI: ${Math.round(progress.progress * 100)}%`,
+            );
+          },
+        },
+      );
+
+      setLocalAIProgress("Analyzing flashcards...");
+      const systemPrompt = `You are a helpful assistant. Analyze the provided flashcards and output exactly 3 comma-separated tags (e.g. "Biology, Anatomy, Cells"). Do not output anything else.`;
+
+      const reply = await engine.chat.completions.create({
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Flashcards: ${formData.content}` },
+        ],
+      });
+
+      const generatedTags = reply.choices[0]?.message.content?.trim() || "";
+      if (generatedTags) {
+        setFormData((prev) => ({
+          ...prev,
+          description: prev.description
+            ? `${prev.description} | Tags: ${generatedTags}`
+            : `Tags: ${generatedTags}`,
+        }));
+        toast.success(
+          "Tags successfully generated and appended to description!",
+        );
+      }
+    } catch (error) {
+      console.error("Error auto-tagging:", error);
+      toast.error("Failed to generate tags with AI.");
+    } finally {
+      setTagging(false);
+      setLocalAIProgress("");
     }
   };
 
@@ -338,7 +450,22 @@ export function CreateFlashcardsSheet({
             </div>
 
             <div className="space-y-2">
-              <Label>Description (optional)</Label>
+              <div className="flex items-center justify-between">
+                <Label>Description (optional)</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs text-primary"
+                  onClick={handleAutoTag}
+                  disabled={tagging || !formData.content}
+                >
+                  {tagging ? (
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  ) : null}
+                  Auto-Tag with AI
+                </Button>
+              </div>
               <Input
                 placeholder="What is this study set about?"
                 value={formData.description}
@@ -394,7 +521,23 @@ export function CreateFlashcardsSheet({
             </TabsList>
 
             <TabsContent value="manual" className="space-y-2 mt-4">
-              <Label>Flashcards</Label>
+              <div className="flex items-center justify-between">
+                <Label>Flashcards</Label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs"
+                  onClick={() =>
+                    setFormData({
+                      ...formData,
+                      content:
+                        "Q: What is the powerhouse of the cell?\nA: Mitochondria\n\nQ: What is the chemical symbol for Gold?\nA: Au\n\nQ: What year did the Titanic sink?\nA: 1912",
+                    })
+                  }
+                >
+                  Load Template
+                </Button>
+              </div>
               <p className="text-xs text-muted-foreground">
                 Format: Q: question text A: answer text (one per line)
               </p>
@@ -431,20 +574,39 @@ export function CreateFlashcardsSheet({
                   disabled={generating}
                 />
               </div>
+              <div className="flex items-center space-x-2 border rounded-md p-4 bg-muted/20">
+                <Switch
+                  id="local-ai-mode"
+                  checked={useLocalAI}
+                  onCheckedChange={setUseLocalAI}
+                />
+                <Label
+                  htmlFor="local-ai-mode"
+                  className="flex-1 cursor-pointer"
+                >
+                  <div className="font-medium text-primary">
+                    Use Local AI (Free, Unlimited)
+                  </div>
+                  <div className="text-xs text-muted-foreground font-normal leading-tight">
+                    Generates flashcards directly on your device using WebGPU.
+                    Saves API costs and bypasses rate limits. First run
+                    downloads a ~1GB model.
+                  </div>
+                </Label>
+              </div>
+
               <Button
-                type="button"
                 onClick={handleGenerateQuiz}
-                disabled={generating || !aiPrompt}
+                disabled={generating}
                 className="w-full"
-                variant="secondary"
               >
                 {generating ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
-                    Generating...
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {localAIProgress ? localAIProgress : "Generating..."}
                   </>
                 ) : (
-                  "Generate Flashcards"
+                  "Generate Questions"
                 )}
               </Button>
             </TabsContent>

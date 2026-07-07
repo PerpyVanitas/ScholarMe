@@ -217,6 +217,11 @@ export function QrIdCard({
           <div className="text-center space-y-1 mt-1">
             <h2 className="text-xl font-black uppercase tracking-tight text-white drop-shadow leading-tight line-clamp-2 px-1">
               {displayName}
+              {profile.pronouns && (
+                <span className="text-sm ml-2 font-semibold lowercase opacity-80">
+                  ({profile.pronouns})
+                </span>
+              )}
             </h2>
             <div className="inline-block bg-black/40 px-3 py-0.5 rounded border border-[#FFD700]/20">
               <span className="font-mono text-xs font-bold tracking-wider text-[#FFD700]">
@@ -354,6 +359,11 @@ export function QrIdCard({
           <div className="text-center space-y-1 mt-1">
             <h2 className="text-xl font-black uppercase tracking-tight text-white drop-shadow leading-tight line-clamp-2 px-1">
               {displayName}
+              {profile.pronouns && (
+                <span className="text-sm ml-2 font-semibold lowercase opacity-80">
+                  ({profile.pronouns})
+                </span>
+              )}
             </h2>
             <div className="inline-block bg-black/40 px-3 py-0.5 rounded border border-[#FFD700]/20">
               <span className="font-mono text-xs font-bold tracking-wider text-[#FFD700]">

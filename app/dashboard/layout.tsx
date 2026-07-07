@@ -16,14 +16,25 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { BreadcrumbNav } from "@/components/breadcrumb-nav";
 import { ScrollToTop } from "@/components/scroll-to-top";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { ScrollToTopFab } from "@/components/scroll-to-top-fab";
 import { CommandMenu } from "@/components/command-menu";
 import { StreakIndicator } from "@/components/streak-indicator";
 import { OnboardingTour } from "@/components/onboarding-tour";
+import { MobileFab } from "@/components/mobile-fab";
+import { AnalyticsPageTracker } from "@/components/analytics-page-tracker";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const { profile, role, loading, notificationCount } = useUser();
-
-  useInactivityTimeout();
+  const { showWarning, staySignedIn } = useInactivityTimeout();
 
   if (loading) {
     return (
@@ -70,12 +81,15 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
             className="mr-2 h-4 hidden md:flex"
           />
           <BreadcrumbNav />
-          <div id="tour-command-menu" className="flex-1 flex justify-center max-w-md mx-auto hidden md:flex">
+          <div
+            id="tour-command-menu"
+            className="flex-1 flex justify-center max-w-md mx-auto hidden md:flex"
+          >
             <CommandMenu />
           </div>
           <div className="ml-auto flex items-center gap-2">
             <div id="tour-streak-indicator">
-              <StreakIndicator currentStreak={3} />
+              <StreakIndicator />
             </div>
             <FeedbackButton />
             <ThemeToggle />
@@ -86,8 +100,38 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
         </div>
         <ScrollToTop />
         <OnboardingTour />
+        <AnalyticsPageTracker />
         <MobileBottomNav />
+        <MobileFab />
       </SidebarInset>
+
+      {/* Session Timeout Warning Modal */}
+      <Dialog
+        open={showWarning}
+        onOpenChange={(open) => {
+          if (!open) staySignedIn();
+        }}
+      >
+        <DialogContent
+          className="sm:max-w-md"
+          showCloseButton={false}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle>Session Expiring Soon</DialogTitle>
+            <DialogDescription>
+              You have been inactive for a while. For your security, you will be
+              automatically logged out in 60 seconds.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-start mt-4">
+            <Button type="button" onClick={staySignedIn} className="w-full">
+              Keep Me Signed In
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <ScrollToTopFab />
     </SidebarProvider>
   );
 }

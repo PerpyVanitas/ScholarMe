@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Flame } from "lucide-react";
 import {
   Tooltip,
@@ -7,14 +8,72 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { createClient } from "@/lib/supabase/client";
+import { tryUnlockBadge } from "@/lib/utils/badges";
 
-interface StreakIndicatorProps {
-  currentStreak: number;
-}
+export function StreakIndicator() {
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [isActive, setIsActive] = useState(false);
+  const supabase = createClient();
 
-export function StreakIndicator({ currentStreak }: StreakIndicatorProps) {
-  // If streak is 0, we can still show a gray flame or hide it. Let's show a gray flame.
-  const isActive = currentStreak > 0;
+  useEffect(() => {
+    async function fetchStreak() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Optimistic create or fetch
+      const { data, error } = await supabase
+        .from("user_streaks")
+        .select("current_streak, last_login_date")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!data) {
+        // First time
+        await supabase
+          .from("user_streaks")
+          .insert({ user_id: user.id, current_streak: 1 });
+        setCurrentStreak(1);
+        setIsActive(true);
+      } else {
+        const lastLogin = new Date(data.last_login_date);
+        const today = new Date();
+        const diffTime = Math.abs(today.getTime() - lastLogin.getTime());
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        let newStreak = data.current_streak;
+        if (diffDays === 1) {
+          // Logged in next day, increment
+          newStreak += 1;
+          await supabase
+            .from("user_streaks")
+            .update({
+              current_streak: newStreak,
+              last_login_date: today.toISOString(),
+            })
+            .eq("user_id", user.id);
+        } else if (diffDays > 1) {
+          // Streak broken
+          newStreak = 1;
+          await supabase
+            .from("user_streaks")
+            .update({ current_streak: 1, last_login_date: today.toISOString() })
+            .eq("user_id", user.id);
+        }
+
+        setCurrentStreak(newStreak);
+        setIsActive(newStreak > 0);
+
+        if (newStreak >= 7) {
+          await tryUnlockBadge(supabase, user.id, "week_warrior");
+        }
+      }
+    }
+
+    fetchStreak();
+  }, [supabase]);
 
   return (
     <TooltipProvider>

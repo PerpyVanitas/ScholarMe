@@ -22,6 +22,8 @@ import {
   FileIcon,
   Download,
   ShieldAlert,
+  Upload,
+  Sparkles,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -60,10 +62,18 @@ export function ChatInterface({
     string | null
   >(initialConversations.length > 0 ? initialConversations[0].id : null);
 
-  const { messages, sendMessage } = useRealtimeMessages(
-    activeConversationId,
-    currentUserId,
+  const activeConversation = conversations.find(
+    (c) => c.id === activeConversationId,
   );
+
+  const currentParticipant =
+    activeConversation?.conversation_participants?.find(
+      (p) => p.profile_id === currentUserId,
+    );
+  const currentUserName = currentParticipant?.profiles?.full_name || "Someone";
+
+  const { messages, sendMessage, typingUsers, sendTypingEvent } =
+    useRealtimeMessages(activeConversationId, currentUserId, currentUserName);
   const [newMessage, setNewMessage] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
   const [isSending, setIsSending] = useState(false);
@@ -76,10 +86,130 @@ export function ChatInterface({
   const [userSearch, setUserSearch] = useState("");
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
   const [conversationSearch, setConversationSearch] = useState("");
+  const [messageSearch, setMessageSearch] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
 
-  const activeConversation = conversations.find(
-    (c) => c.id === activeConversationId,
-  );
+  // Smart Replies State
+  const [smartReplies, setSmartReplies] = useState<string[]>([]);
+  const [generatingReplies, setGeneratingReplies] = useState(false);
+  const [repliesProgress, setRepliesProgress] = useState("");
+
+  // Load draft from localStorage when conversation changes
+  useEffect(() => {
+    if (activeConversationId && typeof window !== "undefined") {
+      const draft = localStorage.getItem(`chat_draft_${activeConversationId}`);
+      if (draft !== null) {
+        setNewMessage(draft);
+      } else {
+        setNewMessage("");
+      }
+    }
+  }, [activeConversationId]);
+
+  // Handle incoming drag and drop
+  useEffect(() => {
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      setIsDragging(true);
+    };
+
+    const handleDragLeave = (e: DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+    };
+
+    const handleDrop = (e: DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+
+      if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+        setAttachment(e.dataTransfer.files[0]);
+      }
+    };
+
+    const dropZone = document.getElementById("chat-drop-zone");
+    if (dropZone) {
+      dropZone.addEventListener("dragover", handleDragOver);
+      dropZone.addEventListener("dragleave", handleDragLeave);
+      dropZone.addEventListener("drop", handleDrop);
+    }
+
+    return () => {
+      if (dropZone) {
+        dropZone.removeEventListener("dragover", handleDragOver);
+        dropZone.removeEventListener("dragleave", handleDragLeave);
+        dropZone.removeEventListener("drop", handleDrop);
+      }
+    };
+  }, [activeConversationId]);
+
+  const handleSuggestReplies = async () => {
+    if (messages.length === 0) return;
+    try {
+      setGeneratingReplies(true);
+      setSmartReplies([]);
+      setRepliesProgress("Loading AI...");
+
+      const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
+      const engine = await CreateMLCEngine(
+        "Llama-3.2-1B-Instruct-q4f32_1-MLC",
+        {
+          initProgressCallback: (progress) => {
+            setRepliesProgress(`AI: ${Math.round(progress.progress * 100)}%`);
+          },
+        },
+      );
+
+      setRepliesProgress("Thinking...");
+      const recentMessages = messages
+        .slice(-5)
+        .map(
+          (m) =>
+            `${m.sender_id === currentUserId ? "Me" : "Them"}: ${m.content}`,
+        )
+        .join("\n");
+
+      const systemPrompt = `You are a helpful assistant. Based on the following recent chat messages, suggest exactly 3 short, natural replies for "Me" to send next. Output ONLY a valid JSON array of 3 strings. Do not output anything else.`;
+
+      const reply = await engine.chat.completions.create({
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Recent messages:\n${recentMessages}` },
+        ],
+        response_format: { type: "json_object" },
+      });
+
+      const rawContent = reply.choices[0]?.message.content || "[]";
+      let parsedData = [];
+      try {
+        parsedData = JSON.parse(rawContent);
+      } catch (e) {
+        const match = rawContent.match(/\[[\s\S]*\]/);
+        if (match) parsedData = JSON.parse(match[0]);
+      }
+
+      if (Array.isArray(parsedData) && parsedData.length > 0) {
+        setSmartReplies(parsedData.slice(0, 3));
+      }
+    } catch (error) {
+      console.error("Smart replies error:", error);
+      toast.error("Failed to generate smart replies");
+    } finally {
+      setGeneratingReplies(false);
+      setRepliesProgress("");
+    }
+  };
+
+  // Save draft to localStorage on change
+  useEffect(() => {
+    if (activeConversationId && typeof window !== "undefined") {
+      if (newMessage.trim()) {
+        localStorage.setItem(`chat_draft_${activeConversationId}`, newMessage);
+      } else {
+        localStorage.removeItem(`chat_draft_${activeConversationId}`);
+      }
+    }
+  }, [newMessage, activeConversationId]);
 
   const toConversationMessage = (message: Message): ConversationMessage => ({
     id: message.id,
@@ -259,6 +389,9 @@ export function ChatInterface({
 
     setNewMessage(""); // Optimistic clear
     setAttachment(null);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(`chat_draft_${activeConversationId}`);
+    }
 
     await sendMessage(content, currentAttachment);
     setIsSending(false);
@@ -266,13 +399,34 @@ export function ChatInterface({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      // Limit to 5MB for example
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("File size must be less than 5MB");
-        return;
-      }
-      setAttachment(file);
+      handleFileSelection(e.target.files[0]);
+    }
+  };
+
+  const handleFileSelection = (file: File) => {
+    // Limit to 5MB for example
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size must be less than 5MB");
+      return;
+    }
+    setAttachment(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!isDragging) setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileSelection(e.dataTransfer.files[0]);
     }
   };
 
@@ -443,8 +597,20 @@ export function ChatInterface({
 
       {/* Main Chat Area */}
       <div
-        className={`flex-1 flex-col bg-background ${!activeConversationId ? "hidden md:flex" : "flex"}`}
+        className={`flex-1 flex-col relative bg-background ${!activeConversationId ? "hidden md:flex" : "flex"}`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
       >
+        {isDragging && (
+          <div className="absolute inset-0 z-50 bg-background/80 backdrop-blur-sm border-2 border-dashed border-primary flex items-center justify-center rounded-lg m-4">
+            <div className="flex flex-col items-center gap-2 text-primary">
+              <Upload className="w-10 h-10 animate-bounce" />
+              <p className="text-xl font-bold">Drop file to attach</p>
+            </div>
+          </div>
+        )}
+
         {activeConversation ? (
           <>
             {/* Chat Header */}
@@ -484,85 +650,122 @@ export function ChatInterface({
               </div>
             </div>
 
-            {/* Messages Scroll Area */}
-            <div className="flex-1 overflow-y-auto p-4 md:p-6" ref={scrollRef}>
-              <div className="flex flex-col gap-4">
-                {messages.map((msg) => {
-                  const isMe = msg.sender_id === currentUserId;
-                  const senderName =
-                    msg.profiles?.full_name ||
-                    activeConversation?.conversation_participants?.find(
-                      (p) => p.profile_id === msg.sender_id,
-                    )?.profiles?.full_name ||
-                    "Unknown";
-                  const showSenderName = forceAuditMode
-                    ? true
-                    : !isMe &&
-                      (activeConversation?.conversation_participants?.length ||
-                        0) > 2;
-
-                  return (
-                    <div
-                      key={msg.id}
-                      className={`flex flex-col gap-1 ${isMe ? "items-end" : "items-start"}`}
-                    >
-                      {showSenderName && (
-                        <span
-                          className={`text-[10px] font-semibold text-muted-foreground px-1 ${isMe ? "text-right" : ""}`}
-                        >
-                          {senderName}
-                        </span>
-                      )}
-                      <div
-                        className={`flex w-max max-w-[75%] flex-col gap-1 rounded-lg px-4 py-2 text-sm ${
-                          isMe
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted"
-                        }`}
-                      >
-                        {msg.file_url && (
-                          <div className="mb-2">
-                            {msg.file_type?.startsWith("image/") ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img
-                                src={msg.file_url}
-                                alt={msg.file_name || "attachment"}
-                                className="max-w-[200px] max-h-[200px] rounded-md object-contain cursor-pointer"
-                                onClick={() =>
-                                  window.open(msg.file_url!, "_blank")
-                                }
-                              />
-                            ) : (
-                              <a
-                                href={msg.file_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-2 p-2 bg-background/20 rounded-md hover:bg-background/40 transition-colors"
-                              >
-                                <FileIcon className="h-4 w-4 shrink-0" />
-                                <span className="text-xs truncate max-w-[150px]">
-                                  {msg.file_name || "Attachment"}
-                                </span>
-                                <Download className="h-3 w-3 shrink-0 ml-auto opacity-70" />
-                              </a>
-                            )}
-                          </div>
-                        )}
-                        {msg.content && <span>{msg.content}</span>}
-                        <span
-                          className={`text-[9px] text-right ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}
-                        >
-                          {new Date(msg.created_at).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
+            {/* Search within conversation */}
+            <div className="px-4 py-2 border-b bg-muted/20">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Search in conversation..."
+                  value={messageSearch}
+                  onChange={(e) => setMessageSearch(e.target.value)}
+                  className="pl-9 h-9 bg-background/50"
+                />
               </div>
             </div>
+
+            {/* Messages Scroll Area */}
+            <ScrollArea className="flex-1 p-4 md:p-6" ref={scrollRef}>
+              <div className="flex flex-col gap-4">
+                {messages
+                  .filter((msg) => {
+                    if (!messageSearch.trim()) return true;
+                    return msg.content
+                      ?.toLowerCase()
+                      .includes(messageSearch.toLowerCase());
+                  })
+                  .map((msg) => {
+                    const isMe = msg.sender_id === currentUserId;
+                    const senderName =
+                      msg.profiles?.full_name ||
+                      activeConversation?.conversation_participants?.find(
+                        (p) => p.profile_id === msg.sender_id,
+                      )?.profiles?.full_name ||
+                      "Unknown";
+                    const showSenderName = forceAuditMode
+                      ? true
+                      : !isMe &&
+                        (activeConversation?.conversation_participants
+                          ?.length || 0) > 2;
+
+                    return (
+                      <div
+                        key={msg.id}
+                        className={`flex flex-col gap-1 ${isMe ? "items-end" : "items-start"}`}
+                      >
+                        {showSenderName && (
+                          <span
+                            className={`text-[10px] font-semibold text-muted-foreground px-1 ${isMe ? "text-right" : ""}`}
+                          >
+                            {senderName}
+                          </span>
+                        )}
+                        <div
+                          className={`flex w-max max-w-[75%] flex-col gap-1 rounded-lg px-4 py-2 text-sm ${
+                            isMe
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted"
+                          }`}
+                        >
+                          {msg.file_url && (
+                            <div className="mb-2">
+                              {msg.file_type?.startsWith("image/") ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={msg.file_url}
+                                  alt={msg.file_name || "attachment"}
+                                  className="max-w-[200px] max-h-[200px] rounded-md object-contain cursor-pointer"
+                                  onClick={() =>
+                                    window.open(msg.file_url!, "_blank")
+                                  }
+                                />
+                              ) : (
+                                <a
+                                  href={msg.file_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-2 p-2 bg-background/20 rounded-md hover:bg-background/40 transition-colors"
+                                >
+                                  <FileIcon className="h-4 w-4 shrink-0" />
+                                  <span className="text-xs truncate max-w-[150px]">
+                                    {msg.file_name || "Attachment"}
+                                  </span>
+                                  <Download className="h-3 w-3 shrink-0 ml-auto opacity-70" />
+                                </a>
+                              )}
+                            </div>
+                          )}
+                          {msg.content && <span>{msg.content}</span>}
+                          <span
+                            className={`text-[9px] text-right ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}
+                          >
+                            {new Date(msg.created_at).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </ScrollArea>
+
+            {/* Typing Indicators */}
+            {Object.keys(typingUsers).length > 0 && (
+              <div className="px-4 py-2 text-xs text-muted-foreground flex items-center gap-1 bg-background border-t">
+                <div className="flex gap-1 items-center">
+                  <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                  <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                  <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce"></span>
+                </div>
+                <span className="ml-1 font-medium text-foreground">
+                  {Object.values(typingUsers).join(", ")}{" "}
+                  {Object.keys(typingUsers).length === 1 ? "is" : "are"}{" "}
+                  typing...
+                </span>
+              </div>
+            )}
 
             {/* Audit Mode Banner — replaces input entirely (#25) */}
             {getConversationDisplayInfo(activeConversation).isAudit ? (
@@ -616,6 +819,57 @@ export function ChatInterface({
                     </div>
                   </div>
                 )}
+
+                {/* Smart Replies Area */}
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  {!generatingReplies &&
+                    smartReplies.length === 0 &&
+                    messages.length > 0 &&
+                    messages[messages.length - 1].sender_id !==
+                      currentUserId && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleSuggestReplies}
+                        className="h-7 text-xs rounded-full border-primary/30 text-primary hover:bg-primary/10"
+                      >
+                        <Sparkles className="h-3 w-3 mr-1" /> Suggest Reply
+                      </Button>
+                    )}
+                  {generatingReplies && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground border px-3 py-1 rounded-full bg-muted/30">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      {repliesProgress}
+                    </div>
+                  )}
+                  {!generatingReplies && smartReplies.length > 0 && (
+                    <>
+                      {smartReplies.map((reply, idx) => (
+                        <Button
+                          key={idx}
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs rounded-full"
+                          onClick={() => {
+                            setNewMessage(reply);
+                            setSmartReplies([]);
+                          }}
+                        >
+                          {reply}
+                        </Button>
+                      ))}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 rounded-full text-muted-foreground"
+                        onClick={() => setSmartReplies([])}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </>
+                  )}
+                </div>
+
                 <form
                   onSubmit={handleSendMessage}
                   className="flex gap-2 items-end"
@@ -640,7 +894,10 @@ export function ChatInterface({
                   <Input
                     placeholder="Type a message..."
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
+                    onChange={(e) => {
+                      setNewMessage(e.target.value);
+                      sendTypingEvent();
+                    }}
                     className="flex-1"
                     disabled={isSending}
                   />

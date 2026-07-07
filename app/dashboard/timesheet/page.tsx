@@ -329,6 +329,20 @@ export default function TimesheetPage() {
         </div>
       )}
 
+      {/* 12-hour Warning */}
+      {isClockedIn &&
+        openEntry &&
+        calcMinutes(openEntry.clock_in, null, now) > 720 && (
+          <div className="w-full bg-destructive/10 border border-destructive/20 text-destructive rounded-lg p-4 text-sm flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 shrink-0" />
+            <span>
+              <strong>Warning:</strong> You have been clocked in for over 12
+              hours. Please clock out or adjust your time to avoid payroll
+              issues.
+            </span>
+          </div>
+        )}
+
       {/* Clock In/Out Card */}
       <Card className="border-border/60">
         <CardContent className="flex flex-col items-center gap-4 py-8 sm:flex-row sm:justify-between">

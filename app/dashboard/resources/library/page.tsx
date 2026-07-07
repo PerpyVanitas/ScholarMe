@@ -1,63 +1,55 @@
-import { LibraryCatalog, PhysicalBook } from "@/components/library-catalog";
-import { createClient } from "@/lib/supabase/server";
+import { LibraryCatalog } from "@/features/library/components/library-catalog";
+import { getLibraryCatalog } from "@/features/library/api/actions";
 
 export const metadata = {
-  title: "Physical Library | ScholarMe",
-  description: "Browse the physical books available at the ScholarMe facility.",
+  title: "Library Catalog | ScholarMe",
+  description: "Browse physical books and equipment available at the facility.",
 };
 
 export default async function LibraryPage() {
-  const supabase = await createClient();
-  
-  // Attempt to fetch from DB. Fallback to mock data if empty or table doesn't exist yet
-  const { data: books, error } = await supabase
-    .from("physical_books")
-    .select("*")
-    .order("title");
+  let initialResources = [];
+  try {
+    initialResources = await getLibraryCatalog();
+  } catch (e) {
+    console.error("Error fetching library catalog:", e);
+  }
 
-  let initialBooks: PhysicalBook[] = books || [];
-
-  if (initialBooks.length === 0) {
-    initialBooks = [
+  // Fallback mock data to display structure before DB tables are present
+  if (initialResources.length === 0) {
+    initialResources = [
       {
-        id: "mock-1",
+        id: "mock-lib-1",
         title: "Calculus: Early Transcendentals",
         author: "James Stewart",
-        isbn: "9781305480513",
-        available_copies: 2,
-        total_copies: 3,
-        location_shelf: "Math A1",
-        cover_image_url: "https://covers.openlibrary.org/b/isbn/9781305480513-M.jpg",
-        description: "The definitive textbook for university calculus sequences."
+        isbn: "9781285741550",
+        resource_type: "book",
+        cover_image_url:
+          "https://covers.openlibrary.org/b/isbn/9781285741550-M.jpg",
+        total_quantity: 3,
+        available_quantity: 2,
+        location: "A1-Shelf",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       },
       {
-        id: "mock-2",
-        title: "Introduction to Algorithms",
-        author: "Thomas H. Cormen",
-        isbn: "9780262033848",
-        available_copies: 0,
-        total_copies: 1,
-        location_shelf: "CS B4",
-        cover_image_url: "https://covers.openlibrary.org/b/isbn/9780262033848-M.jpg",
-        description: "A comprehensive update of the leading algorithms text."
+        id: "mock-lib-2",
+        title: "Texas Instruments TI-84 Plus CE",
+        author: null,
+        isbn: null,
+        resource_type: "calculator",
+        cover_image_url: null,
+        total_quantity: 5,
+        available_quantity: 0,
+        location: "Front Desk",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       },
-      {
-        id: "mock-3",
-        title: "Campbell Biology",
-        author: "Lisa A. Urry",
-        isbn: "9780134093413",
-        available_copies: 5,
-        total_copies: 5,
-        location_shelf: "Science C2",
-        cover_image_url: "https://covers.openlibrary.org/b/isbn/9780134093413-M.jpg",
-        description: "The world's most successful majors biology text and media program."
-      }
-    ];
+    ] as any;
   }
 
   return (
     <div className="flex-1 space-y-4">
-      <LibraryCatalog initialBooks={initialBooks} />
+      <LibraryCatalog initialResources={initialResources} />
     </div>
   );
 }

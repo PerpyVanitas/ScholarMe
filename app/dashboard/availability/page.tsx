@@ -22,9 +22,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Clock, Plus, Trash2, Loader2, Save } from "lucide-react";
+import { Clock, Plus, Trash2, Loader2, Save, Copy } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { DEMO_USERS } from "@/scripts/demo";
 import type { TutorAvailability, Tutor } from "@/lib/types";
 import { DAYS_OF_WEEK } from "@/lib/types";
@@ -41,6 +51,12 @@ export default function AvailabilityPage() {
   const [newDay, setNewDay] = useState("1");
   const [newStart, setNewStart] = useState("09:00");
   const [newEnd, setNewEnd] = useState("10:00");
+
+  // Copy schedule form
+  const [copyOpen, setCopyOpen] = useState(false);
+  const [copyFromDay, setCopyFromDay] = useState("1");
+  const [copyToDays, setCopyToDays] = useState<string[]>([]);
+  const [copyLoading, setCopyLoading] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -113,6 +129,69 @@ export default function AvailabilityPage() {
       setSlots((prev: any) => prev.filter((s: any) => s.id !== id));
       toast.success("Slot removed");
     }
+  }
+
+  async function copySchedule() {
+    if (!tutor || copyToDays.length === 0) return;
+    setCopyLoading(true);
+    const supabase = createClient();
+    const sourceSlots = slots.filter(
+      (s) => s.day_of_week === parseInt(copyFromDay),
+    );
+
+    if (sourceSlots.length === 0) {
+      toast.error("No slots to copy from the selected day.");
+      setCopyLoading(false);
+      return;
+    }
+
+    const newSlots = [];
+    for (const targetDay of copyToDays) {
+      const dayNum = parseInt(targetDay);
+      for (const slot of sourceSlots) {
+        // avoid exact duplicates
+        const exists = slots.some(
+          (s) =>
+            s.day_of_week === dayNum &&
+            s.start_time === slot.start_time &&
+            s.end_time === slot.end_time,
+        );
+        if (!exists) {
+          newSlots.push({
+            tutor_id: tutor.id,
+            day_of_week: dayNum,
+            start_time: slot.start_time,
+            end_time: slot.end_time,
+          });
+        }
+      }
+    }
+
+    if (newSlots.length === 0) {
+      toast.info("No new slots needed (already identical).");
+      setCopyOpen(false);
+      setCopyLoading(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("tutor_availability")
+      .insert(newSlots)
+      .select();
+
+    if (error) {
+      toast.error("Failed to copy schedule");
+    } else if (data) {
+      setSlots((prev: any) =>
+        [...prev, ...data].sort(
+          (a: any, b: any) => a.day_of_week - b.day_of_week,
+        ),
+      );
+      toast.success("Schedule copied successfully");
+      setCopyOpen(false);
+      setCopyToDays([]);
+    }
+    setCopyLoading(false);
   }
 
   async function saveBio() {
@@ -250,9 +329,94 @@ export default function AvailabilityPage() {
       </Card>
 
       <Card className="border-border/60">
-        <CardHeader>
-          <CardTitle className="text-base">Your Weekly Schedule</CardTitle>
-          <CardDescription>Your current availability slots</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-base">Your Weekly Schedule</CardTitle>
+            <CardDescription>Your current availability slots</CardDescription>
+          </div>
+          <Dialog open={copyOpen} onOpenChange={setCopyOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Copy className="mr-2 h-4 w-4" />
+                Copy Day
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Copy Schedule</DialogTitle>
+                <DialogDescription>
+                  Copy time slots from one day to multiple other days.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex flex-col gap-4 py-4">
+                <div className="flex flex-col gap-2">
+                  <Label>Copy from:</Label>
+                  <Select value={copyFromDay} onValueChange={setCopyFromDay}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DAYS_OF_WEEK.map((day, idx) => (
+                        <SelectItem key={idx} value={idx.toString()}>
+                          {day} (
+                          {slots.filter((s) => s.day_of_week === idx).length}{" "}
+                          slots)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-2 mt-2">
+                  <Label>Paste to:</Label>
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    {DAYS_OF_WEEK.map((day, idx) => {
+                      if (idx.toString() === copyFromDay) return null;
+                      return (
+                        <div key={idx} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`day-${idx}`}
+                            checked={copyToDays.includes(idx.toString())}
+                            onCheckedChange={(checked) => {
+                              if (checked)
+                                setCopyToDays((prev) => [
+                                  ...prev,
+                                  idx.toString(),
+                                ]);
+                              else
+                                setCopyToDays((prev) =>
+                                  prev.filter((d) => d !== idx.toString()),
+                                );
+                            }}
+                          />
+                          <label
+                            htmlFor={`day-${idx}`}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            {day}
+                          </label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setCopyOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={copySchedule}
+                  disabled={copyLoading || copyToDays.length === 0}
+                >
+                  {copyLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    "Copy Schedule"
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </CardHeader>
         <CardContent>
           {slots.length === 0 ? (

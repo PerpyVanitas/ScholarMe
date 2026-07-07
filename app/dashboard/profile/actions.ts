@@ -16,6 +16,9 @@ export interface UpdateProfileData {
   esas_scholar?: boolean;
   academic_year_joined?: string | null;
   unique_id_number?: string | null;
+  pronouns?: string | null;
+  status_message?: string | null;
+  social_links?: Record<string, string> | null;
 }
 
 export async function updateProfile(data: UpdateProfileData) {
@@ -49,6 +52,9 @@ export async function updateProfile(data: UpdateProfileData) {
       esas_scholar: data.esas_scholar,
       academic_year_joined: data.academic_year_joined,
       unique_id_number: data.unique_id_number,
+      pronouns: data.pronouns,
+      status_message: data.status_message,
+      social_links: data.social_links,
       profile_completed: true,
     })
     .eq("id", user.id)
@@ -163,6 +169,9 @@ export interface UpdateTutorData {
   hourly_rate: number | null;
   years_experience: number | null;
   specialization_ids: string[];
+  is_paused?: boolean;
+  calendar_sync_enabled?: boolean;
+  auto_approve_past_learners?: boolean;
 }
 
 export async function updateTutorInfo(data: UpdateTutorData) {
@@ -190,6 +199,9 @@ export async function updateTutorInfo(data: UpdateTutorData) {
       bio: data.bio,
       hourly_rate: data.hourly_rate,
       years_experience: data.years_experience,
+      is_paused: data.is_paused,
+      calendar_sync_enabled: data.calendar_sync_enabled,
+      auto_approve_past_learners: data.auto_approve_past_learners,
     })
     .eq("id", tutorId);
 
@@ -225,5 +237,37 @@ export async function updateTutorInfo(data: UpdateTutorData) {
   }
 
   revalidatePath("/dashboard/profile");
+  return { success: true };
+}
+
+export async function toggleTutorPause(isPaused: boolean) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  const tutorEnsured = await ensureTutorRow(supabase, user);
+  if (!tutorEnsured.ok) {
+    return { success: false, error: tutorEnsured.error };
+  }
+
+  const { error: updateError } = await supabase
+    .from("tutors")
+    .update({ is_paused: isPaused })
+    .eq("id", tutorEnsured.tutor.id);
+
+  if (updateError) {
+    console.error("Tutor pause update error:", updateError);
+    return { success: false, error: updateError.message };
+  }
+
+  revalidatePath("/dashboard/profile");
+  revalidatePath("/dashboard/tutors");
   return { success: true };
 }

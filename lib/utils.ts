@@ -21,3 +21,35 @@ export function getAvatarUrl(
   }
   return avatarUrl;
 }
+
+export function generateIcs(
+  title: string,
+  description: string,
+  startDate: Date,
+  endDate: Date,
+): void {
+  const formatDate = (date: Date) => {
+    return date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  };
+
+  const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//ScholarMe//EN
+BEGIN:VEVENT
+UID:${new Date().getTime()}@scholarme.com
+DTSTAMP:${formatDate(new Date())}
+DTSTART:${formatDate(startDate)}
+DTEND:${formatDate(endDate)}
+SUMMARY:${title}
+DESCRIPTION:${description}
+END:VEVENT
+END:VCALENDAR`;
+
+  const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+  const link = document.createElement("a");
+  link.href = window.URL.createObjectURL(blob);
+  link.setAttribute("download", `${title.replace(/\s+/g, "_")}.ics`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}

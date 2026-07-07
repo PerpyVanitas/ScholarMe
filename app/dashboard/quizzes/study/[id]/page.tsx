@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import confetti from "canvas-confetti";
 import {
   ArrowLeft,
   ArrowRight,
@@ -19,6 +20,7 @@ import {
   Clock,
   BookOpen,
   Shuffle,
+  Flag,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -153,6 +155,29 @@ export default function StudyModePage({
     setIsComplete(false);
   }
 
+  async function handleFlagQuestion() {
+    const currentItem = shuffledItems[currentIndex];
+    const reason = prompt(
+      "Why are you flagging this question? (e.g., Inaccurate AI, typo)",
+    );
+    if (!reason) return;
+
+    try {
+      const res = await fetch("/api/quizzes/flag", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ study_set_item_id: currentItem.id, reason }),
+      });
+      if (res.ok) {
+        toast.success("Question flagged for review.");
+      } else {
+        toast.error("Failed to flag question.");
+      }
+    } catch (e) {
+      toast.error("An error occurred.");
+    }
+  }
+
   async function saveAttempt() {
     const correctCount = Object.values(answers).filter((a) => a.correct).length;
     const timeSpent = Math.floor((Date.now() - startTime) / 1000);
@@ -180,6 +205,15 @@ export default function StudyModePage({
           description: xpData.current_level
             ? `You are now Level ${xpData.current_level}`
             : "Great job completing the quiz!",
+        });
+      }
+
+      // Confetti for 100% score
+      if (correctCount === shuffledItems.length && shuffledItems.length > 0) {
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
         });
       }
     } catch (error) {
@@ -298,9 +332,19 @@ export default function StudyModePage({
       <Card className="min-h-[300px] mb-6">
         <CardContent className="p-8">
           <div className="min-h-[220px]">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground mb-4">
-              Question
-            </p>
+            <div className="flex justify-between items-center mb-4">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                Question
+              </p>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleFlagQuestion}
+                title="Flag inaccurate question"
+              >
+                <Flag className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            </div>
             <p className="text-xl font-medium mb-6">{currentItem.question}</p>
 
             {currentItem.item_type === "true_false" ? (

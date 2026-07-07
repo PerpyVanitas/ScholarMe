@@ -33,6 +33,14 @@ interface ProfileEditDialogProps {
   editYearLevel: string;
   setEditYearLevel: (v: string) => void;
   editAvatarUrl: string | null;
+  editPronouns: string;
+  setEditPronouns: (v: string) => void;
+  editStatusMessage: string;
+  setEditStatusMessage: (v: string) => void;
+  editGithubUrl: string;
+  setEditGithubUrl: (v: string) => void;
+  editLinkedinUrl: string;
+  setEditLinkedinUrl: (v: string) => void;
   uploadingAvatar: boolean;
   isTutor: boolean;
   displayName: string;
@@ -61,6 +69,14 @@ export function ProfileEditDialog({
   editYearLevel,
   setEditYearLevel,
   editAvatarUrl,
+  editPronouns,
+  setEditPronouns,
+  editStatusMessage,
+  setEditStatusMessage,
+  editGithubUrl,
+  setEditGithubUrl,
+  editLinkedinUrl,
+  setEditLinkedinUrl,
   uploadingAvatar,
   isTutor,
   displayName,
@@ -155,15 +171,58 @@ export function ProfileEditDialog({
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="editPhone">Phone Number</Label>
+              <Input
+                id="editPhone"
+                type="tel"
+                value={editPhone}
+                onChange={(e) => setEditPhone(e.target.value)}
+                placeholder="Enter phone number"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editPronouns">Pronouns</Label>
+              <Input
+                id="editPronouns"
+                value={editPronouns}
+                onChange={(e) => setEditPronouns(e.target.value)}
+                placeholder="e.g. she/her, they/them"
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="editPhone">Phone Number</Label>
+            <Label htmlFor="editStatusMessage">Status Message</Label>
             <Input
-              id="editPhone"
-              type="tel"
-              value={editPhone}
-              onChange={(e) => setEditPhone(e.target.value)}
-              placeholder="Enter phone number"
+              id="editStatusMessage"
+              value={editStatusMessage}
+              onChange={(e) => setEditStatusMessage(e.target.value)}
+              placeholder="What's on your mind?"
+              maxLength={50}
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="editGithubUrl">GitHub URL</Label>
+              <Input
+                id="editGithubUrl"
+                value={editGithubUrl}
+                onChange={(e) => setEditGithubUrl(e.target.value)}
+                placeholder="https://github.com/username"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editLinkedinUrl">LinkedIn URL</Label>
+              <Input
+                id="editLinkedinUrl"
+                value={editLinkedinUrl}
+                onChange={(e) => setEditLinkedinUrl(e.target.value)}
+                placeholder="https://linkedin.com/in/username"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">

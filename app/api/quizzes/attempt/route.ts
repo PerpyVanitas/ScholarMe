@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { tryUnlockBadge } from "@/lib/utils/badges";
 
 export async function POST(request: NextRequest) {
   try {
@@ -67,6 +68,15 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    if (calculatedScore === totalItems && totalItems > 0) {
+      await tryUnlockBadge(supabase, user.id, "quiz_master");
+    }
+
+    const hour = new Date().getHours();
+    if (hour >= 22 || hour < 5) {
+      await tryUnlockBadge(supabase, user.id, "night_owl");
     }
 
     return NextResponse.json({ data });

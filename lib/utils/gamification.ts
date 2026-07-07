@@ -5,9 +5,10 @@ export function triggerConfetti() {
   const animationEnd = Date.now() + duration;
   const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
 
-  const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+  const randomInRange = (min: number, max: number) =>
+    Math.random() * (max - min) + min;
 
-  const interval: any = setInterval(function() {
+  const interval: any = setInterval(function () {
     const timeLeft = animationEnd - Date.now();
 
     if (timeLeft <= 0) {
@@ -15,8 +16,18 @@ export function triggerConfetti() {
     }
 
     const particleCount = 50 * (timeLeft / duration);
-    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+    confetti(
+      Object.assign({}, defaults, {
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+      }),
+    );
+    confetti(
+      Object.assign({}, defaults, {
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+      }),
+    );
   }, 250);
 }
 
@@ -45,9 +56,19 @@ export async function earnXp(amount: number, reason: string) {
     const res = await fetch("/api/xp/earn", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount, reason })
+      body: JSON.stringify({ amount, reason }),
     });
     const data = await res.json();
+
+    // Trigger haptic feedback for success or level up
+    if (typeof window !== "undefined" && "vibrate" in navigator) {
+      if (data.leveledUp) {
+        navigator.vibrate([200, 100, 200, 100, 400]); // Long celebration vibration
+      } else {
+        navigator.vibrate([100, 50, 100]); // Short success vibration
+      }
+    }
+
     return data;
   } catch (error) {
     console.error("Failed to earn XP:", error);

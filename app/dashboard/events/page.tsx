@@ -1,5 +1,6 @@
-import { AnnouncementCalendar, FacilityEvent } from "@/components/announcement-calendar";
-import { createClient } from "@/lib/supabase/server";
+import { AnnouncementCalendar } from "@/components/announcement-calendar";
+import { getEvents } from "@/features/events/api/actions";
+import { startOfMonth, endOfMonth, addMonths, subMonths } from "date-fns";
 
 export const metadata = {
   title: "Events & Announcements | ScholarMe",
@@ -7,22 +8,24 @@ export const metadata = {
 };
 
 export default async function EventsPage() {
-  const supabase = await createClient();
-  
-  // Attempt to fetch from DB. Fallback to mock data if empty or table doesn't exist yet
-  const { data: events, error } = await supabase
-    .from("facility_events")
-    .select("*")
-    .order("start_time");
+  const now = new Date();
+  const monthStart = subMonths(startOfMonth(now), 1);
+  const monthEnd = addMonths(endOfMonth(now), 1);
 
-  let initialEvents: FacilityEvent[] = events || [];
+  let initialEvents = [];
+  try {
+    initialEvents = await getEvents(monthStart, monthEnd);
+  } catch (e) {
+    console.error("Error fetching events:", e);
+  }
 
+  // Mock data if no events found (to keep UI looking good during development)
   if (initialEvents.length === 0) {
     const today = new Date();
-    
+
     const mockDate1 = new Date(today);
     mockDate1.setHours(10, 0, 0, 0);
-    
+
     const mockDate1End = new Date(today);
     mockDate1End.setHours(11, 30, 0, 0);
 
@@ -38,22 +41,26 @@ export default async function EventsPage() {
       {
         id: "evt-1",
         title: "Weekly Townhall Meeting",
-        description: "Join us for our weekly center sync. We will discuss new study policies and upcoming midterms.",
+        description:
+          "Join us for our weekly center sync. We will discuss new study policies and upcoming midterms.",
         start_time: mockDate1.toISOString(),
         end_time: mockDate1End.toISOString(),
-        color_code: "border-l-blue-500",
-        is_mandatory: true
+        color_code: "bg-blue-500",
+        is_mandatory: true,
+        event_rsvps: [],
       },
       {
         id: "evt-2",
         title: "Calculus Group Study Session",
-        description: "Open floor group study for all Calculus students. Peer tutors will be roaming.",
+        description:
+          "Open floor group study for all Calculus students. Peer tutors will be roaming.",
         start_time: mockDate2.toISOString(),
         end_time: mockDate2End.toISOString(),
-        color_code: "border-l-green-500",
-        is_mandatory: false
-      }
-    ];
+        color_code: "bg-green-500",
+        is_mandatory: false,
+        event_rsvps: [],
+      },
+    ] as any;
   }
 
   return (

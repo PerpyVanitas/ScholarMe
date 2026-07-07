@@ -55,9 +55,64 @@ export interface Profile {
   academic_year_joined?: string | null;
   unique_id_number?: string | null;
   is_card_issued?: boolean | null;
+  pronouns?: string | null;
+  status_message?: string | null;
+  social_links?: Record<string, string> | null;
+  dashboard_layout?: unknown;
   created_at: string;
   roles?: Array<{ id: string; name: string }>;
   hs_designations?: HsDesignation[];
+}
+
+export interface BudgetApproval {
+  id: string;
+  request_id: string;
+  approver_id: string;
+  status: string;
+  comments: string;
+  step_number: number;
+  created_at: string;
+  profiles: Profile;
+}
+
+export interface UserStreak {
+  user_id: string;
+  current_streak: number;
+  longest_streak: number;
+  last_login_date: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserBadge {
+  id: string;
+  user_id: string;
+  badge_name: string;
+  badge_description?: string;
+  icon_name?: string;
+  unlocked_at: string;
+}
+
+export interface ForumPost {
+  id: string;
+  author_id: string;
+  title: string;
+  content: string;
+  category: string;
+  is_pinned: boolean;
+  created_at: string;
+  updated_at: string;
+  profiles?: Profile;
+}
+
+export interface ForumReply {
+  id: string;
+  post_id: string;
+  author_id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  profiles?: Profile;
 }
 
 export interface AuthCard {
@@ -88,6 +143,9 @@ export interface Tutor {
   total_students_helped?: number;
   response_rate?: number;
   total_hours_tutored?: number;
+  is_paused?: boolean;
+  is_lead_tutor?: boolean;
+  strikes?: number;
   created_at: string;
   profiles: Profile;
   tutor_specializations: { specializations: Specialization }[];
@@ -101,7 +159,8 @@ export interface TutorAvailability {
   end_time: string;
 }
 
-export type SessionStatus = "pending" | "confirmed" | "completed" | "cancelled";
+export type SessionStatus =
+  "pending" | "confirmed" | "completed" | "cancelled" | "no_show";
 
 export interface Session {
   id: string;
@@ -113,11 +172,32 @@ export interface Session {
   specialization_id: string | null;
   status: SessionStatus;
   notes: string | null;
+  tutor_memo: string | null;
+  prep_notes?: string | null;
+  meeting_link?: string | null;
+  max_participants?: number;
+  participant_count?: number;
+  transfer_to_tutor_id?: string | null;
+  reschedule_requested_date?: string | null;
+  reschedule_requested_start?: string | null;
+  reschedule_requested_end?: string | null;
   created_at: string;
   tutors?: Tutor & { profiles?: Profile };
   learner_profile?: Profile;
   specializations?: Specialization;
   session_ratings?: SessionRating[];
+}
+
+export interface TutorReview {
+  id: string;
+  reviewer_id: string;
+  tutor_id: string;
+  session_id?: string | null;
+  rating: number;
+  feedback: string;
+  created_at: string;
+  reviewer?: Tutor & { profiles?: Profile };
+  tutor?: Tutor & { profiles?: Profile };
 }
 
 export interface SessionRating {
@@ -379,4 +459,84 @@ export interface TeamSchedule {
   created_at: string;
   updated_at: string;
   profiles?: Profile;
+}
+
+export interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  priority: boolean;
+  author_id: string;
+  created_at: string;
+  updated_at: string;
+  profiles?: Profile;
+}
+
+export interface FacilityEvent {
+  id: string;
+  title: string;
+  description: string | null;
+  start_time: string;
+  end_time: string;
+  color_code: string;
+  organizer_id: string | null;
+  is_mandatory: boolean;
+  created_at: string;
+  updated_at: string;
+  organizer?: Profile;
+  event_rsvps?: EventRsvp[];
+}
+
+export type RsvpStatus = "going" | "maybe" | "not_going";
+
+export interface EventRsvp {
+  id: string;
+  event_id: string;
+  profile_id: string;
+  status: RsvpStatus;
+  created_at: string;
+  updated_at: string;
+  profiles?: Profile;
+  facility_events?: FacilityEvent;
+}
+
+export interface PhysicalResource {
+  id: string;
+  title: string;
+  author: string | null;
+  isbn: string | null;
+  resource_type: string;
+  cover_image_url: string | null;
+  total_quantity: number;
+  available_quantity: number;
+  location: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ResourceCheckout {
+  id: string;
+  resource_id: string;
+  profile_id: string;
+  checkout_date: string;
+  due_date: string;
+  return_date: string | null;
+  status: "active" | "returned" | "overdue" | "lost";
+  notes: string | null;
+  checked_out_by: string;
+  checked_in_by: string | null;
+  resource?: PhysicalResource;
+  profile?: Profile;
+}
+
+export interface SessionWaitlist {
+  id: string;
+  tutor_id: string;
+  learner_id: string;
+  requested_date: string;
+  status: "waiting" | "notified" | "fulfilled" | "cancelled";
+  created_at: string;
+  updated_at: string;
+  tutor?: Tutor;
+  learner?: Profile;
 }

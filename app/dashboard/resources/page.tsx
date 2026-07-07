@@ -157,29 +157,58 @@ export default function ResourcesPage() {
   }
 
   async function handleDeleteResource(resource: ResourceRow) {
-    try {
-      const supabase = createClient();
-      const pathMatch = resource.url.split("/resources/");
-      if (pathMatch[1]) {
-        await supabase.storage
+    // Optimistic UI update
+    setRepoResources((prev) => ({
+      ...prev,
+      [resource.repository_id]: (prev[resource.repository_id] || []).filter(
+        (r) => r.id !== resource.id,
+      ),
+    }));
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const supabase = createClient();
+        const pathMatch = resource.url.split("/resources/");
+        if (pathMatch[1]) {
+          await supabase.storage
+            .from("resources")
+            .remove([decodeURIComponent(pathMatch[1])]);
+        }
+        const { error } = await supabase
           .from("resources")
-          .remove([decodeURIComponent(pathMatch[1])]);
+          .delete()
+          .eq("id", resource.id);
+        if (error) throw error;
+      } catch (err: unknown) {
+        console.error("Delete failed in background:", err);
+        // Rollback on failure
+        setRepoResources((prev) => ({
+          ...prev,
+          [resource.repository_id]: [
+            ...(prev[resource.repository_id] || []),
+            resource,
+          ],
+        }));
       }
-      const { error } = await supabase
-        .from("resources")
-        .delete()
-        .eq("id", resource.id);
-      if (error) throw error;
-      setRepoResources((prev) => ({
-        ...prev,
-        [resource.repository_id]: (prev[resource.repository_id] || []).filter(
-          (r) => r.id !== resource.id,
-        ),
-      }));
-      toast.success("Resource deleted.");
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Delete failed");
-    }
+    }, 5000);
+
+    toast.success("Resource deleted", {
+      action: {
+        label: "Undo",
+        onClick: () => {
+          clearTimeout(timeoutId);
+          // Revert optimistic delete
+          setRepoResources((prev) => ({
+            ...prev,
+            [resource.repository_id]: [
+              ...(prev[resource.repository_id] || []),
+              resource,
+            ],
+          }));
+          toast.success("Resource restored");
+        },
+      },
+    });
   }
 
   function openUploadForRepo(repoId: string) {

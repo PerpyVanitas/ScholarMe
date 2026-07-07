@@ -22,6 +22,7 @@ interface DashboardData {
   recentSessions?: Session[];
   tutor?: Tutor | null;
   upcomingSessions?: Session[];
+  overdueSessions?: Session[];
   tutorStats?: {
     completedSessions: number;
     upcomingSessions: number;
@@ -106,8 +107,39 @@ export default function DashboardView() {
             .eq("tutor_id", tutorId)
             .in("status", ["pending", "confirmed"]);
 
+          const { data: allConfirmed } = await supabase
+            .from("sessions")
+            .select("id, scheduled_date, end_time")
+            .eq("tutor_id", tutorId)
+            .eq("status", "confirmed");
+
+          const now = new Date();
+          const overdueSessions =
+            allConfirmed
+              ?.filter((s) => {
+                const endDateTime = new Date(
+                  `${s.scheduled_date}T${s.end_time}`,
+                );
+                return endDateTime < now;
+              })
+              .map((s) => s.id) || [];
+
           extra.tutor = tutor;
           extra.upcomingSessions = sessions || [];
+          extra.overdueSessions = (sessions || []).filter((s) =>
+            overdueSessions.includes(s.id),
+          ); // or we can just pass the count, but let's just pass the full objects if we fetched them. Actually let's fetch full objects for overdue:
+
+          const { data: fullOverdue } =
+            overdueSessions.length > 0
+              ? await supabase
+                  .from("sessions")
+                  .select("*, specializations(*)")
+                  .in("id", overdueSessions)
+              : { data: [] };
+
+          extra.overdueSessions = fullOverdue || [];
+
           extra.tutorStats = {
             completedSessions: completedCount || 0,
             upcomingSessions: upcomingCount || 0,
@@ -214,6 +246,7 @@ export default function DashboardView() {
         profile={profile}
         tutor={dashboardData.tutor || null}
         upcomingSessions={dashboardData.upcomingSessions || []}
+        overdueSessions={dashboardData.overdueSessions || []}
         stats={
           dashboardData.tutorStats || {
             completedSessions: 0,

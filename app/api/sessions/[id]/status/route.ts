@@ -4,31 +4,66 @@ import { NextResponse } from "next/server";
 
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { status } = await request.json();
+  const {
+    status,
+    meeting_link,
+    start_time,
+    end_time,
+    scheduled_date,
+    substitute_tutor_id,
+  } = await request.json();
 
-  if (!["confirmed", "completed", "cancelled"].includes(status)) {
+  if (
+    status &&
+    !["confirmed", "completed", "cancelled", "no_show"].includes(status)
+  ) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
 
+  const updateData: any = {};
+  if (status) updateData.status = status;
+  if (meeting_link !== undefined) updateData.meeting_link = meeting_link;
+  if (start_time) updateData.start_time = start_time;
+  if (end_time) updateData.end_time = end_time;
+  if (scheduled_date) updateData.scheduled_date = scheduled_date;
+  if (substitute_tutor_id) updateData.substitute_tutor_id = substitute_tutor_id;
+
   const { data, error } = await supabase
     .from("sessions")
-    .update({ status })
+    .update(updateData)
     .eq("id", id)
-    .select()
+    .select("*, tutor_id")
     .single();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  if (status === "no_show" && data?.tutor_id) {
+    const { data: tutorRow } = await supabase
+      .from("tutors")
+      .select("strikes")
+      .eq("id", data.tutor_id)
+      .single();
+
+    if (tutorRow) {
+      await supabase
+        .from("tutors")
+        .update({ strikes: (tutorRow.strikes ?? 0) + 1 })
+        .eq("id", data.tutor_id);
+    }
   }
 
   return NextResponse.json(data);

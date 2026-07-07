@@ -16,6 +16,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Missing pathname" }, { status: 400 });
     }
 
+    // If already a public URL (e.g. legacy data), just redirect.
+    if (pathname.startsWith("http://") || pathname.startsWith("https://")) {
+      return NextResponse.redirect(pathname);
+    }
+
     // Intercept and serve base64 data URIs directly
     if (pathname.startsWith("data:image/")) {
       const matches = pathname.match(
@@ -32,6 +37,19 @@ export async function GET(request: NextRequest) {
           },
         });
       }
+    }
+
+    // Supabase storage path (resources bucket).
+    if (pathname.startsWith("avatars/")) {
+      const base = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
+      if (!base) {
+        return NextResponse.json(
+          { error: "Supabase URL is not configured" },
+          { status: 500 },
+        );
+      }
+      const url = `${base}/storage/v1/object/public/resources/${pathname}`;
+      return NextResponse.redirect(url);
     }
 
     const result = await get(pathname, {

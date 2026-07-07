@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileText, Pencil, Send } from "lucide-react";
+import { FileText, Pencil, Send, Download } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { ExportFinanceCsv } from "@/features/finance/components/finance-export-csv";
 import { Scard } from "../types";
@@ -26,6 +26,53 @@ interface Props {
 }
 
 export function ScardsTab({ canSubmit, isManager, scards }: Props) {
+  const handleExportPdf = (report: Scard) => {
+    // A simple client-side PDF generation logic using window.print()
+    const printWindow = window.open("", "", "height=600,width=800");
+    if (!printWindow) return;
+
+    printWindow.document.write("<html><head><title>SCARD Report</title>");
+    printWindow.document.write(
+      "<style>body{font-family:sans-serif;padding:20px;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ddd;padding:8px;} .header{text-align:center;margin-bottom:20px;}</style>",
+    );
+    printWindow.document.write("</head><body>");
+
+    printWindow.document.write(
+      '<div class="header"><h2>Official SCARDS Report</h2>',
+    );
+    printWindow.document.write(
+      `<p>Event ID: <strong>${report.event_id}</strong> (v${report.version})</p></div>`,
+    );
+
+    printWindow.document.write("<table>");
+    printWindow.document.write(
+      `<tr><td><strong>Status</strong></td><td>${report.status.toUpperCase()}</td></tr>`,
+    );
+    printWindow.document.write(
+      `<tr><td><strong>Date Submitted</strong></td><td>${new Date(report.created_at).toLocaleDateString()}</td></tr>`,
+    );
+    printWindow.document.write(
+      `<tr><td><strong>Total Receipts</strong></td><td>₱${report.receipts_total}</td></tr>`,
+    );
+    printWindow.document.write(
+      `<tr><td><strong>Total Disbursements</strong></td><td>₱${report.disbursements_total}</td></tr>`,
+    );
+    printWindow.document.write(
+      `<tr><td><strong>Final Balance</strong></td><td><strong>₱${report.balance}</strong></td></tr>`,
+    );
+    printWindow.document.write("</table>");
+
+    printWindow.document.write("<br/><p>Certified by Finance Officer</p>");
+
+    printWindow.document.write("</body></html>");
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 250);
+  };
+
   return (
     <div className="space-y-6">
       {canSubmit && (
@@ -144,6 +191,18 @@ export function ScardsTab({ canSubmit, isManager, scards }: Props) {
                     <FileText className="w-4 h-4" /> View Official Report
                   </a>
                 )}
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleExportPdf(report)}
+                    className="w-full mt-2"
+                  >
+                    <Download className="w-4 h-4 mr-2" /> Export to PDF
+                  </Button>
+                </div>
+
                 <div className="p-3 bg-muted rounded-md flex justify-between items-center mt-4">
                   <span className="font-medium">Balance</span>
                   <span

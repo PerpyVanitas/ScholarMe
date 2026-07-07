@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import type { Profile, UserRole } from "@/lib/types";
 import { getAvatarUrl } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
@@ -56,9 +56,19 @@ import {
   BarChart,
   Camera,
   UserCog,
+  Bot,
+  History,
+  Pin,
+  PinOff,
+  Activity,
+  FileSpreadsheet,
+  ShieldCheck,
+  Receipt,
 } from "lucide-react";
 import { signOut } from "@/app/auth/actions";
 import { HonorSocietyLogo } from "@/components/honsoc-logo";
+import { toast } from "sonner";
+import confetti from "canvas-confetti";
 
 interface AppSidebarProps {
   profile: Profile;
@@ -84,17 +94,24 @@ function getNavItems(role: UserRole) {
   // Study items
   const studyItems = [
     { title: resourceTitle, href: "/dashboard/resources", icon: BookOpen },
-    { title: "Physical Library", href: "/dashboard/resources/library", icon: BookOpen },
+    {
+      title: "Physical Library",
+      href: "/dashboard/resources/library",
+      icon: BookOpen,
+    },
     { title: "Study Quizzes", href: "/dashboard/quizzes", icon: Lightbulb },
+    { title: "AI Tutor", href: "/dashboard/ai-tutor", icon: Bot },
     { title: "Flashcards", href: "/dashboard/flashcards", icon: FolderOpen },
   ];
 
   // Community items depending on role
   const communityItems = [
-    { title: "Events Calendar", href: "/dashboard/events", icon: Calendar },
+    { title: "Events Calendar", href: "/dashboard/calendar", icon: Calendar },
     { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
     { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
     { title: "My Messages", href: "/dashboard/messages", icon: MessageSquare },
+    { title: "Forums", href: "/dashboard/forums", icon: MessageSquare },
+    { title: "Study Groups", href: "/dashboard/groups", icon: Users },
     { title: "Voting", href: "/dashboard/voting", icon: Vote },
     { title: "Leaderboard", href: "/dashboard/leaderboard", icon: Trophy },
   ];
@@ -105,6 +122,11 @@ function getNavItems(role: UserRole) {
     managementItems = [
       { title: "My Timesheet", href: "/dashboard/timesheet", icon: Timer },
       { title: "Availability", href: "/dashboard/availability", icon: Clock },
+      {
+        title: "Peer Reviews",
+        href: "/dashboard/tutors/reviews",
+        icon: ShieldCheck,
+      },
     ];
   } else if (
     role === "administrator" ||
@@ -132,6 +154,21 @@ function getNavItems(role: UserRole) {
         title: "QR Scanner",
         href: "/dashboard/admin/scanner",
         icon: Camera,
+      },
+      {
+        title: "Data Export",
+        href: "/dashboard/admin/export",
+        icon: FileSpreadsheet,
+      },
+      {
+        title: "System Health",
+        href: "/dashboard/admin/health",
+        icon: Activity,
+      },
+      {
+        title: "Mastery Verifications",
+        href: "/dashboard/admin/verifications",
+        icon: ShieldCheck,
       },
     ];
     if (role === "super_admin") {
@@ -163,6 +200,11 @@ function getNavItems(role: UserRole) {
         title: "Finance Dashboard",
         href: "/dashboard/finance",
         icon: FileText,
+      },
+      {
+        title: "Cash Register",
+        href: "/dashboard/finance/register",
+        icon: Receipt,
       },
     ];
     if (role === "auditor") {
@@ -198,17 +240,22 @@ function getNavItems(role: UserRole) {
     }
   }
 
-  const groups = [
+  const learnerGroups = [
     { label: "Core", items: coreItems },
     { label: "Academics & Study", items: studyItems },
     { label: "Community & Interaction", items: communityItems },
   ];
 
-  if (managementItems.length > 0) {
-    groups.push({ label: `${roleLabels[role]} Tools`, items: managementItems });
-  }
+  const managementGroups =
+    managementItems.length > 0
+      ? [{ label: `${roleLabels[role]} Tools`, items: managementItems }]
+      : [];
 
-  return groups;
+  return {
+    learnerGroups,
+    managementGroups,
+    hasManagement: managementItems.length > 0,
+  };
 }
 
 const roleLabels: Record<UserRole, string> = {
@@ -231,7 +278,15 @@ export function AppSidebar({
   notificationCount,
 }: AppSidebarProps) {
   const pathname = usePathname();
-  const navGroups = useMemo(() => getNavItems(role), [role]);
+  const { learnerGroups, managementGroups, hasManagement } = useMemo(
+    () => getNavItems(role),
+    [role],
+  );
+  const [workspace, setWorkspace] = useState<"learner" | "management">(
+    "learner",
+  );
+  const navGroups = workspace === "learner" ? learnerGroups : managementGroups;
+
   const initials = profile?.full_name
     ? profile.full_name
         .split(" ")
@@ -241,24 +296,179 @@ export function AppSidebar({
         .slice(0, 2)
     : "?";
 
+  const [logoClicks, setLogoClicks] = useState(0);
+  const [recentVisits, setRecentVisits] = useState<
+    { title: string; href: string }[]
+  >([]);
+  const [favorites, setFavorites] = useState<string[]>([]); // array of hrefs
+
+  // Load pinned favorites
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("scholarme_favorites");
+      if (stored) setFavorites(JSON.parse(stored));
+    } catch (e) {}
+  }, []);
+
+  const toggleFavorite = (e: React.MouseEvent, href: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    let newFavs = [...favorites];
+    if (newFavs.includes(href)) {
+      newFavs = newFavs.filter((f) => f !== href);
+    } else {
+      if (newFavs.length >= 5) {
+        toast.error("You can only pin up to 5 favorites");
+        return;
+      }
+      newFavs.push(href);
+    }
+    setFavorites(newFavs);
+    localStorage.setItem("scholarme_favorites", JSON.stringify(newFavs));
+  };
+
+  // Maintain recently visited stack in localStorage
+  useEffect(() => {
+    if (!pathname || pathname === "/dashboard/home") return;
+
+    try {
+      const stored = localStorage.getItem("scholarme_recent_visits");
+      let visits: { title: string; href: string }[] = stored
+        ? JSON.parse(stored)
+        : [];
+
+      // Find title for current pathname
+      let currentTitle = "Page";
+      for (const group of learnerGroups.concat(managementGroups)) {
+        for (const item of group.items) {
+          if (item.href === pathname) {
+            currentTitle = item.title;
+            break;
+          }
+        }
+      }
+
+      // Don't log if it's not a known sidebar item or if it's the exact same page twice in a row
+      if (
+        currentTitle === "Page" ||
+        (visits.length > 0 && visits[0].href === pathname)
+      )
+        return;
+
+      visits = visits.filter((v) => v.href !== pathname); // Remove duplicates
+      visits.unshift({ title: currentTitle, href: pathname }); // Add to front
+      visits = visits.slice(0, 3); // Keep only top 3
+
+      localStorage.setItem("scholarme_recent_visits", JSON.stringify(visits));
+      setRecentVisits(visits);
+    } catch (e) {
+      console.error("Failed to parse recent visits", e);
+    }
+  }, [pathname, navGroups]);
+
+  // Load initial visits
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("scholarme_recent_visits");
+      if (stored) setRecentVisits(JSON.parse(stored));
+    } catch (e) {}
+  }, []);
+
+  const handleLogoClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    const newClicks = logoClicks + 1;
+    setLogoClicks(newClicks);
+
+    if (newClicks === 10) {
+      toast.success("🔍 You found a secret!", {
+        description: "Explorer Badge Unlocked!",
+      });
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+      });
+      // Optionally grant XP here
+      const { earnXp } = await import("@/lib/utils/gamification");
+      await earnXp(100, "Found the secret explorer egg!");
+      setLogoClicks(0);
+    }
+  };
+
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link href="/dashboard/home">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                  <HonorSocietyLogo variant="auto" className="h-6 w-6" />
-                </div>
-                <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold">ScholarMe</span>
-                  <span className="text-xs text-muted-foreground">
-                    {roleLabels[role]}
-                  </span>
-                </div>
-              </Link>
-            </SidebarMenuButton>
+            {hasManagement ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton
+                    size="lg"
+                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  >
+                    <div
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary cursor-pointer text-primary-foreground"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleLogoClick(e as any);
+                      }}
+                    >
+                      <HonorSocietyLogo variant="auto" className="h-6 w-6" />
+                    </div>
+                    <div className="flex flex-col gap-0.5 leading-none">
+                      <span className="font-semibold">
+                        {workspace === "learner"
+                          ? "Learner Workspace"
+                          : `${roleLabels[role]} Workspace`}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        ScholarMe
+                      </span>
+                    </div>
+                    <ChevronsUpDown className="ml-auto h-4 w-4" />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width]">
+                  <DropdownMenuItem onClick={() => setWorkspace("learner")}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">Learner Workspace</span>
+                      <span className="text-xs text-muted-foreground">
+                        Core study tools
+                      </span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setWorkspace("management")}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">
+                        {roleLabels[role]} Workspace
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        Management tools
+                      </span>
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <SidebarMenuButton size="lg" asChild>
+                <Link href="/dashboard/home">
+                  <div
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary cursor-pointer text-primary-foreground"
+                    onClick={handleLogoClick}
+                  >
+                    <HonorSocietyLogo variant="auto" className="h-6 w-6" />
+                  </div>
+                  <div className="flex flex-col gap-0.5 leading-none">
+                    <span className="font-semibold">ScholarMe</span>
+                    <span className="text-xs text-muted-foreground">
+                      {roleLabels[role]}
+                    </span>
+                  </div>
+                </Link>
+              </SidebarMenuButton>
+            )}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
@@ -266,8 +476,63 @@ export function AppSidebar({
       <SidebarSeparator />
 
       <SidebarContent>
+        {favorites.length > 0 && (
+          <Collapsible defaultOpen={true} className="group/collapsible mb-2">
+            <SidebarGroup>
+              <SidebarGroupLabel asChild>
+                <CollapsibleTrigger>
+                  Pinned Favorites
+                  <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {favorites.map((favHref) => {
+                      // find the item from all possible groups to get the icon and title
+                      let favItem = null;
+                      for (const g of learnerGroups.concat(managementGroups)) {
+                        const found = g.items.find((i) => i.href === favHref);
+                        if (found) favItem = found;
+                      }
+                      if (!favItem) return null;
+                      return (
+                        <SidebarMenuItem key={`fav-${favHref}`}>
+                          <SidebarMenuButton
+                            asChild
+                            isActive={pathname === favHref}
+                            tooltip={favItem.title}
+                            className="group/favitem"
+                          >
+                            <Link href={favHref}>
+                              <favItem.icon className="h-4 w-4 text-primary" />
+                              <span className="font-medium">
+                                {favItem.title}
+                              </span>
+                              <button
+                                onClick={(e) => toggleFavorite(e, favHref)}
+                                className="ml-auto opacity-0 group-hover/favitem:opacity-100 p-1 hover:bg-muted rounded text-muted-foreground"
+                              >
+                                <PinOff className="h-3 w-3" />
+                              </button>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </SidebarGroup>
+          </Collapsible>
+        )}
+
         {navGroups.map((group, index) => (
-          <Collapsible defaultOpen={index === 0} className="group/collapsible" key={index}>
+          <Collapsible
+            defaultOpen={index === 0}
+            className="group/collapsible"
+            key={index}
+          >
             <SidebarGroup>
               <SidebarGroupLabel asChild>
                 <CollapsibleTrigger>
@@ -296,6 +561,21 @@ export function AppSidebar({
                                     : notificationCount}
                                 </span>
                               )}
+                            <button
+                              onClick={(e) => toggleFavorite(e, item.href)}
+                              className="ml-auto opacity-0 group-hover:opacity-100 p-1 hover:bg-muted rounded"
+                              title={
+                                favorites.includes(item.href)
+                                  ? "Unpin"
+                                  : "Pin to Favorites"
+                              }
+                            >
+                              {favorites.includes(item.href) ? (
+                                <PinOff className="h-3 w-3 text-primary" />
+                              ) : (
+                                <Pin className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                              )}
+                            </button>
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -306,6 +586,41 @@ export function AppSidebar({
             </SidebarGroup>
           </Collapsible>
         ))}
+
+        {recentVisits.length > 0 && (
+          <Collapsible defaultOpen={true} className="group/collapsible mt-4">
+            <SidebarGroup>
+              <SidebarGroupLabel asChild>
+                <CollapsibleTrigger>
+                  Recently Visited
+                  <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {recentVisits.map((item) => (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={pathname === item.href}
+                          tooltip={item.title}
+                        >
+                          <Link href={item.href}>
+                            <History className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-muted-foreground">
+                              {item.title}
+                            </span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </SidebarGroup>
+          </Collapsible>
+        )}
       </SidebarContent>
 
       <SidebarFooter>

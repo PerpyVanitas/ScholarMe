@@ -55,6 +55,7 @@ import { UserDeleteDialog } from "./components/user-delete-dialog";
 import { UserLogsDialog } from "./components/user-logs-dialog";
 import { UserDesignationsDialog } from "./components/user-designations-dialog";
 import { UserIdCardDialog } from "./components/user-id-card-dialog";
+import { UserProfileDialog } from "./components/user-profile-dialog";
 
 const roleColors: Record<string, string> = {
   super_admin: "bg-red-500/10 text-red-500 border-red-500/30",
@@ -96,8 +97,14 @@ function AdminUsersContent() {
   // Create state
   const [createOpen, setCreateOpen] = useState(false);
 
+  // Profile view state
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileUser, setProfileUser] = useState<Profile | null>(null);
+
   // Bulk selection state
-  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Edit state
   const [editOpen, setEditOpen] = useState(false);
@@ -150,6 +157,11 @@ function AdminUsersContent() {
     setEditOpen(true);
   }
 
+  function openProfile(p: Profile) {
+    setProfileUser(p);
+    setProfileOpen(true);
+  }
+
   function openDelete(p: Profile) {
     setDeleteUser(p);
     setDeleteOpen(true);
@@ -181,7 +193,10 @@ function AdminUsersContent() {
   }
 
   function toggleAllSelection(filteredProfiles: Profile[]) {
-    if (selectedUserIds.size === filteredProfiles.length && filteredProfiles.length > 0) {
+    if (
+      selectedUserIds.size === filteredProfiles.length &&
+      filteredProfiles.length > 0
+    ) {
       setSelectedUserIds(new Set());
     } else {
       setSelectedUserIds(new Set(filteredProfiles.map((p) => p.id)));
@@ -218,9 +233,9 @@ function AdminUsersContent() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <BulkIdExporter 
-            selectedUsers={profiles.filter(p => selectedUserIds.has(p.id))} 
-            onClearSelection={() => setSelectedUserIds(new Set())} 
+          <BulkIdExporter
+            selectedUsers={profiles.filter((p) => selectedUserIds.has(p.id))}
+            onClearSelection={() => setSelectedUserIds(new Set())}
           />
           <ExportCsvButton
             data={filtered.map((p) => ({
@@ -310,6 +325,7 @@ function AdminUsersContent() {
                   </div>
                   <UserActionsMenu
                     profile={p}
+                    onProfile={openProfile}
                     onEdit={openEdit}
                     onDelete={openDelete}
                     onLogs={openLogs}
@@ -328,8 +344,11 @@ function AdminUsersContent() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12">
-                      <Checkbox 
-                        checked={filtered.length > 0 && selectedUserIds.size === filtered.length}
+                      <Checkbox
+                        checked={
+                          filtered.length > 0 &&
+                          selectedUserIds.size === filtered.length
+                        }
                         onCheckedChange={() => toggleAllSelection(filtered)}
                         aria-label="Select all"
                       />
@@ -345,9 +364,13 @@ function AdminUsersContent() {
                 </TableHeader>
                 <TableBody>
                   {filtered.map((p) => (
-                    <TableRow key={p.id}>
+                    <TableRow
+                      key={p.id}
+                      onDoubleClick={() => openEdit(p)}
+                      className="cursor-pointer hover:bg-muted/50"
+                    >
                       <TableCell>
-                        <Checkbox 
+                        <Checkbox
                           checked={selectedUserIds.has(p.id)}
                           onCheckedChange={() => toggleUserSelection(p.id)}
                           aria-label={`Select ${p.full_name}`}
@@ -384,14 +407,26 @@ function AdminUsersContent() {
                         })}
                       </TableCell>
                       <TableCell>
-                        <UserActionsMenu
-                          profile={p}
-                          onEdit={openEdit}
-                          onDelete={openDelete}
-                          onLogs={openLogs}
-                          onPrintId={openPrintId}
-                          onDesignations={openDesignations}
-                        />
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="hidden md:flex"
+                            onClick={() => openProfile(p)}
+                          >
+                            <Users className="h-3.5 w-3.5 mr-1.5" />
+                            View Profile
+                          </Button>
+                          <UserActionsMenu
+                            profile={p}
+                            onProfile={openProfile}
+                            onEdit={openEdit}
+                            onDelete={openDelete}
+                            onLogs={openLogs}
+                            onPrintId={openPrintId}
+                            onDesignations={openDesignations}
+                          />
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -455,6 +490,12 @@ function AdminUsersContent() {
           setIdCardUser(updated);
         }}
       />
+
+      <UserProfileDialog
+        open={profileOpen}
+        onOpenChange={setProfileOpen}
+        user={profileUser}
+      />
     </div>
   );
 }
@@ -475,6 +516,7 @@ export default function AdminUsersPage() {
 
 function UserActionsMenu({
   profile,
+  onProfile,
   onEdit,
   onDelete,
   onLogs,
@@ -482,6 +524,7 @@ function UserActionsMenu({
   onDesignations,
 }: {
   profile: Profile;
+  onProfile: (p: Profile) => void;
   onEdit: (p: Profile) => void;
   onDelete: (p: Profile) => void;
   onLogs: (p: Profile) => void;
@@ -497,6 +540,10 @@ function UserActionsMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => onProfile(profile)}>
+          <Users className="mr-2 h-4 w-4" />
+          View Profile
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onEdit(profile)}>
           <Pencil className="mr-2 h-4 w-4" />
           Edit Details

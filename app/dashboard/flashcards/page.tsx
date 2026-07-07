@@ -19,6 +19,7 @@ import {
   Users,
   Lock,
   FileText,
+  Copy,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -80,18 +81,59 @@ function FlashcardsContent() {
     }
   };
 
-  const handleDeleteQuiz = async (id: string) => {
-    if (!confirm("Are you sure you want to delete these flashcards?")) return;
+  const handleDeleteQuiz = (id: string) => {
+    const setToDelete = myStudySets.find((s) => s.id === id);
+    if (!setToDelete) return;
 
+    // Optimistically remove from UI
+    setMyStudySets((prev) => prev.filter((s) => s.id !== id));
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/flashcards/${id}`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Failed to delete");
+      } catch (error) {
+        console.error("Error deleting flashcards:", error);
+        toast.error("Failed to delete flashcards");
+        await loadStudySets(); // Revert on failure
+      }
+    }, 5000);
+
+    toast.success("Flashcard set deleted", {
+      action: {
+        label: "Undo",
+        onClick: () => {
+          clearTimeout(timeoutId);
+          setMyStudySets((prev) => {
+            const restored = [...prev, setToDelete];
+            // Sort by created_at descending to maintain order
+            return restored.sort(
+              (a, b) =>
+                new Date(b.created_at).getTime() -
+                new Date(a.created_at).getTime(),
+            );
+          });
+          toast.success("Delete undone");
+        },
+      },
+      duration: 5000,
+    });
+  };
+
+  const handleForkSet = async (id: string) => {
     try {
-      const res = await fetch(`/api/flashcards/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete");
+      toast.loading("Forking set...", { id: "forking" });
+      const res = await fetch(`/api/flashcards/${id}/fork`, { method: "POST" });
+      if (!res.ok) throw new Error("Failed to fork");
 
-      toast.success("Flashcards deleted");
+      toast.success("Set forked to your personal flashcards!", {
+        id: "forking",
+      });
       await loadStudySets();
+      setActiveTab("my-sets");
     } catch (error) {
-      console.error("Error deleting flashcards:", error);
-      toast.error("Failed to delete flashcards");
+      console.error("Error forking:", error);
+      toast.error("Failed to fork set", { id: "forking" });
     }
   };
 
@@ -264,12 +306,22 @@ function FlashcardsContent() {
                       </span>
                       <span>by {set.profiles?.full_name || "Unknown"}</span>
                     </div>
-                    <Button asChild className="w-full mt-auto">
-                      <Link href={`/dashboard/flashcards/study/${set.id}`}>
-                        <BookOpen className="mr-2 h-4 w-4" />
-                        Study
-                      </Link>
-                    </Button>
+                    <div className="flex gap-2 mt-auto w-full">
+                      <Button asChild className="flex-1">
+                        <Link href={`/dashboard/flashcards/study/${set.id}`}>
+                          <BookOpen className="mr-2 h-4 w-4" />
+                          Study
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        title="Fork to My Sets"
+                        onClick={() => handleForkSet(set.id)}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}

@@ -19,7 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, HelpCircle } from "lucide-react";
+import {
+  HoverCard,
+  HoverCardTrigger,
+  HoverCardContent,
+} from "@/components/ui/hover-card";
 import { toast } from "sonner";
 import { useUser } from "@/lib/user-context";
 
@@ -124,7 +129,36 @@ export function UserCreateDialog({
           </div>
           {currentAdminRole === "super_admin" && (
             <div className="flex flex-col gap-2">
-              <Label>Role</Label>
+              <div className="flex items-center gap-2">
+                <Label>Role</Label>
+                <HoverCard>
+                  <HoverCardTrigger asChild>
+                    <button
+                      type="button"
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <HelpCircle className="h-4 w-4" />
+                    </button>
+                  </HoverCardTrigger>
+                  <HoverCardContent className="w-80">
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-semibold">User Roles</h4>
+                      <p className="text-sm">
+                        <strong>Learner:</strong> Default access to study tools
+                        and tutors.
+                      </p>
+                      <p className="text-sm">
+                        <strong>Tutor:</strong> Can conduct sessions and earn
+                        from tutoring.
+                      </p>
+                      <p className="text-sm">
+                        <strong>Administrator:</strong> Manage users, resources,
+                        and system settings.
+                      </p>
+                    </div>
+                  </HoverCardContent>
+                </HoverCard>
+              </div>
               <Select value={newRole} onValueChange={setNewRole}>
                 <SelectTrigger>
                   <SelectValue />
