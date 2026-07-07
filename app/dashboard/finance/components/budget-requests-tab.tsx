@@ -21,11 +21,17 @@ import {
 
 interface Props {
   canSubmit: boolean;
-  isManager: boolean;
+  canReview: boolean;
+  canApprove: boolean;
   budgetReqs: BudgetRequest[] | null;
 }
 
-export function BudgetRequestsTab({ canSubmit, isManager, budgetReqs }: Props) {
+export function BudgetRequestsTab({
+  canSubmit,
+  canReview,
+  canApprove,
+  budgetReqs,
+}: Props) {
   return (
     <div className="space-y-6">
       {canSubmit && (
@@ -139,7 +145,7 @@ export function BudgetRequestsTab({ canSubmit, isManager, budgetReqs }: Props) {
                     </form>
                   </div>
                 )}
-                {isManager && req.status === "pending" && (
+                {canReview && req.status === "pending" && (
                   <div className="flex gap-2 mt-4">
                     <form
                       action={async () => {
@@ -157,6 +163,20 @@ export function BudgetRequestsTab({ canSubmit, isManager, budgetReqs }: Props) {
                     <form
                       action={async () => {
                         "use server";
+                        await updateBudgetRequestStatus(req.id, "rejected");
+                      }}
+                    >
+                      <Button size="sm" variant="destructive">
+                        Reject
+                      </Button>
+                    </form>
+                  </div>
+                )}
+                {canApprove && req.status === "finance_review" && (
+                  <div className="flex gap-2 mt-4">
+                    <form
+                      action={async () => {
+                        "use server";
                         await updateBudgetRequestStatus(
                           req.id,
                           "president_approved",
@@ -164,7 +184,7 @@ export function BudgetRequestsTab({ canSubmit, isManager, budgetReqs }: Props) {
                       }}
                     >
                       <Button size="sm" variant="default">
-                        Approve
+                        President Approve
                       </Button>
                     </form>
                     <form
@@ -175,6 +195,20 @@ export function BudgetRequestsTab({ canSubmit, isManager, budgetReqs }: Props) {
                     >
                       <Button size="sm" variant="destructive">
                         Reject
+                      </Button>
+                    </form>
+                  </div>
+                )}
+                {canReview && req.status === "president_approved" && (
+                  <div className="flex gap-2 mt-4">
+                    <form
+                      action={async () => {
+                        "use server";
+                        await updateBudgetRequestStatus(req.id, "released");
+                      }}
+                    >
+                      <Button size="sm" variant="default">
+                        Release Funds
                       </Button>
                     </form>
                   </div>

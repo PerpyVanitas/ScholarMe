@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import { canAccessAdminRoute, getRoleName } from "@/lib/utils/roles";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 export default async function AdminLayout({
@@ -23,13 +25,12 @@ export default async function AdminLayout({
     .eq("id", user.id)
     .single();
 
-  const rawRole = profile?.roles;
-  const roleName = Array.isArray(rawRole)
-    ? rawRole[0]?.name
-    : (rawRole as any)?.name;
+  const roleName = getRoleName(profile ?? { roles: [] });
+  const headerStore = await headers();
+  const pathname = headerStore.get("x-pathname") ?? "/dashboard/admin";
 
-  // Gate: Only permitted roles can access routes within /dashboard/admin
-  if (!["administrator", "super_admin"].includes(roleName)) {
+  // Gate each admin area to the constitutional/officer role it maps to.
+  if (!canAccessAdminRoute(roleName, pathname)) {
     redirect("/dashboard/home");
   }
 

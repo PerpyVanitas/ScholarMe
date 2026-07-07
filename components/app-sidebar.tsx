@@ -6,6 +6,15 @@ import { usePathname } from "next/navigation";
 import { useMemo, useState, useEffect } from "react";
 import type { Profile, UserRole } from "@/lib/types";
 import { getAvatarUrl } from "@/lib/utils";
+import {
+  AUDIT_ROLES,
+  FINANCE_REVIEW_ROLES,
+  FINANCE_VIEW_ROLES,
+  GOVERNANCE_ROLES,
+  ROLE_LABELS,
+  TEAMWORK_ROLES,
+  hasAnyRole,
+} from "@/lib/utils/roles";
 import type { LucideIcon } from "lucide-react";
 import {
   Sidebar,
@@ -80,14 +89,14 @@ function getNavItems(role: UserRole) {
   // Core items available to everyone
   const coreItems = [
     { title: "Dashboard", href: "/dashboard/home", icon: LayoutDashboard },
+    { title: "Profile", href: "/dashboard/profile", icon: Settings },
     { title: "Notifications", href: "/dashboard/notifications", icon: Bell },
-    { title: "Finance Dashboard", href: "/dashboard/finance", icon: BookOpen },
   ];
 
   const resourceTitle =
     role === "tutor"
       ? "My Repositories"
-      : role === "administrator"
+      : hasAnyRole(role, GOVERNANCE_ROLES)
         ? "Resource Library"
         : "Resources";
 
@@ -107,8 +116,18 @@ function getNavItems(role: UserRole) {
   // Community items depending on role
   const communityItems = [
     { title: "Events Calendar", href: "/dashboard/calendar", icon: Calendar },
-    { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
-    { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
+    ...(role === "learner"
+      ? [
+          { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
+          { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
+        ]
+      : [
+          {
+            title: role === "tutor" ? "Tutoring Sessions" : "Sessions",
+            href: "/dashboard/sessions",
+            icon: Calendar,
+          },
+        ]),
     { title: "My Messages", href: "/dashboard/messages", icon: MessageSquare },
     { title: "Forums", href: "/dashboard/forums", icon: MessageSquare },
     { title: "Study Groups", href: "/dashboard/groups", icon: Users },
@@ -117,23 +136,27 @@ function getNavItems(role: UserRole) {
   ];
 
   // Admin/Tutor specific management tools
-  let managementItems: { title: string; href: string; icon: LucideIcon }[] = [];
+  const managementGroups: {
+    label: string;
+    items: { title: string; href: string; icon: LucideIcon }[];
+  }[] = [];
   if (role === "tutor") {
-    managementItems = [
-      { title: "My Timesheet", href: "/dashboard/timesheet", icon: Timer },
-      { title: "Availability", href: "/dashboard/availability", icon: Clock },
-      {
-        title: "Peer Reviews",
-        href: "/dashboard/tutors/reviews",
-        icon: ShieldCheck,
-      },
-    ];
-  } else if (
-    role === "administrator" ||
-    role === "president" ||
-    role === "super_admin"
-  ) {
-    managementItems = [
+    managementGroups.push({
+      label: "Tutor Tools",
+      items: [
+        { title: "My Timesheet", href: "/dashboard/timesheet", icon: Timer },
+        { title: "Availability", href: "/dashboard/availability", icon: Clock },
+        {
+          title: "Peer Reviews",
+          href: "/dashboard/tutors/reviews",
+          icon: ShieldCheck,
+        },
+      ],
+    });
+  }
+
+  if (hasAnyRole(role, GOVERNANCE_ROLES)) {
+    const adminItems = [
       {
         title: "Admin Dashboard",
         href: "/dashboard/admin",
@@ -150,11 +173,7 @@ function getNavItems(role: UserRole) {
         href: "/dashboard/admin/logs",
         icon: ShieldAlert,
       },
-      {
-        title: "QR Scanner",
-        href: "/dashboard/admin/scanner",
-        icon: Camera,
-      },
+      { title: "QR Scanner", href: "/dashboard/admin/scanner", icon: Camera },
       {
         title: "Data Export",
         href: "/dashboard/admin/export",
@@ -172,30 +191,29 @@ function getNavItems(role: UserRole) {
       },
     ];
     if (role === "super_admin") {
-      managementItems.push({
-        title: "Message Audit",
-        href: "/dashboard/admin/messages",
-        icon: MessageSquare,
-      });
-      managementItems.push({
-        title: "User Feedback",
-        href: "/dashboard/admin/feedback",
-        icon: Bug,
-      });
-      managementItems.push({
-        title: "Role Management",
-        href: "/dashboard/admin/roles",
-        icon: UserCog,
-      });
+      adminItems.push(
+        {
+          title: "Message Audit",
+          href: "/dashboard/admin/messages",
+          icon: MessageSquare,
+        },
+        {
+          title: "User Feedback",
+          href: "/dashboard/admin/feedback",
+          icon: Bug,
+        },
+        {
+          title: "Role Management",
+          href: "/dashboard/admin/roles",
+          icon: UserCog,
+        },
+      );
     }
-  } else if (
-    role === "finance_manager" ||
-    role === "treasurer" ||
-    role === "auditor" ||
-    role === "committee_head" ||
-    role === "faculty_adviser"
-  ) {
-    managementItems = [
+    managementGroups.push({ label: "Administration", items: adminItems });
+  }
+
+  if (hasAnyRole(role, FINANCE_VIEW_ROLES)) {
+    const financeItems = [
       {
         title: "Finance Dashboard",
         href: "/dashboard/finance",
@@ -207,37 +225,31 @@ function getNavItems(role: UserRole) {
         icon: Receipt,
       },
     ];
-    if (role === "auditor") {
-      managementItems.push(
-        {
-          title: "Reports Hub",
-          href: "/dashboard/admin/reports",
-          icon: FileText,
-        },
-        {
-          title: "User Feedback",
-          href: "/dashboard/admin/feedback",
-          icon: Bug,
-        },
-      );
+    if (
+      hasAnyRole(role, AUDIT_ROLES) ||
+      hasAnyRole(role, FINANCE_REVIEW_ROLES)
+    ) {
+      financeItems.push({
+        title: "Reports Hub",
+        href: "/dashboard/admin/reports",
+        icon: FileText,
+      });
     }
+    managementGroups.push({ label: "Finance & Audit", items: financeItems });
   }
 
   // Add Team Workspace to relevant roles
-  if (
-    role === "officer" ||
-    role === "president" ||
-    role === "committee_head" ||
-    role === "super_admin" ||
-    role === "administrator"
-  ) {
-    if (!managementItems.some((item) => item.title === "Team Workspace")) {
-      managementItems.push({
-        title: "Team Workspace",
-        href: "/dashboard/team",
-        icon: Users,
-      });
-    }
+  if (hasAnyRole(role, TEAMWORK_ROLES)) {
+    managementGroups.push({
+      label: "Officer Work",
+      items: [
+        {
+          title: "Team Workspace",
+          href: "/dashboard/team",
+          icon: Users,
+        },
+      ],
+    });
   }
 
   const learnerGroups = [
@@ -246,31 +258,12 @@ function getNavItems(role: UserRole) {
     { label: "Community & Interaction", items: communityItems },
   ];
 
-  const managementGroups =
-    managementItems.length > 0
-      ? [{ label: `${roleLabels[role]} Tools`, items: managementItems }]
-      : [];
-
   return {
     learnerGroups,
     managementGroups,
-    hasManagement: managementItems.length > 0,
+    hasManagement: managementGroups.length > 0,
   };
 }
-
-const roleLabels: Record<UserRole, string> = {
-  learner: "Learner",
-  tutor: "Tutor",
-  administrator: "Admin",
-  finance_manager: "Finance",
-  auditor: "Auditor",
-  president: "President",
-  treasurer: "Treasurer",
-  committee_head: "Committee",
-  faculty_adviser: "Adviser",
-  super_admin: "Super Admin",
-  officer: "Officer",
-};
 
 export function AppSidebar({
   profile,
@@ -420,7 +413,7 @@ export function AppSidebar({
                       <span className="font-semibold">
                         {workspace === "learner"
                           ? "Learner Workspace"
-                          : `${roleLabels[role]} Workspace`}
+                          : `${ROLE_LABELS[role]} Workspace`}
                       </span>
                       <span className="text-xs text-muted-foreground">
                         ScholarMe
@@ -442,7 +435,7 @@ export function AppSidebar({
                   <DropdownMenuItem onClick={() => setWorkspace("management")}>
                     <div className="flex flex-col">
                       <span className="font-medium">
-                        {roleLabels[role]} Workspace
+                        {ROLE_LABELS[role]} Workspace
                       </span>
                       <span className="text-xs text-muted-foreground">
                         Management tools
@@ -463,7 +456,7 @@ export function AppSidebar({
                   <div className="flex flex-col gap-0.5 leading-none">
                     <span className="font-semibold">ScholarMe</span>
                     <span className="text-xs text-muted-foreground">
-                      {roleLabels[role]}
+                      {ROLE_LABELS[role]}
                     </span>
                   </div>
                 </Link>

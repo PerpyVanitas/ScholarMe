@@ -1,6 +1,14 @@
 import { SyncTabs } from "@/components/sync-tabs";
 import { TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/server";
+import {
+  canAccessFinance,
+  canApproveFinance,
+  canReviewFinance,
+  canSubmitFinance,
+  canAuditFinance,
+  getRoleName,
+} from "@/lib/utils/roles";
 import { redirect } from "next/navigation";
 
 // Components
@@ -17,22 +25,24 @@ export default async function FinanceDashboard() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/auth/login");
 
-  const { data: isManager } = await supabase.rpc("has_role", {
-    user_id: user.id,
-    allowed_roles: ["finance_manager", "administrator"],
-  });
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("roles(name)")
+    .eq("id", user.id)
+    .single();
 
-  const { data: canSubmit } = await supabase.rpc("has_role", {
-    user_id: user.id,
-    allowed_roles: [
-      "finance_manager",
-      "administrator",
-      "committee_head",
-      "president",
-    ],
-  });
+  const role = getRoleName(profile ?? { roles: [] });
+
+  if (!canAccessFinance(role)) {
+    redirect("/dashboard/home");
+  }
+
+  const canReview = canReviewFinance(role);
+  const canApprove = canApproveFinance(role);
+  const canSubmit = canSubmitFinance(role);
+  const canAudit = canAuditFinance(role);
 
   // Optimized Supabase selects avoiding unnecessary fields
   const { data: budgetReqs } = await supabase
@@ -81,9 +91,9 @@ export default async function FinanceDashboard() {
     <div className="p-8 max-w-6xl mx-auto space-y-6">
       <div className="flex flex-col items-start gap-2">
         <h1 className="text-3xl font-bold">Financial Management</h1>
-        {isManager && (
+        {canReview && (
           <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
-            Finance Manager Access
+            Finance Review Access
           </span>
         )}
       </div>
@@ -99,7 +109,8 @@ export default async function FinanceDashboard() {
         <TabsContent value="requests" className="space-y-6">
           <BudgetRequestsTab
             canSubmit={canSubmit}
-            isManager={isManager}
+            canReview={canReview}
+            canApprove={canApprove}
             budgetReqs={budgetReqs as BudgetRequest[] | null}
           />
         </TabsContent>
@@ -122,8 +133,8 @@ export default async function FinanceDashboard() {
 
         <TabsContent value="scards" className="space-y-6">
           <ScardsTab
-            canSubmit={canSubmit}
-            isManager={isManager}
+            canSubmit={canReview}
+            canAudit={canAudit}
             scards={scards as Scard[] | null}
           />
         </TabsContent>

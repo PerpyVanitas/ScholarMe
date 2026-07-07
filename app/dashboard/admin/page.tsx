@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { AdminCharts } from "@/features/admin/components/admin-charts";
+import { GOVERNANCE_ROLES, getRoleName, hasAnyRole } from "@/lib/utils/roles";
 
 export const metadata = {
   title: "Admin Dashboard | ScholarMe",
@@ -33,18 +34,16 @@ export default async function AdminDashboardPage() {
     redirect("/auth/login");
   }
 
-  // Verify admin role
+  // Verify governance/admin access for the dashboard overview.
   const { data: profile } = await supabase
     .from("profiles")
     .select("roles!inner(name)")
     .eq("id", session.user.id)
     .single();
 
-  const role = Array.isArray(profile?.roles)
-    ? profile?.roles[0]?.name
-    : (profile?.roles as any)?.name;
+  const role = getRoleName(profile ?? { roles: [] });
 
-  if (role !== "administrator" && role !== "super_admin") {
+  if (!hasAnyRole(role, GOVERNANCE_ROLES)) {
     redirect("/dashboard/home");
   }
 

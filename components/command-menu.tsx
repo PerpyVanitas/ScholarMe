@@ -2,26 +2,24 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { DialogProps } from "@radix-ui/react-dialog";
 import {
-  Calculator,
-  Calendar,
   CreditCard,
-  Settings,
-  Smile,
   User,
   LayoutDashboard,
-  Bell,
   BookOpen,
   Lightbulb,
   FolderOpen,
   Users,
-  MessageSquare,
-  Vote,
-  Trophy,
   ShieldAlert,
   Search,
 } from "lucide-react";
+import { useUser } from "@/lib/user-context";
+import {
+  canAccessFinance,
+  GOVERNANCE_ROLES,
+  TEAMWORK_ROLES,
+  hasAnyRole,
+} from "@/lib/utils/roles";
 
 import {
   CommandDialog,
@@ -37,6 +35,10 @@ import {
 export function CommandMenu() {
   const [open, setOpen] = React.useState(false);
   const router = useRouter();
+  const { role } = useUser();
+  const showFinance = canAccessFinance(role);
+  const showAdmin = hasAnyRole(role, GOVERNANCE_ROLES);
+  const showTeam = hasAnyRole(role, TEAMWORK_ROLES);
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -80,28 +82,73 @@ export function CommandMenu() {
               <span>Dashboard</span>
             </CommandItem>
             <CommandItem
-              onSelect={() => runCommand(() => router.push("/dashboard/tutors"))}
+              onSelect={() =>
+                runCommand(() => router.push("/dashboard/tutors"))
+              }
             >
               <Users className="mr-2 h-4 w-4" />
               <span>Find a Tutor</span>
             </CommandItem>
             <CommandItem
-              onSelect={() => runCommand(() => router.push("/dashboard/resources"))}
+              onSelect={() =>
+                runCommand(() => router.push("/dashboard/resources"))
+              }
             >
               <BookOpen className="mr-2 h-4 w-4" />
               <span>Resource Library</span>
             </CommandItem>
+            {showFinance && (
+              <CommandItem
+                onSelect={() =>
+                  runCommand(() => router.push("/dashboard/finance"))
+                }
+              >
+                <CreditCard className="mr-2 h-4 w-4" />
+                <span>Finance</span>
+              </CommandItem>
+            )}
           </CommandGroup>
+          {(showAdmin || showTeam) && (
+            <>
+              <CommandSeparator />
+              <CommandGroup heading="Management">
+                {showAdmin && (
+                  <CommandItem
+                    onSelect={() =>
+                      runCommand(() => router.push("/dashboard/admin"))
+                    }
+                  >
+                    <ShieldAlert className="mr-2 h-4 w-4" />
+                    <span>Admin Dashboard</span>
+                  </CommandItem>
+                )}
+                {showTeam && (
+                  <CommandItem
+                    onSelect={() =>
+                      runCommand(() => router.push("/dashboard/team"))
+                    }
+                  >
+                    <Users className="mr-2 h-4 w-4" />
+                    <span>Team Workspace</span>
+                  </CommandItem>
+                )}
+              </CommandGroup>
+            </>
+          )}
           <CommandSeparator />
           <CommandGroup heading="Study Tools">
             <CommandItem
-              onSelect={() => runCommand(() => router.push("/dashboard/quizzes"))}
+              onSelect={() =>
+                runCommand(() => router.push("/dashboard/quizzes"))
+              }
             >
               <Lightbulb className="mr-2 h-4 w-4" />
               <span>Study Quizzes</span>
             </CommandItem>
             <CommandItem
-              onSelect={() => runCommand(() => router.push("/dashboard/flashcards"))}
+              onSelect={() =>
+                runCommand(() => router.push("/dashboard/flashcards"))
+              }
             >
               <FolderOpen className="mr-2 h-4 w-4" />
               <span>Flashcards</span>
@@ -110,18 +157,13 @@ export function CommandMenu() {
           <CommandSeparator />
           <CommandGroup heading="Settings">
             <CommandItem
-              onSelect={() => runCommand(() => router.push("/dashboard/profile"))}
+              onSelect={() =>
+                runCommand(() => router.push("/dashboard/profile"))
+              }
             >
               <User className="mr-2 h-4 w-4" />
               <span>Profile</span>
               <CommandShortcut>⌘P</CommandShortcut>
-            </CommandItem>
-            <CommandItem
-              onSelect={() => runCommand(() => router.push("/dashboard/settings"))}
-            >
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Settings</span>
-              <CommandShortcut>⌘S</CommandShortcut>
             </CommandItem>
           </CommandGroup>
         </CommandList>

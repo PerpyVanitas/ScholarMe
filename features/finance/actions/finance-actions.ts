@@ -2,32 +2,43 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+  AUDIT_ROLES,
+  FINANCE_REVIEW_ROLES,
+  FINANCE_SUBMIT_ROLES,
+  PRESIDENT_APPROVAL_ROLES,
+} from "@/lib/utils/roles";
 
-/**
- * Checks if the user is a finance manager or administrator
- */
-async function checkFinanceManager(supabase: any, userId: string) {
+async function checkRole(
+  supabase: SupabaseClient,
+  userId: string,
+  allowedRoles: readonly string[],
+) {
   const { data } = await supabase.rpc("has_role", {
     user_id: userId,
-    allowed_roles: ["finance_manager", "administrator"],
+    allowed_roles: [...allowedRoles],
   });
   return data === true;
 }
 
-/**
- * Checks if the user can submit finance requests
- */
-async function checkCanSubmitFinance(supabase: any, userId: string) {
-  const { data } = await supabase.rpc("has_role", {
-    user_id: userId,
-    allowed_roles: [
-      "finance_manager",
-      "administrator",
-      "committee_head",
-      "president",
-    ],
-  });
-  return data === true;
+async function checkCanSubmitFinance(supabase: SupabaseClient, userId: string) {
+  return checkRole(supabase, userId, FINANCE_SUBMIT_ROLES);
+}
+
+async function checkCanReviewFinance(supabase: SupabaseClient, userId: string) {
+  return checkRole(supabase, userId, FINANCE_REVIEW_ROLES);
+}
+
+async function checkCanApproveFinance(
+  supabase: SupabaseClient,
+  userId: string,
+) {
+  return checkRole(supabase, userId, PRESIDENT_APPROVAL_ROLES);
+}
+
+async function checkCanAuditFinance(supabase: SupabaseClient, userId: string) {
+  return checkRole(supabase, userId, AUDIT_ROLES);
 }
 
 /**
@@ -38,7 +49,7 @@ export async function hasLateLiquidations(userId: string) {
   const { data, error } = await supabase
     .from("finance_liquidations")
     .select("id")
-    .eq("user_id", userId)
+    .eq("submitted_by", userId)
     .eq("is_late", true)
     .limit(1);
 
@@ -97,8 +108,9 @@ export async function createBudgetRequest(formData: FormData) {
     activity_title,
     objectives,
     amount,
+    breakdown,
     attachment_url: attachmentUrl,
-    user_id: user.id,
+    submitted_by: user.id,
     status,
   });
 
@@ -119,8 +131,32 @@ export async function updateBudgetRequestStatus(
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
 
-  const isManager = await checkFinanceManager(supabase, user.id);
-  if (!isManager) throw new Error("Unauthorized to approve requests");
+  const { data: existing, error: fetchError } = await supabase
+    .from("finance_budget_requests")
+    .select("status")
+    .eq("id", requestId)
+    .single();
+  if (fetchError || !existing) {
+    throw new Error(fetchError?.message || "Budget request not found");
+  }
+
+  const currentStatus = existing.status as string;
+  const canReview = await checkCanReviewFinance(supabase, user.id);
+  const canApprove = await checkCanApproveFinance(supabase, user.id);
+  const allowed =
+    (currentStatus === "pending" &&
+      ["finance_review", "rejected"].includes(status) &&
+      canReview) ||
+    (currentStatus === "finance_review" &&
+      ["president_approved", "rejected"].includes(status) &&
+      canApprove) ||
+    (currentStatus === "president_approved" &&
+      status === "released" &&
+      canReview);
+
+  if (!allowed) {
+    throw new Error("Unauthorized finance status transition");
+  }
 
   const { error } = await supabase
     .from("finance_budget_requests")
@@ -149,7 +185,7 @@ export async function submitBudgetRequestForReview(requestId: string) {
     .update({ status: "pending" })
     .eq("id", requestId)
     .eq("status", "draft")
-    .eq("user_id", user.id);
+    .eq("submitted_by", user.id);
 
   if (error) throw new Error(error.message);
   revalidatePath("/dashboard/finance");
@@ -190,7 +226,7 @@ export async function createPettyCash(formData: FormData) {
   const { data: recentRequests } = await supabase
     .from("finance_petty_cash")
     .select("amount")
-    .eq("user_id", user.id)
+    .eq("submitted_by", user.id)
     .gte("created_at", yesterday.toISOString());
 
   const recentTotal =
@@ -209,7 +245,7 @@ export async function createPettyCash(formData: FormData) {
     amount,
     justification,
     attachment_url: attachmentUrl,
-    user_id: user.id,
+    submitted_by: user.id,
     status,
   });
 
@@ -227,8 +263,8 @@ export async function approvePettyCash(
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
 
-  const isManager = await checkFinanceManager(supabase, user.id);
-  if (!isManager) throw new Error("Unauthorized");
+  const canReview = await checkCanReviewFinance(supabase, user.id);
+  if (!canReview) throw new Error("Unauthorized");
 
   const { error } = await supabase
     .from("finance_petty_cash")
@@ -259,7 +295,7 @@ export async function submitPettyCashForReview(id: string) {
     .update({ status: "pending" })
     .eq("id", id)
     .eq("status", "draft")
-    .eq("user_id", user.id);
+    .eq("submitted_by", user.id);
 
   if (error) throw new Error(error.message);
   revalidatePath("/dashboard/finance");
@@ -326,10 +362,10 @@ export async function submitLiquidation(formData: FormData) {
   }
 
   const { error } = await supabase.from("finance_liquidations").insert({
-    budget_request_id: requestId,
+    request_id: requestId,
     receipt_urls: receiptUrls,
     proof_of_payment_urls: proofUrls,
-    user_id: user.id,
+    submitted_by: user.id,
     is_late: isLate,
   });
 
@@ -364,8 +400,8 @@ export async function saveScards(formData: FormData) {
     attachmentUrl = filePath;
   }
 
-  const canSubmit = await checkCanSubmitFinance(supabase, user.id);
-  if (!canSubmit) throw new Error("Unauthorized to submit SCARDS");
+  const canReview = await checkCanReviewFinance(supabase, user.id);
+  if (!canReview) throw new Error("Unauthorized to prepare SCARDS");
 
   const balance = receipts - disbursements;
 
@@ -423,12 +459,12 @@ export async function submitScardsForReview(scardId: string) {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
 
-  const canSubmit = await checkCanSubmitFinance(supabase, user.id);
-  if (!canSubmit) throw new Error("Unauthorized");
+  const canReview = await checkCanReviewFinance(supabase, user.id);
+  if (!canReview) throw new Error("Unauthorized");
 
   const { error } = await supabase
     .from("finance_scards")
-    .update({ status: "submitted" })
+    .update({ status: "auditor_review" })
     .eq("id", scardId)
     .eq("status", "draft"); // Only draft can be submitted
 
@@ -446,8 +482,8 @@ export async function updateScardsReport(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
 
-  const canSubmit = await checkCanSubmitFinance(supabase, user.id);
-  if (!canSubmit) throw new Error("Unauthorized to update SCARDS");
+  const canReview = await checkCanReviewFinance(supabase, user.id);
+  if (!canReview) throw new Error("Unauthorized to update SCARDS");
 
   const scardId = formData.get("scard_id") as string;
   const receipts = parseFloat(formData.get("receipts_total") as string) || 0;
@@ -491,8 +527,8 @@ export async function cosignScards(scardId: string) {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
 
-  const isManager = await checkFinanceManager(supabase, user.id);
-  if (!isManager) throw new Error("Unauthorized to co-sign");
+  const canAudit = await checkCanAuditFinance(supabase, user.id);
+  if (!canAudit) throw new Error("Unauthorized to co-sign");
 
   const { error } = await supabase
     .from("finance_scards")

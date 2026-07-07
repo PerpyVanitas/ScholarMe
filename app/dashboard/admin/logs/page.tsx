@@ -19,6 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ShieldAlert } from "lucide-react";
 import { ExportCsvButton } from "@/components/export-csv-button";
+import { canAccessAdminRoute, getRoleName } from "@/lib/utils/roles";
 
 export const dynamic = "force-dynamic";
 
@@ -33,13 +34,15 @@ export default async function SystemLogsPage() {
     redirect("/auth/login");
   }
 
-  // Optional: check admin role (assuming only super_admin has access to this based on sidebar)
-  const { data: hasRole } = await supabase.rpc("has_role", {
-    user_id: user.id,
-    allowed_roles: ["super_admin", "administrator"],
-  });
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("roles(name)")
+    .eq("id", user.id)
+    .single();
 
-  if (!hasRole) {
+  const roleName = getRoleName(profile ?? { roles: [] });
+
+  if (!canAccessAdminRoute(roleName, "/dashboard/admin/logs")) {
     redirect("/dashboard");
   }
 

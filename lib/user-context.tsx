@@ -12,7 +12,7 @@ import { createClient } from "@/lib/supabase/client";
 import { type RealtimeChannel } from "@supabase/supabase-js";
 import type { Profile, UserRole } from "@/lib/types";
 import { DEMO_USERS, getDemoUserFromCookie } from "@/scripts/demo";
-import { resolveRoleId } from "@/features/profiles/api/db";
+import { resolveRoleId, roleNameFromUser } from "@/features/profiles/api/db";
 import { toast } from "sonner";
 
 interface UserContextType {
@@ -66,18 +66,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       } else {
         // Profile not found in the database.
         // 1. Determine fallback role
-        let fallbackRole: UserRole = "learner";
-        if (
-          user.user_metadata?.role_name === "administrator" ||
-          user.user_metadata?.role === "administrator"
-        ) {
-          fallbackRole = "administrator";
-        } else if (
-          user.user_metadata?.role_name === "tutor" ||
-          user.user_metadata?.role === "tutor"
-        ) {
-          fallbackRole = "tutor";
-        }
+        const fallbackRole: UserRole = roleNameFromUser(user);
 
         let roleId: string;
         try {

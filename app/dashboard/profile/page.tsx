@@ -59,6 +59,7 @@ import {
 import { useUser } from "@/lib/user-context";
 import { QrIdCard } from "@/features/auth/components/qr-id-card";
 import { getRoleName } from "@/lib/utils/roles";
+import { roleNameFromUser } from "@/features/profiles/api/db";
 
 // Import modular components
 import { ProfileEditDialog } from "./components/profile-edit-dialog";
@@ -188,18 +189,7 @@ export default function ProfilePage() {
           }
         }
 
-        let fallbackRole = "learner";
-        if (
-          user.user_metadata?.role_name === "administrator" ||
-          user.user_metadata?.role === "administrator"
-        ) {
-          fallbackRole = "administrator";
-        } else if (
-          user.user_metadata?.role_name === "tutor" ||
-          user.user_metadata?.role === "tutor"
-        ) {
-          fallbackRole = "tutor";
-        }
+        const fallbackRole = roleNameFromUser(user);
 
         const fullNameStr =
           user.user_metadata?.full_name || user.email?.split("@")[0] || "User";

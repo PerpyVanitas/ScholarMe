@@ -21,11 +21,11 @@ import {
 
 interface Props {
   canSubmit: boolean;
-  isManager: boolean;
+  canAudit: boolean;
   scards: Scard[] | null;
 }
 
-export function ScardsTab({ canSubmit, isManager, scards }: Props) {
+export function ScardsTab({ canSubmit, canAudit, scards }: Props) {
   const handleExportPdf = (report: Scard) => {
     // A simple client-side PDF generation logic using window.print()
     const printWindow = window.open("", "", "height=600,width=800");
@@ -221,7 +221,7 @@ export function ScardsTab({ canSubmit, isManager, scards }: Props) {
                     className={`px-2 py-1 rounded text-xs uppercase tracking-wider font-semibold ${
                       report.status === "cosigned"
                         ? "bg-primary/10 text-primary"
-                        : report.status === "submitted"
+                        : report.status === "auditor_review"
                           ? "bg-blue-500/10 text-blue-600"
                           : "bg-muted text-muted-foreground"
                     }`}
@@ -267,7 +267,7 @@ export function ScardsTab({ canSubmit, isManager, scards }: Props) {
                         </Button>
                       </form>
                     )}
-                    {isManager && report.status === "submitted" && (
+                    {canAudit && report.status === "auditor_review" && (
                       <form
                         action={async () => {
                           "use server";

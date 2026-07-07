@@ -3,9 +3,12 @@
 import { Plus, BookOpen, Clock, Calendar } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
+import { useUser } from "@/lib/user-context";
 
 export function MobileFab() {
   const [isOpen, setIsOpen] = useState(false);
+  const { role } = useUser();
+  const isTutor = role === "tutor";
 
   return (
     <div className="fixed bottom-20 right-6 z-50 md:hidden">
@@ -20,21 +23,23 @@ export function MobileFab() {
             <Calendar className="h-4 w-4" />
           </Link>
           <Link
-            href="/dashboard/study/flashcards"
+            href="/dashboard/flashcards"
             className="flex items-center gap-2 bg-background border shadow-md rounded-full px-4 py-2 text-sm font-medium hover:bg-muted"
             onClick={() => setIsOpen(false)}
           >
             Study Deck
             <BookOpen className="h-4 w-4" />
           </Link>
-          <Link
-            href="/dashboard/timesheet"
-            className="flex items-center gap-2 bg-background border shadow-md rounded-full px-4 py-2 text-sm font-medium hover:bg-muted"
-            onClick={() => setIsOpen(false)}
-          >
-            Timesheet
-            <Clock className="h-4 w-4" />
-          </Link>
+          {isTutor && (
+            <Link
+              href="/dashboard/timesheet"
+              className="flex items-center gap-2 bg-background border shadow-md rounded-full px-4 py-2 text-sm font-medium hover:bg-muted"
+              onClick={() => setIsOpen(false)}
+            >
+              Timesheet
+              <Clock className="h-4 w-4" />
+            </Link>
+          )}
         </div>
       )}
       <button

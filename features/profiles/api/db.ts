@@ -1,4 +1,6 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
+import type { UserRole } from "@/lib/types";
+import { isKnownRole } from "@/lib/utils/roles";
 
 export const PROFILE_WITH_ROLE_SELECT = "*, roles(name)" as const;
 
@@ -16,10 +18,7 @@ export async function resolveRoleId(
   supabase: SupabaseClient,
   roleName: string,
 ): Promise<string> {
-  const allowed = ["learner", "tutor", "administrator"] as const;
-  const safeName = allowed.includes(roleName as (typeof allowed)[number])
-    ? roleName
-    : "learner";
+  const safeName = isKnownRole(roleName) ? roleName : "learner";
 
   const { data: roleRow } = await supabase
     .from("roles")
@@ -41,18 +40,12 @@ export async function resolveRoleId(
   return learnerRow.id;
 }
 
-function roleNameFromUser(user: User): string {
-  if (
-    user.user_metadata?.role_name === "administrator" ||
-    user.user_metadata?.role === "administrator"
-  ) {
-    return "administrator";
-  }
-  if (
-    user.user_metadata?.role_name === "tutor" ||
-    user.user_metadata?.role === "tutor"
-  ) {
-    return "tutor";
+export function roleNameFromUser(user: User): UserRole {
+  const candidate =
+    (user.user_metadata?.role_name as string | undefined) ||
+    (user.user_metadata?.role as string | undefined);
+  if (isKnownRole(candidate)) {
+    return candidate;
   }
   return "learner";
 }
