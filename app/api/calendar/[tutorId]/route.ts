@@ -1,13 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic"; // Always fetch fresh data
 
 export async function GET(
-  request: Request,
-  { params }: { params: { tutorId: string } },
+  request: NextRequest,
+  context: { params: Promise<{ tutorId: string }> },
 ) {
-  const tutorId = params.tutorId;
+  const { tutorId } = await context.params;
 
   if (!tutorId) {
     return new NextResponse("Tutor ID is required", { status: 400 });

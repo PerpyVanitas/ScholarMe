@@ -20,7 +20,6 @@ import {
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { createClient } from "@/lib/supabase/client";
-import { validateAdmin } from "@/lib/auth-utils";
 import { useRouter } from "next/navigation";
 
 interface VerificationRequest {
@@ -50,8 +49,32 @@ export default function AdminVerificationsPage() {
   }, []);
 
   const checkAdminAndFetch = async () => {
-    const { isAdmin } = await validateAdmin();
-    if (!isAdmin) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      router.push("/auth/signin");
+      return;
+    }
+
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("roles(name)")
+      .eq("id", user.id)
+      .single();
+
+    const isAdmin = Array.isArray(profile?.roles)
+      ? profile.roles.some(
+          (r: { name: string }) =>
+            r.name === "administrator" ||
+            r.name === "president" ||
+            r.name === "super_admin",
+        )
+      : ["administrator", "president", "super_admin"].includes(
+          (profile?.roles as { name: string } | undefined)?.name || "",
+        );
+
+    if (error || !isAdmin) {
       router.push("/dashboard/home");
       return;
     }

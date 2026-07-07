@@ -1,7 +1,6 @@
 /** POST /api/sessions -- book a new tutoring session (learner_id = current user). */
 import { createClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
-import { v4 as uuidv4 } from "uuid";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -81,7 +80,7 @@ export async function POST(request: Request) {
 
   // Handle recurring logic (e.g., next 4 weeks)
   const numWeeks = is_recurring ? 4 : 1;
-  const recurring_id = is_recurring ? uuidv4() : null;
+  const recurring_id = is_recurring ? crypto.randomUUID() : null;
 
   const sessionsToInsert = [];
   const baseDate = new Date(scheduled_date);
