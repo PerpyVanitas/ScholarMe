@@ -97,44 +97,61 @@ ALTER TABLE public.team_schedules ENABLE ROW LEVEL SECURITY;
 -- 4. RLS Policies
 
 -- For budget requests
+DROP POLICY IF EXISTS "Anyone can view budget requests" ON public.finance_budget_requests;
 CREATE POLICY "Anyone can view budget requests" ON public.finance_budget_requests FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "Committee Heads can insert requests" ON public.finance_budget_requests;
 CREATE POLICY "Committee Heads can insert requests" ON public.finance_budget_requests FOR INSERT TO authenticated WITH CHECK (auth.uid() = submitted_by);
+DROP POLICY IF EXISTS "Finance Managers and submitters can update requests" ON public.finance_budget_requests;
 CREATE POLICY "Finance Managers and submitters can update requests" ON public.finance_budget_requests FOR UPDATE TO authenticated USING (
     auth.uid() = submitted_by OR public.has_role(auth.uid(), ARRAY['finance_manager', 'administrator'])
 );
 
 -- For petty cash
+DROP POLICY IF EXISTS "Anyone can view petty cash" ON public.finance_petty_cash;
 CREATE POLICY "Anyone can view petty cash" ON public.finance_petty_cash FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "Members can insert petty cash" ON public.finance_petty_cash;
 CREATE POLICY "Members can insert petty cash" ON public.finance_petty_cash FOR INSERT TO authenticated WITH CHECK (auth.uid() = submitted_by);
+DROP POLICY IF EXISTS "Finance Managers can update petty cash" ON public.finance_petty_cash;
 CREATE POLICY "Finance Managers can update petty cash" ON public.finance_petty_cash FOR UPDATE TO authenticated USING (
     public.has_role(auth.uid(), ARRAY['finance_manager', 'administrator'])
 );
 
 -- For liquidations
+DROP POLICY IF EXISTS "Anyone can view liquidations" ON public.finance_liquidations;
 CREATE POLICY "Anyone can view liquidations" ON public.finance_liquidations FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "Members can insert liquidations" ON public.finance_liquidations;
 CREATE POLICY "Members can insert liquidations" ON public.finance_liquidations FOR INSERT TO authenticated WITH CHECK (auth.uid() = submitted_by);
+DROP POLICY IF EXISTS "Finance Managers can update liquidations" ON public.finance_liquidations;
 CREATE POLICY "Finance Managers can update liquidations" ON public.finance_liquidations FOR UPDATE TO authenticated USING (
     public.has_role(auth.uid(), ARRAY['finance_manager', 'administrator'])
 );
 
 -- For SCARDS
+DROP POLICY IF EXISTS "Anyone can view SCARDS" ON public.finance_scards;
 CREATE POLICY "Anyone can view SCARDS" ON public.finance_scards FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "Finance Managers can manage SCARDS" ON public.finance_scards;
 CREATE POLICY "Finance Managers can manage SCARDS" ON public.finance_scards FOR ALL TO authenticated USING (
     public.has_role(auth.uid(), ARRAY['finance_manager', 'administrator'])
 );
 
 -- For Audit Findings
+DROP POLICY IF EXISTS "Anyone can view audit findings" ON public.finance_audit_findings;
 CREATE POLICY "Anyone can view audit findings" ON public.finance_audit_findings FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "Finance Managers can manage audit findings" ON public.finance_audit_findings;
 CREATE POLICY "Finance Managers can manage audit findings" ON public.finance_audit_findings FOR ALL TO authenticated USING (
     public.has_role(auth.uid(), ARRAY['finance_manager', 'administrator'])
 );
 
 -- For Team Tasks
+DROP POLICY IF EXISTS "Anyone can view team tasks" ON public.team_tasks;
 CREATE POLICY "Anyone can view team tasks" ON public.team_tasks FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "Anyone can manage team tasks" ON public.team_tasks;
 CREATE POLICY "Anyone can manage team tasks" ON public.team_tasks FOR ALL TO authenticated USING (true);
 
 -- For Team Schedules
+DROP POLICY IF EXISTS "Anyone can view team schedules" ON public.team_schedules;
 CREATE POLICY "Anyone can view team schedules" ON public.team_schedules FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "Members can manage their own schedules" ON public.team_schedules;
 CREATE POLICY "Members can manage their own schedules" ON public.team_schedules FOR ALL TO authenticated USING (
     auth.uid() = member_id OR public.has_role(auth.uid(), ARRAY['finance_manager', 'administrator'])
 );
@@ -143,6 +160,8 @@ CREATE POLICY "Members can manage their own schedules" ON public.team_schedules 
 INSERT INTO storage.buckets (id, name, public) VALUES ('finance_attachments', 'finance_attachments', false) ON CONFLICT (id) DO NOTHING;
 
 -- Storage Policies
+DROP POLICY IF EXISTS "Anyone can view finance attachments" ON storage.objects;
 CREATE POLICY "Anyone can view finance attachments" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'finance_attachments');
+DROP POLICY IF EXISTS "Authenticated users can upload finance attachments" ON storage.objects;
 CREATE POLICY "Authenticated users can upload finance attachments" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'finance_attachments');
 
