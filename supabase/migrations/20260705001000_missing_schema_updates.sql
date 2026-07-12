@@ -73,17 +73,27 @@ ALTER TABLE public.finance_liquidations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.finance_scards ENABLE ROW LEVEL SECURITY;
 
 -- Temporary open policies for development (restrict to authenticated users)
+DROP POLICY IF EXISTS "Allow read for authenticated" ON public.finance_budget_requests;
 CREATE POLICY "Allow read for authenticated" ON public.finance_budget_requests FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Allow insert for authenticated" ON public.finance_budget_requests FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Allow insert for authenticated" ON public.finance_budget_requests;
+CREATE POLICY "Allow insert for authenticated" ON public.finance_budget_requests FOR INSERT TO authenticated WITH CHECK (auth.uid() = submitted_by);
+DROP POLICY IF EXISTS "Allow update for authenticated" ON public.finance_budget_requests;
 CREATE POLICY "Allow update for authenticated" ON public.finance_budget_requests FOR UPDATE TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Allow read for authenticated" ON public.finance_petty_cash;
 CREATE POLICY "Allow read for authenticated" ON public.finance_petty_cash FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Allow insert for authenticated" ON public.finance_petty_cash FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Allow insert for authenticated" ON public.finance_petty_cash;
+CREATE POLICY "Allow insert for authenticated" ON public.finance_petty_cash FOR INSERT TO authenticated WITH CHECK (auth.uid() = submitted_by);
+DROP POLICY IF EXISTS "Allow update for authenticated" ON public.finance_petty_cash;
 CREATE POLICY "Allow update for authenticated" ON public.finance_petty_cash FOR UPDATE TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Allow read for authenticated" ON public.finance_liquidations;
 CREATE POLICY "Allow read for authenticated" ON public.finance_liquidations FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Allow insert for authenticated" ON public.finance_liquidations FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Allow insert for authenticated" ON public.finance_liquidations;
+CREATE POLICY "Allow insert for authenticated" ON public.finance_liquidations FOR INSERT TO authenticated WITH CHECK (auth.uid() = submitted_by);
 
+DROP POLICY IF EXISTS "Allow read for authenticated" ON public.finance_scards;
 CREATE POLICY "Allow read for authenticated" ON public.finance_scards FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "Allow all mutations for authenticated" ON public.finance_scards;
 CREATE POLICY "Allow all mutations for authenticated" ON public.finance_scards FOR ALL TO authenticated USING (true);
 
