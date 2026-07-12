@@ -12,6 +12,7 @@ ALTER TABLE public.polls
 DROP POLICY IF EXISTS "polls_public_read" ON public.polls;
 
 -- Regular users only see non-hidden polls
+DROP POLICY IF EXISTS "polls_authenticated_read" ON public.polls;
 CREATE POLICY "polls_authenticated_read" ON public.polls
   FOR SELECT USING (
     -- Admins and super_admins see everything (including hidden)
