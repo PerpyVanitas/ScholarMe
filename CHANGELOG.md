@@ -1,3 +1,23 @@
+## [2026-07-13] - Implementation Cycle: UX/QA fixes & Visibility Updates
+
+### Added
+
+- **Resource Visibility System**: Added `is_public` toggle to the Resource Upload sheet. Private resources are now visually locked and restricted from unauthenticated or unauthorized users, improving data privacy.
+- **Mastery Verification System**: Tutors can now upload physical documents (transcripts/certificates) to Supabase Storage to verify their subject mastery. Admins can review these documents via generated signed URLs and approve them.
+
+### Changed
+
+- **Unified Sidebar Navigation**: Re-engineered the Sidebar to dynamically calculate `defaultOpen` states based on the active path, improving UX. Unified Tutor & Admin tools under the `TUTOR_ROLES` access scope.
+- **Team Workspace Redesign**: Upgraded the Team Workspace (`/dashboard/team`) to use a responsive, Kanban-style board layout. Opened access to all tutoring-related roles (Tutors, Faculty Advisers, Officers).
+- **System Logs Rewrite**: Replaced the previous `logs/page.tsx` with a fully interactive client component, featuring real-time log filtering and a toggle to "Load All" history.
+
+### Fixed
+
+- **Avatar Storage Pathing**: Corrected the avatar storage URL logic to properly route user uploads to the `resources/avatars/` bucket prefix.
+- **Profile Setup Completion**: Added `year_level` and `degree_program` fields to the Learner Profile setup flow, ensuring onboarding completeness.
+- **Impersonation Fallback**: Implemented a fallback manual-copy dialog for the Impersonation feature in environments where the Clipboard API is blocked.
+- **Removed Redundant Routes**: Deleted the deprecated `/dashboard/admin/roles` route and sidebar link, as role management is now handled inline on the Users table.
+
 ## [2026-07-12] - QA Audit & Production Build Fixes
 
 ### Fixed

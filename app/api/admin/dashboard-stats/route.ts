@@ -1,6 +1,6 @@
-import { createAdminClient } from "@/lib/supabase/create-client";
+import { createAdminClient, createClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
-import { isAdminRole } from "@/lib/utils/roles";
+import { GOVERNANCE_ROLES, hasAnyRole } from "@/lib/utils/roles";
 
 export async function GET() {
   try {
@@ -23,10 +23,10 @@ export async function GET() {
 
     const roleName = Array.isArray(profile?.roles)
       ? profile.roles[0]?.name
-      : (profile?.roles as any)?.name;
-    const isAdmin = isAdminRole(roleName as string);
+      : (profile?.roles as { name: string } | undefined)?.name;
+    const isAuthorized = hasAnyRole(roleName as string, GOVERNANCE_ROLES);
 
-    if (!profile || !isAdmin) {
+    if (!profile || !isAuthorized) {
       return NextResponse.json(
         { error: "Access denied - admin only" },
         { status: 403 },

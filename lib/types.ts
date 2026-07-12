@@ -1,17 +1,17 @@
 /** Central type definitions -- each interface mirrors a Supabase table. */
 
 export type UserRole =
-  | "administrator"
+  | "president"
+  | "vice_president"
+  | "secretary"
+  | "treasurer"
+  | "auditor"
+  | "committee_head"
+  | "assistant_committee_head"
   | "tutor"
   | "learner"
-  | "finance_manager"
-  | "auditor"
-  | "president"
-  | "treasurer"
-  | "committee_head"
-  | "faculty_adviser"
-  | "super_admin"
-  | "officer";
+  | "administrator"
+  | "super_admin";
 
 export type DesignationType =
   "member" | "esas_scholar" | "officer" | "administrator" | "super_admin";
@@ -56,6 +56,10 @@ export interface Profile {
   academic_year_joined?: string | null;
   unique_id_number?: string | null;
   is_card_issued?: boolean | null;
+  membership_classification?: "learner" | "regular_member" | "esas_scholar";
+  committee?: string | null;
+  service_hours_balance?: number;
+  role_expires_at?: string | null;
   pronouns?: string | null;
   status_message?: string | null;
   social_links?: Record<string, string> | null;
@@ -63,29 +67,8 @@ export interface Profile {
   referred_by?: string | null;
   dashboard_layout?: unknown;
   created_at: string;
-  role_expires_at?: string | null;
   roles?: Array<{ id: string; name: string }>;
   hs_designations?: HsDesignation[];
-}
-
-export interface BudgetApproval {
-  id: string;
-  request_id: string;
-  approver_id: string;
-  status: string;
-  comments: string;
-  step_number: number;
-  created_at: string;
-  profiles: Profile;
-}
-
-export interface UserStreak {
-  user_id: string;
-  current_streak: number;
-  longest_streak: number;
-  last_login_date: string;
-  created_at: string;
-  updated_at: string;
 }
 
 export interface UserBadge {
@@ -119,16 +102,6 @@ export interface ForumReply {
   profiles?: Profile;
 }
 
-export interface AuthCard {
-  id: string;
-  user_id: string;
-  card_id: string;
-  pin: string;
-  status: "active" | "revoked";
-  issued_at: string;
-  profiles?: Profile;
-}
-
 export interface Specialization {
   id: string;
   name: string;
@@ -153,6 +126,7 @@ export interface Tutor {
   created_at: string;
   profiles: Profile;
   tutor_specializations: { specializations: Specialization }[];
+  attendance_logs?: AttendanceLog[];
 }
 
 export interface TutorAvailability {
@@ -193,18 +167,6 @@ export interface Session {
   session_ratings?: SessionRating[];
 }
 
-export interface TutorReview {
-  id: string;
-  reviewer_id: string;
-  tutor_id: string;
-  session_id?: string | null;
-  rating: number;
-  feedback: string;
-  created_at: string;
-  reviewer?: Tutor & { profiles?: Profile };
-  tutor?: Tutor & { profiles?: Profile };
-}
-
 export interface SessionRating {
   id: string;
   session_id: string;
@@ -212,17 +174,6 @@ export interface SessionRating {
   rating: number;
   feedback: string | null;
   created_at: string;
-}
-
-export interface Repository {
-  id: string;
-  owner_id: string;
-  title: string;
-  description: string | null;
-  access_role: "all" | "tutor" | "admin";
-  created_at: string;
-  profiles?: Profile;
-  resources?: Resource[];
 }
 
 export interface Resource {
@@ -257,16 +208,6 @@ export interface Timesheet {
   notes: string | null;
   created_at: string;
   tutors?: Tutor & { profiles?: Profile };
-}
-
-export interface AnalyticsLog {
-  id: string;
-  user_id: string | null;
-  action: string;
-  entity_type: string | null;
-  entity_id: string | null;
-  metadata: Record<string, unknown> | null;
-  created_at: string;
 }
 
 export const DAYS_OF_WEEK = [
@@ -305,23 +246,6 @@ export interface PollOption {
   display_order: number;
   created_at: string;
   vote_count?: number;
-}
-
-export interface UserVote {
-  id: string;
-  poll_id: string;
-  option_id: string;
-  user_id: string;
-  created_at: string;
-}
-
-export interface DeviceToken {
-  id: string;
-  user_id: string;
-  token: string;
-  platform: "ios" | "android" | "web";
-  created_at: string;
-  updated_at: string;
 }
 
 export interface Conversation {
@@ -376,14 +300,6 @@ export interface FinanceVendor {
   created_at: string;
 }
 
-export interface FinanceConfig {
-  id: string;
-  semester_budget: number;
-  academic_year: string;
-  created_at: string;
-  updated_at: string;
-}
-
 export type FinanceRequestStatus =
   "pending" | "finance_review" | "president_approved" | "released" | "rejected";
 
@@ -405,40 +321,6 @@ export interface FinanceBudgetRequest {
 
 export type PettyCashStatus = "pending" | "approved" | "rejected";
 
-export interface FinancePettyCash {
-  id: string;
-  amount: number;
-  justification: string;
-  submitted_by: string;
-  status: PettyCashStatus;
-  approved_by: string | null;
-  linked_request_id: string | null;
-  attachment_url: string | null;
-  vendor_id?: string | null;
-  created_at: string;
-  updated_at: string;
-  profiles?: Profile;
-  finance_vendors?: FinanceVendor;
-}
-
-export interface FinanceLiquidation {
-  id: string;
-  request_id: string;
-  receipt_urls: string[];
-  proof_of_payment_urls: string[];
-  submitted_by: string;
-  submitted_at: string;
-  is_late: boolean;
-  returned_amount: number;
-  created_at: string;
-  updated_at: string;
-  finance_budget_requests?: {
-    activity_title: string;
-    amount?: number;
-  };
-  profiles?: Profile;
-}
-
 export type ScardsStatus = "draft" | "auditor_review" | "cosigned";
 
 export interface FinanceScards {
@@ -457,42 +339,7 @@ export interface FinanceScards {
   cosigner?: Profile;
 }
 
-export interface FinanceAuditFinding {
-  id: string;
-  scards_id: string | null;
-  auditor_id: string | null;
-  issue_type: string;
-  description: string;
-  resolved: boolean;
-  created_at: string;
-  updated_at: string;
-  finance_scards?: FinanceScards;
-  auditor?: Profile;
-}
-
 export type TeamTaskStatus = "todo" | "in_progress" | "review" | "done";
-
-export interface TeamTask {
-  id: string;
-  committee_id: string | null;
-  deliverable: string;
-  deadline: string | null;
-  assignee_id: string | null;
-  status: TeamTaskStatus;
-  created_at: string;
-  updated_at: string;
-  assignee?: Profile;
-}
-
-export interface TeamSchedule {
-  id: string;
-  member_id: string;
-  date: string;
-  activity: string;
-  created_at: string;
-  updated_at: string;
-  profiles?: Profile;
-}
 
 export interface Announcement {
   id: string;
@@ -562,18 +409,6 @@ export interface ResourceCheckout {
   profile?: Profile;
 }
 
-export interface SessionWaitlist {
-  id: string;
-  tutor_id: string;
-  learner_id: string;
-  requested_date: string;
-  status: "waiting" | "notified" | "fulfilled" | "cancelled";
-  created_at: string;
-  updated_at: string;
-  tutor?: Tutor;
-  learner?: Profile;
-}
-
 export interface RoadmapItem {
   id: string;
   title: string;
@@ -611,4 +446,15 @@ export interface SupportMessage {
   content: string;
   created_at: string;
   profiles?: Profile;
+}
+
+export interface AttendanceLog {
+  id: string;
+  tutor_id: string;
+  user_id: string;
+  clock_in: string;
+  clock_out?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  location_verified?: boolean;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useUser } from "@/lib/user-context";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -103,6 +103,31 @@ export default function VotingPage() {
   const isAdmin = role === "administrator" || role === "super_admin";
   const isSuperAdmin = role === "super_admin";
 
+  const loadPollResults = useCallback(
+    async (pollId: string, silent = false) => {
+      if (!silent) {
+        setLoadingResults(true);
+        setShowDetailDialog(true);
+      }
+      try {
+        const res = await fetch(`/api/polls/${pollId}/results`);
+        const data = await res.json();
+        if (data.success) {
+          setSelectedPoll(data.data);
+          if (!silent) setSelectedOption("");
+        }
+      } catch {
+        if (!silent) {
+          toast.error("Failed to load poll results");
+          setShowDetailDialog(false);
+        }
+      } finally {
+        if (!silent) setLoadingResults(false);
+      }
+    },
+    [],
+  );
+
   useEffect(() => {
     loadPolls();
     return () => {
@@ -144,8 +169,7 @@ export default function VotingPage() {
       supabase.removeChannel(channel);
       realtimeChannelRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showDetailDialog, selectedPoll?.poll.id]);
+  }, [showDetailDialog, selectedPoll?.poll.id, loadPollResults]);
 
   async function loadPolls() {
     setLoading(true);
@@ -163,28 +187,6 @@ export default function VotingPage() {
       toast.error("Failed to load polls");
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function loadPollResults(pollId: string, silent = false) {
-    if (!silent) {
-      setLoadingResults(true);
-      setShowDetailDialog(true);
-    }
-    try {
-      const res = await fetch(`/api/polls/${pollId}/results`);
-      const data = await res.json();
-      if (data.success) {
-        setSelectedPoll(data.data);
-        if (!silent) setSelectedOption("");
-      }
-    } catch {
-      if (!silent) {
-        toast.error("Failed to load poll results");
-        setShowDetailDialog(false);
-      }
-    } finally {
-      if (!silent) setLoadingResults(false);
     }
   }
 

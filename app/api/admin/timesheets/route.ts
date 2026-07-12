@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/create-client";
-import { isAdminRole } from "@/lib/utils/roles";
+import { GOVERNANCE_ROLES, hasAnyRole } from "@/lib/utils/roles";
 
 // Helper to fetch active timesheet collection period
 async function getActivePeriod(supabase: any) {
@@ -33,10 +33,10 @@ export async function GET(req: NextRequest) {
 
   const roleName = Array.isArray(profile?.roles)
     ? profile.roles[0]?.name
-    : (profile?.roles as any)?.name;
-  const isAdmin = isAdminRole(roleName as string);
+    : (profile?.roles as { name: string } | undefined)?.name;
+  const isAuthorized = hasAnyRole(roleName as string, GOVERNANCE_ROLES);
 
-  if (!profile || !isAdmin) {
+  if (!profile || !isAuthorized) {
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
 

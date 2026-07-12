@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
       return new NextResponse("File not found", { status: 404 });
     }
     return NextResponse.redirect(signedUrl);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching attachment:", error);
     return new NextResponse("Unauthorized or file not found", { status: 401 });
   }

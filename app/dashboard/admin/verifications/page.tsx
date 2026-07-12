@@ -91,6 +91,7 @@ export default function AdminVerificationsPage() {
         specialization_id,
         verification_status,
         verification_document_url,
+        submitted_at,
         tutors!inner(
           profiles(first_name, last_name, email)
         ),
@@ -98,7 +99,8 @@ export default function AdminVerificationsPage() {
       `,
       )
       .eq("verification_status", "pending")
-      .order("tutor_id", { ascending: true });
+      .not("submitted_at", "is", null)
+      .order("submitted_at", { ascending: true });
 
     if (error) {
       console.error("Failed to fetch verifications:", error);
@@ -114,6 +116,7 @@ export default function AdminVerificationsPage() {
       specialization_id: row.specialization_id,
       verification_status: row.verification_status,
       verification_document_url: row.verification_document_url,
+      submitted_at: row.submitted_at,
       tutor: row.tutors?.profiles ?? {
         first_name: "",
         last_name: "",
@@ -204,16 +207,40 @@ export default function AdminVerificationsPage() {
                       variant="link"
                       size="sm"
                       className="h-auto p-0 text-blue-500"
-                      asChild
+                      onClick={async () => {
+                        const docUrl = req.verification_document_url;
+                        if (!docUrl) {
+                          toast.error("No document uploaded for this request.");
+                          return;
+                        }
+                        // If it's already a full URL, open directly
+                        if (
+                          docUrl.startsWith("http://") ||
+                          docUrl.startsWith("https://")
+                        ) {
+                          window.open(docUrl, "_blank", "noopener,noreferrer");
+                          return;
+                        }
+                        // Otherwise generate a signed URL from Supabase storage
+                        try {
+                          const { data, error } = await supabase.storage
+                            .from("resources")
+                            .createSignedUrl(docUrl, 60);
+                          if (error || !data?.signedUrl) throw error;
+                          window.open(
+                            data.signedUrl,
+                            "_blank",
+                            "noopener,noreferrer",
+                          );
+                        } catch {
+                          toast.error(
+                            "Could not open document. The file may have been deleted.",
+                          );
+                        }
+                      }}
                     >
-                      <a
-                        href={req.verification_document_url}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        <FileText className="mr-1 h-3.5 w-3.5" />
-                        View Document
-                      </a>
+                      <FileText className="mr-1 h-3.5 w-3.5" />
+                      View Document
                     </Button>
                   </div>
                 </div>

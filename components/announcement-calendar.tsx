@@ -56,7 +56,17 @@ export function AnnouncementCalendar({
   const [date, setDate] = useState<Date | undefined>(new Date());
   const { profile, role } = useUser();
   const isAdmin =
-    role === "administrator" || role === "super_admin" || role === "officer";
+    role === "administrator" ||
+    role === "super_admin" ||
+    [
+      "president",
+      "vice_president",
+      "secretary",
+      "treasurer",
+      "auditor",
+      "committee_head",
+      "assistant_committee_head",
+    ].includes(role as string);
 
   // Create Event State
   const [openCreate, setOpenCreate] = useState(false);

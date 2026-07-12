@@ -15,7 +15,7 @@ export async function POST(request: Request) {
 
     const adminAuthClient = createAdminClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
 
     const { data: profile } = await adminAuthClient
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
         .select("id")
         .eq("name", "learner")
         .single();
-        
+
       if (learnerRole) {
         await adminAuthClient
           .from("profiles")
@@ -43,17 +43,22 @@ export async function POST(request: Request) {
             role_expires_at: null,
           })
           .eq("id", user.id);
-          
+
         return NextResponse.json({ success: true, reverted: true });
       }
     }
 
     return NextResponse.json({ success: true, reverted: false });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error reverting role:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to revert role" },
-      { status: 500 }
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : String(error) || "Failed to revert role",
+      },
+      { status: 500 },
     );
   }
 }

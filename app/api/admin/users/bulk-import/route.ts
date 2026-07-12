@@ -12,8 +12,11 @@ export async function POST(request: NextRequest) {
 
     if (authError || !user) {
       return NextResponse.json(
-        createErrorResponse("AUTH_002_TOKEN_EXPIRED", "Authentication required"),
-        { status: 401 }
+        createErrorResponse(
+          "AUTH_002_TOKEN_EXPIRED",
+          "Authentication required",
+        ),
+        { status: 401 },
       );
     }
 
@@ -25,17 +28,20 @@ export async function POST(request: NextRequest) {
       .single();
 
     const isAdmin = Array.isArray(callerProfile?.roles)
-      ? callerProfile.roles.some((role: any) =>
-          ["administrator", "super_admin"].includes(role.name)
+      ? callerProfile.roles.some((role: { name: string }) =>
+          ["administrator", "super_admin"].includes(role.name),
         )
       : ["administrator", "super_admin"].includes(
-          (callerProfile?.roles as any)?.name
+          (callerProfile?.roles as { name: string } | undefined)?.name || "",
         );
 
     if (callerError || !isAdmin) {
       return NextResponse.json(
-        createErrorResponse("AUTH_003_ADMIN_ONLY", "Only administrators can perform bulk imports"),
-        { status: 403 }
+        createErrorResponse(
+          "AUTH_003_ADMIN_ONLY",
+          "Only administrators can perform bulk imports",
+        ),
+        { status: 403 },
       );
     }
 
@@ -44,8 +50,11 @@ export async function POST(request: NextRequest) {
 
     if (!Array.isArray(users) || users.length === 0) {
       return NextResponse.json(
-        createErrorResponse("VALID_001_GENERAL", "A valid array of users is required"),
-        { status: 400 }
+        createErrorResponse(
+          "VALID_001_GENERAL",
+          "A valid array of users is required",
+        ),
+        { status: 400 },
       );
     }
 
@@ -55,7 +64,7 @@ export async function POST(request: NextRequest) {
     const { data: roles } = await adminClient.from("roles").select("id, name");
     const roleMap = new Map<string, string>();
     if (roles) {
-      roles.forEach(r => roleMap.set(r.name, r.id));
+      roles.forEach((r) => roleMap.set(r.name, r.id));
     }
 
     let successCount = 0;
@@ -68,7 +77,7 @@ export async function POST(request: NextRequest) {
         const email = u.email;
         const full_name = u.full_name;
         let role_name = u.role_name || "learner";
-        
+
         // Ensure role exists in map, default to learner if invalid
         let role_id = roleMap.get(role_name);
         if (!role_id) {
@@ -107,23 +116,32 @@ export async function POST(request: NextRequest) {
         } else {
           successCount++;
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         failedCount++;
-        failures.push({ email: u.email, error: err.message || "Unknown error" });
+        failures.push({
+          email: u.email,
+          error:
+            err instanceof Error ? err.message : String(err) || "Unknown error",
+        });
       }
     }
 
-    return NextResponse.json({
-      successCount,
-      failedCount,
-      failures,
-    }, { status: 200 });
-
+    return NextResponse.json(
+      {
+        successCount,
+        failedCount,
+        failures,
+      },
+      { status: 200 },
+    );
   } catch (err) {
     console.error("bulk-import error:", err);
     return NextResponse.json(
-      createErrorResponse("SYSTEM_001_UNKNOWN_ERROR", "An unexpected error occurred"),
-      { status: 500 }
+      createErrorResponse(
+        "SYSTEM_001_UNKNOWN_ERROR",
+        "An unexpected error occurred",
+      ),
+      { status: 500 },
     );
   }
 }

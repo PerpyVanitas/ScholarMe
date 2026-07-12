@@ -5,10 +5,22 @@ import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 import { toast } from "sonner";
 import { useUser } from "@/lib/user-context";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export function OnboardingTour() {
   const { profile } = useUser();
   const [mounted, setMounted] = useState(false);
+  const [showSkipConfirm, setShowSkipConfirm] = useState(false);
+  const [tourInstance, setTourInstance] = useState<any>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -47,12 +59,12 @@ export function OnboardingTour() {
         },
       ],
       onDestroyStarted: () => {
-        if (
-          !tour.hasNextStep() ||
-          confirm("Are you sure you want to skip the tour?")
-        ) {
+        if (!tour.hasNextStep()) {
           localStorage.setItem("hasSeenOnboardingTour", "true");
           tour.destroy();
+        } else {
+          setTourInstance(tour);
+          setShowSkipConfirm(true);
         }
       },
     });
@@ -68,5 +80,33 @@ export function OnboardingTour() {
     }, 1500);
   }, [mounted, profile]);
 
-  return null;
+  if (!mounted) return null;
+
+  return (
+    <AlertDialog open={showSkipConfirm} onOpenChange={setShowSkipConfirm}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Skip Tour?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to skip the onboarding tour? You can always
+            find help in the documentation.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={() => setShowSkipConfirm(false)}>
+            Continue Tour
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => {
+              localStorage.setItem("hasSeenOnboardingTour", "true");
+              tourInstance?.destroy();
+              setShowSkipConfirm(false);
+            }}
+          >
+            Skip
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
 }

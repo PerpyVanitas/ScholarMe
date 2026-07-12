@@ -1,8 +1,24 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { formatDistanceToNow, differenceInHours } from "date-fns";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+export function formatRelativeDate(dateInput: string | Date): string {
+  const date = new Date(dateInput);
+  const hoursDiff = Math.abs(differenceInHours(new Date(), date));
+
+  if (hoursDiff < 24) {
+    return formatDistanceToNow(date, { addSuffix: true });
+  }
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 export function getAvatarUrl(

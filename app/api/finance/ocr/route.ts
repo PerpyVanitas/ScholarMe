@@ -9,17 +9,17 @@ export async function POST(req: NextRequest) {
     if (!ai) {
       return NextResponse.json(
         { error: "AI not configured. Missing API key." },
-        { status: 503 }
+        { status: 503 },
       );
     }
 
     const formData = await req.formData();
     const file = formData.get("receipt") as File | null;
-    
+
     if (!file) {
       return NextResponse.json(
         { error: "No receipt file uploaded" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -61,18 +61,18 @@ Respond strictly with a JSON object in this format:
 
     const responseText = response.text;
     if (!responseText) throw new Error("No response from AI");
-    
+
     const parsed = JSON.parse(responseText);
 
     return NextResponse.json({
       vendorName: parsed.vendorName || "Unknown Vendor",
       totalAmount: parsed.totalAmount || 0,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[OCR API] Error extracting receipt data:", error);
     return NextResponse.json(
       { error: "Failed to parse receipt" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

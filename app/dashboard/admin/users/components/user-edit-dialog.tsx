@@ -59,7 +59,9 @@ export function UserEditDialog({
       setEditName(user.full_name || "");
       setEditEmail(user.email || "");
       setEditRole(getUserRoleName(user.roles));
-      setEditRoleExpiresAt(user.role_expires_at ? user.role_expires_at.split("T")[0] : "");
+      setEditRoleExpiresAt(
+        user.role_expires_at ? user.role_expires_at.split("T")[0] : "",
+      );
       setEditPassword("");
       setShowEditPassword(false);
     }
@@ -77,7 +79,9 @@ export function UserEditDialog({
         email: editEmail !== user.email ? editEmail : undefined,
         role_name:
           editRole !== getUserRoleName(user.roles) ? editRole : undefined,
-        role_expires_at: editRoleExpiresAt ? new Date(editRoleExpiresAt).toISOString() : null,
+        role_expires_at: editRoleExpiresAt
+          ? new Date(editRoleExpiresAt).toISOString()
+          : null,
         password: editPassword ? editPassword : undefined,
       }),
     });
@@ -127,7 +131,9 @@ export function UserEditDialog({
                   <SelectContent>
                     <SelectItem value="learner">Learner</SelectItem>
                     <SelectItem value="tutor">Tutor</SelectItem>
-                    <SelectItem value="committee_head">Committee Head</SelectItem>
+                    <SelectItem value="committee_head">
+                      Committee Head
+                    </SelectItem>
                     <SelectItem value="administrator">Administrator</SelectItem>
                     <SelectItem value="finance_manager">
                       Finance Manager
@@ -142,7 +148,7 @@ export function UserEditDialog({
                   </SelectContent>
                 </Select>
               </div>
-              
+
               {editRole !== "learner" && (
                 <div className="flex flex-col gap-2">
                   <Label>Role Expiration Date</Label>
@@ -168,7 +174,7 @@ export function UserEditDialog({
             <div className="relative">
               <Input
                 value={editPassword}
-                onChange={(e: any) => setEditPassword(e.target.value)}
+                onChange={(e) => setEditPassword(e.target.value)}
                 type={showEditPassword ? "text" : "password"}
                 placeholder="Leave blank to keep current password"
                 className="pr-10"

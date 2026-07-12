@@ -44,11 +44,43 @@ export async function PUT(
     .from("sessions")
     .update(updateData)
     .eq("id", id)
-    .select("*, tutor_id")
+    .select("*, tutors(user_id)")
     .single();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Automate XP when completed
+  if (status === "completed" && data) {
+    const xpAwards = [];
+
+    // For Learner
+    if (data.learner_id) {
+      xpAwards.push({
+        profile_id: data.learner_id,
+        amount: 50, // SESSION_COMPLETED
+        reason: "Completed a tutoring session",
+      });
+    }
+
+    // For Tutor
+    const tutorData = Array.isArray(data.tutors) ? data.tutors[0] : data.tutors;
+    if (tutorData?.user_id) {
+      xpAwards.push({
+        profile_id: tutorData.user_id,
+        amount: 50,
+        reason: "Taught a tutoring session",
+      });
+    }
+
+    if (xpAwards.length > 0) {
+      // Create a background task / execute insert silently without failing the overall route
+      const { error: xpError } = await supabase
+        .from("xp_logs")
+        .insert(xpAwards);
+      if (xpError) console.error(xpError);
+    }
   }
 
   if (status === "no_show" && data?.tutor_id) {

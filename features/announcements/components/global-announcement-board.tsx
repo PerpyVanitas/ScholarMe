@@ -43,7 +43,7 @@ export function GlobalAnnouncementBoard() {
     try {
       const data = await getAnnouncements();
       setAnnouncements(data);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
       toast.error(e instanceof Error ? e.message : "An error occurred");
     } finally {

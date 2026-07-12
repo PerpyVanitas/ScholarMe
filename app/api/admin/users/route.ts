@@ -4,7 +4,7 @@
 import { createClient } from "@/lib/supabase/create-client";
 import { createClient as createBareAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
-import { isAdminRole } from "@/lib/utils/roles";
+import { GOVERNANCE_ROLES, hasAnyRole } from "@/lib/utils/roles";
 
 function getAdminSupabase() {
   return createBareAdminClient(
@@ -28,10 +28,10 @@ async function getAdminUser(
 
   const roleName = Array.isArray(profile?.roles)
     ? profile.roles[0]?.name
-    : (profile?.roles as any)?.name;
-  const isAdmin = isAdminRole(roleName);
+    : (profile?.roles as { name: string } | undefined)?.name;
+  const isAuthorized = hasAnyRole(roleName as string, GOVERNANCE_ROLES);
 
-  if (!isAdmin) return null;
+  if (!isAuthorized) return null;
   return { user, roleName };
 }
 
@@ -123,7 +123,8 @@ export async function PATCH(request: Request) {
   }
   const profileUpdates: ProfileUpdates = {};
   if (full_name !== undefined) profileUpdates.full_name = full_name;
-  if (role_expires_at !== undefined) profileUpdates.role_expires_at = role_expires_at;
+  if (role_expires_at !== undefined)
+    profileUpdates.role_expires_at = role_expires_at;
 
   // Update email via auth admin
   if (email) {

@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     const rawRole = profile?.roles;
     const roleName = Array.isArray(rawRole)
       ? rawRole[0]?.name
-      : (rawRole as any)?.name;
+      : (rawRole as { name: string } | undefined)?.name;
     if (!["administrator", "super_admin"].includes(roleName as string)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -51,8 +51,11 @@ export async function POST(request: Request) {
     if (error) throw error;
 
     return NextResponse.json({ success: true, data });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Semester config error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : String(error) },
+      { status: 500 },
+    );
   }
 }

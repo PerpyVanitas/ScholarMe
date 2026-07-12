@@ -23,6 +23,7 @@ import {
 import { Calendar, Loader2 } from "lucide-react";
 import { SESSION_STATUS_COLORS } from "@/lib/constants";
 import type { Session } from "@/lib/types";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export default function AdminSessionsPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -86,12 +87,11 @@ export default function AdminSessionsPage() {
       <Card className="border-border/60">
         <CardContent className="p-0">
           {filtered.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 py-12">
-              <div className="rounded-full bg-muted p-4">
-                <Calendar className="h-6 w-6 text-muted-foreground" />
-              </div>
-              <p className="text-sm text-muted-foreground">No sessions found</p>
-            </div>
+            <EmptyState
+              icon={Calendar}
+              title="No sessions found"
+              description="No sessions match the selected filter."
+            />
           ) : (
             <div className="overflow-x-auto">
               <Table>

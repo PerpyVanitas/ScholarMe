@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Search, Star, Loader2, Users } from "lucide-react";
 import { TutorDetailModal } from "@/features/tutors/components/tutor-detail-modal";
+import { useDebounce } from "@/hooks/use-debounce";
 import type { Tutor, Specialization } from "@/lib/types";
 
 export default function TutorsPage() {
@@ -24,6 +25,7 @@ export default function TutorsPage() {
   const [specializations, setSpecializations] = useState<Specialization[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
   const [selectedSpec, setSelectedSpec] = useState("all");
   const [selectedTutor, setSelectedTutor] = useState<Tutor | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -35,7 +37,7 @@ export default function TutorsPage() {
         supabase
           .from("tutors")
           .select(
-            "*, profiles(*, roles(name)), tutor_specializations(specializations(*))",
+            "*, profiles(*, roles(name)), tutor_specializations(specializations(*)), attendance_logs(clock_in, clock_out)",
           )
           .order("rating", { ascending: false }),
         supabase.from("specializations").select("*").order("name"),
@@ -48,14 +50,26 @@ export default function TutorsPage() {
   }, []);
 
   const filtered = tutors.filter((t) => {
+    // Check if the role allows them to tutor
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const roles: any = t.profiles?.roles;
     const roleName = Array.isArray(roles) ? roles[0]?.name : roles?.name;
-    if (roleName !== "tutor" && roleName !== "officer") return false;
+    if (
+      roleName !== "tutor" &&
+      roleName !== "officer" &&
+      roleName !== "super_admin"
+    )
+      return false;
+
+    // Must be clocked into the timesheet system
+    const isClockedIn = t.attendance_logs?.some((log) => !log.clock_out);
+    if (!isClockedIn) return false;
 
     const nameMatch =
-      !search ||
-      t.profiles?.full_name?.toLowerCase().includes(search.toLowerCase());
+      !debouncedSearch ||
+      t.profiles?.full_name
+        ?.toLowerCase()
+        .includes(debouncedSearch.toLowerCase());
     const specMatch =
       selectedSpec === "all" ||
       t.tutor_specializations?.some(
@@ -171,10 +185,28 @@ export default function TutorsPage() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col flex-1">
-                      <span className="font-semibold text-foreground line-clamp-1">
-                        {name}
-                      </span>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-foreground line-clamp-1">
+                          {name}
+                        </span>
+                        {tutor.rating >= 4.5 && tutor.total_ratings >= 5 && (
+                          <Badge
+                            variant="default"
+                            className="text-[10px] h-4 px-1.5 py-0 bg-yellow-500 hover:bg-yellow-600 text-white border-transparent"
+                          >
+                            Top Rated
+                          </Badge>
+                        )}
+                        {(tutor.profiles as any)?.roles?.name === "officer" && (
+                          <Badge
+                            variant="default"
+                            className="text-[10px] h-4 px-1.5 py-0 bg-blue-500 hover:bg-blue-600 text-white border-transparent"
+                          >
+                            Lead
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 mt-0.5">
                         <Star className="h-3.5 w-3.5 fill-accent text-accent flex-shrink-0" />
                         <span className="text-sm text-muted-foreground">
                           {tutor.rating > 0 ? tutor.rating.toFixed(1) : "New"}{" "}

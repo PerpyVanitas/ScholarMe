@@ -46,6 +46,13 @@ import {
   Award,
   UserCog,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import type { Profile } from "@/lib/types";
 import { ExportCsvButton } from "@/components/export-csv-button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -102,6 +109,9 @@ function AdminUsersContent() {
   // Create state
   const [createOpen, setCreateOpen] = useState(false);
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
+
+  // Impersonation link dialog state
+  const [impersonateLink, setImpersonateLink] = useState<string | null>(null);
 
   // Profile view state
   const [profileOpen, setProfileOpen] = useState(false);
@@ -196,7 +206,7 @@ function AdminUsersContent() {
       }
       toast.success("Role updated successfully");
       loadProfiles();
-    } catch (e) {
+    } catch (e: any) {
       toast.error(e instanceof Error ? e.message : "Error updating role");
     }
   }
@@ -219,26 +229,32 @@ function AdminUsersContent() {
       const loadingToastId = toast.loading("Generating impersonation link...");
       const res = await fetch("/api/admin/impersonate", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: p.email }),
       });
-      
-      if (!res.ok) {
-        throw new Error((await res.json()).error || "Failed to generate link");
-      }
-      
-      const { link } = await res.json();
-      await navigator.clipboard.writeText(link);
-      
+
       toast.dismiss(loadingToastId);
-      toast.success(
-        "Impersonation link copied to clipboard! Open it in an Incognito window.",
-        { duration: 6000 }
-      );
+
+      if (!res.ok) {
+        const body = await res.json();
+        throw new Error(body.error || `Server error: ${res.status}`);
+      }
+
+      const { link } = await res.json();
+
+      // Try clipboard first; fall back to showing a dialog
+      try {
+        await navigator.clipboard.writeText(link);
+        toast.success(
+          "Impersonation link copied! Open it in an Incognito window.",
+          { duration: 6000 },
+        );
+      } catch {
+        // Clipboard not available (HTTP / permissions) — show dialog instead
+        setImpersonateLink(link);
+      }
     } catch (e: any) {
-      toast.error(e.message || "Failed to impersonate user");
+      toast.error(e.message || "Failed to generate impersonation link");
     }
   }
 
@@ -298,7 +314,11 @@ function AdminUsersContent() {
             }))}
             filename="users_export"
           />
-          <Button variant="outline" onClick={() => setBulkImportOpen(true)} className="hidden sm:flex">
+          <Button
+            variant="outline"
+            onClick={() => setBulkImportOpen(true)}
+            className="hidden sm:flex"
+          >
             <Users className="mr-2 h-4 w-4" />
             Bulk Import
           </Button>
@@ -449,21 +469,31 @@ function AdminUsersContent() {
                         <Select
                           disabled={role !== "super_admin"}
                           value={getUserRoleName(p.roles)}
-                          onValueChange={(val) => handleQuickRoleEdit(p.id, val)}
+                          onValueChange={(val) =>
+                            handleQuickRoleEdit(p.id, val)
+                          }
                         >
-                          <SelectTrigger className={`w-[130px] h-8 text-xs font-medium ${roleColors[getUserRoleName(p.roles)] || roleColors.learner}`}>
+                          <SelectTrigger
+                            className={`w-[130px] h-8 text-xs font-medium ${roleColors[getUserRoleName(p.roles)] || roleColors.learner}`}
+                          >
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="learner">Learner</SelectItem>
                             <SelectItem value="tutor">Tutor</SelectItem>
-                            <SelectItem value="administrator">Administrator</SelectItem>
-                            <SelectItem value="finance_manager">Finance</SelectItem>
+                            <SelectItem value="administrator">
+                              Administrator
+                            </SelectItem>
+                            <SelectItem value="finance_manager">
+                              Finance
+                            </SelectItem>
                             <SelectItem value="auditor">Auditor</SelectItem>
                             <SelectItem value="president">President</SelectItem>
                             <SelectItem value="treasurer">Treasurer</SelectItem>
                             <SelectItem value="officer">Officer</SelectItem>
-                            <SelectItem value="super_admin">Super Admin</SelectItem>
+                            <SelectItem value="super_admin">
+                              Super Admin
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </TableCell>
@@ -573,6 +603,34 @@ function AdminUsersContent() {
         onOpenChange={setProfileOpen}
         user={profileUser}
       />
+
+      {/* Impersonation Fallback Dialog — shown when clipboard is unavailable */}
+      <Dialog
+        open={!!impersonateLink}
+        onOpenChange={(o) => !o && setImpersonateLink(null)}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Impersonation Link Generated</DialogTitle>
+            <DialogDescription>
+              Clipboard access was blocked. Copy this link manually and open it
+              in an <strong>Incognito / Private</strong> browser window.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-2 flex flex-col gap-3">
+            <textarea
+              readOnly
+              rows={4}
+              value={impersonateLink ?? ""}
+              className="w-full rounded-md border border-input bg-muted p-3 text-xs font-mono resize-none focus:outline-none"
+              onClick={(e) => (e.target as HTMLTextAreaElement).select()}
+            />
+            <p className="text-xs text-muted-foreground">
+              Click the box above to select all, then copy manually.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

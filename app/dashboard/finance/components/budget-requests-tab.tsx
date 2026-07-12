@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -5,6 +8,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import { SubmitButton } from "@/components/submit-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,6 +40,19 @@ export function BudgetRequestsTab({
   budgetReqs,
   vendors,
 }: Props) {
+  const [isDirty, setIsDirty] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
+
   return (
     <div className="space-y-6">
       {canSubmit && (
@@ -44,7 +61,12 @@ export function BudgetRequestsTab({
             <CardTitle>Submit Budget Request</CardTitle>
           </CardHeader>
           <CardContent>
-            <form action={createBudgetRequest} className="space-y-4 max-w-xl">
+            <form
+              action={createBudgetRequest}
+              className="space-y-4 max-w-xl"
+              onChange={() => setIsDirty(true)}
+              onSubmit={() => setIsDirty(false)}
+            >
               <Input
                 name="activity_title"
                 placeholder="Activity Title"
@@ -59,14 +81,16 @@ export function BudgetRequestsTab({
               />
               <div className="flex flex-col gap-2">
                 <Label htmlFor="vendor_id">Preferred Vendor (Optional)</Label>
-                <select 
-                  name="vendor_id" 
+                <select
+                  name="vendor_id"
                   id="vendor_id"
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="">-- Select Vendor --</option>
-                  {vendors?.map(v => (
-                    <option key={v.id} value={v.id}>{v.name}</option>
+                  {vendors?.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -83,22 +107,24 @@ export function BudgetRequestsTab({
                 />
               </div>
               <div className="flex gap-2">
-                <Button
+                <SubmitButton
                   type="submit"
                   name="action_type"
                   value="submit"
                   variant="default"
+                  loadingText="Submitting..."
                 >
                   Submit Request
-                </Button>
-                <Button
+                </SubmitButton>
+                <SubmitButton
                   type="submit"
                   name="action_type"
                   value="draft"
                   variant="outline"
+                  loadingText="Saving..."
                 >
                   Save Draft
-                </Button>
+                </SubmitButton>
               </div>
             </form>
           </CardContent>
@@ -152,13 +178,16 @@ export function BudgetRequestsTab({
                   <div className="flex gap-2 mt-4">
                     <form
                       action={async () => {
-                        "use server";
                         await submitBudgetRequestForReview(req.id);
                       }}
                     >
-                      <Button size="sm" variant="default">
+                      <SubmitButton
+                        size="sm"
+                        variant="default"
+                        loadingText="Submitting..."
+                      >
                         Submit for Review
-                      </Button>
+                      </SubmitButton>
                     </form>
                   </div>
                 )}
@@ -166,26 +195,32 @@ export function BudgetRequestsTab({
                   <div className="flex gap-2 mt-4">
                     <form
                       action={async () => {
-                        "use server";
                         await updateBudgetRequestStatus(
                           req.id,
                           "finance_review",
                         );
                       }}
                     >
-                      <Button size="sm" variant="outline">
+                      <SubmitButton
+                        size="sm"
+                        variant="outline"
+                        loadingText="Starting..."
+                      >
                         Start Review
-                      </Button>
+                      </SubmitButton>
                     </form>
                     <form
                       action={async () => {
-                        "use server";
                         await updateBudgetRequestStatus(req.id, "rejected");
                       }}
                     >
-                      <Button size="sm" variant="destructive">
+                      <SubmitButton
+                        size="sm"
+                        variant="destructive"
+                        loadingText="Rejecting..."
+                      >
                         Reject
-                      </Button>
+                      </SubmitButton>
                     </form>
                   </div>
                 )}
@@ -193,26 +228,32 @@ export function BudgetRequestsTab({
                   <div className="flex gap-2 mt-4">
                     <form
                       action={async () => {
-                        "use server";
                         await updateBudgetRequestStatus(
                           req.id,
                           "president_approved",
                         );
                       }}
                     >
-                      <Button size="sm" variant="default">
+                      <SubmitButton
+                        size="sm"
+                        variant="default"
+                        loadingText="Approving..."
+                      >
                         President Approve
-                      </Button>
+                      </SubmitButton>
                     </form>
                     <form
                       action={async () => {
-                        "use server";
                         await updateBudgetRequestStatus(req.id, "rejected");
                       }}
                     >
-                      <Button size="sm" variant="destructive">
+                      <SubmitButton
+                        size="sm"
+                        variant="destructive"
+                        loadingText="Rejecting..."
+                      >
                         Reject
-                      </Button>
+                      </SubmitButton>
                     </form>
                   </div>
                 )}
@@ -220,13 +261,16 @@ export function BudgetRequestsTab({
                   <div className="flex gap-2 mt-4">
                     <form
                       action={async () => {
-                        "use server";
                         await updateBudgetRequestStatus(req.id, "released");
                       }}
                     >
-                      <Button size="sm" variant="default">
+                      <SubmitButton
+                        size="sm"
+                        variant="default"
+                        loadingText="Releasing..."
+                      >
                         Release Funds
-                      </Button>
+                      </SubmitButton>
                     </form>
                   </div>
                 )}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { isAdminRole } from "@/lib/utils/roles";
+import { GOVERNANCE_ROLES, hasAnyRole } from "@/lib/utils/roles";
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -18,8 +18,8 @@ export async function GET(request: NextRequest) {
     .single();
   const roleName = Array.isArray(profile?.roles)
     ? profile.roles[0]?.name
-    : (profile?.roles as any)?.name;
-  if (!isAdminRole(roleName as string)) {
+    : (profile?.roles as { name: string } | undefined)?.name;
+  if (!hasAnyRole(roleName as string, GOVERNANCE_ROLES)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

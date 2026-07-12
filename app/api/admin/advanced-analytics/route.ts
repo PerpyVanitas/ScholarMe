@@ -17,7 +17,8 @@ export async function GET(request: Request) {
       .select("roles(name)")
       .eq("id", user.id)
       .single();
-    const rawRole = profile?.roles as any;
+    const rawRole = profile?.roles as
+      { name: string } | { name: string }[] | undefined;
     const roleName = Array.isArray(rawRole) ? rawRole[0]?.name : rawRole?.name;
     if (!["administrator", "super_admin"].includes(roleName ?? "")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -76,7 +77,7 @@ export async function GET(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          error: error.message,
+          error: error instanceof Error ? error.message : String(error),
           hint: error.hint ?? null,
           details: error.details ?? null,
         },
@@ -85,10 +86,15 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json({ success: true, data });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Advanced analytics unexpected error:", error);
     return NextResponse.json(
-      { error: error.message ?? "Unknown server error" },
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : (String(error) ?? "Unknown server error"),
+      },
       { status: 500 },
     );
   }

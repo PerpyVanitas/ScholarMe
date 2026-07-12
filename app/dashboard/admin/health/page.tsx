@@ -36,7 +36,7 @@ export default function SystemHealthPage() {
         if (res.ok) {
           setMetrics(await res.json());
         }
-      } catch (e) {
+      } catch (e: any) {
         console.error("Failed to load health metrics", e);
         toast.error(e instanceof Error ? e.message : "An error occurred");
       } finally {

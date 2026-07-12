@@ -35,6 +35,7 @@ import {
 import { toast } from "sonner";
 import type { Timesheet } from "@/lib/types";
 import { ExportCsvButton } from "@/components/export-csv-button";
+import { EmptyState } from "@/components/ui/empty-state";
 
 const fetcher = async (url: string) => {
   const r = await fetch(url);
@@ -440,14 +441,11 @@ export default function AdminTimesheetsPage() {
                   Loading...
                 </p>
               ) : filteredTutors.length === 0 ? (
-                <div className="flex flex-col items-center gap-3 py-8 text-center">
-                  <div className="rounded-full bg-muted p-3">
-                    <Timer className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    No timesheet data recorded for this period.
-                  </p>
-                </div>
+                <EmptyState
+                  icon={Timer}
+                  title="No timesheet data"
+                  description="No timesheet data recorded for this period."
+                />
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -521,9 +519,11 @@ export default function AdminTimesheetsPage() {
                   Loading...
                 </p>
               ) : filteredEntries.length === 0 ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">
-                  No entries found.
-                </p>
+                <EmptyState
+                  icon={Timer}
+                  title="No entries found"
+                  description="No timesheet entries were found matching your criteria."
+                />
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">

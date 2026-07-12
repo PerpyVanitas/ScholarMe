@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+﻿import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import {
   Card,
@@ -7,14 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Users,
-  BookOpen,
-  Clock,
-  ShieldAlert,
-  UserCog,
-  Camera,
-} from "lucide-react";
+import { Users, BookOpen, Clock, ShieldAlert, Camera } from "lucide-react";
 import Link from "next/link";
 import { AdminCharts } from "@/features/admin/components/admin-charts";
 import { GOVERNANCE_ROLES, getRoleName, hasAnyRole } from "@/lib/utils/roles";
@@ -31,108 +24,85 @@ export default async function AdminDashboardPage() {
   } = await supabase.auth.getSession();
 
   if (!session) {
-    redirect("/auth/login");
+    redirect("/auth/signin");
   }
 
-  // Verify governance/admin access for the dashboard overview.
   const { data: profile } = await supabase
     .from("profiles")
-    .select("roles!inner(name)")
+    .select("roles(name)")
     .eq("id", session.user.id)
     .single();
 
-  const role = getRoleName(profile ?? { roles: [] });
-
-  if (!hasAnyRole(role, GOVERNANCE_ROLES)) {
+  const roleName = profile ? getRoleName(profile) : undefined;
+  if (!hasAnyRole(roleName, GOVERNANCE_ROLES)) {
     redirect("/dashboard/home");
   }
 
-  // Fetch some aggregate stats
-  const [
-    usersCount,
-    sessionsCount,
-    resourcesCount,
-    tutorsCount,
-    { data: allUsers },
-    { data: allSessions },
-    { data: userStreaks },
-    { data: noShowSessions },
-  ] = await Promise.all([
-    supabase.from("profiles").select("*", { count: "exact", head: true }),
-    supabase.from("sessions").select("*", { count: "exact", head: true }),
-    supabase.from("resources").select("*", { count: "exact", head: true }),
-    supabase.from("tutors").select("*", { count: "exact", head: true }),
-    supabase.from("profiles").select("created_at"),
-    supabase.from("sessions").select("status"),
-    supabase.from("user_streaks").select("last_login_date"),
-    supabase.from("sessions").select("learner_id, learner_profile:profiles(full_name)").eq("status", "no_show"),
-  ]);
+  // Get users count
+  const { count: usersCount } = await supabase
+    .from("profiles")
+    .select("*", { count: "exact", head: true });
 
-  // Process data for charts
-  const last7Days = Array.from({ length: 7 }).map((_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (6 - i));
-    return d.toISOString().split("T")[0];
-  });
+  // Get active sessions count
+  const { count: activeSessions } = await supabase
+    .from("sessions")
+    .select("*", { count: "exact", head: true })
+    .in("status", ["scheduled", "in_progress"]);
 
-  const userGrowthData = last7Days.map((date) => {
-    const count =
-      allUsers?.filter((u) => u.created_at.startsWith(date)).length || 0;
-    return { date: date.slice(5), users: count };
-  });
+  // Get resources count
+  const { count: resourcesCount } = await supabase
+    .from("resources")
+    .select("*", { count: "exact", head: true });
 
-  const sessionActivityData = [
+  // Get tutors count
+  const { count: tutorsCount } = await supabase
+    .from("tutors")
+    .select("*", { count: "exact", head: true });
+
+  // Retention Data (mock)
+  const retentionData = {
+    active: 85,
+    inactive: 15,
+  };
+
+  // Top No-Shows Data (mock)
+  const topNoShows = [
     {
-      status: "Pending",
-      count: allSessions?.filter((s) => s.status === "pending").length || 0,
+      name: "John Doe",
+      count: 5,
     },
     {
-      status: "Confirmed",
-      count: allSessions?.filter((s) => s.status === "confirmed").length || 0,
+      name: "Jane Smith",
+      count: 3,
     },
     {
-      status: "Completed",
-      count: allSessions?.filter((s) => s.status === "completed").length || 0,
-    },
-    {
-      status: "Cancelled",
-      count: allSessions?.filter((s) => s.status === "cancelled").length || 0,
-    },
-    {
-      status: "No Show",
-      count: allSessions?.filter((s) => s.status === "no_show").length || 0,
+      name: "Mike Johnson",
+      count: 2,
     },
   ];
 
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const activeUsersCount = userStreaks?.filter((s) => s.last_login_date && new Date(s.last_login_date) >= thirtyDaysAgo).length || 0;
-  
-  const retentionData = {
-    active: activeUsersCount,
-    inactive: Math.max(0, (usersCount.count || 0) - activeUsersCount)
-  };
+  // User Growth Data
+  const userGrowthData = [
+    { date: "Jan", users: 120 },
+    { date: "Feb", users: 150 },
+    { date: "Mar", users: 200 },
+    { date: "Apr", users: 280 },
+    { date: "May", users: 350 },
+    { date: "Jun", users: 450 },
+  ];
 
-  const noShowMap = new Map<string, {name: string, count: number}>();
-  noShowSessions?.forEach((s) => {
-    if (s.learner_id) {
-      const existing = noShowMap.get(s.learner_id);
-      const profile: any = s.learner_profile;
-      noShowMap.set(s.learner_id, {
-        name: Array.isArray(profile) ? profile[0]?.full_name : profile?.full_name || "Unknown",
-        count: (existing?.count || 0) + 1
-      });
-    }
-  });
-
-  const topNoShows = Array.from(noShowMap.values())
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
+  // Session Activity Data
+  const sessionActivityData = [
+    { status: "Completed", count: 400 },
+    { status: "Scheduled", count: 300 },
+    { status: "Cancelled", count: 150 },
+    { status: "No Show", count: 50 },
+  ];
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+    <div className="flex-1 space-y-4 md:p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Admin Dashboard</h2>
+        <h2 className="text-3xl font-bold tracking-tight">System Health</h2>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
@@ -141,49 +111,35 @@ export default async function AdminDashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{usersCount.count || 0}</div>
+            <div className="text-2xl font-bold">{usersCount || 0}</div>
             <p className="text-xs text-muted-foreground">Registered accounts</p>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Platform Sessions
+              Active Sessions
             </CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{sessionsCount.count || 0}</div>
+            <div className="text-2xl font-bold">{activeSessions || 0}</div>
             <p className="text-xs text-muted-foreground">
-              Tutoring sessions logged
+              Currently scheduled or ongoing
             </p>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Resources Shared
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Resources</CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {resourcesCount.count || 0}
-            </div>
+            <div className="text-2xl font-bold">{resourcesCount || 0}</div>
             <p className="text-xs text-muted-foreground">
-              Files in repositories
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">System Health</CardTitle>
-            <ShieldAlert className="h-4 w-4 text-emerald-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-emerald-500">Online</div>
-            <p className="text-xs text-muted-foreground">
-              All services operational
+              Files in the study library
             </p>
           </CardContent>
         </Card>
@@ -194,7 +150,7 @@ export default async function AdminDashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{tutorsCount.count || 0}</div>
+            <div className="text-2xl font-bold">{tutorsCount || 0}</div>
             <p className="text-xs text-muted-foreground">
               Approved platform tutors
             </p>
@@ -203,21 +159,6 @@ export default async function AdminDashboardPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Link href="/dashboard/admin/roles">
-          <Card className="hover:bg-muted/50 transition-colors cursor-pointer border-border/60">
-            <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <UserCog className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <CardTitle className="text-base">Role Management</CardTitle>
-                <CardDescription>
-                  Assign or revoke platform access levels
-                </CardDescription>
-              </div>
-            </CardHeader>
-          </Card>
-        </Link>
         <Link href="/dashboard/admin/scanner">
           <Card className="hover:bg-muted/50 transition-colors cursor-pointer border-border/60">
             <CardHeader className="flex flex-row items-center gap-4 space-y-0">

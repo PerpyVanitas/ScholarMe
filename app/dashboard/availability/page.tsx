@@ -260,7 +260,7 @@ export default function AvailabilityPage() {
         <CardContent className="flex flex-col gap-3">
           <Textarea
             value={bio}
-            onChange={(e: any) => setBio(e.target.value)}
+            onChange={(e) => setBio(e.target.value)}
             placeholder="I specialize in making complex topics simple..."
             rows={3}
           />
@@ -309,7 +309,7 @@ export default function AvailabilityPage() {
               <Input
                 type="time"
                 value={newStart}
-                onChange={(e: any) => setNewStart(e.target.value)}
+                onChange={(e) => setNewStart(e.target.value)}
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -317,7 +317,7 @@ export default function AvailabilityPage() {
               <Input
                 type="time"
                 value={newEnd}
-                onChange={(e: any) => setNewEnd(e.target.value)}
+                onChange={(e) => setNewEnd(e.target.value)}
               />
             </div>
             <Button onClick={addSlot}>

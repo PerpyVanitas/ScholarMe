@@ -29,6 +29,7 @@ import {
   Search,
   ChevronDown,
   ChevronRight,
+  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { UserRole } from "@/lib/types";
@@ -130,7 +131,24 @@ export default function ResourcesPage() {
         "id, owner_id, title, description, access_role, created_at, profiles!repositories_owner_id_fkey(full_name)",
       )
       .order("created_at", { ascending: false });
-    setRepos(data || []);
+
+    // Client-side filter by access_role based on the viewer's role
+    const allRepos = data || [];
+    const visibleRepos = allRepos.filter((repo) => {
+      if (repo.access_role === "all") return true;
+      if (repo.access_role === "tutor") {
+        return (
+          userRole === "tutor" ||
+          userRole === "administrator" ||
+          userRole === "super_admin"
+        );
+      }
+      if (repo.access_role === "admin") {
+        return userRole === "administrator" || userRole === "super_admin";
+      }
+      return false;
+    });
+    setRepos(visibleRepos);
     setLoading(false);
   }, []);
 
@@ -148,7 +166,7 @@ export default function ResourcesPage() {
     const { data } = await supabase
       .from("resources")
       .select(
-        "id, repository_id, title, description, url, file_type, uploaded_by, created_at, profiles!resources_uploaded_by_fkey(full_name)",
+        "id, repository_id, title, description, url, file_type, is_public, uploaded_by, created_at, profiles!resources_uploaded_by_fkey(full_name)",
       )
       .eq("repository_id", repoId)
       .order("created_at", { ascending: false });
@@ -413,12 +431,17 @@ export default function ResourcesPage() {
                             role === "super_admin" ||
                             resource.uploaded_by === userId ||
                             isOwner;
+                          // A resource is considered private if is_public is explicitly false
+                          const isPrivate = resource.is_public === false;
+                          // Users who can bypass the private lock
+                          const canViewPrivate = canDelete || role === "tutor";
 
                           return (
                             <div
                               key={resource.id}
-                              className="flex items-center gap-3 rounded-lg border border-border/60 p-3 transition-colors hover:bg-muted/30 cursor-pointer"
+                              className={`flex items-center gap-3 rounded-lg border border-border/60 p-3 transition-colors ${isPrivate && !canViewPrivate ? "opacity-60 cursor-not-allowed" : "hover:bg-muted/30 cursor-pointer"}`}
                               onClick={() => {
+                                if (isPrivate && !canViewPrivate) return;
                                 setPreviewResource(resource);
                                 setPreviewOpen(true);
                               }}
@@ -461,21 +484,28 @@ export default function ResourcesPage() {
                                 className="flex items-center gap-1 shrink-0"
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  asChild
-                                >
-                                  <a
-                                    href={resource.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    aria-label={`Download ${resource.title}`}
+                                {isPrivate && !canViewPrivate ? (
+                                  <span className="flex items-center gap-1 text-xs text-muted-foreground px-2">
+                                    <Lock className="h-3.5 w-3.5" />
+                                    Private
+                                  </span>
+                                ) : (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    asChild
                                   >
-                                    <Download className="h-4 w-4" />
-                                  </a>
-                                </Button>
+                                    <a
+                                      href={resource.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      aria-label={`Download ${resource.title}`}
+                                    >
+                                      <Download className="h-4 w-4" />
+                                    </a>
+                                  </Button>
+                                )}
                                 {canDelete && (
                                   <Button
                                     variant="ghost"

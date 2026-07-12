@@ -74,7 +74,6 @@ export function WebLLMChat({ initialContext = "" }: WebLLMChatProps) {
 
       const newEngine = await CreateWebWorkerMLCEngine(worker, SELECTED_MODEL, {
         initProgressCallback: (progress) => {
-          console.log(progress);
           setInitProgress(progress);
         },
       });

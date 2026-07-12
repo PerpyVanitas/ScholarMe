@@ -5,6 +5,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import { SubmitButton } from "@/components/submit-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -50,15 +51,19 @@ export function PettyCashTab({ canSubmit, pettyCash, vendors }: Props) {
                 required
               />
               <div className="flex flex-col gap-2">
-                <Label htmlFor="pc_vendor_id">Preferred Vendor (Optional)</Label>
-                <select 
-                  name="vendor_id" 
+                <Label htmlFor="pc_vendor_id">
+                  Preferred Vendor (Optional)
+                </Label>
+                <select
+                  name="vendor_id"
                   id="pc_vendor_id"
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="">-- Select Vendor --</option>
-                  {vendors?.map(v => (
-                    <option key={v.id} value={v.id}>{v.name}</option>
+                  {vendors?.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -75,22 +80,24 @@ export function PettyCashTab({ canSubmit, pettyCash, vendors }: Props) {
                 />
               </div>
               <div className="flex gap-2">
-                <Button
+                <SubmitButton
                   type="submit"
                   name="action_type"
                   value="submit"
                   variant="default"
+                  loadingText="Submitting..."
                 >
                   Submit Petty Cash
-                </Button>
-                <Button
+                </SubmitButton>
+                <SubmitButton
                   type="submit"
                   name="action_type"
                   value="draft"
                   variant="outline"
+                  loadingText="Saving..."
                 >
                   Save Draft
-                </Button>
+                </SubmitButton>
               </div>
             </form>
           </CardContent>
@@ -161,9 +168,13 @@ export function PettyCashTab({ canSubmit, pettyCash, vendors }: Props) {
                         await submitPettyCashForReview(req.id);
                       }}
                     >
-                      <Button size="sm" variant="default">
+                      <SubmitButton
+                        size="sm"
+                        variant="default"
+                        loadingText="Submitting..."
+                      >
                         Submit for Review
-                      </Button>
+                      </SubmitButton>
                     </form>
                   </div>
                 )}

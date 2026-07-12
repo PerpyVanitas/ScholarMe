@@ -1,103 +1,349 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+﻿import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/server";
-import { createTeamTask, addSchedule, updateTaskStatus } from "@/app/actions/team";
+import {
+  createTeamTask,
+  addSchedule,
+  updateTaskStatus,
+} from "@/app/actions/team";
 import { redirect } from "next/navigation";
+import {
+  CalendarDays,
+  CheckCircle2,
+  Circle,
+  Clock,
+  PlayCircle,
+  ListChecks,
+} from "lucide-react";
+import { getRoleName, TEAMWORK_ROLES, hasAnyRole } from "@/lib/utils/roles";
+
+const STATUS_CONFIG = {
+  todo: {
+    label: "To Do",
+    color: "bg-muted text-muted-foreground",
+    icon: Circle,
+  },
+  in_progress: {
+    label: "In Progress",
+    color: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+    icon: PlayCircle,
+  },
+  review: {
+    label: "In Review",
+    color: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+    icon: Clock,
+  },
+  done: {
+    label: "Done",
+    color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+    icon: CheckCircle2,
+  },
+} as const;
+
+type StatusKey = keyof typeof STATUS_CONFIG;
+const columns: StatusKey[] = ["todo", "in_progress", "review", "done"];
 
 export default async function TeamDashboard() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: tasks } = await supabase.from("team_tasks").select("*, profiles(full_name)").order("created_at", { ascending: false });
-  const { data: schedules } = await supabase.from("team_schedules").select("*, profiles(full_name)").order("date", { ascending: true });
+  // RBAC: only tutors and governance roles can access
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("roles(name)")
+    .eq("id", user.id)
+    .single();
 
-  const columns = ["todo", "in_progress", "review", "done"];
+  const roleName = getRoleName(profile as any);
+  if (!hasAnyRole(roleName as any, TEAMWORK_ROLES)) {
+    redirect("/dashboard");
+  }
+
+  const { data: tasks } = await supabase
+    .from("team_tasks")
+    .select("*, profiles(full_name)")
+    .order("created_at", { ascending: false });
+
+  const { data: schedules } = await supabase
+    .from("team_schedules")
+    .select("*, profiles(full_name)")
+    .order("date", { ascending: true });
+
+  const now = new Date();
+  const taskCounts = columns.reduce(
+    (acc, col) => ({
+      ...acc,
+      [col]: tasks?.filter((t: any) => t.status === col).length ?? 0,
+    }),
+    {} as Record<StatusKey, number>,
+  );
 
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold">Teamwork Tracker</h1>
+    <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
+      {/* Header */}
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-bold tracking-tight">Team Workspace</h1>
+        <p className="text-muted-foreground text-sm">
+          Manage committee tasks, track deliverables, and log team availability.
+        </p>
+      </div>
+
+      {/* Summary cards */}
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+        {columns.map((col) => {
+          const cfg = STATUS_CONFIG[col];
+          const Icon = cfg.icon;
+          return (
+            <Card key={col} className="border-border/60">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${cfg.color}`}
+                >
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold">{taskCounts[col]}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {cfg.label}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
 
       <Tabs defaultValue="tasks" className="w-full">
         <TabsList className="mb-4">
-          <TabsTrigger value="tasks">Tasks Matrix</TabsTrigger>
-          <TabsTrigger value="schedule">Schedules</TabsTrigger>
+          <TabsTrigger value="tasks" className="flex items-center gap-2">
+            <ListChecks className="h-4 w-4" />
+            Tasks Matrix
+          </TabsTrigger>
+          <TabsTrigger value="schedule" className="flex items-center gap-2">
+            <CalendarDays className="h-4 w-4" />
+            Schedules
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="tasks" className="space-y-6">
-          <Card>
+          <Card className="border-border/60">
             <CardHeader>
-              <CardTitle>Create New Task</CardTitle>
+              <CardTitle className="text-base">Add New Task</CardTitle>
+              <CardDescription>
+                Create a deliverable with an optional deadline.
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <form action={createTeamTask} className="flex gap-4 max-w-2xl">
-                <Input name="deliverable" placeholder="Deliverable Name" required />
-                <Input type="date" name="deadline" />
+              <form
+                action={createTeamTask}
+                className="flex flex-wrap gap-3 max-w-2xl"
+              >
+                <Input
+                  name="deliverable"
+                  placeholder="Deliverable name..."
+                  required
+                  className="flex-1 min-w-[200px]"
+                />
+                <Input type="date" name="deadline" className="w-40" />
                 <Button type="submit">Add Task</Button>
               </form>
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {columns.map(col => (
-              <div key={col} className="bg-secondary/20 p-4 rounded-lg min-h-[300px]">
-                <h3 className="font-bold text-lg mb-4 capitalize">{col.replace("_", " ")}</h3>
-                <div className="space-y-3">
-                  {tasks?.filter((t: any) => t.status === col).map((t: any) => (
-                    <Card key={t.id} className="p-3 shadow-sm border">
-                      <p className="font-medium text-sm">{t.deliverable}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Due: {t.deadline ? new Date(t.deadline).toLocaleDateString() : "No deadline"}
-                      </p>
-                      <div className="flex gap-1 mt-3">
-                        {col !== "done" && (
-                          <form action={async () => { "use server"; await updateTaskStatus(t.id, "done"); }}>
-                             <Button size="icon" variant="outline" className="h-6 w-6" title="Move to Done">✓</Button>
-                          </form>
-                        )}
-                        {col === "todo" && (
-                           <form action={async () => { "use server"; await updateTaskStatus(t.id, "in_progress"); }}>
-                             <Button size="icon" variant="outline" className="h-6 w-6" title="Start">▶</Button>
-                           </form>
-                        )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {columns.map((col) => {
+              const cfg = STATUS_CONFIG[col];
+              const colTasks =
+                tasks?.filter((t: any) => t.status === col) ?? [];
+              return (
+                <div key={col} className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2 px-1">
+                    <Badge variant="outline" className={`text-xs ${cfg.color}`}>
+                      {cfg.label}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground ml-auto">
+                      {colTasks.length}
+                    </span>
+                  </div>
+                  <div className="space-y-2 min-h-[200px]">
+                    {colTasks.length === 0 ? (
+                      <div className="flex items-center justify-center h-20 rounded-lg border border-dashed border-border/60 text-xs text-muted-foreground">
+                        No tasks
                       </div>
-                    </Card>
-                  ))}
+                    ) : (
+                      colTasks.map((t: any) => {
+                        const isOverdue =
+                          t.deadline &&
+                          new Date(t.deadline) < now &&
+                          t.status !== "done";
+                        return (
+                          <Card
+                            key={t.id}
+                            className="border-border/60 shadow-sm"
+                          >
+                            <CardContent className="p-3">
+                              <p className="text-sm font-medium leading-snug">
+                                {t.deliverable}
+                              </p>
+                              {t.profiles?.full_name && (
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  {t.profiles.full_name}
+                                </p>
+                              )}
+                              {t.deadline && (
+                                <p
+                                  className={`text-xs mt-1 ${isOverdue ? "text-destructive font-medium" : "text-muted-foreground"}`}
+                                >
+                                  Due:{" "}
+                                  {new Date(t.deadline).toLocaleDateString()}
+                                  {isOverdue && " · Overdue"}
+                                </p>
+                              )}
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {col !== "done" && (
+                                  <form
+                                    action={async () => {
+                                      "use server";
+                                      await updateTaskStatus(t.id, "done");
+                                    }}
+                                  >
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-6 text-xs px-2"
+                                    >
+                                      ✓ Done
+                                    </Button>
+                                  </form>
+                                )}
+                                {col === "todo" && (
+                                  <form
+                                    action={async () => {
+                                      "use server";
+                                      await updateTaskStatus(
+                                        t.id,
+                                        "in_progress",
+                                      );
+                                    }}
+                                  >
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 text-xs px-2"
+                                    >
+                                      ▶ Start
+                                    </Button>
+                                  </form>
+                                )}
+                                {col === "in_progress" && (
+                                  <form
+                                    action={async () => {
+                                      "use server";
+                                      await updateTaskStatus(t.id, "review");
+                                    }}
+                                  >
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 text-xs px-2"
+                                    >
+                                      → Review
+                                    </Button>
+                                  </form>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </TabsContent>
 
         <TabsContent value="schedule" className="space-y-6">
-           <Card>
+          <Card className="border-border/60">
             <CardHeader>
-              <CardTitle>Log Schedule Activity</CardTitle>
+              <CardTitle className="text-base">Log Schedule Activity</CardTitle>
+              <CardDescription>
+                Record your availability or upcoming team activities.
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <form action={addSchedule} className="flex gap-4 max-w-2xl">
-                <Input type="date" name="date" required />
-                <Input name="activity" placeholder="Activity / Availability" required />
+              <form
+                action={addSchedule}
+                className="flex flex-wrap gap-3 max-w-2xl"
+              >
+                <Input type="date" name="date" required className="w-40" />
+                <Input
+                  name="activity"
+                  placeholder="Activity / availability note..."
+                  required
+                  className="flex-1 min-w-[200px]"
+                />
                 <Button type="submit">Log</Button>
               </form>
             </CardContent>
           </Card>
 
-          <h2 className="text-xl font-bold mt-8">Upcoming Schedules</h2>
-          <div className="space-y-2">
-            {schedules?.map((s: any) => (
-              <div key={s.id} className="p-3 border rounded flex justify-between items-center bg-card">
-                <div>
-                  <p className="font-semibold">{s.profiles?.full_name}</p>
-                  <p className="text-sm text-muted-foreground">{s.activity}</p>
-                </div>
-                <div className="text-sm font-medium">
-                  {new Date(s.date).toLocaleDateString()}
-                </div>
+          <div className="space-y-3">
+            <h2 className="text-base font-semibold">Upcoming Schedule</h2>
+            {!schedules || schedules.length === 0 ? (
+              <Card className="border-border/60">
+                <CardContent className="flex items-center justify-center py-12 text-muted-foreground text-sm">
+                  No schedules logged yet.
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+                {schedules.map((s: any) => {
+                  const isPast = new Date(s.date) < now;
+                  return (
+                    <Card
+                      key={s.id}
+                      className={`border-border/60 ${isPast ? "opacity-60" : ""}`}
+                    >
+                      <CardContent className="p-4 flex gap-3 items-start">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                          <CalendarDays className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium">
+                            {s.profiles?.full_name || "Unknown"}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5 break-words">
+                            {s.activity}
+                          </p>
+                          <p className="text-xs font-medium mt-1 text-primary">
+                            {new Date(s.date).toLocaleDateString("en-US", {
+                              weekday: "short",
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
-            ))}
+            )}
           </div>
         </TabsContent>
       </Tabs>

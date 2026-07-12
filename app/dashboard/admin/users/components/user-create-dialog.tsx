@@ -109,7 +109,7 @@ export function UserCreateDialog({
             <div className="relative">
               <Input
                 value={newPassword}
-                onChange={(e: any) => setNewPassword(e.target.value)}
+                onChange={(e) => setNewPassword(e.target.value)}
                 type={showCreatePassword ? "text" : "password"}
                 placeholder="Minimum 6 characters"
                 className="pr-10"

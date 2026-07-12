@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Lock, Paintbrush, Zap } from "lucide-react";
@@ -9,17 +15,43 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import type { Profile } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface SkillTreeProps {
   profile: Profile;
 }
 
 const THEMES = [
-  { id: "default", name: "Classic Scholar", cost: 0, color: "hsl(221.2 83.2% 53.3%)" },
-  { id: "emerald", name: "Emerald Scholar", cost: 1000, color: "hsl(142.1 76.2% 36.3%)" },
-  { id: "violet", name: "Arcane Void", cost: 2500, color: "hsl(262.1 83.3% 57.8%)" },
-  { id: "rose", name: "Crimson Dawn", cost: 5000, color: "hsl(346.8 77.2% 49.8%)" },
-  { id: "amber", name: "Golden Prestige", cost: 10000, color: "hsl(37.7 92.1% 50.2%)" },
+  {
+    id: "default",
+    name: "Classic Scholar",
+    cost: 0,
+    color: "hsl(221.2 83.2% 53.3%)",
+  },
+  {
+    id: "emerald",
+    name: "Emerald Scholar",
+    cost: 1000,
+    color: "hsl(142.1 76.2% 36.3%)",
+  },
+  {
+    id: "violet",
+    name: "Arcane Void",
+    cost: 2500,
+    color: "hsl(262.1 83.3% 57.8%)",
+  },
+  {
+    id: "rose",
+    name: "Crimson Dawn",
+    cost: 5000,
+    color: "hsl(346.8 77.2% 49.8%)",
+  },
+  {
+    id: "amber",
+    name: "Golden Prestige",
+    cost: 10000,
+    color: "hsl(37.7 92.1% 50.2%)",
+  },
 ];
 
 export function SkillTree({ profile }: SkillTreeProps) {
@@ -31,13 +63,6 @@ export function SkillTree({ profile }: SkillTreeProps) {
     if (xp < theme.cost) {
       toast.error("Not enough XP to unlock this theme!");
       return;
-    }
-
-    if (theme.cost > 0) {
-      const confirmed = window.confirm(
-        `Equipping "${theme.name}" costs ${theme.cost.toLocaleString()} XP. This XP will be deducted. Proceed?`
-      );
-      if (!confirmed) return;
     }
 
     setLoading(true);
@@ -67,7 +92,9 @@ export function SkillTree({ profile }: SkillTreeProps) {
     if (themeError) {
       toast.error("Failed to apply theme");
     } else {
-      toast.success(`Theme "${theme.name}" equipped! −${theme.cost.toLocaleString()} XP`);
+      toast.success(
+        `Theme "${theme.name}" equipped! −${theme.cost.toLocaleString()} XP`,
+      );
       router.refresh();
     }
     setLoading(false);
@@ -80,8 +107,11 @@ export function SkillTree({ profile }: SkillTreeProps) {
           <Zap className="h-5 w-5 text-primary" /> Profile Themes (Skill Tree)
         </CardTitle>
         <CardDescription>
-          Spend your hard-earned XP to unlock exclusive UI themes. Your current XP:{" "}
-          <span className="font-semibold text-primary">{xp.toLocaleString()}</span>
+          Spend your hard-earned XP to unlock exclusive UI themes. Your current
+          XP:{" "}
+          <span className="font-semibold text-primary">
+            {xp.toLocaleString()}
+          </span>
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -121,22 +151,37 @@ export function SkillTree({ profile }: SkillTreeProps) {
                     <Button variant="secondary" className="w-full" disabled>
                       Equipped
                     </Button>
+                  ) : canAfford ? (
+                    theme.cost > 0 ? (
+                      <ConfirmDialog
+                        title={`Equip ${theme.name}?`}
+                        description={`This will deduct ${theme.cost.toLocaleString()} XP from your account. Proceed?`}
+                        onConfirm={() => unlockTheme(theme)}
+                        trigger={
+                          <Button
+                            variant="default"
+                            className="w-full"
+                            disabled={loading}
+                          >
+                            <Paintbrush className="h-4 w-4 mr-2" /> Equip (−
+                            {theme.cost.toLocaleString()} XP)
+                          </Button>
+                        }
+                      />
+                    ) : (
+                      <Button
+                        variant="default"
+                        className="w-full"
+                        onClick={() => unlockTheme(theme)}
+                        disabled={loading}
+                      >
+                        <Paintbrush className="h-4 w-4 mr-2" /> Equip (Free)
+                      </Button>
+                    )
                   ) : (
-                    <Button
-                      variant={canAfford ? "default" : "outline"}
-                      className="w-full"
-                      onClick={() => unlockTheme(theme)}
-                      disabled={loading || !canAfford}
-                    >
-                      {canAfford ? (
-                        <>
-                          <Paintbrush className="h-4 w-4 mr-2" /> Equip (−{theme.cost.toLocaleString()} XP)
-                        </>
-                      ) : (
-                        <>
-                          <Lock className="h-4 w-4 mr-2" /> Need {(theme.cost - xp).toLocaleString()} more XP
-                        </>
-                      )}
+                    <Button variant="outline" className="w-full" disabled>
+                      <Lock className="h-4 w-4 mr-2" /> Need{" "}
+                      {(theme.cost - xp).toLocaleString()} more XP
                     </Button>
                   )}
                 </div>

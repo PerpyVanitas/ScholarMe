@@ -60,9 +60,14 @@ export async function assignRole(
 
     revalidatePath("/dashboard/admin/roles");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Assign role error:", error);
-    return { error: error.message || "Failed to assign role" };
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : String(error) || "Failed to assign role",
+    };
   }
 }
 
@@ -78,7 +83,10 @@ export async function getRoleHistory(userId: string) {
     .order("created_at", { ascending: false });
 
   if (error) {
-    return { error: error.message, logs: [] };
+    return {
+      error: error instanceof Error ? error.message : String(error),
+      logs: [],
+    };
   }
 
   return { logs: data || [] };

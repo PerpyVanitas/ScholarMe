@@ -36,6 +36,7 @@ import type { Session, UserRole } from "@/lib/types";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { generateIcsFile, downloadIcs } from "@/lib/utils/calendar";
+import { formatRelativeDate } from "@/lib/utils";
 
 export function SessionList({
   sessions,
@@ -139,6 +140,10 @@ export function SessionList({
         const canRate =
           role === "learner" && session.status === "completed" && !hasRating;
 
+        const sessionDateObj = new Date(
+          `${session.scheduled_date}T${session.start_time || "00:00:00"}`,
+        );
+
         return (
           <Card key={session.id} className="border-border/60">
             <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -146,7 +151,7 @@ export function SessionList({
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-foreground">
                     {role === "tutor"
-                      ? `Session on ${new Date(session.scheduled_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
+                      ? `Session ${formatRelativeDate(sessionDateObj)}`
                       : session.tutors?.profiles?.full_name || "Tutor"}
                   </span>
                   <Badge
@@ -159,14 +164,11 @@ export function SessionList({
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Calendar className="h-3.5 w-3.5" />
-                    {new Date(session.scheduled_date).toLocaleDateString(
-                      "en-US",
-                      {
-                        weekday: "short",
-                        month: "short",
-                        day: "numeric",
-                      },
-                    )}
+                    {sessionDateObj.toLocaleDateString("en-US", {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                    })}
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="h-3.5 w-3.5" />
@@ -174,6 +176,7 @@ export function SessionList({
                     {session.end_time?.slice(0, 5)}
                   </span>
                 </div>
+
                 {session.specializations && (
                   <Badge variant="secondary" className="text-xs w-fit mt-1">
                     {session.specializations.name}
@@ -348,7 +351,12 @@ export function SessionList({
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => onUpdateStatus(session.id, "completed")}
+                      onClick={() => {
+                        onUpdateStatus(session.id, "completed");
+                        import("@/components/ui/confetti").then((m) =>
+                          m.triggerConfetti(),
+                        );
+                      }}
                     >
                       <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
                       Mark Complete

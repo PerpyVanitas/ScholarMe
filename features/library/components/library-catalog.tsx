@@ -37,7 +37,17 @@ export function LibraryCatalog({ initialResources }: LibraryCatalogProps) {
   const [search, setSearch] = useState("");
   const { role } = useUser();
   const isAdmin =
-    role === "administrator" || role === "super_admin" || role === "officer";
+    role === "administrator" ||
+    role === "super_admin" ||
+    [
+      "president",
+      "vice_president",
+      "secretary",
+      "treasurer",
+      "auditor",
+      "committee_head",
+      "assistant_committee_head",
+    ].includes(role as string);
 
   // Create Resource State
   const [openCreate, setOpenCreate] = useState(false);

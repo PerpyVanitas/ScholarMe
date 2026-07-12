@@ -54,6 +54,40 @@ export async function POST(request: Request) {
     );
   }
 
+  // Check for overlapping sessions for this learner
+  const { data: overlappingSessions } = await supabase
+    .from("sessions")
+    .select("id")
+    .eq("learner_id", user.id)
+    .eq("scheduled_date", scheduled_date)
+    .neq("status", "cancelled")
+    .neq("status", "no_show")
+    .or(`and(start_time.lt.${end_time},end_time.gt.${start_time})`);
+
+  if (overlappingSessions && overlappingSessions.length > 0) {
+    return NextResponse.json(
+      { error: "You already have a session booked during this time." },
+      { status: 400 },
+    );
+  }
+
+  // Check for overlapping sessions for this tutor
+  const { data: tutorOverlaps } = await supabase
+    .from("sessions")
+    .select("id")
+    .eq("tutor_id", tutor_id)
+    .eq("scheduled_date", scheduled_date)
+    .neq("status", "cancelled")
+    .neq("status", "no_show")
+    .or(`and(start_time.lt.${end_time},end_time.gt.${start_time})`);
+
+  if (tutorOverlaps && tutorOverlaps.length > 0) {
+    return NextResponse.json(
+      { error: "The tutor is already booked during this time." },
+      { status: 400 },
+    );
+  }
+
   // Check auto-approve logic
   let initialStatus = "pending";
   const { data: tutorData } = await supabase
@@ -77,7 +111,11 @@ export async function POST(request: Request) {
   }
 
   // If tutor is creating the session themselves
-  const { data: currentTutor } = await supabase.from("tutors").select("id").eq("user_id", user.id).single();
+  const { data: currentTutor } = await supabase
+    .from("tutors")
+    .select("id")
+    .eq("user_id", user.id)
+    .single();
   if (currentTutor && currentTutor.id === tutor_id && status) {
     initialStatus = status;
   }

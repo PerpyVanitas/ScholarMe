@@ -503,6 +503,7 @@ export function ChatInterface({
                 size="icon"
                 className="md:hidden shrink-0 -ml-2"
                 onClick={() => setActiveConversationId(null)}
+                aria-label="Back to conversations"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
@@ -608,6 +609,7 @@ export function ChatInterface({
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity mt-auto"
+                                aria-label="Message options"
                               >
                                 <MoreVertical className="h-4 w-4 text-muted-foreground" />
                               </Button>
@@ -814,6 +816,7 @@ export function ChatInterface({
                         if (fileInputRef.current)
                           fileInputRef.current.value = "";
                       }}
+                      aria-label="Remove attachment"
                     >
                       <X className="h-3 w-3" />
                     </Button>
@@ -883,6 +886,7 @@ export function ChatInterface({
                         size="sm"
                         className="h-7 w-7 p-0 rounded-full text-muted-foreground"
                         onClick={() => setSmartReplies([])}
+                        aria-label="Clear smart replies"
                       >
                         <X className="h-3 w-3" />
                       </Button>
@@ -908,6 +912,7 @@ export function ChatInterface({
                     className="shrink-0"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isSending}
+                    aria-label="Attach file"
                   >
                     <Paperclip className="h-4 w-4" />
                   </Button>
@@ -924,6 +929,7 @@ export function ChatInterface({
                   <Button
                     type="submit"
                     disabled={(!newMessage.trim() && !attachment) || isSending}
+                    aria-label="Send message"
                   >
                     {isSending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

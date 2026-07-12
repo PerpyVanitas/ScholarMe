@@ -17,10 +17,12 @@ async function requireAdmin() {
     .single();
 
   const isAdmin = Array.isArray(profile?.roles)
-    ? profile.roles.some((role: any) =>
+    ? profile.roles.some((role: { name: string }) =>
         ["administrator", "super_admin"].includes(role.name),
       )
-    : ["administrator", "super_admin"].includes((profile?.roles as any)?.name);
+    : ["administrator", "super_admin"].includes(
+        (profile?.roles as { name: string } | undefined)?.name || "",
+      );
 
   if (!isAdmin) return null;
   return user;

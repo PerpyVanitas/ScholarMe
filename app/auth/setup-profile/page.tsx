@@ -48,6 +48,8 @@ export default function SetupProfilePage() {
   const [bio, setBio] = useState("");
   const [hourlyRate, setHourlyRate] = useState<number | "">("");
   const [yearsExperience, setYearsExperience] = useState<number | "">("");
+  const [degreeProgram, setDegreeProgram] = useState("");
+  const [yearLevel, setYearLevel] = useState<number | "">("");
 
   // Data
   const [specializations, setSpecializations] = useState<Specialization[]>([]);
@@ -78,6 +80,8 @@ export default function SetupProfilePage() {
         setMembershipNumber(profile.membership_number || "");
         setAvatarUrl(profile.avatar_url || null);
         setRoleName(getRoleName(profile));
+        setDegreeProgram(profile.degree_program || "");
+        if (profile.year_level) setYearLevel(profile.year_level);
 
         // If profile already completed, go to dashboard
         if (profile.profile_completed) {
@@ -109,7 +113,11 @@ export default function SetupProfilePage() {
               .select("specialization_id")
               .eq("tutor_id", tutorRow.id);
             if (tutorSpecs) {
-              setSelectedSpecs(tutorSpecs.map((s: any) => s.specialization_id));
+              setSelectedSpecs(
+                tutorSpecs.map(
+                  (s: { specialization_id: string }) => s.specialization_id,
+                ),
+              );
             }
           }
         }
@@ -190,6 +198,8 @@ export default function SetupProfilePage() {
           full_name: `${firstName.trim()} ${lastName.trim()}`,
           avatar_url: avatarPathname || null, // Store the actual Blob pathname
           membership_number: isTutor ? membershipNumber.trim() || null : null,
+          degree_program: !isTutor ? degreeProgram.trim() || null : null,
+          year_level: !isTutor && yearLevel !== "" ? Number(yearLevel) : null,
           profile_completed: true,
         })
         .eq("id", userId);
@@ -357,7 +367,7 @@ export default function SetupProfilePage() {
               <Input
                 id="firstName"
                 value={firstName}
-                onChange={(e: any) => setFirstName(e.target.value)}
+                onChange={(e) => setFirstName(e.target.value)}
                 placeholder="Juan"
               />
             </div>
@@ -366,11 +376,44 @@ export default function SetupProfilePage() {
               <Input
                 id="lastName"
                 value={lastName}
-                onChange={(e: any) => setLastName(e.target.value)}
+                onChange={(e) => setLastName(e.target.value)}
                 placeholder="Dela Cruz"
               />
             </div>
           </div>
+
+          {/* Learner-specific fields */}
+          {!isTutor && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="degreeProgram">Degree Program *</Label>
+                <Input
+                  id="degreeProgram"
+                  value={degreeProgram}
+                  onChange={(e) => setDegreeProgram(e.target.value)}
+                  placeholder="e.g. BS Computer Science"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="yearLevel">Year Level *</Label>
+                <select
+                  id="yearLevel"
+                  value={yearLevel}
+                  onChange={(e) =>
+                    setYearLevel(e.target.value ? Number(e.target.value) : "")
+                  }
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <option value="">Select year level</option>
+                  <option value="1">1st Year</option>
+                  <option value="2">2nd Year</option>
+                  <option value="3">3rd Year</option>
+                  <option value="4">4th Year</option>
+                  <option value="5">5th Year</option>
+                </select>
+              </div>
+            </div>
+          )}
 
           {/* Tutor-specific fields */}
           {isTutor && (
@@ -380,7 +423,7 @@ export default function SetupProfilePage() {
                 <Input
                   id="membershipNumber"
                   value={membershipNumber}
-                  onChange={(e: any) => setMembershipNumber(e.target.value)}
+                  onChange={(e) => setMembershipNumber(e.target.value)}
                   placeholder="e.g. TM-2025-001"
                 />
               </div>
@@ -390,7 +433,7 @@ export default function SetupProfilePage() {
                 <textarea
                   id="bio"
                   value={bio}
-                  onChange={(e: any) => setBio(e.target.value)}
+                  onChange={(e) => setBio(e.target.value)}
                   placeholder="Tell students about your teaching experience and style..."
                   className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   required
@@ -405,7 +448,11 @@ export default function SetupProfilePage() {
                     type="number"
                     min="0"
                     value={hourlyRate}
-                    onChange={(e: any) => setHourlyRate(e.target.value)}
+                    onChange={(e) =>
+                      setHourlyRate(
+                        e.target.value ? Number(e.target.value) : "",
+                      )
+                    }
                     placeholder="e.g. 250"
                   />
                 </div>
@@ -416,7 +463,11 @@ export default function SetupProfilePage() {
                     type="number"
                     min="0"
                     value={yearsExperience}
-                    onChange={(e: any) => setYearsExperience(e.target.value)}
+                    onChange={(e) =>
+                      setYearsExperience(
+                        e.target.value ? Number(e.target.value) : "",
+                      )
+                    }
                     placeholder="e.g. 2"
                   />
                 </div>
@@ -428,7 +479,7 @@ export default function SetupProfilePage() {
                   Select at least one subject you can tutor
                 </p>
                 <div className="flex flex-wrap gap-2 pt-1">
-                  {specializations.map((spec: any) => {
+                  {specializations.map((spec: { id: string; name: string }) => {
                     const isSelected = selectedSpecs.includes(spec.id);
                     return (
                       <button

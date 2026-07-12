@@ -27,6 +27,8 @@ import { SmartTutorRecommendations } from "./smart-tutor-recommendations";
 import { WeeklyChallenges } from "@/features/gamification/components/weekly-challenges";
 import { DailyQuests } from "@/features/gamification/components/daily-quests";
 
+import { SessionCountdown } from "./session-countdown";
+
 interface LearnerDashboardProps {
   profile: Profile;
   upcomingSessions: Session[];
@@ -42,6 +44,8 @@ export function LearnerDashboard({
   upcomingSessions,
   stats,
 }: LearnerDashboardProps) {
+  const nextSession = upcomingSessions.length > 0 ? upcomingSessions[0] : null;
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -138,19 +142,26 @@ export function LearnerDashboard({
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card className="border-border/60">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <div>
-              <CardTitle className="text-base">Upcoming Sessions</CardTitle>
-              <CardDescription>Your next scheduled sessions</CardDescription>
+          <CardHeader className="flex flex-col gap-2 pb-2">
+            <div className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-base">Upcoming Sessions</CardTitle>
+                <CardDescription>Your next scheduled sessions</CardDescription>
+              </div>
+              <Button asChild variant="ghost" size="sm">
+                <Link
+                  href="/dashboard/sessions"
+                  className="flex items-center gap-1"
+                >
+                  View all <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </Button>
             </div>
-            <Button asChild variant="ghost" size="sm">
-              <Link
-                href="/dashboard/sessions"
-                className="flex items-center gap-1"
-              >
-                View all <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </Button>
+            {nextSession && (
+              <div className="mt-2">
+                <SessionCountdown session={nextSession} />
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             {upcomingSessions.length === 0 ? (

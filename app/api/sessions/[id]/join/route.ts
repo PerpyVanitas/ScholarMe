@@ -84,3 +84,58 @@ export async function POST(
 
   return NextResponse.json({ success: true });
 }
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Update status to cancelled instead of deleting the row
+  const { error: updateError } = await supabase
+    .from("session_participants")
+    .update({ status: "cancelled" })
+    .eq("session_id", id)
+    .eq("learner_id", user.id);
+
+  if (updateError) {
+    return NextResponse.json({ error: updateError.message }, { status: 500 });
+  }
+
+  // Handle Waitlist Auto-Promotion
+  const { data: waitlist } = await supabase
+    .from("session_waitlists")
+    .select("id, user_id")
+    .eq("session_id", id)
+    .eq("status", "waiting")
+    .order("joined_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (waitlist) {
+    // Promote the waitlisted user
+    await supabase.from("session_participants").insert({
+      session_id: id,
+      learner_id: waitlist.user_id,
+      status: "registered",
+    });
+
+    // Mark waitlist entry as promoted
+    await supabase
+      .from("session_waitlists")
+      .update({ status: "promoted" })
+      .eq("id", waitlist.id);
+
+    // Future improvement: Send email/notification to promoted user here
+  }
+
+  return NextResponse.json({ success: true });
+}

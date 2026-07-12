@@ -164,17 +164,6 @@ export default function AdminAnalyticsPage() {
   const [noSemester, setNoSemester] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Admin Create State
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [adminForm, setAdminForm] = useState({
-    full_name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
-  const [adminFormError, setAdminFormError] = useState("");
-
   // Semester Config State
   const [semesterDialog, setSemesterDialog] = useState(false);
   const [semesterForm, setSemesterForm] = useState({
@@ -278,41 +267,6 @@ export default function AdminAnalyticsPage() {
       loadHallOfFame();
     }
   }, [hofStartDate, hofEndDate]);
-
-  async function handleCreateAdmin(e: React.FormEvent) {
-    e.preventDefault();
-    setAdminFormError("");
-    if (adminForm.password !== adminForm.confirmPassword)
-      return setAdminFormError("Passwords do not match.");
-    if (adminForm.password.length < 8)
-      return setAdminFormError("Password must be at least 8 characters.");
-
-    setCreating(true);
-    try {
-      const res = await fetch("/api/admin/create-admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(adminForm),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.success)
-        throw new Error(json.error?.message || "Failed to create admin");
-
-      toast.success(`Administrator created: ${adminForm.email}`);
-      setDialogOpen(false);
-      setAdminForm({
-        full_name: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-      });
-    } catch (e) {
-      const error = e as Error;
-      setAdminFormError(error.message);
-    } finally {
-      setCreating(false);
-    }
-  }
 
   async function handleConfigureSemester(e: React.FormEvent) {
     e.preventDefault();
@@ -506,68 +460,6 @@ export default function AdminAnalyticsPage() {
                 </div>
                 <Button type="submit" disabled={configuring}>
                   {configuring ? "Saving..." : "Save & Activate"}
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
-
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <ShieldPlus className="mr-2 h-4 w-4" /> New Admin
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create Administrator</DialogTitle>
-              </DialogHeader>
-              <form
-                onSubmit={handleCreateAdmin}
-                className="flex flex-col gap-4"
-              >
-                <Input
-                  required
-                  placeholder="Full Name"
-                  value={adminForm.full_name}
-                  onChange={(e) =>
-                    setAdminForm({ ...adminForm, full_name: e.target.value })
-                  }
-                />
-                <Input
-                  required
-                  type="email"
-                  placeholder="Email"
-                  value={adminForm.email}
-                  onChange={(e) =>
-                    setAdminForm({ ...adminForm, email: e.target.value })
-                  }
-                />
-                <Input
-                  required
-                  type="password"
-                  placeholder="Password"
-                  value={adminForm.password}
-                  onChange={(e) =>
-                    setAdminForm({ ...adminForm, password: e.target.value })
-                  }
-                />
-                <Input
-                  required
-                  type="password"
-                  placeholder="Confirm Password"
-                  value={adminForm.confirmPassword}
-                  onChange={(e) =>
-                    setAdminForm({
-                      ...adminForm,
-                      confirmPassword: e.target.value,
-                    })
-                  }
-                />
-                {adminFormError && (
-                  <p className="text-sm text-destructive">{adminFormError}</p>
-                )}
-                <Button type="submit" disabled={creating}>
-                  {creating ? "Creating..." : "Create"}
                 </Button>
               </form>
             </DialogContent>

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Shared role normalization utilities.
  *
  * Supabase returns joined `roles(id, name)` relations as arrays even when
@@ -15,18 +15,19 @@ type RoleLike = {
 
 type ProfileLike = {
   roles?: RoleLike | RoleLike[] | null;
+  membership_classification?: string | null;
 };
 
 export const USER_ROLES = [
   "learner",
   "tutor",
-  "officer",
+  "assistant_committee_head",
   "committee_head",
-  "finance_manager",
-  "treasurer",
   "auditor",
+  "treasurer",
+  "secretary",
+  "vice_president",
   "president",
-  "faculty_adviser",
   "administrator",
   "super_admin",
 ] as const satisfies readonly UserRole[];
@@ -34,76 +35,91 @@ export const USER_ROLES = [
 export const ROLE_LABELS: Record<UserRole, string> = {
   learner: "Learner",
   tutor: "Tutor",
-  officer: "Officer",
+  assistant_committee_head: "Asst. Committee Head",
   committee_head: "Committee Head",
-  finance_manager: "Finance Manager",
-  treasurer: "Treasurer",
   auditor: "Auditor",
+  treasurer: "Treasurer",
+  secretary: "Secretary",
+  vice_president: "Vice President",
   president: "President",
-  faculty_adviser: "Faculty Adviser",
   administrator: "Administrator",
   super_admin: "Super Admin",
 };
 
 export const ADMIN_ROLES = ["administrator", "super_admin"] as const;
+
+export const EXECUTIVE_ROLES = [
+  "president",
+  "vice_president",
+  "secretary",
+  "treasurer",
+  "auditor",
+] as const satisfies readonly UserRole[];
+
+export const COMMITTEE_LEADERSHIP = [
+  "committee_head",
+  "assistant_committee_head",
+] as const satisfies readonly UserRole[];
+
+export const MEMBER_ROLES = [
+  ...EXECUTIVE_ROLES,
+  ...COMMITTEE_LEADERSHIP,
+  "tutor",
+] as const satisfies readonly UserRole[];
+
+export const TUTOR_ROLES = [
+  ...MEMBER_ROLES,
+  "super_admin",
+] as const satisfies readonly UserRole[];
+
 export const GOVERNANCE_ROLES = [
   "president",
-  "faculty_adviser",
   "administrator",
   "super_admin",
 ] as const satisfies readonly UserRole[];
+
 export const OFFICER_ROLES = [
-  "officer",
-  "committee_head",
-  "finance_manager",
-  "treasurer",
-  "auditor",
-  "president",
-  "faculty_adviser",
+  ...EXECUTIVE_ROLES,
+  ...COMMITTEE_LEADERSHIP,
   "administrator",
   "super_admin",
 ] as const satisfies readonly UserRole[];
+
 export const FINANCE_VIEW_ROLES = [
-  "committee_head",
-  "finance_manager",
   "treasurer",
   "auditor",
   "president",
-  "faculty_adviser",
   "administrator",
   "super_admin",
 ] as const satisfies readonly UserRole[];
+
 export const FINANCE_SUBMIT_ROLES = [
-  "committee_head",
-  "finance_manager",
   "treasurer",
   "president",
   "administrator",
   "super_admin",
 ] as const satisfies readonly UserRole[];
+
 export const FINANCE_REVIEW_ROLES = [
-  "finance_manager",
   "treasurer",
   "administrator",
   "super_admin",
 ] as const satisfies readonly UserRole[];
+
 export const PRESIDENT_APPROVAL_ROLES = [
   "president",
   "administrator",
   "super_admin",
 ] as const satisfies readonly UserRole[];
+
 export const AUDIT_ROLES = [
   "auditor",
   "administrator",
   "super_admin",
 ] as const satisfies readonly UserRole[];
+
 export const TEAMWORK_ROLES = [
-  "officer",
-  "committee_head",
-  "finance_manager",
-  "treasurer",
-  "auditor",
-  "president",
+  ...MEMBER_ROLES,
   "administrator",
   "super_admin",
 ] as const satisfies readonly UserRole[];
@@ -112,7 +128,6 @@ const ADMIN_ROUTE_ACCESS: Array<{
   prefix: string;
   roles: readonly UserRole[];
 }> = [
-  { prefix: "/dashboard/admin/roles", roles: ["super_admin"] },
   { prefix: "/dashboard/admin/messages", roles: ["super_admin"] },
   { prefix: "/dashboard/admin/feedback", roles: ["super_admin"] },
   { prefix: "/dashboard/admin/reports", roles: FINANCE_VIEW_ROLES },
@@ -145,6 +160,18 @@ export function isAdminRole(
   return ADMIN_ROLES.includes(role as (typeof ADMIN_ROLES)[number]);
 }
 
+export function isEsasScholar(
+  profile: ProfileLike | null | undefined,
+): boolean {
+  return profile?.membership_classification === "esas_scholar";
+}
+
+export function isRegularMember(
+  profile: ProfileLike | null | undefined,
+): boolean {
+  return profile?.membership_classification === "regular_member";
+}
+
 export function normalizeRole(
   raw: Role | RoleLike | Role[] | RoleLike[] | undefined | null,
 ): RoleLike | undefined {
@@ -163,31 +190,31 @@ export function getRoleName(
 }
 
 export function canAccessAdminRoute(
-  role: string | null | undefined,
+  roleName: UserRole,
   pathname: string,
-) {
+): boolean {
+  if (hasAnyRole(roleName, ["administrator", "super_admin"])) return true;
+
   const match = ADMIN_ROUTE_ACCESS.find((route) =>
     pathname.startsWith(route.prefix),
   );
-  return !!match && hasAnyRole(role, match.roles);
+  if (!match) return false;
+
+  return hasAnyRole(roleName, match.roles);
 }
 
 export function canAccessFinance(role: string | null | undefined) {
   return hasAnyRole(role, FINANCE_VIEW_ROLES);
 }
-
 export function canSubmitFinance(role: string | null | undefined) {
   return hasAnyRole(role, FINANCE_SUBMIT_ROLES);
 }
-
 export function canReviewFinance(role: string | null | undefined) {
   return hasAnyRole(role, FINANCE_REVIEW_ROLES);
 }
-
 export function canApproveFinance(role: string | null | undefined) {
   return hasAnyRole(role, PRESIDENT_APPROVAL_ROLES);
 }
-
 export function canAuditFinance(role: string | null | undefined) {
   return hasAnyRole(role, AUDIT_ROLES);
 }

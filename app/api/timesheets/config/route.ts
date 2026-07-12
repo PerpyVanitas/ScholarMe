@@ -20,7 +20,7 @@ export async function GET() {
     if (error) {
       console.warn(
         "Could not fetch active timesheet config (table might not exist yet):",
-        error.message,
+        error instanceof Error ? error.message : String(error),
       );
       return NextResponse.json({
         id: null,
@@ -33,8 +33,11 @@ export async function GET() {
     return NextResponse.json(
       data || { id: null, name: null, start_date: null, end_date: null },
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[API Error]", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : String(error) },
+      { status: 500 },
+    );
   }
 }

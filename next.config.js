@@ -30,6 +30,9 @@ const securityHeaders = [
 const nextConfig = {
   // reactCompiler: true,  // Disabled — requires babel-plugin-react-compiler (not installed)
   poweredByHeader: false,
+  experimental: {
+    optimizePackageImports: ["lucide-react", "recharts", "date-fns"],
+  },
   images: {
     remotePatterns: [
       {
@@ -54,6 +57,7 @@ const withPWA = require("@ducanh2912/next-pwa").default({
   disable: process.env.NODE_ENV === "development",
   register: true,
   skipWaiting: true,
+  buildExcludes: [/app-build-manifest.json$/],
 });
 
 module.exports = withPWA(nextConfig);

@@ -30,12 +30,12 @@ export async function POST(request: NextRequest) {
 
     const isAdmin = Array.isArray(callerProfile?.roles)
       ? callerProfile.roles.some(
-          (role: any) =>
+          (role: { name: string }) =>
             ["administrator", "super_admin"].includes(role.name) ||
             role.name === "super_admin",
         )
       : ["administrator", "super_admin"].includes(
-          (callerProfile?.roles as any)?.name,
+          (callerProfile?.roles as { name: string } | undefined)?.name || "",
         );
 
     if (callerError || !isAdmin) {

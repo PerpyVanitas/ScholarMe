@@ -24,7 +24,7 @@ export async function GET(
 
   const roleName = Array.isArray(profile?.roles)
     ? profile.roles[0]?.name
-    : (profile?.roles as any)?.name;
+    : (profile?.roles as { name: string } | undefined)?.name;
   const isAdmin = ["administrator", "super_admin"].includes(roleName as string);
 
   if (!isAdmin) {

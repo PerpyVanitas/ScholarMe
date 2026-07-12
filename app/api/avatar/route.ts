@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Supabase storage path (resources bucket).
+    // Supabase storage path (avatars stored in 'resources' bucket under avatars/ prefix)
     if (pathname.startsWith("avatars/")) {
       const base = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
       if (!base) {
@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
           { status: 500 },
         );
       }
+      // Use public URL directly — the 'resources' bucket must have public access for avatars/
       const url = `${base}/storage/v1/object/public/resources/${pathname}`;
       return NextResponse.redirect(url);
     }

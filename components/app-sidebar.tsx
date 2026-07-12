@@ -13,7 +13,12 @@ import {
   GOVERNANCE_ROLES,
   ROLE_LABELS,
   TEAMWORK_ROLES,
+  TUTOR_ROLES,
+  EXECUTIVE_ROLES,
+  COMMITTEE_LEADERSHIP,
+  ADMIN_ROLES,
   hasAnyRole,
+  isEsasScholar,
 } from "@/lib/utils/roles";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -86,7 +91,7 @@ interface AppSidebarProps {
   notificationCount: number;
 }
 
-function getNavItems(role: UserRole) {
+function getNavItems(role: UserRole, profile: Profile) {
   // Core items available to everyone
   const coreItems = [
     { title: "Dashboard", href: "/dashboard/home", icon: LayoutDashboard },
@@ -94,24 +99,25 @@ function getNavItems(role: UserRole) {
     { title: "Notifications", href: "/dashboard/notifications", icon: Bell },
   ];
 
-  const resourceTitle =
-    role === "tutor"
-      ? "My Repositories"
-      : hasAnyRole(role, GOVERNANCE_ROLES)
-        ? "Resource Library"
-        : "Resources";
-
-  // Study items
+  // Study Tools
   const studyItems = [
-    { title: resourceTitle, href: "/dashboard/resources", icon: BookOpen },
+    { title: "Study Quizzes", href: "/dashboard/quizzes", icon: Lightbulb },
+    { title: "AI Tutor", href: "/dashboard/ai-tutor", icon: Bot },
+    { title: "Flashcards", href: "/dashboard/flashcards", icon: FolderOpen },
+  ];
+
+  // Library & Resources
+  const libraryItems = [
+    {
+      title: "Digital Resources",
+      href: "/dashboard/resources",
+      icon: BookOpen,
+    },
     {
       title: "Physical Library",
       href: "/dashboard/resources/library",
       icon: BookOpen,
     },
-    { title: "Study Quizzes", href: "/dashboard/quizzes", icon: Lightbulb },
-    { title: "AI Tutor", href: "/dashboard/ai-tutor", icon: Bot },
-    { title: "Flashcards", href: "/dashboard/flashcards", icon: FolderOpen },
   ];
 
   // Community items depending on role
@@ -129,9 +135,9 @@ function getNavItems(role: UserRole) {
             icon: Calendar,
           },
         ]),
-    { title: "My Messages", href: "/dashboard/messages", icon: MessageSquare },
-    { title: "Forums", href: "/dashboard/forums", icon: MessageSquare },
+    { title: "Community Hub", href: "/dashboard/forums", icon: MessageSquare },
     { title: "Study Groups", href: "/dashboard/groups", icon: Users },
+    { title: "My Messages", href: "/dashboard/messages", icon: MessageSquare },
     { title: "Voting", href: "/dashboard/voting", icon: Vote },
     { title: "Leaderboard", href: "/dashboard/leaderboard", icon: Trophy },
   ];
@@ -141,10 +147,12 @@ function getNavItems(role: UserRole) {
     label: string;
     items: { title: string; href: string; icon: LucideIcon }[];
   }[] = [];
-  if (role === "tutor") {
-    managementGroups.push({
-      label: "Tutor Tools",
-      items: [
+
+  // Honor Society (Tutor / Officers)
+  if (hasAnyRole(role, TUTOR_ROLES)) {
+    const hsItems = [];
+    if (hasAnyRole(role, TUTOR_ROLES)) {
+      hsItems.push(
         { title: "My Timesheet", href: "/dashboard/timesheet", icon: Timer },
         { title: "Availability", href: "/dashboard/availability", icon: Clock },
         {
@@ -152,72 +160,75 @@ function getNavItems(role: UserRole) {
           href: "/dashboard/tutors/reviews",
           icon: ShieldCheck,
         },
+      );
+    }
+
+    // If ESAS scholar, or anyone we want to track 90 hours for. Currently placing it in profile is better,
+    // but we can add an ESAS Tracker link here.
+
+    if (hasAnyRole(role, TEAMWORK_ROLES)) {
+      hsItems.push({
+        title: "Team Workspace",
+        href: "/dashboard/team",
+        icon: Users,
+      });
+    }
+
+    managementGroups.push({
+      label: "Honor Society",
+      items: hsItems,
+    });
+  }
+
+  // Executive Board
+  if (hasAnyRole(role, EXECUTIVE_ROLES) || hasAnyRole(role, ADMIN_ROLES)) {
+    managementGroups.push({
+      label: "Executive Board",
+      items: [
+        {
+          title: "Admin Dashboard",
+          href: "/dashboard/admin",
+          icon: LayoutDashboard,
+        },
+        {
+          title: "User Management",
+          href: "/dashboard/admin/users",
+          icon: Users,
+        },
+        {
+          title: "Mastery Verifications",
+          href: "/dashboard/admin/verifications",
+          icon: ShieldCheck,
+        },
+        {
+          title: "Tutor Analytics",
+          href: "/dashboard/admin/tutor-stats",
+          icon: BarChart,
+        },
       ],
     });
   }
 
-  if (hasAnyRole(role, GOVERNANCE_ROLES)) {
-    const adminItems = [
-      {
-        title: "Admin Dashboard",
-        href: "/dashboard/admin",
-        icon: LayoutDashboard,
-      },
-      {
-        title: "Tutor Analytics",
-        href: "/dashboard/admin/tutor-stats",
-        icon: BarChart,
-      },
-      { title: "User Management", href: "/dashboard/admin/users", icon: Users },
-      {
-        title: "System Logs",
-        href: "/dashboard/admin/logs",
-        icon: ShieldAlert,
-      },
-      { title: "QR Scanner", href: "/dashboard/admin/scanner", icon: Camera },
-      {
-        title: "Data Export",
-        href: "/dashboard/admin/export",
-        icon: FileSpreadsheet,
-      },
-      {
-        title: "Integrations",
-        href: "/dashboard/admin/integrations",
-        icon: Settings,
-      },
-      {
-        title: "System Health",
-        href: "/dashboard/admin/health",
-        icon: Activity,
-      },
-      {
-        title: "Mastery Verifications",
-        href: "/dashboard/admin/verifications",
-        icon: ShieldCheck,
-      },
-    ];
-    if (role === "super_admin") {
-      adminItems.push(
+  // Committee Management
+  if (
+    hasAnyRole(role, COMMITTEE_LEADERSHIP) ||
+    hasAnyRole(role, EXECUTIVE_ROLES) ||
+    hasAnyRole(role, ADMIN_ROLES)
+  ) {
+    managementGroups.push({
+      label: "Committee Management",
+      items: [
+        { title: "QR Scanner", href: "/dashboard/admin/scanner", icon: Camera },
         {
-          title: "Message Audit",
-          href: "/dashboard/admin/messages",
-          icon: MessageSquare,
+          title: "Data Export",
+          href: "/dashboard/admin/export",
+          icon: FileSpreadsheet,
         },
-        {
-          title: "User Feedback",
-          href: "/dashboard/admin/feedback",
-          icon: Bug,
-        },
-        {
-          title: "Role Management",
-          href: "/dashboard/admin/roles",
-          icon: UserCog,
-        },
-      );
-    }
-    managementGroups.push({ label: "Administration", items: adminItems });
+      ],
+    });
   }
 
+  // Finance & Audit
   if (hasAnyRole(role, FINANCE_VIEW_ROLES)) {
     const financeItems = [
       {
@@ -244,23 +255,46 @@ function getNavItems(role: UserRole) {
     managementGroups.push({ label: "Finance & Audit", items: financeItems });
   }
 
-  // Add Team Workspace to relevant roles
-  if (hasAnyRole(role, TEAMWORK_ROLES)) {
-    managementGroups.push({
-      label: "Officer Work",
-      items: [
+  // IT Administration
+  if (hasAnyRole(role, ADMIN_ROLES)) {
+    const adminItems = [
+      {
+        title: "System Logs",
+        href: "/dashboard/admin/logs",
+        icon: ShieldAlert,
+      },
+      {
+        title: "Integrations",
+        href: "/dashboard/admin/integrations",
+        icon: Settings,
+      },
+      {
+        title: "System Health",
+        href: "/dashboard/admin/health",
+        icon: Activity,
+      },
+    ];
+    if (role === "super_admin") {
+      adminItems.push(
         {
-          title: "Team Workspace",
-          href: "/dashboard/team",
-          icon: Users,
+          title: "Message Audit",
+          href: "/dashboard/admin/messages",
+          icon: MessageSquare,
         },
-      ],
-    });
+        {
+          title: "User Feedback",
+          href: "/dashboard/admin/feedback",
+          icon: Bug,
+        },
+      );
+    }
+    managementGroups.push({ label: "IT Administration", items: adminItems });
   }
 
   const learnerGroups = [
     { label: "Core", items: coreItems },
-    { label: "Academics & Study", items: studyItems },
+    { label: "Study Tools", items: studyItems },
+    { label: "Library & Resources", items: libraryItems },
     { label: "Community & Interaction", items: communityItems },
   ];
 
@@ -268,6 +302,7 @@ function getNavItems(role: UserRole) {
     learnerGroups,
     managementGroups,
     hasManagement: managementGroups.length > 0,
+    hasTutorTools: hasAnyRole(role, TUTOR_ROLES),
   };
 }
 
@@ -277,10 +312,8 @@ export function AppSidebar({
   notificationCount,
 }: AppSidebarProps) {
   const pathname = usePathname();
-  const { learnerGroups, managementGroups, hasManagement } = useMemo(
-    () => getNavItems(role),
-    [role],
-  );
+  const { learnerGroups, managementGroups, hasManagement, hasTutorTools } =
+    useMemo(() => getNavItems(role, profile), [role, profile]);
   const [workspace, setWorkspace] = useState<"learner" | "management">(
     "learner",
   );
@@ -306,7 +339,9 @@ export function AppSidebar({
     try {
       const stored = localStorage.getItem("scholarme_favorites");
       if (stored) setFavorites(JSON.parse(stored));
-    } catch (e) {}
+    } catch (e) {
+      console.warn("Failed to parse favorites from localStorage", e);
+    }
   }, []);
 
   const toggleFavorite = (e: React.MouseEvent, href: string) => {
@@ -371,7 +406,9 @@ export function AppSidebar({
     try {
       const stored = localStorage.getItem("scholarme_recent_visits");
       if (stored) setRecentVisits(JSON.parse(stored));
-    } catch (e) {}
+    } catch (e) {
+      console.warn("Failed to parse recent visits from localStorage", e);
+    }
   }, []);
 
   const handleLogoClick = async (e: React.MouseEvent) => {
@@ -527,65 +564,71 @@ export function AppSidebar({
           </Collapsible>
         )}
 
-        {navGroups.map((group, index) => (
-          <Collapsible
-            defaultOpen={index === 0}
-            className="group/collapsible"
-            key={index}
-          >
-            <SidebarGroup>
-              <SidebarGroupLabel asChild>
-                <CollapsibleTrigger>
-                  {group.label}
-                  <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                </CollapsibleTrigger>
-              </SidebarGroupLabel>
-              <CollapsibleContent>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {group.items.map((item) => (
-                      <SidebarMenuItem key={item.href}>
-                        <SidebarMenuButton
-                          asChild
-                          isActive={pathname === item.href}
-                          tooltip={item.title}
-                        >
-                          <Link href={item.href}>
-                            <item.icon className="h-4 w-4" />
-                            <span>{item.title}</span>
-                            {item.title === "Notifications" &&
-                              notificationCount > 0 && (
-                                <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium text-primary-foreground">
-                                  {notificationCount > 99
-                                    ? "99+"
-                                    : notificationCount}
-                                </span>
-                              )}
-                            <button
-                              onClick={(e) => toggleFavorite(e, item.href)}
-                              className="ml-auto opacity-0 group-hover:opacity-100 p-1 hover:bg-muted rounded"
-                              title={
-                                favorites.includes(item.href)
-                                  ? "Unpin"
-                                  : "Pin to Favorites"
-                              }
-                            >
-                              {favorites.includes(item.href) ? (
-                                <PinOff className="h-3 w-3 text-primary" />
-                              ) : (
-                                <Pin className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                              )}
-                            </button>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </CollapsibleContent>
-            </SidebarGroup>
-          </Collapsible>
-        ))}
+        {navGroups.map((group, index) => {
+          const isGroupActive = group.items.some(
+            (item) =>
+              pathname === item.href || pathname.startsWith(item.href + "/"),
+          );
+          return (
+            <Collapsible
+              defaultOpen={isGroupActive || index === 0}
+              className="group/collapsible"
+              key={index}
+            >
+              <SidebarGroup>
+                <SidebarGroupLabel asChild>
+                  <CollapsibleTrigger>
+                    {group.label}
+                    <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                  </CollapsibleTrigger>
+                </SidebarGroupLabel>
+                <CollapsibleContent>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {group.items.map((item) => (
+                        <SidebarMenuItem key={item.href}>
+                          <SidebarMenuButton
+                            asChild
+                            isActive={pathname === item.href}
+                            tooltip={item.title}
+                          >
+                            <Link href={item.href}>
+                              <item.icon className="h-4 w-4" />
+                              <span>{item.title}</span>
+                              {item.title === "Notifications" &&
+                                notificationCount > 0 && (
+                                  <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium text-primary-foreground">
+                                    {notificationCount > 99
+                                      ? "99+"
+                                      : notificationCount}
+                                  </span>
+                                )}
+                              <button
+                                onClick={(e) => toggleFavorite(e, item.href)}
+                                className="ml-auto opacity-0 group-hover:opacity-100 p-1 hover:bg-muted rounded"
+                                title={
+                                  favorites.includes(item.href)
+                                    ? "Unpin"
+                                    : "Pin to Favorites"
+                                }
+                              >
+                                {favorites.includes(item.href) ? (
+                                  <PinOff className="h-3 w-3 text-primary" />
+                                ) : (
+                                  <Pin className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                                )}
+                              </button>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      ))}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </CollapsibleContent>
+              </SidebarGroup>
+            </Collapsible>
+          );
+        })}
 
         {recentVisits.length > 0 && (
           <Collapsible defaultOpen={true} className="group/collapsible mt-4">

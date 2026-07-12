@@ -22,7 +22,7 @@ export async function POST(request: Request) {
       .single();
 
     const role = getRoleName(profile ?? { roles: [] });
-    if (!hasAnyRole(role, GOVERNANCE_ROLES)) {
+    if (role !== "super_admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
           autoRefreshToken: false,
           persistSession: false,
         },
-      }
+      },
     );
 
     const { data, error } = await adminAuthClient.auth.admin.generateLink({
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     console.error("Error generating impersonation link:", message);
     return NextResponse.json(
       { error: message || "Failed to generate link" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

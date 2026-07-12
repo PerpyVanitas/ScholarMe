@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { createSuccessResponse, createErrorResponse } from "@/lib/api-errors";
-import { isAdminRole } from "@/lib/utils/roles";
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,14 +26,7 @@ export async function GET(request: NextRequest) {
 
     const roleName = Array.isArray(profile?.roles)
       ? profile.roles[0]?.name
-      : (profile?.roles as any)?.name;
-
-    if (!isAdminRole(roleName)) {
-      return NextResponse.json(
-        createErrorResponse("AUTH_003_ADMIN_ONLY", "Admin access required"),
-        { status: 403 },
-      );
-    }
+      : (profile?.roles as { name: string } | undefined)?.name;
 
     // Since only Super Admin should view feedback based on user request, let's enforce super_admin
     if (roleName !== "super_admin") {
@@ -97,7 +89,7 @@ export async function PATCH(request: NextRequest) {
 
     const roleName = Array.isArray(profile?.roles)
       ? profile.roles[0]?.name
-      : (profile?.roles as any)?.name;
+      : (profile?.roles as { name: string } | undefined)?.name;
 
     if (roleName !== "super_admin") {
       return NextResponse.json(
@@ -115,7 +107,7 @@ export async function PATCH(request: NextRequest) {
     if (!feedback_id || !status) {
       return NextResponse.json(
         { error: "Missing required fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -132,7 +124,9 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(createSuccessResponse({ success: true }), { status: 200 });
+    return NextResponse.json(createSuccessResponse({ success: true }), {
+      status: 200,
+    });
   } catch (error) {
     console.error("Feedback PATCH error:", error);
     return NextResponse.json(

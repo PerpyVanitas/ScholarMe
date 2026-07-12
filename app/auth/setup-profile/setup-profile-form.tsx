@@ -253,7 +253,7 @@ export function SetupProfileForm({
               <Input
                 id="firstName"
                 value={firstName}
-                onChange={(e: any) => setFirstName(e.target.value)}
+                onChange={(e) => setFirstName(e.target.value)}
                 placeholder="Juan"
               />
             </div>
@@ -262,7 +262,7 @@ export function SetupProfileForm({
               <Input
                 id="lastName"
                 value={lastName}
-                onChange={(e: any) => setLastName(e.target.value)}
+                onChange={(e) => setLastName(e.target.value)}
                 placeholder="Dela Cruz"
               />
             </div>
@@ -274,7 +274,7 @@ export function SetupProfileForm({
               id="birthdate"
               type="date"
               value={birthdate}
-              onChange={(e: any) => setBirthdate(e.target.value)}
+              onChange={(e) => setBirthdate(e.target.value)}
             />
           </div>
 
@@ -283,7 +283,7 @@ export function SetupProfileForm({
             <Input
               id="membershipNumber"
               value={membershipNumber}
-              onChange={(e: any) => setMembershipNumber(e.target.value)}
+              onChange={(e) => setMembershipNumber(e.target.value)}
               placeholder="e.g. 21-1234-567"
               required
             />
@@ -297,7 +297,7 @@ export function SetupProfileForm({
                   Select the subjects you can tutor
                 </p>
                 <div className="flex flex-wrap gap-2 pt-1">
-                  {specializations.map((spec: any) => {
+                  {specializations.map((spec: { id: string; name: string }) => {
                     const isSelected = selectedSpecs.includes(spec.id);
                     return (
                       <button
