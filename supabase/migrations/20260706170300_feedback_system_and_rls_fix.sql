@@ -11,14 +11,17 @@ CREATE TABLE IF NOT EXISTS public.system_feedback (
 ALTER TABLE public.system_feedback ENABLE ROW LEVEL SECURITY;
 
 -- Allow authenticated users to insert feedback
+DROP POLICY IF EXISTS "system_feedback_insert" ON public.system_feedback;
 CREATE POLICY "system_feedback_insert" ON public.system_feedback
   FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 
 -- Allow admins to read feedback
+DROP POLICY IF EXISTS "system_feedback_select_admin" ON public.system_feedback;
 CREATE POLICY "system_feedback_select_admin" ON public.system_feedback
   FOR SELECT USING (public.is_admin(auth.uid()));
 
 -- Allow admins to update feedback status
+DROP POLICY IF EXISTS "system_feedback_update_admin" ON public.system_feedback;
 CREATE POLICY "system_feedback_update_admin" ON public.system_feedback
   FOR UPDATE USING (public.is_admin(auth.uid()));
 
