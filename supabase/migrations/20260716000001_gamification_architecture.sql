@@ -15,12 +15,15 @@ CREATE TABLE IF NOT EXISTS weekly_challenges (
 );
 
 ALTER TABLE weekly_challenges ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Weekly challenges are viewable by everyone" ON weekly_challenges;
 CREATE POLICY "Weekly challenges are viewable by everyone" ON weekly_challenges FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Weekly challenges insertable by admin" ON weekly_challenges;
 CREATE POLICY "Weekly challenges insertable by admin" ON weekly_challenges FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role_id = 'super_admin')
+    public.is_admin(auth.uid())
 );
+DROP POLICY IF EXISTS "Weekly challenges updatable by admin" ON weekly_challenges;
 CREATE POLICY "Weekly challenges updatable by admin" ON weekly_challenges FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role_id = 'super_admin')
+    public.is_admin(auth.uid())
 );
 
 -- Daily Quests (Per User)
@@ -37,8 +40,11 @@ CREATE TABLE IF NOT EXISTS daily_quests (
 );
 
 ALTER TABLE daily_quests ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view their own quests" ON daily_quests;
 CREATE POLICY "Users can view their own quests" ON daily_quests FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update their own quests" ON daily_quests;
 CREATE POLICY "Users can update their own quests" ON daily_quests FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "System can insert quests" ON daily_quests;
 CREATE POLICY "System can insert quests" ON daily_quests FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Integrations & Webhooks Config
@@ -52,12 +58,15 @@ CREATE TABLE IF NOT EXISTS integration_configs (
 );
 
 ALTER TABLE integration_configs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Integration configs viewable by admins" ON integration_configs;
 CREATE POLICY "Integration configs viewable by admins" ON integration_configs FOR SELECT USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role_id = 'super_admin')
+    public.is_admin(auth.uid())
 );
+DROP POLICY IF EXISTS "Integration configs updatable by admins" ON integration_configs;
 CREATE POLICY "Integration configs updatable by admins" ON integration_configs FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role_id = 'super_admin')
+    public.is_admin(auth.uid())
 );
+DROP POLICY IF EXISTS "Integration configs insertable by admins" ON integration_configs;
 CREATE POLICY "Integration configs insertable by admins" ON integration_configs FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role_id = 'super_admin')
+    public.is_admin(auth.uid())
 );
