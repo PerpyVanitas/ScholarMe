@@ -15,14 +15,17 @@ CREATE TABLE IF NOT EXISTS public.physical_books (
 
 ALTER TABLE public.physical_books ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Anyone can view physical books" ON public.physical_books FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Admins can insert physical books" ON public.physical_books;
 CREATE POLICY "Admins can insert physical books" ON public.physical_books FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM roles r JOIN user_roles ur ON ur.role_id = r.id WHERE ur.user_id = auth.uid() AND r.name = 'administrator')
+  public.is_admin(auth.uid())
 );
+DROP POLICY IF EXISTS "Admins can update physical books" ON public.physical_books;
 CREATE POLICY "Admins can update physical books" ON public.physical_books FOR UPDATE USING (
-  EXISTS (SELECT 1 FROM roles r JOIN user_roles ur ON ur.role_id = r.id WHERE ur.user_id = auth.uid() AND r.name = 'administrator')
+  public.is_admin(auth.uid())
 );
+DROP POLICY IF EXISTS "Admins can delete physical books" ON public.physical_books;
 CREATE POLICY "Admins can delete physical books" ON public.physical_books FOR DELETE USING (
-  EXISTS (SELECT 1 FROM roles r JOIN user_roles ur ON ur.role_id = r.id WHERE ur.user_id = auth.uid() AND r.name = 'administrator')
+  public.is_admin(auth.uid())
 );
 
 
@@ -41,17 +44,20 @@ CREATE TABLE IF NOT EXISTS public.facility_events (
 
 ALTER TABLE public.facility_events ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Anyone can view events" ON public.facility_events FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Admins and Organizers can insert events" ON public.facility_events;
 CREATE POLICY "Admins and Organizers can insert events" ON public.facility_events FOR INSERT WITH CHECK (
-  auth.uid() = organizer_id OR
-  EXISTS (SELECT 1 FROM roles r JOIN user_roles ur ON ur.role_id = r.id WHERE ur.user_id = auth.uid() AND r.name = 'administrator')
+  auth.uid() = organizer_id OR public.is_admin(auth.uid())
 );
+DROP POLICY IF EXISTS "Admins and Organizers can update events" ON public.facility_events;
 CREATE POLICY "Admins and Organizers can update events" ON public.facility_events FOR UPDATE USING (
-  auth.uid() = organizer_id OR
-  EXISTS (SELECT 1 FROM roles r JOIN user_roles ur ON ur.role_id = r.id WHERE ur.user_id = auth.uid() AND r.name = 'administrator')
+  auth.uid() = organizer_id OR public.is_admin(auth.uid())
 );
 
+DROP TRIGGER IF EXISTS handle_updated_at ON public.physical_books;
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.physical_books
   FOR EACH ROW EXECUTE PROCEDURE moddatetime (updated_at);
+  
+DROP TRIGGER IF EXISTS handle_updated_at ON public.facility_events;
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.facility_events
   FOR EACH ROW EXECUTE PROCEDURE moddatetime (updated_at);
 
