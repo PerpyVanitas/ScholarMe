@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- Add file attachment columns to messages table
 ALTER TABLE "public"."messages" 
 ADD COLUMN IF NOT EXISTS "file_url" text,
@@ -32,3 +33,4 @@ TO authenticated
 USING (
   bucket_id = 'chat-attachments'
 );
+

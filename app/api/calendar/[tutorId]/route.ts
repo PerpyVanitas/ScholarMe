@@ -29,7 +29,7 @@ export async function GET(
   }
 
   // Fetch upcoming confirmed sessions
-  const { data: sessions } = await supabase
+  const { data: sessions, error: sessionsError } = await supabase
     .from("sessions")
     .select("*, specializations(name)")
     .eq("tutor_id", tutorId)
@@ -37,8 +37,13 @@ export async function GET(
     .gte("scheduled_date", new Date().toISOString().split("T")[0])
     .order("scheduled_date", { ascending: true });
 
-  if (!sessions) {
-    return new NextResponse("No sessions found", { status: 404 });
+  if (sessionsError) {
+    return new NextResponse("Failed to fetch sessions", { status: 500 });
+  }
+
+  // Supabase returns [] not null for empty results — handle both gracefully
+  if (!sessions || sessions.length === 0) {
+    return new NextResponse("No upcoming sessions found", { status: 404 });
   }
 
   // Generate ICS File

@@ -23,10 +23,11 @@ import {
   SheetTitle,
   SheetFooter,
 } from "@/components/ui/sheet";
-import { Loader2, CheckCircle, BookOpen, FileText } from "lucide-react";
+import { Loader2, CheckCircle, BookOpen, FileText, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { CreateMLCEngine } from "@mlc-ai/web-llm";
+import { ImageOcclusionEditor } from "@/components/image-occlusion-editor";
 
 interface CreateQuizSheetProps {
   open: boolean;
@@ -353,6 +354,8 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
             item.responses ||
             null,
           item_type: item.type || formData.type,
+          image_url: item.image_url,
+          occlusion_masks: item.occlusion_masks,
         }));
       } else {
         const lines = formData.content
@@ -401,7 +404,7 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
       toast.success("Study set created!");
 
       const { earnXp } = await import("@/lib/utils/gamification");
-      const xpData = await earnXp(25, "Created Quiz");
+      const xpData = await earnXp("QUIZ_CREATED", "Created Quiz");
       if (xpData.success) {
         toast.success(`🎉 +25 XP Earned!`, {
           description: xpData.current_level
@@ -584,6 +587,145 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
               </TabsTrigger>
             </TabsList>
 
+            {structuredItems.length > 0 && (
+                <div className="space-y-4 mt-6">
+                  <div className="flex items-center justify-between border-b border-border/50 pb-3">
+                    <div>
+                      <Label className="text-base font-semibold">
+                        Generated Preview
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        {structuredItems.length} items ready to save. Edit inline below.
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setStructuredItems([...structuredItems, { question: "", answer: "", type: "flashcard", image_url: "", occlusion_masks: [] }])}
+                        className="h-8"
+                      >
+                        Add Item
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setStructuredItems([])}
+                        className="h-8"
+                      >
+                        Discard
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="max-h-[350px] overflow-y-auto space-y-3 pr-2 scrollbar-thin">
+                    {structuredItems.map((item, i) => (
+                      <div
+                        key={i}
+                        className="p-4 bg-muted/30 border border-border/50 rounded-xl text-sm relative group focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/50 transition-all"
+                      >
+                        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                          <Button 
+                            variant="destructive" 
+                            size="icon" 
+                            className="h-6 w-6" 
+                            onClick={() => {
+                              const newItems = [...structuredItems];
+                              newItems.splice(i, 1);
+                              setStructuredItems(newItems);
+                            }}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] uppercase bg-background"
+                          >
+                            {item.type?.replace(/_/g, " ") || formData.type}
+                          </Badge>
+                        </div>
+
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="text-xs text-muted-foreground mb-1 block">
+                              Question
+                            </Label>
+                            <Textarea
+                              value={item.question || item.instructions || ""}
+                              onChange={(e) => {
+                                const newItems = [...structuredItems];
+                                if (newItems[i].question !== undefined)
+                                  newItems[i].question = e.target.value;
+                                else if (newItems[i].instructions !== undefined)
+                                  newItems[i].instructions = e.target.value;
+                                else 
+                                  newItems[i].question = e.target.value;
+                                setStructuredItems(newItems);
+                              }}
+                              className="min-h-[40px] text-sm resize-none bg-background border-none shadow-none px-2 py-2 focus-visible:ring-1"
+                              placeholder="Question text..."
+                            />
+                          </div>
+
+                          <div className="pt-2 border-t border-border/50">
+                            <Label className="text-xs text-muted-foreground mb-1 block">
+                              Answer
+                            </Label>
+                            <Input
+                              value={item.correct_answer || item.answer || ""}
+                              onChange={(e) => {
+                                const newItems = [...structuredItems];
+                                if (newItems[i].correct_answer !== undefined)
+                                  newItems[i].correct_answer = e.target.value;
+                                else if (newItems[i].answer !== undefined)
+                                  newItems[i].answer = e.target.value;
+                                else 
+                                  newItems[i].answer = e.target.value;
+                                setStructuredItems(newItems);
+                              }}
+                              className="h-8 text-sm font-medium bg-background border-none shadow-none px-2 focus-visible:ring-1"
+                              placeholder="Answer text..."
+                            />
+                          </div>
+
+                          <div className="pt-2 border-t border-border/50 flex flex-col gap-2">
+                            <Label className="text-xs text-muted-foreground block">
+                              Image URL (Optional)
+                            </Label>
+                            <div className="flex gap-2">
+                              <Input 
+                                type="url" 
+                                placeholder="https://example.com/image.png" 
+                                className="h-8 text-xs"
+                                value={item.image_url || ""}
+                                onChange={(e) => {
+                                  const newItems = [...structuredItems];
+                                  newItems[i].image_url = e.target.value;
+                                  setStructuredItems(newItems);
+                                }}
+                              />
+                            </div>
+                            {item.image_url && (
+                              <ImageOcclusionEditor 
+                                imageUrl={item.image_url} 
+                                masks={item.occlusion_masks || []} 
+                                onChange={(masks) => {
+                                  const newItems = [...structuredItems];
+                                  newItems[i].occlusion_masks = masks;
+                                  setStructuredItems(newItems);
+                                }} 
+                              />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+            )}
+
+            <div className={structuredItems.length > 0 ? "hidden" : "block"}>
             <TabsContent value="manual" className="space-y-2 mt-4">
               <div className="flex items-center justify-between">
                 <Label>Questions</Label>
@@ -664,181 +806,7 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
                 )}
               </Button>
             </TabsContent>
-
-            <TabsContent value="resource" className="space-y-5 mt-4">
-              {structuredItems.length > 0 ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-border/50 pb-3">
-                    <div>
-                      <Label className="text-base font-semibold">
-                        Generated Preview
-                      </Label>
-                      <p className="text-xs text-muted-foreground">
-                        {structuredItems.length} items ready to save. Edit
-                        inline below.
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setStructuredItems([])}
-                      className="h-8"
-                    >
-                      Discard
-                    </Button>
-                  </div>
-                  <div className="max-h-[350px] overflow-y-auto space-y-3 pr-2 scrollbar-thin">
-                    {structuredItems.map((item, i) => (
-                      <div
-                        key={i}
-                        className="p-4 bg-muted/30 border border-border/50 rounded-xl text-sm relative group focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/50 transition-all"
-                      >
-                        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Badge
-                            variant="outline"
-                            className="text-[10px] uppercase bg-background"
-                          >
-                            {item.type?.replace(/_/g, " ")}
-                          </Badge>
-                        </div>
-
-                        <div className="space-y-3">
-                          <div>
-                            <Label className="text-xs text-muted-foreground mb-1 block">
-                              Question
-                            </Label>
-                            <Textarea
-                              value={item.question || item.instructions || ""}
-                              onChange={(e) => {
-                                const newItems = [...structuredItems];
-                                if (newItems[i].question !== undefined)
-                                  newItems[i].question = e.target.value;
-                                else if (newItems[i].instructions !== undefined)
-                                  newItems[i].instructions = e.target.value;
-                                setStructuredItems(newItems);
-                              }}
-                              className="min-h-[60px] text-sm resize-none bg-background border-none shadow-none px-0 focus-visible:ring-0 placeholder:text-muted-foreground/50"
-                              placeholder="Question text..."
-                            />
-                          </div>
-
-                          <div className="pt-2 border-t border-border/50">
-                            <Label className="text-xs text-muted-foreground mb-1 block">
-                              Answer
-                            </Label>
-                            <Input
-                              value={item.correct_answer || item.answer || ""}
-                              onChange={(e) => {
-                                const newItems = [...structuredItems];
-                                if (newItems[i].correct_answer !== undefined)
-                                  newItems[i].correct_answer = e.target.value;
-                                else if (newItems[i].answer !== undefined)
-                                  newItems[i].answer = e.target.value;
-                                setStructuredItems(newItems);
-                              }}
-                              className="h-8 text-sm font-medium bg-background border-none shadow-none px-0 focus-visible:ring-0"
-                              placeholder="Answer text..."
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="space-y-2">
-                    <Label>Select Resource</Label>
-                    <Select
-                      value={selectedResource}
-                      onValueChange={setSelectedResource}
-                      disabled={generating}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a document/PDF" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {resources.map((r) => (
-                          <SelectItem key={r.id} value={r.id}>
-                            {r.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {extractingTopics ? (
-                    <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground bg-muted/50 rounded-lg">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Scanning document for chapters and topics...
-                    </div>
-                  ) : extractedTopics.length > 0 ? (
-                    <div className="space-y-2">
-                      <Label>Select Topics to Include</Label>
-                      <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto p-2 border border-border/50 rounded-md bg-muted/50">
-                        {extractedTopics.map((topic) => (
-                          <div
-                            key={topic}
-                            className="flex items-start space-x-2"
-                          >
-                            <input
-                              type="checkbox"
-                              id={"topic_" + topic}
-                              checked={selectedTopics.includes(topic)}
-                              onChange={() => toggleTopic(topic)}
-                              className="mt-1 rounded border-zinc-700 bg-zinc-900 w-4 h-4 cursor-pointer shrink-0"
-                            />
-                            <Label
-                              htmlFor={"topic_" + topic}
-                              className="text-xs cursor-pointer leading-tight"
-                            >
-                              {topic}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <Label>Target Chapters/Topics</Label>
-                      <Input
-                        placeholder="e.g. Chapter 3"
-                        value={targetChapters}
-                        onChange={(e) => setTargetChapters(e.target.value)}
-                        disabled={generating}
-                      />
-                    </div>
-                  )}
-                  <div className="space-y-2 mt-4">
-                    <Label>Context / Instructions</Label>
-                    <Input
-                      placeholder="e.g. Focus on definitions"
-                      value={userContext}
-                      onChange={(e) => setUserContext(e.target.value)}
-                      disabled={generating}
-                    />
-                  </div>
-
-                  <Button
-                    type="button"
-                    onClick={handleGenerateFromResource}
-                    disabled={generating || !selectedResource}
-                    className="w-full mt-2"
-                    variant="secondary"
-                  >
-                    {generating ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
-                        Extracting...
-                      </>
-                    ) : (
-                      "Generate Questions"
-                    )}
-                  </Button>
-                </>
-              )}
-            </TabsContent>
+            </div>
           </Tabs>
 
           <SheetFooter className="pt-6 border-t mt-6 flex-col sm:flex-row gap-3">

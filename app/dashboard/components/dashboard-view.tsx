@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Loader2, Plus, Calendar, BookOpen, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUser } from "@/lib/user-context";
-import { getDemoProfileId, getDemoTutorId } from "@/scripts/demo";
 import { AdminDashboard } from "@/features/admin/components/admin-dashboard";
 import { TutorDashboard } from "@/features/tutors/components/tutor-dashboard";
 import { LearnerDashboard } from "@/features/sessions/components/learner-dashboard";
@@ -43,7 +41,6 @@ export default function DashboardView() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    // Don't load dashboard data until user context is ready
     if (userLoading || !profile) return;
 
     async function loadDashboardData() {
@@ -51,8 +48,7 @@ export default function DashboardView() {
         const supabase = createClient();
         const extra: DashboardData = {};
 
-        if (role === "administrator") {
-          // Admin stats via server API (needs admin client)
+        if (role === "administrator" || role === "super_admin") {
           try {
             const res = await fetch("/api/admin/dashboard-stats");
             if (res.ok) {
@@ -61,8 +57,9 @@ export default function DashboardView() {
               extra.recentSessions = stats.recentSessions;
             }
           } catch {
-            // Fallback to empty stats
+            extra.adminStats = undefined;
           }
+
           if (!extra.adminStats) {
             extra.adminStats = {
               pendingSessions: 0,
@@ -73,24 +70,34 @@ export default function DashboardView() {
             extra.recentSessions = [];
           }
         } else if (role === "tutor") {
-          const userId =
-            isAuthenticated && profile ? profile.id : getDemoProfileId("tutor");
-
-          if (isAuthenticated && profile) {
+          if (isAuthenticated) {
             await ensureTutor();
           }
 
           const { data: tutor } = await supabase
             .from("tutors")
             .select("*")
-            .eq("user_id", userId)
+            .eq("user_id", profile?.id || "")
             .maybeSingle();
 
-          const tutorId = tutor?.id || getDemoTutorId("tutor") || "none";
+          if (!tutor?.id) {
+            extra.tutor = tutor ?? null;
+            extra.upcomingSessions = [];
+            extra.overdueSessions = [];
+            extra.tutorStats = {
+              completedSessions: 0,
+              upcomingSessions: 0,
+              rating: tutor?.rating || 0,
+              totalRatings: tutor?.total_ratings || 0,
+            };
+            setDashboardData(extra);
+            return;
+          }
+
           const { data: sessions } = await supabase
             .from("sessions")
             .select("*, specializations(*)")
-            .eq("tutor_id", tutorId)
+            .eq("tutor_id", tutor.id)
             .in("status", ["pending", "confirmed"])
             .order("scheduled_date", { ascending: true })
             .limit(5);
@@ -98,64 +105,54 @@ export default function DashboardView() {
           const { count: completedCount } = await supabase
             .from("sessions")
             .select("*", { count: "exact", head: true })
-            .eq("tutor_id", tutorId)
+            .eq("tutor_id", tutor.id)
             .eq("status", "completed");
 
           const { count: upcomingCount } = await supabase
             .from("sessions")
             .select("*", { count: "exact", head: true })
-            .eq("tutor_id", tutorId)
+            .eq("tutor_id", tutor.id)
             .in("status", ["pending", "confirmed"]);
 
           const { data: allConfirmed } = await supabase
             .from("sessions")
             .select("id, scheduled_date, end_time")
-            .eq("tutor_id", tutorId)
+            .eq("tutor_id", tutor.id)
             .eq("status", "confirmed");
 
           const now = new Date();
-          const overdueSessions =
+          const overdueSessionIds =
             allConfirmed
-              ?.filter((s) => {
+              ?.filter((session) => {
                 const endDateTime = new Date(
-                  `${s.scheduled_date}T${s.end_time}`,
+                  `${session.scheduled_date}T${session.end_time}`,
                 );
                 return endDateTime < now;
               })
-              .map((s) => s.id) || [];
+              .map((session) => session.id) || [];
 
-          extra.tutor = tutor;
-          extra.upcomingSessions = sessions || [];
-          extra.overdueSessions = (sessions || []).filter((s) =>
-            overdueSessions.includes(s.id),
-          ); // or we can just pass the count, but let's just pass the full objects if we fetched them. Actually let's fetch full objects for overdue:
-
-          const { data: fullOverdue } =
-            overdueSessions.length > 0
+          const { data: overdueSessions } =
+            overdueSessionIds.length > 0
               ? await supabase
                   .from("sessions")
                   .select("*, specializations(*)")
-                  .in("id", overdueSessions)
+                  .in("id", overdueSessionIds)
               : { data: [] };
 
-          extra.overdueSessions = fullOverdue || [];
-
+          extra.tutor = tutor;
+          extra.upcomingSessions = sessions || [];
+          extra.overdueSessions = overdueSessions || [];
           extra.tutorStats = {
             completedSessions: completedCount || 0,
             upcomingSessions: upcomingCount || 0,
-            rating: tutor?.rating || 0,
-            totalRatings: tutor?.total_ratings || 0,
+            rating: tutor.rating || 0,
+            totalRatings: tutor.total_ratings || 0,
           };
         } else {
-          // Learner
-          const learnerId =
-            isAuthenticated && profile
-              ? profile.id
-              : getDemoProfileId("learner");
           const { data: sessions } = await supabase
             .from("sessions")
             .select("*, tutors(*, profiles(*)), specializations(*)")
-            .eq("learner_id", learnerId)
+            .eq("learner_id", profile?.id || "")
             .in("status", ["pending", "confirmed"])
             .order("scheduled_date", { ascending: true })
             .limit(5);
@@ -163,13 +160,13 @@ export default function DashboardView() {
           const { count: completedCount } = await supabase
             .from("sessions")
             .select("*", { count: "exact", head: true })
-            .eq("learner_id", learnerId)
+            .eq("learner_id", profile?.id || "")
             .eq("status", "completed");
 
           const { count: totalCount } = await supabase
             .from("sessions")
             .select("*", { count: "exact", head: true })
-            .eq("learner_id", learnerId);
+            .eq("learner_id", profile?.id || "");
 
           extra.upcomingSessions = sessions || [];
           extra.learnerStats = {
@@ -191,7 +188,6 @@ export default function DashboardView() {
     loadDashboardData();
   }, [profile, role, userLoading, isAuthenticated]);
 
-  // Show loading while user context or dashboard data loads
   if (userLoading || dataLoading) {
     return (
       <div className="flex flex-col gap-6 w-full animate-in fade-in duration-500">
@@ -223,18 +219,16 @@ export default function DashboardView() {
     );
   }
 
-  if (role === "administrator") {
+  if (role === "administrator" || role === "super_admin") {
     return (
       <AdminDashboard
         profile={profile}
-        stats={
-          dashboardData.adminStats || {
-            pendingSessions: 0,
-            clockedInTutors: 0,
-            activeTutors: 0,
-            sessionsToday: 0,
-          }
-        }
+        stats={dashboardData.adminStats || {
+          pendingSessions: 0,
+          clockedInTutors: 0,
+          activeTutors: 0,
+          sessionsToday: 0,
+        }}
         recentSessions={dashboardData.recentSessions || []}
       />
     );
@@ -247,14 +241,12 @@ export default function DashboardView() {
         tutor={dashboardData.tutor || null}
         upcomingSessions={dashboardData.upcomingSessions || []}
         overdueSessions={dashboardData.overdueSessions || []}
-        stats={
-          dashboardData.tutorStats || {
-            completedSessions: 0,
-            upcomingSessions: 0,
-            rating: 0,
-            totalRatings: 0,
-          }
-        }
+        stats={dashboardData.tutorStats || {
+          completedSessions: 0,
+          upcomingSessions: 0,
+          rating: 0,
+          totalRatings: 0,
+        }}
       />
     );
   }
@@ -263,13 +255,11 @@ export default function DashboardView() {
     <LearnerDashboard
       profile={profile}
       upcomingSessions={dashboardData.upcomingSessions || []}
-      stats={
-        dashboardData.learnerStats || {
-          totalSessions: 0,
-          completedSessions: 0,
-          upcomingSessions: 0,
-        }
-      }
+      stats={dashboardData.learnerStats || {
+        totalSessions: 0,
+        completedSessions: 0,
+        upcomingSessions: 0,
+      }}
     />
   );
 }

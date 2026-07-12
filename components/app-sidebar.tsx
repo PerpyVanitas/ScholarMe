@@ -76,6 +76,7 @@ import {
 } from "lucide-react";
 import { signOut } from "@/app/auth/actions";
 import { HonorSocietyLogo } from "@/components/honsoc-logo";
+import { A11ySettings } from "@/components/a11y-settings";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 
@@ -178,6 +179,11 @@ function getNavItems(role: UserRole) {
         title: "Data Export",
         href: "/dashboard/admin/export",
         icon: FileSpreadsheet,
+      },
+      {
+        title: "Integrations",
+        href: "/dashboard/admin/integrations",
+        icon: Settings,
       },
       {
         title: "System Health",
@@ -383,7 +389,7 @@ export function AppSidebar({
       });
       // Optionally grant XP here
       const { earnXp } = await import("@/lib/utils/gamification");
-      await earnXp(100, "Found the secret explorer egg!");
+      await earnXp("SECRET_EGG_FOUND", "Found the secret explorer egg!");
       setLogoClicks(0);
     }
   };
@@ -617,6 +623,9 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter>
+        <div className="px-4 pb-2">
+          <A11ySettings />
+        </div>
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>

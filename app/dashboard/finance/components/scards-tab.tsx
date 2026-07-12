@@ -1,3 +1,7 @@
+"use client";
+
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 import {
   Card,
   CardContent,
@@ -26,51 +30,49 @@ interface Props {
 }
 
 export function ScardsTab({ canSubmit, canAudit, scards }: Props) {
-  const handleExportPdf = (report: Scard) => {
-    // A simple client-side PDF generation logic using window.print()
-    const printWindow = window.open("", "", "height=600,width=800");
-    if (!printWindow) return;
-
-    printWindow.document.write("<html><head><title>SCARD Report</title>");
-    printWindow.document.write(
-      "<style>body{font-family:sans-serif;padding:20px;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ddd;padding:8px;} .header{text-align:center;margin-bottom:20px;}</style>",
-    );
-    printWindow.document.write("</head><body>");
-
-    printWindow.document.write(
-      '<div class="header"><h2>Official SCARDS Report</h2>',
-    );
-    printWindow.document.write(
-      `<p>Event ID: <strong>${report.event_id}</strong> (v${report.version})</p></div>`,
-    );
-
-    printWindow.document.write("<table>");
-    printWindow.document.write(
-      `<tr><td><strong>Status</strong></td><td>${report.status.toUpperCase()}</td></tr>`,
-    );
-    printWindow.document.write(
-      `<tr><td><strong>Date Submitted</strong></td><td>${new Date(report.created_at).toLocaleDateString()}</td></tr>`,
-    );
-    printWindow.document.write(
-      `<tr><td><strong>Total Receipts</strong></td><td>₱${report.receipts_total}</td></tr>`,
-    );
-    printWindow.document.write(
-      `<tr><td><strong>Total Disbursements</strong></td><td>₱${report.disbursements_total}</td></tr>`,
-    );
-    printWindow.document.write(
-      `<tr><td><strong>Final Balance</strong></td><td><strong>₱${report.balance}</strong></td></tr>`,
-    );
-    printWindow.document.write("</table>");
-
-    printWindow.document.write("<br/><p>Certified by Finance Officer</p>");
-
-    printWindow.document.write("</body></html>");
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => {
-      printWindow.print();
-      printWindow.close();
-    }, 250);
+  const handleExportPdf = async (report: Scard) => {
+    // Generate a temporary hidden div for the report
+    const div = document.createElement("div");
+    div.style.position = "absolute";
+    div.style.left = "-9999px";
+    div.style.padding = "40px";
+    div.style.width = "800px";
+    div.style.background = "white";
+    div.style.color = "black";
+    div.style.fontFamily = "sans-serif";
+    
+    div.innerHTML = `
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h2>Official SCARDS Report</h2>
+        <p>Event ID: <strong>${report.event_id}</strong> (v${report.version})</p>
+      </div>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <tr><td style="border: 1px solid #ccc; padding: 10px;"><strong>Status</strong></td><td style="border: 1px solid #ccc; padding: 10px;">${report.status.toUpperCase()}</td></tr>
+        <tr><td style="border: 1px solid #ccc; padding: 10px;"><strong>Date Submitted</strong></td><td style="border: 1px solid #ccc; padding: 10px;">${new Date(report.created_at).toLocaleDateString()}</td></tr>
+        <tr><td style="border: 1px solid #ccc; padding: 10px;"><strong>Total Receipts</strong></td><td style="border: 1px solid #ccc; padding: 10px;">P${report.receipts_total}</td></tr>
+        <tr><td style="border: 1px solid #ccc; padding: 10px;"><strong>Total Disbursements</strong></td><td style="border: 1px solid #ccc; padding: 10px;">P${report.disbursements_total}</td></tr>
+        <tr><td style="border: 1px solid #ccc; padding: 10px;"><strong>Final Balance</strong></td><td style="border: 1px solid #ccc; padding: 10px;"><strong>P${report.balance}</strong></td></tr>
+      </table>
+      ${report.status === 'cosigned' ? `<p style="margin-top: 30px;">Co-signed by Auditor on ${new Date(report.cosigned_at!).toLocaleDateString()}</p>` : ''}
+      <p style="margin-top: ${report.status === 'cosigned' ? '10px' : '30px'};">Certified by Finance Officer</p>
+    `;
+    
+    document.body.appendChild(div);
+    
+    try {
+      const canvas = await html2canvas(div, { scale: 2 });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`SCARDS_${report.event_id}_v${report.version}.pdf`);
+    } catch (err) {
+      console.error("Failed to generate PDF", err);
+    } finally {
+      document.body.removeChild(div);
+    }
   };
 
   return (

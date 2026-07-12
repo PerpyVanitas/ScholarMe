@@ -35,6 +35,8 @@ export function useRealtimeMessages(
           file_type,
           file_size,
           created_at,
+          is_pinned,
+          reply_to_id,
           sender:profiles!sender_id (
             id,
             full_name,
@@ -123,7 +125,7 @@ export function useRealtimeMessages(
   }, [conversationId, supabase]);
 
   const sendMessage = useCallback(
-    async (content: string, file?: File | null) => {
+    async (content: string, file?: File | null, replyToId?: string | null) => {
       if ((!content.trim() && !file) || !conversationId || !currentUserId)
         return;
 
@@ -168,6 +170,7 @@ export function useRealtimeMessages(
         file_name: fileName,
         file_type: fileType,
         file_size: fileSize,
+        reply_to_id: replyToId,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -182,6 +185,7 @@ export function useRealtimeMessages(
         file_name: fileName,
         file_type: fileType,
         file_size: fileSize,
+        reply_to_id: replyToId,
       });
 
       if (error) {
@@ -205,5 +209,15 @@ export function useRealtimeMessages(
     });
   }, [conversationId, currentUserId, currentUserName, supabase]);
 
-  return { messages, sendMessage, typingUsers, sendTypingEvent };
+  const pinMessage = useCallback(async (messageId: string, isPinned: boolean) => {
+    await supabase.from("messages").update({ is_pinned: isPinned }).eq("id", messageId);
+  }, [supabase]);
+
+  const markAsRead = useCallback(async (messageId: string) => {
+    if (!conversationId || !currentUserId) return;
+    await supabase.from("conversation_participants").update({ last_read_message_id: messageId })
+      .eq("conversation_id", conversationId).eq("profile_id", currentUserId);
+  }, [conversationId, currentUserId, supabase]);
+
+  return { messages, sendMessage, typingUsers, sendTypingEvent, pinMessage, markAsRead };
 }

@@ -6,7 +6,6 @@ import {
   ChevronsUpDown,
   Loader2,
   Search,
-  User as UserIcon,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDebounce } from "use-debounce";
@@ -48,10 +47,10 @@ export function UserSelector() {
   const [users, setUsers] = React.useState<UserProfile[]>([]);
   const [loading, setLoading] = React.useState(false);
 
-  // To show the currently selected user if we have one
   const [selectedUser, setSelectedUser] = React.useState<UserProfile | null>(
     null,
   );
+  const displayedSelectedUser = currentUserId ? selectedUser : null;
 
   React.useEffect(() => {
     if (!open) return;
@@ -83,36 +82,30 @@ export function UserSelector() {
   // Fetch the selected user details on mount or if currentUserId changes
   React.useEffect(() => {
     if (!currentUserId) {
-      setSelectedUser(null);
       return;
     }
 
     const fetchSelectedUser = async () => {
       try {
-        // We can just search for them by id, wait we only have a general search.
-        // But /api/messages/users returns top 20. A specific API for single user isn't guaranteed.
-        // Actually, if we just want to show "Selected User", we can rely on the list if they just clicked it,
-        // or just show "User Selected" as fallback.
         const cached = users.find((u) => u.id === currentUserId);
         if (cached) {
           setSelectedUser(cached);
         } else {
-          // just a placeholder
-          setSelectedUser({
-            id: currentUserId,
-            full_name: "Selected User",
-            email: "",
-            avatar_url: null,
-            role: "",
-          });
+          const res = await apiClient(
+            `/api/messages/users?userId=${encodeURIComponent(currentUserId)}`,
+          );
+          if (res.success && res.data) {
+            setSelectedUser(res.data);
+          } else {
+            setSelectedUser(null);
+          }
         }
       } catch (e) {
         console.error(e);
       }
     };
     fetchSelectedUser();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUserId]);
+  }, [currentUserId, users]);
 
   const handleSelect = (user: UserProfile) => {
     setSelectedUser(user);
@@ -133,17 +126,17 @@ export function UserSelector() {
           aria-expanded={open}
           className="w-full max-w-md justify-between"
         >
-          {selectedUser ? (
+          {displayedSelectedUser ? (
             <div className="flex items-center gap-2 truncate">
               <Avatar className="h-6 w-6">
                 <AvatarImage
-                  src={getAvatarUrl(selectedUser.avatar_url) || ""}
+                  src={getAvatarUrl(displayedSelectedUser.avatar_url) || ""}
                 />
                 <AvatarFallback>
-                  {selectedUser.full_name?.charAt(0) || "U"}
+                  {displayedSelectedUser.full_name?.charAt(0) || "U"}
                 </AvatarFallback>
               </Avatar>
-              <span className="truncate">{selectedUser.full_name}</span>
+              <span className="truncate">{displayedSelectedUser.full_name}</span>
             </div>
           ) : (
             <span className="text-muted-foreground flex items-center gap-2">

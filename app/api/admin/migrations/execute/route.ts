@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     // Parse statements
     const statements = parseSQLStatements(migrationSQL);
 
-    console.log(`[Migration API] Executing ${statements.length} statements`);
+    console.info(`[Migration API] Executing ${statements.length} statements`);
 
     const results = [];
     let successCount = 0;
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
 
       try {
         // Call Supabase PostgreSQL REST API
-        const response = await fetch(`${supabaseUrl}/rest/v1/rpc/exec`, {
+        const response = await fetch(`${supabaseUrl}/rest/v1/rpc/exec_sql`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -113,14 +113,15 @@ export async function POST(request: NextRequest) {
             });
           }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         failureCount++;
+        const errMsg = err instanceof Error ? err.message : String(err);
         results.push({
           index: i + 1,
           type: stmtType,
           status: "error",
           preview: stmt.substring(0, 50),
-          message: err.message,
+          message: errMsg,
         });
       }
     }
@@ -135,9 +136,10 @@ export async function POST(request: NextRequest) {
       results: results.slice(0, 20), // Return first 20 for brevity
       totalResults: results.length,
     });
-  } catch (error: any) {
-    console.error("[API Error]", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("[API Error]", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 

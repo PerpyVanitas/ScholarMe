@@ -4,18 +4,21 @@ import { sendEmail } from "@/lib/email";
 
 export async function POST(req: Request) {
   try {
-    const supabase = await createAdminClient();
+    // Authenticate via CRON_SECRET to prevent unauthorized triggering
+    const authHeader = req.headers.get("authorization");
+    const cronSecret = process.env.CRON_SECRET;
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    // In production, you would authenticate this endpoint via a secure secret
-    // e.g. const authHeader = req.headers.get('authorization');
-    // if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const supabase = await createAdminClient();
 
     const now = new Date();
     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
     let remindersSent = 0;
     let overdueNoticesSent = 0;
-    const errors: any[] = [];
+    const errors: { message: string; detail?: string }[] = [];
 
     // 1. Event RSVP Reminders
     const { data: upcomingEvents, error: eventsError } = await supabase

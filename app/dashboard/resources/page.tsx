@@ -93,7 +93,7 @@ export default function ResourcesPage() {
     null,
   );
 
-  const canManage = role === "tutor" || role === "administrator";
+  const canManage = role === "tutor" || role === "administrator" || role === "super_admin";
 
   const loadRepos = useCallback(async () => {
     const supabase = createClient();
@@ -320,7 +320,7 @@ export default function ResourcesPage() {
             const isLoading = loadingResources === repo.id;
             const items = repoResources[repo.id] || [];
             const isOwner = repo.owner_id === userId;
-            const canAdd = isOwner || role === "administrator";
+            const canAdd = isOwner || role === "administrator" || role === "super_admin";
             const filtered =
               filterType === "all"
                 ? items
@@ -407,6 +407,7 @@ export default function ResourcesPage() {
                           const Icon = info.icon;
                           const canDelete =
                             role === "administrator" ||
+                            role === "super_admin" ||
                             resource.uploaded_by === userId ||
                             isOwner;
 
@@ -426,7 +427,7 @@ export default function ResourcesPage() {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-sm font-medium text-foreground truncate">
+                                  <span className="text-sm font-medium text-foreground break-words overflow-hidden max-w-full min-w-0">
                                     {resource.title}
                                   </span>
                                   <Badge

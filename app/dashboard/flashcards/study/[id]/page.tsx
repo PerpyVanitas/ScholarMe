@@ -204,7 +204,7 @@ export default function StudyModePage({
     try {
       // Earn XP for finishing a flashcard set
       const { earnXp } = await import("@/lib/utils/gamification");
-      const xpData = await earnXp(50, "Reviewed Flashcards");
+      const xpData = await earnXp("FLASHCARD_REVIEW_COMPLETED", "Reviewed Flashcards");
       if (xpData.success) {
         toast.success(`🎉 +50 XP Earned!`, {
           description: xpData.current_level

@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- Create system_feedback table
 CREATE TABLE IF NOT EXISTS public.system_feedback (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -26,3 +27,4 @@ CREATE POLICY "system_feedback_update_admin" ON public.system_feedback
 DROP POLICY IF EXISTS "profiles_select_all" ON public.profiles;
 CREATE POLICY "profiles_select_auth" ON public.profiles
   FOR SELECT USING (auth.role() = 'authenticated');
+

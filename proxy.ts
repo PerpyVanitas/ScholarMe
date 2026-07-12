@@ -5,11 +5,8 @@ export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const isDev = process.env.NODE_ENV !== "production";
 
-  // In development, Next.js fast refresh requires 'unsafe-eval'
-  // In production, we strictly use nonces and 'strict-dynamic' to prevent unsafe inline scripts
-  const scriptSrc = isDev
-    ? `'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval'`
-    : `'self' 'nonce-${nonce}' 'strict-dynamic'`;
+  // WebLLM requires 'unsafe-eval' for compiling WebAssembly
+  const scriptSrc = `'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval'`;
 
   const cspHeader = `
     default-src 'self';

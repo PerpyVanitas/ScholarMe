@@ -18,10 +18,11 @@ export async function GET(request: Request) {
       .eq("id", user.id)
       .single();
     const rawRole = profile?.roles;
+    type RoleEntry = { name: string };
     const roleName = Array.isArray(rawRole)
-      ? rawRole[0]?.name
-      : (rawRole as any)?.name;
-    if (!["administrator", "super_admin"].includes(roleName as string)) {
+      ? (rawRole as RoleEntry[])[0]?.name
+      : (rawRole as RoleEntry | null)?.name;
+    if (!["administrator", "super_admin"].includes(roleName ?? "")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

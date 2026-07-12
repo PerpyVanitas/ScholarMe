@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 CREATE TABLE IF NOT EXISTS public.announcements (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT NOT NULL,
@@ -53,3 +54,4 @@ CREATE POLICY "Users can delete their own RSVP" ON public.event_rsvps FOR DELETE
 
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.event_rsvps
   FOR EACH ROW EXECUTE PROCEDURE moddatetime (updated_at);
+

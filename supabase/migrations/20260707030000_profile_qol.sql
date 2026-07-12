@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- Add new Profile columns
 ALTER TABLE profiles
 ADD COLUMN pronouns TEXT,
@@ -23,3 +24,4 @@ CREATE POLICY "Users can view their own login history"
 CREATE POLICY "Users can insert their own login history"
     ON login_history FOR INSERT
     WITH CHECK (auth.uid() = user_id);
+

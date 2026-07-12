@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- 1. Insert missing roles (ignore if they already exist)
 INSERT INTO public.roles (name)
 VALUES 
@@ -85,3 +86,4 @@ CREATE POLICY "Allow insert for authenticated" ON public.finance_liquidations FO
 
 CREATE POLICY "Allow read for authenticated" ON public.finance_scards FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Allow all mutations for authenticated" ON public.finance_scards FOR ALL TO authenticated USING (true);
+

@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- Create a function to update tutor statistics when a session completes
 CREATE OR REPLACE FUNCTION update_tutor_statistics()
 RETURNS TRIGGER AS $$
@@ -40,3 +41,4 @@ CREATE TRIGGER on_session_completed_update_stats
   AFTER UPDATE OF status ON public.sessions
   FOR EACH ROW
   EXECUTE FUNCTION update_tutor_statistics();
+

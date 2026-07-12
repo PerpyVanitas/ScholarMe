@@ -14,6 +14,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Calendar,
@@ -29,6 +30,7 @@ import type { Session, UserRole } from "@/lib/types";
 import Link from "next/link";
 import { RefreshCw, CalendarPlus, StickyNote } from "lucide-react";
 import { generateIcs } from "@/lib/utils";
+import { SessionForm } from "@/app/dashboard/sessions/components/session-form";
 
 interface SessionsClientProps {
   initialSessions: Session[];
@@ -45,6 +47,7 @@ export function SessionsClient({ initialSessions, role }: SessionsClientProps) {
   const [memoSession, setMemoSession] = useState<Session | null>(null);
   const [memoValue, setMemoValue] = useState("");
   const [memoLoading, setMemoLoading] = useState(false);
+  const [createSessionOpen, setCreateSessionOpen] = useState(false);
 
   async function updateStatus(sessionId: string, status: string) {
     const res = await fetch(`/api/sessions/${sessionId}/status`, {
@@ -140,15 +143,39 @@ export function SessionsClient({ initialSessions, role }: SessionsClientProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          {role === "tutor" ? "My Sessions" : "Sessions"}
-        </h1>
-        <p className="text-muted-foreground">
-          {role === "tutor"
-            ? "Sessions assigned to you"
-            : "Your tutoring sessions"}
-        </p>
+      <div className="flex justify-between items-start md:items-center flex-col md:flex-row gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            {role === "tutor" ? "My Sessions" : "Sessions"}
+          </h1>
+          <p className="text-muted-foreground">
+            {role === "tutor"
+              ? "Sessions assigned to you"
+              : "Your tutoring sessions"}
+          </p>
+        </div>
+        {role === "tutor" && (
+          <Dialog open={createSessionOpen} onOpenChange={setCreateSessionOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2 shrink-0">
+                <CalendarPlus className="h-4 w-4" />
+                Schedule Office Hours
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Schedule a Session</DialogTitle>
+                <DialogDescription>
+                  Set up office hours or a group session for learners to join.
+                </DialogDescription>
+              </DialogHeader>
+              <SessionForm 
+                onSuccess={() => { setCreateSessionOpen(false); window.location.reload(); }} 
+                onCancel={() => setCreateSessionOpen(false)} 
+              />
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <Tabs defaultValue="upcoming" className="w-full">
@@ -346,6 +373,11 @@ function SessionList({
                   >
                     {session.status}
                   </Badge>
+                  {session.is_office_hours && (
+                    <Badge variant="secondary" className="bg-blue-500/10 text-blue-500 hover:bg-blue-500/20">
+                      Office Hours
+                    </Badge>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">

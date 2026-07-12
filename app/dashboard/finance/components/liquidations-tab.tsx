@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -8,11 +11,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Receipt, FileText, AlertTriangle, Clock } from "lucide-react";
+import { Receipt, FileText, AlertTriangle, Clock, Sparkles } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { ExportFinanceCsv } from "@/features/finance/components/finance-export-csv";
 import { Liquidation, BudgetRequest } from "../types";
 import { submitLiquidation } from "@/features/finance/actions/finance-actions";
+import { toast } from "sonner";
 
 interface Props {
   canSubmit: boolean;
@@ -28,6 +32,53 @@ export function LiquidationsTab({
   allLiquidations,
   lateLiquidations,
 }: Props) {
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [returnedAmount, setReturnedAmount] = useState<number>(0);
+
+  const handleExtractAI = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    const fileInput = document.getElementById("receipts") as HTMLInputElement;
+    if (!fileInput.files || fileInput.files.length === 0) {
+      toast.error("Please select a receipt file first.");
+      return;
+    }
+
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append("receipt", file);
+
+    try {
+      setIsExtracting(true);
+      toast.info("Extracting receipt data...");
+      const res = await fetch("/api/finance/ocr", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Failed to extract");
+
+      const data = await res.json();
+      toast.success(`Extracted: ${data.vendorName} - ₱${data.totalAmount}`);
+      
+      // Auto-calculate returned amount if we have a selected request
+      const reqSelect = document.getElementById("request_id") as HTMLSelectElement;
+      if (reqSelect.value) {
+        const req = approvedRequests?.find(r => r.id === reqSelect.value);
+        if (req && req.amount) {
+          const diff = req.amount - data.totalAmount;
+          if (diff >= 0) {
+            setReturnedAmount(diff);
+          }
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to extract data using AI.");
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {canSubmit && (
@@ -57,9 +108,12 @@ export function LiquidationsTab({
                 </select>
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="receipts">
-                  Official Receipts (Images/PDFs)
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="receipts">Official Receipts (Images/PDFs)</Label>
+                  <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={handleExtractAI} disabled={isExtracting}>
+                    <Sparkles className="w-3 h-3 mr-1" /> {isExtracting ? "Extracting..." : "Extract with AI"}
+                  </Button>
+                </div>
                 <Input
                   id="receipts"
                   name="receipts"
@@ -70,7 +124,20 @@ export function LiquidationsTab({
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="proofs">Proofs of Payment (Images/PDFs)</Label>
+                <Label htmlFor="returned_amount">Returned Unspent Amount (PHP)</Label>
+                <Input
+                  id="returned_amount"
+                  name="returned_amount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={returnedAmount}
+                  onChange={(e) => setReturnedAmount(parseFloat(e.target.value) || 0)}
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="proofs">Proofs of Payment / Return (Images/PDFs)</Label>
                 <Input
                   id="proofs"
                   name="proofs"

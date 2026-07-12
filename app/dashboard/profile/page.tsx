@@ -67,6 +67,7 @@ import { TutorSettingsDialog } from "./components/tutor-settings-dialog";
 import { HonorSocietyDesignationDialog } from "./components/honor-society-designation-dialog";
 import { MasteryVerificationDialog } from "./components/mastery-verification-dialog";
 import { AchievementsCard } from "./components/achievements-card";
+import { SkillTree } from "./components/skill-tree";
 import dynamic from "next/dynamic";
 
 const DesignationCard = dynamic(
@@ -912,6 +913,7 @@ export default function ProfilePage() {
             setDesignationDialogOpen={setDesignationDialogOpen}
           />
           <AchievementsCard />
+          <SkillTree profile={profile} />
           <SecuritySettings />
         </div>
       </div>

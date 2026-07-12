@@ -109,22 +109,21 @@ export async function PATCH(request: Request) {
 
   const { user: admin, roleName: adminRoleName } = adminData;
 
-  const { user_id, full_name, email, role_name, password } =
+  const { user_id, full_name, email, role_name, password, role_expires_at } =
     await request.json();
   if (!user_id)
     return NextResponse.json({ error: "Missing user_id" }, { status: 400 });
 
   const adminClient = getAdminSupabase();
 
-  // Update profile name
-  if (full_name !== undefined) {
-    const { error } = await adminClient
-      .from("profiles")
-      .update({ full_name })
-      .eq("id", user_id);
-    if (error)
-      return NextResponse.json({ error: error.message }, { status: 500 });
+  interface ProfileUpdates {
+    full_name?: string;
+    role_expires_at?: string | null;
+    email?: string;
   }
+  const profileUpdates: ProfileUpdates = {};
+  if (full_name !== undefined) profileUpdates.full_name = full_name;
+  if (role_expires_at !== undefined) profileUpdates.role_expires_at = role_expires_at;
 
   // Update email via auth admin
   if (email) {
@@ -133,9 +132,13 @@ export async function PATCH(request: Request) {
     });
     if (error)
       return NextResponse.json({ error: error.message }, { status: 500 });
+    profileUpdates.email = email;
+  }
+
+  if (Object.keys(profileUpdates).length > 0) {
     const { error: profileError } = await adminClient
       .from("profiles")
-      .update({ email })
+      .update(profileUpdates)
       .eq("id", user_id);
     if (profileError)
       return NextResponse.json(

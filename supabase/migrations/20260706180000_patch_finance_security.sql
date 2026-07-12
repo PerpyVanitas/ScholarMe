@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- 1. Drop the weak/broken policies allowing open access
 DROP POLICY IF EXISTS "Allow read for authenticated" ON public.finance_budget_requests;
 DROP POLICY IF EXISTS "Allow update for authenticated" ON public.finance_budget_requests;
@@ -164,3 +165,4 @@ USING (
     WHERE p.id = auth.uid() AND r.name IN ('officer', 'committee_head', 'president', 'super_admin')
   )
 );
+

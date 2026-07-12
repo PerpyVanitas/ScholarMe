@@ -86,6 +86,8 @@ export function CreatePostDialog({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="What's on your mind?"
+              maxLength={255}
+              className="break-words"
             />
           </div>
           <div className="space-y-2">
@@ -111,6 +113,8 @@ export function CreatePostDialog({
               onChange={(e) => setContent(e.target.value)}
               placeholder="Write your post..."
               rows={6}
+              maxLength={2000}
+              className="break-words whitespace-pre-wrap"
             />
           </div>
         </div>

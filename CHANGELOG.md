@@ -1,5 +1,50 @@
-## [2026-07-07] - Phase 29 QoL Sprint: Final Backlog Completion
+## [2026-07-12] - System Audit & Stability Fixes (Batch 3)
 
+### Fixed
+- **Integrations Dashboard**: Wired Canvas save, webhook CRUD, and payroll export to real DB tables (`integration_configs` and `attendance_logs`) instead of mock data.
+- **Admin Migrations Endpoint**: Added `exec_sql` RPC function migration and wired the REST API execution path to fix the broken migration endpoint.
+- **Gamification Actions**: Refactored `earnXp` calls across the app to strictly use `XP_AWARDS` constant strings instead of arbitrary numbers. Added missing constants (`SECRET_EGG_FOUND`, `QUIZ_CREATED`).
+- **Daily Gamification Decay**: Wired the `gamification/daily` logic directly into the user login flow so inactive users correctly lose XP automatically.
+- **Accessibility Settings**: Removed the fake language switcher that wasn't doing anything due to lack of an i18n framework.
+- **Theme Color**: Updated `manifest.ts` to read `theme_color` from `NEXT_PUBLIC_THEME_COLOR` for white-labeling support.
+- **Weekly Challenges**: Added missing `weekly_challenges` table migration with proper RLS policies.
+- **Cleanup**: Deleted unused/orphaned `offline-storage.ts` script.
+
+## [2026-07-12] - Advanced Study Sets & UI Customization
+
+### Added
+- **Export Flashcards**: Added `/api/quizzes/[id]/export` endpoint to export Study Sets to CSV compatible with Anki/Quizlet.
+- **Text-to-Speech (TTS)**: Added browser native speech synthesis buttons for flashcard questions and answers in Study mode.
+- **Typing Mode**: Added a toggle for Spelling/Typing mode where learners must type out exactly the flashcard answer.
+- **Confidence Ratings (SM2)**: Replaced standard self-grading for flashcards with Again/Hard/Good/Easy buttons for SRS.
+- **Live Chat Support**: Implemented a global floating `SupportChatWidget` for users to directly reach Super Admins via real-time messaging, with an Inbox for admins in the dashboard.
+- **Public Roadmap**: Added `/dashboard/roadmap` where users can view Planned, In Progress, and Completed features and upvote them.
+- **White-labeling**: Added Organization Settings dashboard for Admins to customize the global primary theme color, logo, and Landing Page Hero text.
+- **Image Occlusion**: Added ability to upload an image URL to flashcards and draw interactive occlusion masks that hide visual parts, which users can click to reveal during study sessions.
+
+## [2026-07-12] - QA Bug Fixes
+
+## [2026-07-12] - Messaging & Community QoL Features
+
+### Added
+
+- **Messaging Upgrades**: Added Read receipts, Pin messages, Threaded replies support, and Chat search within conversation.
+- **Study Buddy Matching**: Created `/dashboard/network/study-buddies` to let users find peers in the same degree program and year level.
+- **Alumni Directory**: Created `/dashboard/network/alumni` to connect students with graduates.
+- **Tutor Office Hours**: Added an "Office Hours" toggle in the create session form for tutors, allowing them to host drop-in group sessions marked specifically as Office Hours.
+- **Finance Module**: Implemented multi-step approvals, OCR receipt parsing support, budget progress bars, partial liquidations, vendor directory, and email/in-app notifications.
+
+
+### Fixed
+
+- **CSP WebAssembly Error**: Updated `proxy.ts` Content-Security-Policy to allow `'unsafe-eval'` in production to fix the AI Tutor crash.
+- **AI Tutor Error Handling**: Added toast notifications when WebLLM initialization fails so users are informed instead of silently failing.
+- **Mobile Navigation**: Unhid the `SidebarTrigger` on mobile screens to restore access to Forums, Voting, Leaderboards, and Messages via the mobile drawer.
+- **Resources Mobile Rendering**: Fixed horizontal layout overflow on mobile resource cards that caused blank screens when previewing files.
+- **Forums & Study Group Server Errors**: Added `maxLength` and CSS word breaking to creation forms to prevent Postgres constraint crashes when users type continuous characters.
+- **Messages Attachments**: Fixed the chat sidebar incorrectly displaying "no messages yet" when a file was sent, and added the HTML5 `download` attribute to attachment links to ensure they download properly.
+
+## [2026-07-07] - Phase 29 QoL Sprint: Final Backlog Completion
 ### Added
 
 - **Study Group Chat**: Real-time group messaging via `study_group_messages` with Supabase Realtime on the group detail page.

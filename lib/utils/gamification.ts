@@ -1,4 +1,5 @@
 import confetti from "canvas-confetti";
+import { XP_AWARDS } from "@/lib/constants";
 
 export function triggerConfetti() {
   const duration = 3 * 1000;
@@ -8,7 +9,8 @@ export function triggerConfetti() {
   const randomInRange = (min: number, max: number) =>
     Math.random() * (max - min) + min;
 
-  const interval: any = setInterval(function () {
+  // Use ReturnType<typeof setInterval> instead of any
+  const interval: ReturnType<typeof setInterval> = setInterval(function () {
     const timeLeft = animationEnd - Date.now();
 
     if (timeLeft <= 0) {
@@ -47,22 +49,45 @@ export function getLevelColor(level: number): string {
   return "border-purple-400 bg-purple-400/20 text-purple-400 shadow-[0_0_15px_rgba(192,132,252,0.3)]"; // Grandmaster: Glowing Purple
 }
 
+/**
+ * Returns the XP needed to reach the NEXT level from the current one.
+ * Formula aligned with lib/gamification-utils.ts: level² × 100
+ * (was previously (10*level)² which gave wildly different results)
+ */
 export function getNextLevelXp(currentLevel: number): number {
-  return Math.pow(10 * currentLevel, 2);
+  return Math.pow(currentLevel, 2) * 100;
 }
 
-export async function earnXp(amount: number, reason: string) {
+export interface EarnXpResult {
+  success: boolean;
+  xp_earned?: number;
+  total_xp?: number;
+  current_level?: number;
+  error?: string;
+}
+
+/**
+ * Awards XP to the current user via the API.
+ * @param action - Must be a key in XP_AWARDS constants (e.g. "SESSION_COMPLETED")
+ * @param reason - Human-readable description shown in XP logs
+ */
+export async function earnXp(action: keyof typeof XP_AWARDS, reason: string): Promise<EarnXpResult> {
   try {
     const res = await fetch("/api/xp/earn", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount, reason }),
+      body: JSON.stringify({ action, reason }),
     });
-    const data = await res.json();
+    const data: EarnXpResult = await res.json();
+
+    if (!res.ok) {
+      console.error("XP earn API error:", data.error);
+      return { success: false, error: data.error };
+    }
 
     // Trigger haptic feedback for success or level up
     if (typeof window !== "undefined" && "vibrate" in navigator) {
-      if (data.leveledUp) {
+      if (data.current_level) {
         navigator.vibrate([200, 100, 200, 100, 400]); // Long celebration vibration
       } else {
         navigator.vibrate([100, 50, 100]); // Short success vibration
@@ -72,6 +97,6 @@ export async function earnXp(amount: number, reason: string) {
     return data;
   } catch (error) {
     console.error("Failed to earn XP:", error);
-    return { success: false };
+    return { success: false, error: "Network error" };
   }
 }

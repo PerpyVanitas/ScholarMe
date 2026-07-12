@@ -1,7 +1,6 @@
 import { createClient, createAdminClient } from "@/lib/supabase/create-client";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { DEMO_USERS, getDemoProfileId, getDemoTutorId } from "@/scripts/demo";
 import { isAdminRole } from "@/lib/utils/roles";
 import type { UserRole, Profile } from "@/lib/types";
 
@@ -20,8 +19,6 @@ export async function GET() {
   const devRole = cookieStore.get("dev_role")?.value as UserRole | undefined;
 
   let profile: Profile | null = null;
-  const isDemoMode = !user;
-
   // Fetch profile for logged-in users
   if (user) {
     const { data: p } = await supabase
@@ -47,35 +44,6 @@ export async function GET() {
     };
   }
 
-  // Demo mode fallback
-  if (!profile && isDemoMode) {
-    const selectedRole = (devRole || "administrator") as UserRole;
-    const demoProfileId = getDemoProfileId(selectedRole);
-    const { data: demoProfile } = await supabase
-      .from("profiles")
-      .select("*, roles(*)")
-      .eq("id", demoProfileId)
-      .maybeSingle();
-
-    if (demoProfile) {
-      profile = demoProfile;
-    } else {
-      const demoInfo =
-        DEMO_USERS[selectedRole as keyof typeof DEMO_USERS] ||
-        DEMO_USERS.administrator;
-      profile = {
-        id: demoInfo.profileId,
-        role_id: null,
-        full_name: demoInfo.fullName,
-        email: demoInfo.email,
-        avatar_url: null,
-        phone_number: null,
-        created_at: new Date().toISOString(),
-        roles: [{ id: "demo-role", name: selectedRole }],
-      };
-    }
-  }
-
   // Final guarantee
   if (!profile) {
     profile = {
@@ -91,7 +59,7 @@ export async function GET() {
   }
 
   const role = (
-    isDemoMode && devRole
+    devRole && !user
       ? devRole
       : Array.isArray(profile?.roles) && profile.roles.length > 0
         ? profile.roles[0].name
@@ -147,15 +115,14 @@ export async function GET() {
     }
 
     if (role === "tutor") {
-      const userId = user?.id || getDemoProfileId("tutor");
-      const demoTutorId = getDemoTutorId("tutor");
+      const userId = user?.id;
       const { data: tutor } = await supabase
         .from("tutors")
         .select("*")
         .eq("user_id", userId)
         .maybeSingle();
 
-      const effectiveTutorId = tutor?.id || demoTutorId || "none";
+      const effectiveTutorId = tutor?.id || "none";
 
       const { data: sessions } = await supabase
         .from("sessions")
@@ -192,7 +159,7 @@ export async function GET() {
     }
 
     // Learner
-    const learnerId = user?.id || getDemoProfileId("learner");
+    const learnerId = user?.id;
     const { data: sessions } = await supabase
       .from("sessions")
       .select("*, tutors(*, profiles(*)), specializations(*)")

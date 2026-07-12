@@ -1,6 +1,7 @@
 import { SyncTabs } from "@/components/sync-tabs";
 import { TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/server";
+import { Progress } from "@/components/ui/progress";
 import {
   canAccessFinance,
   canApproveFinance,
@@ -19,6 +20,7 @@ import { ScardsTab } from "./components/scards-tab";
 
 // Types
 import { BudgetRequest, PettyCash, Liquidation, Scard } from "./types";
+import { FinanceVendor } from "@/lib/types";
 
 export default async function FinanceDashboard() {
   const supabase = await createClient();
@@ -87,15 +89,49 @@ export default async function FinanceDashboard() {
     )
     .order("created_at", { ascending: false });
 
+  const { data: configs } = await supabase
+    .from("finance_configs")
+    .select("semester_budget")
+    .limit(1)
+    .maybeSingle();
+
+  const semesterBudget = configs?.semester_budget || 100000;
+  
+  // Calculate total spent (from released/president_approved requests)
+  const { data: spentReqs } = await supabase
+    .from("finance_budget_requests")
+    .select("amount")
+    .in("status", ["president_approved", "released"]);
+    
+  const totalSpent = spentReqs?.reduce((sum, req) => sum + Number(req.amount), 0) || 0;
+  const budgetPercentage = Math.min((totalSpent / semesterBudget) * 100, 100);
+
+  const { data: vendorsData } = await supabase
+    .from("finance_vendors")
+    .select("*")
+    .order("name", { ascending: true });
+    
+  const vendors = (vendorsData || []) as FinanceVendor[];
+
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-6">
       <div className="flex flex-col items-start gap-2">
         <h1 className="text-3xl font-bold">Financial Management</h1>
-        {canReview && (
-          <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
-            Finance Review Access
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {canReview && (
+            <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
+              Finance Review Access
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-card border rounded-lg p-6">
+        <div className="flex justify-between mb-2">
+          <span className="text-sm font-medium text-muted-foreground">Semester Budget Utilization</span>
+          <span className="text-sm font-bold">₱{totalSpent.toLocaleString()} / ₱{semesterBudget.toLocaleString()}</span>
+        </div>
+        <Progress value={budgetPercentage} className="h-3" />
       </div>
 
       <SyncTabs defaultValue="requests" className="w-full">
@@ -112,6 +148,7 @@ export default async function FinanceDashboard() {
             canReview={canReview}
             canApprove={canApprove}
             budgetReqs={budgetReqs as BudgetRequest[] | null}
+            vendors={vendors}
           />
         </TabsContent>
 
@@ -119,6 +156,7 @@ export default async function FinanceDashboard() {
           <PettyCashTab
             canSubmit={canSubmit}
             pettyCash={pettyCash as PettyCash[] | null}
+            vendors={vendors}
           />
         </TabsContent>
 
@@ -133,10 +171,11 @@ export default async function FinanceDashboard() {
 
         <TabsContent value="scards" className="space-y-6">
           <ScardsTab
-            canSubmit={canReview}
-            canAudit={canAudit}
-            scards={scards as Scard[] | null}
-          />
+          canSubmit={canReview}
+          canAudit={canAudit}
+          scards={scards as Scard[] | null}
+          canReview={canReview}
+        />
         </TabsContent>
       </SyncTabs>
     </div>

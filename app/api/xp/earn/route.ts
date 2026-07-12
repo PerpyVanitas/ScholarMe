@@ -41,23 +41,30 @@ export async function POST(req: Request) {
 
     // Since trigger_update_profile_level updates the profile automatically,
     // we just fetch the updated profile level/xp to return to the client.
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("total_xp, current_level")
       .eq("id", user.id)
       .single();
 
+    if (profileError) {
+      console.error("[XP] Failed to fetch updated profile after XP insert:", profileError.message);
+      // Still return success — the XP was inserted, we just can't confirm the new total
+      return NextResponse.json({ success: true, xp_earned: amount });
+    }
+
     return NextResponse.json({ 
       success: true, 
       xp_earned: amount,
-      total_xp: profile?.total_xp,
-      current_level: profile?.current_level
+      total_xp: profile?.total_xp ?? 0,
+      current_level: profile?.current_level ?? 1,
     });
 
-  } catch (error: any) {
-    console.error("Error earning XP:", error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("Error earning XP:", message);
     return NextResponse.json(
-      { error: error.message || "Failed to earn XP" },
+      { error: message || "Failed to earn XP" },
       { status: 500 }
     );
   }

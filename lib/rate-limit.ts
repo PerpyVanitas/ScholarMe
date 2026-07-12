@@ -29,10 +29,12 @@ export function rateLimit({ interval, limit }: RateLimitOptions) {
       const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
       if (!supabaseUrl || !supabaseKey) {
-        // Fallback to allow if env vars are missing (should be caught by lib/env.ts anyway)
+        // Fail closed: if env vars are missing, block requests rather than allow them
+        // This prevents a misconfigured environment from bypassing rate limiting entirely
+        console.error("[RateLimit] NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set — rate limiter blocking all requests.");
         return {
-          success: true,
-          remaining: limit - 1,
+          success: false,
+          remaining: 0,
           reset: Date.now() + interval,
         };
       }

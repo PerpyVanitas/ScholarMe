@@ -1,0 +1,2 @@
+ALTER TABLE public.profiles
+ADD COLUMN IF NOT EXISTS role_expires_at TIMESTAMP WITH TIME ZONE;

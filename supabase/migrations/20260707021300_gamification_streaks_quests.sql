@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 CREATE TABLE IF NOT EXISTS public.user_streaks (
     user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     current_streak INTEGER NOT NULL DEFAULT 0,
@@ -34,3 +35,4 @@ CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.user_streaks
   FOR EACH ROW EXECUTE PROCEDURE moddatetime (updated_at);
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.user_quests
   FOR EACH ROW EXECUTE PROCEDURE moddatetime (updated_at);
+

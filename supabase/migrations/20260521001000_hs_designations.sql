@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- =============================================
 -- Honor Society Designations Table Migration
 -- =============================================
@@ -62,3 +63,4 @@ CREATE POLICY "Admins can manage all designations"
       WHERE p.id = auth.uid() AND r.name = 'administrator'
     )
   );
+

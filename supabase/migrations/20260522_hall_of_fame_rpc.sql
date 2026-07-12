@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- =============================================
 -- Hall of Fame RPC Migration
 -- =============================================
@@ -79,3 +80,4 @@ BEGIN
     RETURN result;
 END;
 $$ LANGUAGE plpgsql;
+

@@ -1,2 +1,4 @@
+SET statement_timeout = 0;
 -- Migration applied manually before CLI tracking was set up.
 -- This file exists to satisfy supabase migration history sync.
+

@@ -19,11 +19,14 @@ import {
   updateBudgetRequestStatus,
 } from "@/features/finance/actions/finance-actions";
 
+import { FinanceVendor } from "@/lib/types";
+
 interface Props {
   canSubmit: boolean;
   canReview: boolean;
   canApprove: boolean;
   budgetReqs: BudgetRequest[] | null;
+  vendors?: FinanceVendor[];
 }
 
 export function BudgetRequestsTab({
@@ -31,6 +34,7 @@ export function BudgetRequestsTab({
   canReview,
   canApprove,
   budgetReqs,
+  vendors,
 }: Props) {
   return (
     <div className="space-y-6">
@@ -53,6 +57,19 @@ export function BudgetRequestsTab({
                 placeholder="Total Amount (PHP)"
                 required
               />
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="vendor_id">Preferred Vendor (Optional)</Label>
+                <select 
+                  name="vendor_id" 
+                  id="vendor_id"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="">-- Select Vendor --</option>
+                  {vendors?.map(v => (
+                    <option key={v.id} value={v.id}>{v.name}</option>
+                  ))}
+                </select>
+              </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="attachment">
                   Budget Request Document (PDF/DOCX)

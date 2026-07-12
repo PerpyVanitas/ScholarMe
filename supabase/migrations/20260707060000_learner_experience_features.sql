@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- 1. AI Quiz Flagging
 CREATE TABLE IF NOT EXISTS public.quiz_question_flags (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -95,3 +96,4 @@ INSERT INTO public.session_participants (session_id, learner_id, status)
 SELECT id, learner_id, 'registered' FROM public.sessions
 WHERE learner_id IS NOT NULL
 ON CONFLICT DO NOTHING;
+

@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 CREATE OR REPLACE FUNCTION public.generate_unique_id_number()
 RETURNS trigger AS $$
 DECLARE
@@ -47,3 +48,4 @@ $$ LANGUAGE plpgsql;
 UPDATE public.profiles
 SET unique_id_number = NULL, academic_year_joined = academic_year_joined
 WHERE academic_year_joined = '2026-2027' AND unique_id_number LIKE 'HS-20262027-%';
+

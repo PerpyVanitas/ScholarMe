@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- Phase 29: Study group chat, group session discovery, analytics
 
 -- 1. Study group messages
@@ -73,3 +74,4 @@ BEGIN
     );
   END IF;
 END $$;
+

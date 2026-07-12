@@ -19,9 +19,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 import {
   Table,
   TableBody,
@@ -42,6 +44,7 @@ import {
   History,
   FileText,
   Award,
+  UserCog,
 } from "lucide-react";
 import type { Profile } from "@/lib/types";
 import { ExportCsvButton } from "@/components/export-csv-button";
@@ -56,6 +59,7 @@ import { UserLogsDialog } from "./components/user-logs-dialog";
 import { UserDesignationsDialog } from "./components/user-designations-dialog";
 import { UserIdCardDialog } from "./components/user-id-card-dialog";
 import { UserProfileDialog } from "./components/user-profile-dialog";
+import { BulkUserImportDialog } from "./components/bulk-user-import-dialog";
 
 const roleColors: Record<string, string> = {
   super_admin: "bg-red-500/10 text-red-500 border-red-500/30",
@@ -93,9 +97,11 @@ function AdminUsersContent() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
+  const { role } = useUser();
 
   // Create state
   const [createOpen, setCreateOpen] = useState(false);
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
 
   // Profile view state
   const [profileOpen, setProfileOpen] = useState(false);
@@ -177,9 +183,63 @@ function AdminUsersContent() {
     setDesignationsOpen(true);
   }
 
+  async function handleQuickRoleEdit(userId: string, newRole: string) {
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId, role_name: newRole }),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error || "Failed to update role");
+      }
+      toast.success("Role updated successfully");
+      loadProfiles();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error updating role");
+    }
+  }
+
   function openPrintId(p: Profile) {
     setIdCardUser(p);
     setIdCardOpen(true);
+  }
+
+  function toggleAllSelection(filteredProfiles: Profile[]) {
+    if (selectedUserIds.size === filteredProfiles.length) {
+      setSelectedUserIds(new Set());
+    } else {
+      setSelectedUserIds(new Set(filteredProfiles.map((p) => p.id)));
+    }
+  }
+
+  async function handleImpersonate(p: Profile) {
+    try {
+      const loadingToastId = toast.loading("Generating impersonation link...");
+      const res = await fetch("/api/admin/impersonate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: p.email }),
+      });
+      
+      if (!res.ok) {
+        throw new Error((await res.json()).error || "Failed to generate link");
+      }
+      
+      const { link } = await res.json();
+      await navigator.clipboard.writeText(link);
+      
+      toast.dismiss(loadingToastId);
+      toast.success(
+        "Impersonation link copied to clipboard! Open it in an Incognito window.",
+        { duration: 6000 }
+      );
+    } catch (e: any) {
+      toast.error(e.message || "Failed to impersonate user");
+    }
   }
 
   function toggleUserSelection(userId: string) {
@@ -190,17 +250,6 @@ function AdminUsersContent() {
       newSet.add(userId);
     }
     setSelectedUserIds(newSet);
-  }
-
-  function toggleAllSelection(filteredProfiles: Profile[]) {
-    if (
-      selectedUserIds.size === filteredProfiles.length &&
-      filteredProfiles.length > 0
-    ) {
-      setSelectedUserIds(new Set());
-    } else {
-      setSelectedUserIds(new Set(filteredProfiles.map((p) => p.id)));
-    }
   }
 
   const filtered = profiles.filter((p) => {
@@ -249,6 +298,10 @@ function AdminUsersContent() {
             }))}
             filename="users_export"
           />
+          <Button variant="outline" onClick={() => setBulkImportOpen(true)} className="hidden sm:flex">
+            <Users className="mr-2 h-4 w-4" />
+            Bulk Import
+          </Button>
           <Button onClick={() => setCreateOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Create User
@@ -331,6 +384,7 @@ function AdminUsersContent() {
                     onLogs={openLogs}
                     onPrintId={openPrintId}
                     onDesignations={openDesignations}
+                    onImpersonate={handleImpersonate}
                   />
                 </CardContent>
               </Card>
@@ -392,12 +446,26 @@ function AdminUsersContent() {
                         {p.email}
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={roleColors[getUserRoleName(p.roles)]}
+                        <Select
+                          disabled={role !== "super_admin"}
+                          value={getUserRoleName(p.roles)}
+                          onValueChange={(val) => handleQuickRoleEdit(p.id, val)}
                         >
-                          {getUserRoleName(p.roles)}
-                        </Badge>
+                          <SelectTrigger className={`w-[130px] h-8 text-xs font-medium ${roleColors[getUserRoleName(p.roles)] || roleColors.learner}`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="learner">Learner</SelectItem>
+                            <SelectItem value="tutor">Tutor</SelectItem>
+                            <SelectItem value="administrator">Administrator</SelectItem>
+                            <SelectItem value="finance_manager">Finance</SelectItem>
+                            <SelectItem value="auditor">Auditor</SelectItem>
+                            <SelectItem value="president">President</SelectItem>
+                            <SelectItem value="treasurer">Treasurer</SelectItem>
+                            <SelectItem value="officer">Officer</SelectItem>
+                            <SelectItem value="super_admin">Super Admin</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
                         {new Date(p.created_at).toLocaleDateString("en-US", {
@@ -425,6 +493,7 @@ function AdminUsersContent() {
                             onLogs={openLogs}
                             onPrintId={openPrintId}
                             onDesignations={openDesignations}
+                            onImpersonate={handleImpersonate}
                           />
                         </div>
                       </TableCell>
@@ -443,6 +512,14 @@ function AdminUsersContent() {
         onOpenChange={setCreateOpen}
         onCreated={() => {
           setCreateOpen(false);
+          loadProfiles();
+        }}
+      />
+
+      <BulkUserImportDialog
+        open={bulkImportOpen}
+        onOpenChange={setBulkImportOpen}
+        onImported={() => {
           loadProfiles();
         }}
       />
@@ -522,6 +599,7 @@ function UserActionsMenu({
   onLogs,
   onPrintId,
   onDesignations,
+  onImpersonate,
 }: {
   profile: Profile;
   onProfile: (p: Profile) => void;
@@ -530,6 +608,7 @@ function UserActionsMenu({
   onLogs: (p: Profile) => void;
   onPrintId: (p: Profile) => void;
   onDesignations: (p: Profile) => void;
+  onImpersonate: (p: Profile) => void;
 }) {
   return (
     <DropdownMenu>
@@ -559,6 +638,10 @@ function UserActionsMenu({
         <DropdownMenuItem onClick={() => onDesignations(profile)}>
           <Award className="mr-2 h-4 w-4" />
           Manage Status
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onImpersonate(profile)}>
+          <UserCog className="mr-2 h-4 w-4" />
+          Impersonate User
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

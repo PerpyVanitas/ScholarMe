@@ -16,6 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { Bot, User, Send, Download, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { toast } from "sonner";
 
 type Message = {
   role: "system" | "user" | "assistant";
@@ -74,8 +75,11 @@ export function WebLLMChat({ initialContext = "" }: WebLLMChatProps) {
       });
       setEngine(newEngine);
       setIsReady(true);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Failed to initialize WebLLM:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to download model",
+      );
       setMessages((prev) => [
         ...prev,
         {

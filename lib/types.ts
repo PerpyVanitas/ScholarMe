@@ -48,6 +48,7 @@ export interface Profile {
   bio?: string | null;
   total_xp?: number;
   current_level?: number;
+  profile_theme_color?: string | null;
   profile_completed?: boolean | null;
   onboarding_completed?: boolean;
   terms_accepted_at?: string | null;
@@ -58,8 +59,11 @@ export interface Profile {
   pronouns?: string | null;
   status_message?: string | null;
   social_links?: Record<string, string> | null;
+  referral_code?: string | null;
+  referred_by?: string | null;
   dashboard_layout?: unknown;
   created_at: string;
+  role_expires_at?: string | null;
   roles?: Array<{ id: string; name: string }>;
   hs_designations?: HsDesignation[];
 }
@@ -175,6 +179,7 @@ export interface Session {
   tutor_memo: string | null;
   prep_notes?: string | null;
   meeting_link?: string | null;
+  is_office_hours?: boolean;
   max_participants?: number;
   participant_count?: number;
   transfer_to_tutor_id?: string | null;
@@ -341,6 +346,8 @@ export interface ConversationMessage {
   file_size?: number | null;
   created_at: string;
   sender?: Profile;
+  is_pinned?: boolean;
+  reply_to_id?: string | null;
 }
 
 export interface Message {
@@ -358,6 +365,23 @@ export interface Message {
     full_name: string;
     avatar_url: string | null;
   } | null;
+  is_pinned?: boolean;
+  reply_to_id?: string | null;
+}
+
+export interface FinanceVendor {
+  id: string;
+  name: string;
+  category: string | null;
+  created_at: string;
+}
+
+export interface FinanceConfig {
+  id: string;
+  semester_budget: number;
+  academic_year: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export type FinanceRequestStatus =
@@ -371,9 +395,12 @@ export interface FinanceBudgetRequest {
   amount: number;
   submitted_by: string;
   status: FinanceRequestStatus;
+  attachment_url: string | null;
+  vendor_id?: string | null;
   created_at: string;
   updated_at: string;
   profiles?: Profile;
+  finance_vendors?: FinanceVendor;
 }
 
 export type PettyCashStatus = "pending" | "approved" | "rejected";
@@ -386,23 +413,29 @@ export interface FinancePettyCash {
   status: PettyCashStatus;
   approved_by: string | null;
   linked_request_id: string | null;
+  attachment_url: string | null;
+  vendor_id?: string | null;
   created_at: string;
   updated_at: string;
   profiles?: Profile;
-  approver?: Profile;
+  finance_vendors?: FinanceVendor;
 }
 
 export interface FinanceLiquidation {
   id: string;
-  request_id: string | null;
+  request_id: string;
   receipt_urls: string[];
   proof_of_payment_urls: string[];
   submitted_by: string;
   submitted_at: string;
   is_late: boolean;
+  returned_amount: number;
   created_at: string;
   updated_at: string;
-  finance_budget_requests?: FinanceBudgetRequest;
+  finance_budget_requests?: {
+    activity_title: string;
+    amount?: number;
+  };
   profiles?: Profile;
 }
 
@@ -539,4 +572,43 @@ export interface SessionWaitlist {
   updated_at: string;
   tutor?: Tutor;
   learner?: Profile;
+}
+
+export interface RoadmapItem {
+  id: string;
+  title: string;
+  description: string | null;
+  status: "planned" | "in-progress" | "completed";
+  upvotes: number;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface OrganizationSettings {
+  id: string;
+  primary_color: string;
+  logo_url: string | null;
+  hero_title: string;
+  hero_subtitle: string;
+  updated_at: string;
+  updated_by: string | null;
+}
+
+export interface SupportTicket {
+  id: string;
+  user_id: string;
+  status: "open" | "in-progress" | "resolved";
+  created_at: string;
+  updated_at: string;
+  profiles?: Profile;
+  support_messages?: SupportMessage[];
+}
+
+export interface SupportMessage {
+  id: string;
+  ticket_id: string;
+  sender_id: string;
+  content: string;
+  created_at: string;
+  profiles?: Profile;
 }

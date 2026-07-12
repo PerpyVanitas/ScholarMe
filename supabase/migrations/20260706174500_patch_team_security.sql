@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- Migration: Patch Team Security & Gamify Tutors
 -- 1. Restrict team_tasks Row Level Security
 DROP POLICY IF EXISTS "Anyone can manage team tasks" ON public.team_tasks;
@@ -54,3 +55,4 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+

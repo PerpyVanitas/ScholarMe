@@ -19,6 +19,7 @@ export interface UpdateProfileData {
   pronouns?: string | null;
   status_message?: string | null;
   social_links?: Record<string, string> | null;
+  referral_code?: string | null;
 }
 
 export async function updateProfile(data: UpdateProfileData) {
@@ -55,6 +56,7 @@ export async function updateProfile(data: UpdateProfileData) {
       pronouns: data.pronouns,
       status_message: data.status_message,
       social_links: data.social_links,
+      referral_code: data.referral_code,
       profile_completed: true,
     })
     .eq("id", user.id)

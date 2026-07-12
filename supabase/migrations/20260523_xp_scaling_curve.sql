@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- Drop the existing function first just to be safe if the signature changed, but OR REPLACE usually handles it.
 CREATE OR REPLACE FUNCTION public.update_profile_level()
 RETURNS TRIGGER AS $$
@@ -17,3 +18,4 @@ $$ LANGUAGE plpgsql;
 -- To ensure the UI updates existing profiles correctly, we should also retroactively recalculate current_level for all profiles
 UPDATE public.profiles
 SET current_level = floor(0.1 * sqrt(total_xp)) + 1;
+

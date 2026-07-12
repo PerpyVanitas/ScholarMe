@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- Migration: poll system fixes
 -- 1. Add is_hidden column to polls
 -- 2. Fix RLS: non-admins can't see hidden polls
@@ -46,3 +47,4 @@ CREATE POLICY "poll_options_admin_update" ON public.poll_options
 DROP POLICY IF EXISTS "poll_options_admin_delete" ON public.poll_options;
 CREATE POLICY "poll_options_admin_delete" ON public.poll_options
   FOR DELETE USING (public.is_admin(auth.uid()));
+

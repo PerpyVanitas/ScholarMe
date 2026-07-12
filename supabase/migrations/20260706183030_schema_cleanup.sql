@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- 1. Remove redundant columns from study_sets
 ALTER TABLE public.study_sets 
   DROP COLUMN IF EXISTS user_id,
@@ -42,3 +43,4 @@ CREATE INDEX IF NOT EXISTS idx_resources_repository_id ON public.resources(repos
 CREATE INDEX IF NOT EXISTS idx_study_sets_owner_id ON public.study_sets(owner_id);
 CREATE INDEX IF NOT EXISTS idx_quiz_attempts_study_set_id ON public.quiz_attempts(study_set_id);
 CREATE INDEX IF NOT EXISTS idx_quiz_attempts_user_id ON public.quiz_attempts(user_id);
+

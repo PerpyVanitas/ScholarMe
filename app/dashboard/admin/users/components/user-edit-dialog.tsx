@@ -23,6 +23,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/lib/user-context";
 import type { Profile } from "@/lib/types";
+import { format } from "date-fns";
 
 interface UserEditDialogProps {
   open: boolean;
@@ -49,6 +50,7 @@ export function UserEditDialog({
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editRole, setEditRole] = useState("");
+  const [editRoleExpiresAt, setEditRoleExpiresAt] = useState("");
   const [editPassword, setEditPassword] = useState("");
   const [showEditPassword, setShowEditPassword] = useState(false);
 
@@ -57,6 +59,7 @@ export function UserEditDialog({
       setEditName(user.full_name || "");
       setEditEmail(user.email || "");
       setEditRole(getUserRoleName(user.roles));
+      setEditRoleExpiresAt(user.role_expires_at ? user.role_expires_at.split("T")[0] : "");
       setEditPassword("");
       setShowEditPassword(false);
     }
@@ -74,6 +77,7 @@ export function UserEditDialog({
         email: editEmail !== user.email ? editEmail : undefined,
         role_name:
           editRole !== getUserRoleName(user.roles) ? editRole : undefined,
+        role_expires_at: editRoleExpiresAt ? new Date(editRoleExpiresAt).toISOString() : null,
         password: editPassword ? editPassword : undefined,
       }),
     });
@@ -113,30 +117,44 @@ export function UserEditDialog({
             />
           </div>
           {currentAdminRole === "super_admin" ? (
-            <div className="flex flex-col gap-2">
-              <Label>Role</Label>
-              <Select value={editRole} onValueChange={setEditRole}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="learner">Learner</SelectItem>
-                  <SelectItem value="tutor">Tutor</SelectItem>
-                  <SelectItem value="committee_head">Committee Head</SelectItem>
-                  <SelectItem value="administrator">Administrator</SelectItem>
-                  <SelectItem value="finance_manager">
-                    Finance Manager
-                  </SelectItem>
-                  <SelectItem value="treasurer">Treasurer</SelectItem>
-                  <SelectItem value="auditor">Auditor</SelectItem>
-                  <SelectItem value="president">President</SelectItem>
-                  <SelectItem value="faculty_adviser">
-                    Faculty Adviser
-                  </SelectItem>
-                  <SelectItem value="super_admin">Super Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <>
+              <div className="flex flex-col gap-2">
+                <Label>Role</Label>
+                <Select value={editRole} onValueChange={setEditRole}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="learner">Learner</SelectItem>
+                    <SelectItem value="tutor">Tutor</SelectItem>
+                    <SelectItem value="committee_head">Committee Head</SelectItem>
+                    <SelectItem value="administrator">Administrator</SelectItem>
+                    <SelectItem value="finance_manager">
+                      Finance Manager
+                    </SelectItem>
+                    <SelectItem value="treasurer">Treasurer</SelectItem>
+                    <SelectItem value="auditor">Auditor</SelectItem>
+                    <SelectItem value="president">President</SelectItem>
+                    <SelectItem value="faculty_adviser">
+                      Faculty Adviser
+                    </SelectItem>
+                    <SelectItem value="super_admin">Super Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {editRole !== "learner" && (
+                <div className="flex flex-col gap-2">
+                  <Label>Role Expiration Date</Label>
+                  <Input
+                    type="date"
+                    value={editRoleExpiresAt}
+                    onChange={(e) => setEditRoleExpiresAt(e.target.value)}
+                    placeholder="Leave empty for permanent"
+                  />
+                </div>
+              )}
+            </>
           ) : (
             <div className="flex flex-col gap-2">
               <Label>Role</Label>

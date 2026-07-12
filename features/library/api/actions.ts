@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { PhysicalResource, ResourceCheckout } from "@/lib/types";
 
+type PhysicalResourceRow = PhysicalResource;
+
 export async function getLibraryCatalog(): Promise<PhysicalResource[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -16,7 +18,7 @@ export async function getLibraryCatalog(): Promise<PhysicalResource[]> {
     return [];
   }
 
-  return (data as any) || [];
+  return (data ?? []) as PhysicalResourceRow[];
 }
 
 export async function getResourceByIsbn(
@@ -30,7 +32,7 @@ export async function getResourceByIsbn(
     .single();
 
   if (error) return null;
-  return data as any;
+  return data as PhysicalResourceRow;
 }
 
 export async function addPhysicalResource(data: {
@@ -168,5 +170,5 @@ export async function getActiveCheckouts(): Promise<ResourceCheckout[]> {
     .order("due_date", { ascending: true });
 
   if (error) return [];
-  return data as any;
+  return data as ResourceCheckout[];
 }

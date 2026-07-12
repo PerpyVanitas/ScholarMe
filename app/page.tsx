@@ -27,6 +27,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { FeedbackButton } from "@/components/feedback-button";
 import { HonorSocietyLogo } from "@/components/honsoc-logo";
 import { TosLink, PrivacyLink } from "@/components/legal-modals";
+import { OrganizationSettings } from "@/lib/types";
 
 const GALLERY_IMAGES = [
   {
@@ -202,6 +203,7 @@ export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [statsVisible, setStatsVisible] = useState(false);
+  const [orgSettings, setOrgSettings] = useState<OrganizationSettings | null>(null);
   const statsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -217,6 +219,20 @@ export default function HomePage() {
       }
     };
     checkAuth();
+
+    const fetchOrgSettings = async () => {
+      const supabase = createClient();
+      const { data: settings } = await supabase
+        .from("organization_settings")
+        .select("*")
+        .limit(1)
+        .single();
+      
+      if (settings) {
+        setOrgSettings(settings);
+      }
+    };
+    fetchOrgSettings();
 
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
@@ -237,6 +253,13 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300 overflow-x-hidden">
+      {orgSettings?.primary_color && (
+        <style dangerouslySetInnerHTML={{__html: `
+          :root {
+            --primary: ${orgSettings.primary_color};
+          }
+        `}} />
+      )}
       {/* ── NAV ── */}
       <nav
         className={`fixed top-0 w-full z-50 transition-all duration-500 ${
@@ -374,10 +397,10 @@ export default function HomePage() {
             <div className="text-center max-w-4xl mx-auto mb-10 space-y-6">
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[1.05] tracking-tight animate-fade-in-up">
                 <span className="bg-gradient-to-br from-foreground via-foreground to-amber-600/80 dark:to-[#FFD700] bg-clip-text text-transparent">
-                  Ace Your Courses
+                  {orgSettings?.hero_title || "Ace Your Courses"}
                 </span>
                 <br />
-                <span className="text-foreground">With Elite Peer Tutors</span>
+                <span className="text-foreground">{orgSettings?.hero_subtitle || "With Elite Peer Tutors"}</span>
               </h1>
               <p
                 className="text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto animate-fade-in-up"

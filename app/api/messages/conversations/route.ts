@@ -29,7 +29,8 @@ export async function POST(req: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
 
-    // 1. Check if a 1-on-1 conversation already exists between these two users
+    // 1. Check if a 1-on-1 conversation already exists between these two users.
+    // We also check total participant count to avoid matching group conversations.
     const { data: existingConvs, error: checkError } = await adminSupabase
       .from("conversation_participants")
       .select("conversation_id")
@@ -42,16 +43,31 @@ export async function POST(req: Request) {
       );
     }
 
-    // Group by conversation_id to see which conversation has both participants
+    // Group by conversation_id to find which ones include BOTH users
     const counts: Record<string, number> = {};
-    let existingConvId: string | null = null;
+    let candidateConvIds: string[] = [];
 
     for (const p of existingConvs || []) {
       counts[p.conversation_id] = (counts[p.conversation_id] || 0) + 1;
       if (counts[p.conversation_id] === 2) {
-        existingConvId = p.conversation_id;
-        break;
+        candidateConvIds.push(p.conversation_id);
       }
+    }
+
+    // Filter candidates to only 1-on-1 conversations (exactly 2 total participants)
+    let existingConvId: string | null = null;
+    if (candidateConvIds.length > 0) {
+      const { data: participantCounts } = await adminSupabase
+        .from("conversation_participants")
+        .select("conversation_id")
+        .in("conversation_id", candidateConvIds);
+
+      const totalCounts: Record<string, number> = {};
+      for (const p of participantCounts || []) {
+        totalCounts[p.conversation_id] = (totalCounts[p.conversation_id] || 0) + 1;
+      }
+      // Only a true 1-on-1 conversation has exactly 2 participants
+      existingConvId = candidateConvIds.find((id) => totalCounts[id] === 2) ?? null;
     }
 
     if (existingConvId) {
@@ -78,10 +94,10 @@ export async function POST(req: Request) {
         .single();
 
       if (!fetchError && conv) {
-        // Sort messages to get the latest one
-        const sortedMessages = conv.messages?.sort(
-          (a: any, b: any) =>
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+        // Sort messages chronologically
+        type RawMessage = { id: string; content: string; created_at: string; sender_id: string };
+        const sortedMessages = (conv.messages as RawMessage[] | undefined)?.sort(
+          (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
         );
         return NextResponse.json({
           success: true,
@@ -163,10 +179,11 @@ export async function POST(req: Request) {
       conversation: createdConv,
       existing: false,
     });
-  } catch (error: any) {
-    console.error("[messages/conversations] Error:", error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("[messages/conversations] Error:", message);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: message },
       { status: 500 },
     );
   }

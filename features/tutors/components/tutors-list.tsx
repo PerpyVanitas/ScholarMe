@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,6 +31,37 @@ export function TutorsList({
   const [selectedSpec, setSelectedSpec] = useState("all");
   const [selectedTutor, setSelectedTutor] = useState<Tutor | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [onlineTutors, setOnlineTutors] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const supabase = createClient();
+    const roomOne = supabase.channel('tutors-presence');
+
+    roomOne
+      .on('presence', { event: 'sync' }, () => {
+        const newState = roomOne.presenceState();
+        const onlineIds = new Set<string>();
+        type PresenceUser = { user_id?: string };
+        for (const id in newState) {
+          (newState[id] as PresenceUser[]).forEach((p) => {
+            if (p.user_id) onlineIds.add(p.user_id);
+          });
+        }
+        setOnlineTutors(onlineIds);
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await roomOne.track({ user_id: user.id });
+          }
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(roomOne);
+    };
+  }, []);
 
   const filtered = initialTutors.filter((t) => {
     const nameMatch =
@@ -116,11 +148,16 @@ export function TutorsList({
               >
                 <CardContent className="flex flex-col gap-4 p-5 flex-1">
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12">
-                      <AvatarFallback className="bg-primary/10 text-primary">
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
+                    <div className="relative">
+                      <Avatar className="h-12 w-12">
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+                      {tutor.user_id && onlineTutors.has(tutor.user_id) && (
+                        <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-background bg-green-500" title="Online" />
+                      )}
+                    </div>
                     <div className="flex flex-col flex-1">
                       <span className="font-semibold text-foreground line-clamp-1">
                         {name}

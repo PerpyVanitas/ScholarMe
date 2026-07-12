@@ -3,12 +3,32 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { Resend } from "resend";
 import {
   AUDIT_ROLES,
   FINANCE_REVIEW_ROLES,
   FINANCE_SUBMIT_ROLES,
   PRESIDENT_APPROVAL_ROLES,
 } from "@/lib/utils/roles";
+
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+
+async function notifyStatusChange(email: string, title: string, status: string) {
+  if (!resend) {
+    console.log(`[Notification Mock] Email to ${email}: ${title} status changed to ${status}`);
+    return;
+  }
+  try {
+    await resend.emails.send({
+      from: "finance@scholarme.app",
+      to: email,
+      subject: `Finance Request Update: ${status.replace("_", " ").toUpperCase()}`,
+      html: `<p>Your finance request <b>${title}</b> has been updated to <b>${status.replace("_", " ").toUpperCase()}</b>.</p>`,
+    });
+  } catch (error) {
+    console.error("[finance] Failed to send email notification", error);
+  }
+}
 
 async function checkRole(
   supabase: SupabaseClient,
@@ -82,6 +102,7 @@ export async function createBudgetRequest(formData: FormData) {
   const amount = parseFloat(formData.get("amount") as string);
   const breakdownStr = formData.get("breakdown") as string;
   const attachment = formData.get("attachment") as File | null;
+  const vendor_id = formData.get("vendor_id") as string | null;
   let attachmentUrl = null;
 
   if (attachment && attachment.size > 0) {
@@ -110,6 +131,7 @@ export async function createBudgetRequest(formData: FormData) {
     amount,
     breakdown,
     attachment_url: attachmentUrl,
+    vendor_id: vendor_id || null,
     submitted_by: user.id,
     status,
   });
@@ -133,7 +155,7 @@ export async function updateBudgetRequestStatus(
 
   const { data: existing, error: fetchError } = await supabase
     .from("finance_budget_requests")
-    .select("status")
+    .select("status, amount, activity_title, profiles(email)")
     .eq("id", requestId)
     .single();
   if (fetchError || !existing) {
@@ -141,18 +163,22 @@ export async function updateBudgetRequestStatus(
   }
 
   const currentStatus = existing.status as string;
+  const amount = Number(existing.amount);
   const canReview = await checkCanReviewFinance(supabase, user.id);
   const canApprove = await checkCanApproveFinance(supabase, user.id);
-  const allowed =
-    (currentStatus === "pending" &&
-      ["finance_review", "rejected"].includes(status) &&
-      canReview) ||
-    (currentStatus === "finance_review" &&
-      ["president_approved", "rejected"].includes(status) &&
-      canApprove) ||
-    (currentStatus === "president_approved" &&
-      status === "released" &&
-      canReview);
+  
+  // Fast-track: if <= 5000, Finance Review can jump straight to Released.
+  let allowed = false;
+  if (amount <= 5000) {
+    allowed =
+      (currentStatus === "pending" && ["released", "rejected"].includes(status) && canReview) ||
+      (currentStatus === "pending" && status === "finance_review" && canReview);
+  } else {
+    allowed =
+      (currentStatus === "pending" && ["finance_review", "rejected"].includes(status) && canReview) ||
+      (currentStatus === "finance_review" && ["president_approved", "rejected"].includes(status) && canApprove) ||
+      (currentStatus === "president_approved" && status === "released" && canReview);
+  }
 
   if (!allowed) {
     throw new Error("Unauthorized finance status transition");
@@ -164,6 +190,14 @@ export async function updateBudgetRequestStatus(
     .eq("id", requestId);
 
   if (error) throw new Error(error.message);
+  
+  const profileData = existing.profiles as any;
+  const userEmail = profileData ? (Array.isArray(profileData) ? profileData[0]?.email : profileData.email) : null;
+  
+  if (userEmail) {
+    await notifyStatusChange(userEmail, existing.activity_title, status);
+  }
+
   revalidatePath("/dashboard/finance");
 }
 
@@ -207,6 +241,7 @@ export async function createPettyCash(formData: FormData) {
   const amount = parseFloat(formData.get("amount") as string);
   let justification = formData.get("justification") as string;
   const attachment = formData.get("attachment") as File | null;
+  const vendor_id = formData.get("vendor_id") as string | null;
   let attachmentUrl = null;
 
   if (attachment && attachment.size > 0) {
@@ -245,6 +280,7 @@ export async function createPettyCash(formData: FormData) {
     amount,
     justification,
     attachment_url: attachmentUrl,
+    vendor_id: vendor_id || null,
     submitted_by: user.id,
     status,
   });
@@ -303,6 +339,7 @@ export async function submitPettyCashForReview(id: string) {
 
 export async function submitLiquidation(formData: FormData) {
   const requestId = formData.get("request_id") as string;
+  const returnedAmount = parseFloat(formData.get("returned_amount") as string) || 0;
 
   // Handle multiple file uploads for receipts and proofs
   const receipts = formData.getAll("receipts") as File[];
@@ -367,6 +404,7 @@ export async function submitLiquidation(formData: FormData) {
     proof_of_payment_urls: proofUrls,
     submitted_by: user.id,
     is_late: isLate,
+    returned_amount: returnedAmount,
   });
 
   if (error) throw new Error(error.message);

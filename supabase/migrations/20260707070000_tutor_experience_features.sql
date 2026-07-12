@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- Migration: 20260707070000_tutor_experience_features.sql
 -- Description: Adds Tutor Experience features: meeting links, substitute tutors, calendar sync, auto-approve, peer reviews, strikes, mastery level.
 
@@ -36,3 +37,4 @@ CREATE POLICY "Tutors can insert peer reviews" ON public.tutor_peer_reviews
   FOR INSERT WITH CHECK (
     EXISTS (SELECT 1 FROM public.tutors t WHERE t.id = reviewer_id AND t.user_id = auth.uid())
   );
+

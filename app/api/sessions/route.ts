@@ -42,6 +42,9 @@ export async function POST(request: Request) {
     prep_notes,
     is_recurring,
     max_participants,
+    is_office_hours,
+    tutor_notes,
+    status,
   } = body;
 
   if (!tutor_id || !scheduled_date || !start_time || !end_time) {
@@ -73,6 +76,12 @@ export async function POST(request: Request) {
     }
   }
 
+  // If tutor is creating the session themselves
+  const { data: currentTutor } = await supabase.from("tutors").select("id").eq("user_id", user.id).single();
+  if (currentTutor && currentTutor.id === tutor_id && status) {
+    initialStatus = status;
+  }
+
   const participantCap = Math.min(
     Math.max(Number(max_participants) || 1, 1),
     10,
@@ -101,6 +110,8 @@ export async function POST(request: Request) {
       prep_notes: prep_notes || null,
       recurring_id: recurring_id,
       max_participants: participantCap,
+      is_office_hours: is_office_hours || false,
+      tutor_notes: tutor_notes || null,
     });
   }
 

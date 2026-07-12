@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- Add prep_notes to sessions
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS prep_notes text;
 
@@ -7,3 +8,4 @@ ALTER TABLE tutor_specializations ADD COLUMN IF NOT EXISTS verification_document
 
 -- Add dashboard_layout to profiles
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS dashboard_layout jsonb DEFAULT '[]'::jsonb;
+

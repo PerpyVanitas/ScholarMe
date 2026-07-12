@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 CREATE TABLE IF NOT EXISTS forum_posts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     author_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -54,3 +55,4 @@ CREATE POLICY "Authors can update their own replies"
 CREATE POLICY "Authors can delete their own replies"
     ON forum_replies FOR DELETE
     USING (auth.uid() = author_id);
+

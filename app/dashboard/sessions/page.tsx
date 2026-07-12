@@ -201,7 +201,7 @@ export default function SessionsPage() {
 
         const { earnXp } = await import("@/lib/utils/gamification");
         const xpData = await earnXp(
-          earnedXp,
+          "SESSION_COMPLETED",
           `Tutoring Session (${durationHours.toFixed(1)} hrs)`,
         );
 

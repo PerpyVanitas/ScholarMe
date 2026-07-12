@@ -55,6 +55,8 @@ export default async function AdminDashboardPage() {
     tutorsCount,
     { data: allUsers },
     { data: allSessions },
+    { data: userStreaks },
+    { data: noShowSessions },
   ] = await Promise.all([
     supabase.from("profiles").select("*", { count: "exact", head: true }),
     supabase.from("sessions").select("*", { count: "exact", head: true }),
@@ -62,6 +64,8 @@ export default async function AdminDashboardPage() {
     supabase.from("tutors").select("*", { count: "exact", head: true }),
     supabase.from("profiles").select("created_at"),
     supabase.from("sessions").select("status"),
+    supabase.from("user_streaks").select("last_login_date"),
+    supabase.from("sessions").select("learner_id, learner_profile:profiles(full_name)").eq("status", "no_show"),
   ]);
 
   // Process data for charts
@@ -94,7 +98,36 @@ export default async function AdminDashboardPage() {
       status: "Cancelled",
       count: allSessions?.filter((s) => s.status === "cancelled").length || 0,
     },
+    {
+      status: "No Show",
+      count: allSessions?.filter((s) => s.status === "no_show").length || 0,
+    },
   ];
+
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const activeUsersCount = userStreaks?.filter((s) => s.last_login_date && new Date(s.last_login_date) >= thirtyDaysAgo).length || 0;
+  
+  const retentionData = {
+    active: activeUsersCount,
+    inactive: Math.max(0, (usersCount.count || 0) - activeUsersCount)
+  };
+
+  const noShowMap = new Map<string, {name: string, count: number}>();
+  noShowSessions?.forEach((s) => {
+    if (s.learner_id) {
+      const existing = noShowMap.get(s.learner_id);
+      const profile: any = s.learner_profile;
+      noShowMap.set(s.learner_id, {
+        name: Array.isArray(profile) ? profile[0]?.full_name : profile?.full_name || "Unknown",
+        count: (existing?.count || 0) + 1
+      });
+    }
+  });
+
+  const topNoShows = Array.from(noShowMap.values())
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -206,6 +239,8 @@ export default async function AdminDashboardPage() {
       <AdminCharts
         userGrowthData={userGrowthData}
         sessionActivityData={sessionActivityData}
+        retentionData={retentionData}
+        topNoShows={topNoShows}
       />
     </div>
   );

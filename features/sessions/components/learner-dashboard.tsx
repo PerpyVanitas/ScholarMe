@@ -24,6 +24,8 @@ import { SESSION_STATUS_COLORS } from "@/lib/constants";
 import type { Profile, Session } from "@/lib/types";
 import { TutorOfTheMonth } from "./tutor-of-the-month";
 import { SmartTutorRecommendations } from "./smart-tutor-recommendations";
+import { WeeklyChallenges } from "@/features/gamification/components/weekly-challenges";
+import { DailyQuests } from "@/features/gamification/components/daily-quests";
 
 interface LearnerDashboardProps {
   profile: Profile;
@@ -49,6 +51,15 @@ export function LearnerDashboard({
         <p className="text-muted-foreground">
           Here is an overview of your tutoring journey.
         </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-6">
+          <WeeklyChallenges />
+        </div>
+        <div className="space-y-6">
+          <DailyQuests />
+        </div>
       </div>
 
       {/* Gamification Progress Card */}

@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- =============================================
 -- Restore User Policies on hs_designations
 -- =============================================
@@ -16,3 +17,4 @@ CREATE POLICY "Users can update own designations"
 CREATE POLICY "Users can delete own designations"
   ON public.hs_designations FOR DELETE
   USING (auth.uid() = user_id);
+

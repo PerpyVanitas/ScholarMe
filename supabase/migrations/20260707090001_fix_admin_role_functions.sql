@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- Fix role helper functions to correctly recognize super_admin.
 -- Some RLS policies rely on public.is_admin(auth.uid()).
 
@@ -18,4 +19,5 @@ BEGIN
   RETURN public.has_role(user_id, ARRAY['super_admin']);
 END;
 $$ LANGUAGE plpgsql;
+
 

@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- Fix poll_options read policy to align with polls (hidden polls are not visible to non-admins)
 
 DROP POLICY IF EXISTS "poll_options_public_read" ON public.poll_options;
@@ -13,3 +14,4 @@ CREATE POLICY "poll_options_authenticated_read" ON public.poll_options
       WHERE p.id = poll_options.poll_id AND p.is_hidden = false
     )
   );
+

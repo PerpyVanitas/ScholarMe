@@ -45,7 +45,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const { data: p } = await supabase
         .from("profiles")
         .select(
-          "id, email, full_name, first_name, last_name, avatar_url, phone_number, birthdate, date_of_birth, membership_number, degree_program, year_level, total_xp, current_level, role_id, created_at, roles(id, name)",
+          "id, email, full_name, first_name, last_name, avatar_url, phone_number, birthdate, date_of_birth, membership_number, degree_program, year_level, total_xp, current_level, role_id, role_expires_at, created_at, roles(id, name)",
         )
         .eq("id", user.id)
         .maybeSingle();
@@ -59,9 +59,19 @@ export function UserProvider({ children }: { children: ReactNode }) {
               ? [p.roles as { name: string; id: string }]
               : undefined,
         } as Profile);
-        const roleName = Array.isArray(p.roles)
+        
+        let roleName = Array.isArray(p.roles)
           ? (p.roles[0]?.name ?? "learner")
           : ((p.roles as { name: string })?.name ?? "learner");
+          
+        if (p.role_expires_at && new Date(p.role_expires_at) < new Date() && roleName !== "learner") {
+          roleName = "learner";
+          fetch("/api/auth/revert-role", { method: "POST" }).catch((err) => {
+            console.error("Role revert failed:", err);
+            toast.error("Your temporary role has expired but could not be reverted automatically. Please refresh the page.");
+          });
+        }
+          
         setRole(roleName as UserRole);
       } else {
         // Profile not found in the database.
@@ -127,6 +137,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           }
         } catch (e) {
           console.error("Failed to insert healed profile row:", e);
+          toast.error("Your profile could not be saved to the database. Some features may not work correctly.");
         }
 
         if (healedProfile) {
@@ -236,7 +247,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       if (user) {
         roleSubscription = supabase
           .channel(
-            `user-roles-${user.id}-${Math.random().toString(36).substring(7)}`,
+            `user-roles-${user.id}`,
           )
           .on(
             "postgres_changes",

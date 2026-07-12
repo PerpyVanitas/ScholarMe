@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 CREATE TABLE IF NOT EXISTS user_streaks (
     user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     current_streak INT DEFAULT 1,
@@ -41,3 +42,4 @@ CREATE POLICY "Users can view any badges"
 CREATE POLICY "Users can insert their own badges"
     ON user_badges FOR INSERT
     WITH CHECK (auth.uid() = user_id);
+

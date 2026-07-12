@@ -1,17 +1,23 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/create-client";
 import { ensureTutorRow } from "@/features/tutors/api/db";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Helper to fetch active timesheet collection period
-async function getActivePeriod(supabase: any) {
+async function getActivePeriod(supabase: SupabaseClient) {
   try {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("timesheet_config")
       .select("start_date, end_date")
       .eq("id", 1)
       .maybeSingle();
+    if (error) {
+      console.error("[Timesheets] Failed to fetch active period config:", error.message);
+      return null;
+    }
     return data || null;
-  } catch {
+  } catch (err) {
+    console.error("[Timesheets] Unexpected error fetching active period:", err);
     return null;
   }
 }
@@ -62,7 +68,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const { action } = await req.json();
+  const { action, lat, lng, location_verified } = await req.json();
 
   const ensured = await ensureTutorRow(supabase, user);
   if (!ensured.ok) {
@@ -107,8 +113,11 @@ export async function POST(req: Request) {
         tutor_id: tutor.id,
         user_id: user.id,
         clock_in: now.toISOString(),
+        lat,
+        lng,
+        location_verified,
       })
-      .select("id, tutor_id, user_id, clock_in, clock_out")
+      .select("id, tutor_id, user_id, clock_in, clock_out, lat, lng, location_verified")
       .single();
 
     if (error)

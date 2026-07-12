@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { Announcement } from "@/lib/types";
 
+type AnnouncementRow = Announcement;
+
 export async function getAnnouncements(): Promise<Announcement[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -29,7 +31,7 @@ export async function getAnnouncements(): Promise<Announcement[]> {
     return [];
   }
 
-  return (data as any) || [];
+  return (data ?? []) as AnnouncementRow[];
 }
 
 export async function createAnnouncement(data: {

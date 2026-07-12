@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- Tutor Peer Review & Substitution Schema Update
 
 -- 1. Add is_lead_tutor to tutors
@@ -32,3 +33,4 @@ ALTER TABLE public.sessions
   ADD COLUMN IF NOT EXISTS reschedule_requested_date date,
   ADD COLUMN IF NOT EXISTS reschedule_requested_start time,
   ADD COLUMN IF NOT EXISTS reschedule_requested_end time;
+

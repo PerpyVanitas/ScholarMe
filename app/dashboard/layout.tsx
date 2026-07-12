@@ -75,7 +75,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
       />
       <SidebarInset>
         <header className="flex h-14 items-center gap-2 border-b border-border/60 px-4">
-          <SidebarTrigger className="-ml-1 hidden md:flex" />
+          <SidebarTrigger className="-ml-1" />
           <Separator
             orientation="vertical"
             className="mr-2 h-4 hidden md:flex"

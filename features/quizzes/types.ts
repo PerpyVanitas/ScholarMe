@@ -22,6 +22,14 @@ export interface StudySet {
   }
 }
 
+export interface OcclusionMask {
+  id: string
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
 export interface StudySetItem {
   id: string
   study_set_id: string
@@ -31,6 +39,8 @@ export interface StudySetItem {
   item_type: "flashcard" | "multiple_choice" | "true_false"
   order_index: number
   created_at: string
+  image_url?: string | null
+  occlusion_masks?: OcclusionMask[] | null
 }
 
 export interface QuizAttempt {
@@ -66,4 +76,6 @@ export interface CreateStudySetItemForm {
   answer: string
   options?: string[]
   item_type: "flashcard" | "multiple_choice" | "true_false"
+  image_url?: string | null
+  occlusion_masks?: OcclusionMask[] | null
 }

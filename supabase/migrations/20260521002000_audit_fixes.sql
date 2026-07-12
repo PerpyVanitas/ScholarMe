@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- =============================================
 -- System Audit Fixes Migration
 -- =============================================
@@ -42,3 +43,4 @@ CREATE TRIGGER trigger_protect_tutor_ratings
 UPDATE storage.buckets
 SET public = false
 WHERE id = 'resources';
+

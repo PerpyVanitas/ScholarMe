@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- =============================================
 -- Advanced Analytics & Semester Config Migration
 -- =============================================
@@ -198,3 +199,4 @@ BEGIN
     RETURN result;
 END;
 $$ LANGUAGE plpgsql;
+

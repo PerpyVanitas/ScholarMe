@@ -145,7 +145,7 @@ export function ResourceUploadSheet({
 
       // Earn XP
       const { earnXp } = await import("@/lib/utils/gamification");
-      const xpData = await earnXp(100, "Uploaded Resource");
+      const xpData = await earnXp("RESOURCE_UPLOADED", "Uploaded Resource");
       if (xpData.success) {
         toast.success(`🎉 +100 XP Earned!`, {
           description: xpData.current_level

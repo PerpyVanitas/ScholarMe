@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 CREATE TABLE IF NOT EXISTS public.roles (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL UNIQUE
@@ -1304,3 +1305,4 @@ DROP TRIGGER IF EXISTS trigger_generate_unique_id_number ON public.profiles;
 CREATE TRIGGER trigger_generate_unique_id_number
   BEFORE INSERT OR UPDATE OF academic_year_joined ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.generate_unique_id_number();
+

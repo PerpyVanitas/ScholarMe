@@ -81,6 +81,8 @@ export function CreateGroupDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Calculus II Study Crew"
+              maxLength={255}
+              className="break-words"
             />
           </div>
           <div className="space-y-2">
@@ -91,6 +93,8 @@ export function CreateGroupDialog({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What will this group focus on?"
               rows={4}
+              maxLength={1000}
+              className="break-words whitespace-pre-wrap"
             />
           </div>
           <div className="flex items-center justify-between rounded-lg border p-3">

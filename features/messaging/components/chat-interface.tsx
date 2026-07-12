@@ -24,7 +24,17 @@ import {
   ShieldAlert,
   Upload,
   Sparkles,
+  Pin,
+  Reply,
+  CheckCheck,
+  MoreVertical,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import {
@@ -72,7 +82,7 @@ export function ChatInterface({
     );
   const currentUserName = currentParticipant?.profiles?.full_name || "Someone";
 
-  const { messages, sendMessage, typingUsers, sendTypingEvent } =
+  const { messages, sendMessage, typingUsers, sendTypingEvent, pinMessage, markAsRead } =
     useRealtimeMessages(activeConversationId, currentUserId, currentUserName);
   const [newMessage, setNewMessage] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
@@ -88,6 +98,13 @@ export function ChatInterface({
   const [conversationSearch, setConversationSearch] = useState("");
   const [messageSearch, setMessageSearch] = useState("");
   const [isDragging, setIsDragging] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+
+  useEffect(() => {
+    if (messages.length > 0 && messages[messages.length - 1].sender_id !== currentUserId) {
+      markAsRead(messages[messages.length - 1].id);
+    }
+  }, [messages, currentUserId, markAsRead]);
 
   // Smart Replies State
   const [smartReplies, setSmartReplies] = useState<string[]>([]);
@@ -386,14 +403,16 @@ export function ChatInterface({
     setIsSending(true);
     const content = newMessage.trim();
     const currentAttachment = attachment;
+    const replyToId = replyingTo ? replyingTo.id : null;
 
     setNewMessage(""); // Optimistic clear
     setAttachment(null);
+    setReplyingTo(null);
     if (typeof window !== "undefined") {
       localStorage.removeItem(`chat_draft_${activeConversationId}`);
     }
 
-    await sendMessage(content, currentAttachment);
+    await sendMessage(content, currentAttachment, replyToId);
     setIsSending(false);
   };
 
@@ -584,7 +603,10 @@ export function ChatInterface({
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground truncate">
-                          {latestMessage?.content || "No messages yet"}
+                          {latestMessage?.content ||
+                            (latestMessage?.file_url
+                              ? "Sent an attachment"
+                              : "No messages yet")}
                         </p>
                       </div>
                     </button>
@@ -664,6 +686,23 @@ export function ChatInterface({
               </div>
             </div>
 
+            {/* Pinned Messages */}
+            {messages.filter(m => m.is_pinned).length > 0 && (
+              <div className="bg-primary/5 border-b px-4 py-2 flex flex-col gap-1 max-h-32 overflow-y-auto">
+                <div className="flex items-center gap-2 text-xs font-semibold text-primary">
+                  <Pin className="h-3 w-3" /> Pinned Messages
+                </div>
+                {messages.filter(m => m.is_pinned).map(pm => (
+                  <div key={pm.id} className="text-sm truncate text-muted-foreground bg-background/50 p-1.5 rounded border cursor-pointer hover:bg-background/80" onClick={() => {
+                    setMessageSearch(pm.content || "");
+                  }}>
+                    <span className="font-medium mr-1">{pm.profiles?.full_name || "User"}:</span>
+                    {pm.content || "Attachment"}
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Messages Scroll Area */}
             <ScrollArea className="flex-1 p-4 md:p-6" ref={scrollRef}>
               <div className="flex flex-col gap-4">
@@ -691,60 +730,105 @@ export function ChatInterface({
                     return (
                       <div
                         key={msg.id}
-                        className={`flex flex-col gap-1 ${isMe ? "items-end" : "items-start"}`}
+                        className={`group flex w-full gap-2 ${isMe ? "justify-end" : "justify-start"}`}
                       >
-                        {showSenderName && (
-                          <span
-                            className={`text-[10px] font-semibold text-muted-foreground px-1 ${isMe ? "text-right" : ""}`}
-                          >
-                            {senderName}
-                          </span>
-                        )}
-                        <div
-                          className={`flex w-max max-w-[75%] flex-col gap-1 rounded-lg px-4 py-2 text-sm ${
-                            isMe
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted"
-                          }`}
-                        >
-                          {msg.file_url && (
-                            <div className="mb-2">
-                              {msg.file_type?.startsWith("image/") ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img
-                                  src={msg.file_url}
-                                  alt={msg.file_name || "attachment"}
-                                  className="max-w-[200px] max-h-[200px] rounded-md object-contain cursor-pointer"
-                                  onClick={() =>
-                                    window.open(msg.file_url!, "_blank")
-                                  }
-                                />
-                              ) : (
-                                <a
-                                  href={msg.file_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-2 p-2 bg-background/20 rounded-md hover:bg-background/40 transition-colors"
-                                >
-                                  <FileIcon className="h-4 w-4 shrink-0" />
-                                  <span className="text-xs truncate max-w-[150px]">
-                                    {msg.file_name || "Attachment"}
-                                  </span>
-                                  <Download className="h-3 w-3 shrink-0 ml-auto opacity-70" />
-                                </a>
+                        {!isMe && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity mt-auto">
+                                <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => setReplyingTo(msg)}>
+                                <Reply className="h-4 w-4 mr-2" /> Reply
+                              </DropdownMenuItem>
+                              {isAdmin && (
+                                <DropdownMenuItem onClick={() => pinMessage(msg.id, !msg.is_pinned)}>
+                                  <Pin className="h-4 w-4 mr-2" /> {msg.is_pinned ? "Unpin" : "Pin"}
+                                </DropdownMenuItem>
                               )}
-                            </div>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                        <div className={`flex flex-col gap-1 max-w-[75%] ${isMe ? "items-end" : "items-start"}`}>
+                          {showSenderName && (
+                            <span className={`text-[10px] font-semibold text-muted-foreground px-1 ${isMe ? "text-right" : ""}`}>
+                              {senderName}
+                            </span>
                           )}
-                          {msg.content && <span>{msg.content}</span>}
-                          <span
-                            className={`text-[9px] text-right ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}
+                          <div
+                            className={`flex flex-col gap-1 rounded-lg px-4 py-2 text-sm relative ${
+                              isMe ? "bg-primary text-primary-foreground" : "bg-muted"
+                            }`}
                           >
-                            {new Date(msg.created_at).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
+                            {msg.is_pinned && (
+                              <Pin className={`absolute -top-2 -right-2 h-4 w-4 rotate-45 ${isMe ? "text-primary-foreground" : "text-primary"} drop-shadow`} />
+                            )}
+                            {msg.reply_to_id && (
+                              <div className="text-xs bg-background/20 rounded p-1.5 mb-1 border-l-2 border-primary-foreground/50 opacity-80 truncate">
+                                {messages.find(m => m.id === msg.reply_to_id)?.content || "Replied to a message"}
+                              </div>
+                            )}
+                            {msg.file_url && (
+                              <div className="mb-2">
+                                {msg.file_type?.startsWith("image/") ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img
+                                    src={msg.file_url}
+                                    alt={msg.file_name || "attachment"}
+                                    className="max-w-[200px] max-h-[200px] rounded-md object-contain cursor-pointer"
+                                    onClick={() => window.open(msg.file_url!, "_blank")}
+                                  />
+                                ) : (
+                                  <a
+                                    href={msg.file_url}
+                                    download
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 p-2 bg-background/20 rounded-md hover:bg-background/40 transition-colors"
+                                  >
+                                    <FileIcon className="h-4 w-4 shrink-0" />
+                                    <span className="text-xs truncate max-w-[150px]">
+                                      {msg.file_name || "Attachment"}
+                                    </span>
+                                    <Download className="h-3 w-3 shrink-0 ml-auto opacity-70" />
+                                  </a>
+                                )}
+                              </div>
+                            )}
+                            {/* Rich Media Link Preview (Naive implementation) */}
+                            {msg.content && msg.content.match(/https?:\/\/[^\s]+/) && (
+                              <a href={msg.content.match(/https?:\/\/[^\s]+/)?.[0]} target="_blank" rel="noopener noreferrer" className="block text-blue-300 underline text-xs mb-1 truncate max-w-[200px]">
+                                {msg.content.match(/https?:\/\/[^\s]+/)?.[0]}
+                              </a>
+                            )}
+                            {msg.content && <span>{msg.content}</span>}
+                            <div className={`flex items-center gap-1 justify-end mt-1 text-[9px] ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                              <span>
+                                {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                              </span>
+                              {isMe && <CheckCheck className="h-3 w-3 ml-0.5" />}
+                            </div>
+                          </div>
                         </div>
+                        {isMe && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity mt-auto">
+                                <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => setReplyingTo(msg)}>
+                                <Reply className="h-4 w-4 mr-2" /> Reply
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => pinMessage(msg.id, !msg.is_pinned)}>
+                                <Pin className="h-4 w-4 mr-2" /> {msg.is_pinned ? "Unpin" : "Pin"}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                       </div>
                     );
                   })}
@@ -783,6 +867,16 @@ export function ChatInterface({
               </div>
             ) : (
               <div className="p-4 bg-background border-t">
+                {replyingTo && (
+                  <div className="mb-2 flex items-center justify-between p-2 text-sm bg-muted/30 border-l-2 border-primary rounded-r">
+                    <div className="truncate text-muted-foreground">
+                      Replying to <span className="font-medium text-foreground">{replyingTo.profiles?.full_name || 'Someone'}</span>: {replyingTo.content}
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-4 w-4" onClick={() => setReplyingTo(null)}>
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
                 {attachment && (
                   <div className="mb-3 flex items-center gap-3 p-2 border rounded-md bg-muted/50 w-fit max-w-[80%] relative pr-8">
                     <Button

@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- Phase 21: Library and Waitlists
 
 -- Physical Resources (Library Catalog)
@@ -95,3 +96,4 @@ CREATE POLICY "View waitlists" ON public.session_waitlists
       WHERE p.id = auth.uid() AND r.name IN ('administrator', 'super_admin', 'officer')
     )
   );
+

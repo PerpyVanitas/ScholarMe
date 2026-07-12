@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- 1. Add finance_manager role
 INSERT INTO public.roles (name) VALUES ('finance_manager') ON CONFLICT (name) DO NOTHING;
 
@@ -144,3 +145,4 @@ INSERT INTO storage.buckets (id, name, public) VALUES ('finance_attachments', 'f
 -- Storage Policies
 CREATE POLICY "Anyone can view finance attachments" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'finance_attachments');
 CREATE POLICY "Authenticated users can upload finance attachments" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'finance_attachments');
+

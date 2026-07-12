@@ -97,7 +97,8 @@ export async function GET(request: Request) {
     }
 
     const roleCounts: Record<string, number> = {};
-    (profilesWithRoles || []).forEach((p: any) => {
+    type ProfileWithRole = { roles: { name: string } | { name: string }[] | null };
+    (profilesWithRoles as ProfileWithRole[] || []).forEach((p) => {
       const roleArray = p.roles;
       const role = Array.isArray(roleArray)
         ? roleArray[0]?.name

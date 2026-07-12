@@ -1,3 +1,4 @@
+SET statement_timeout = 0;
 -- Insert new roles into the roles table
 INSERT INTO roles (name)
 VALUES 
@@ -9,3 +10,4 @@ VALUES
   ('faculty_adviser'),
   ('super_admin')
 ON CONFLICT (name) DO NOTHING;
+

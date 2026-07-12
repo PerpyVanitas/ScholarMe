@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { FacilityEvent, EventRsvp, RsvpStatus } from "@/lib/types";
+import { FacilityEvent, RsvpStatus } from "@/lib/types";
 
 export async function getEvents(
   monthStart: Date,
@@ -40,7 +40,7 @@ export async function getEvents(
     return [];
   }
 
-  return (data as any) || [];
+  return (data ?? []) as FacilityEvent[];
 }
 
 export async function createEvent(data: {
@@ -73,6 +73,7 @@ export async function createEvent(data: {
   }
 
   revalidatePath("/dashboard/events");
+  revalidatePath("/dashboard/calendar");
   return { success: true };
 }
 
@@ -89,6 +90,7 @@ export async function deleteEvent(id: string) {
   }
 
   revalidatePath("/dashboard/events");
+  revalidatePath("/dashboard/calendar");
   return { success: true };
 }
 
@@ -129,5 +131,6 @@ export async function updateEventRsvp(eventId: string, status: RsvpStatus) {
   }
 
   revalidatePath("/dashboard/events");
+  revalidatePath("/dashboard/calendar");
   return { success: true };
 }

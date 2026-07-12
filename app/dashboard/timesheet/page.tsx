@@ -96,7 +96,9 @@ function getWeekRange(offset: number = 0) {
   const now = new Date();
   const day = now.getDay();
   const monday = new Date(now);
-  monday.setDate(now.getDate() - day + 1 + offset * 7);
+  // Sunday (day=0) should map to the previous Monday (6 days back), not next Monday
+  const daysToMonday = day === 0 ? -6 : 1 - day;
+  monday.setDate(now.getDate() + daysToMonday + offset * 7);
   monday.setHours(0, 0, 0, 0);
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
@@ -154,11 +156,29 @@ export default function TimesheetPage() {
 
   async function handleClock(action: "clock_in" | "clock_out") {
     setClockLoading(true);
+    let locationData = {};
+    
+    if (action === "clock_in" && "geolocation" in navigator) {
+      try {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+        });
+        locationData = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          location_verified: true
+        };
+      } catch (err) {
+        toast.warning("Location access denied or unavailable. Clocking in as unverified.");
+        locationData = { location_verified: false };
+      }
+    }
+
     try {
       const res = await fetch("/api/timesheets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ action, ...locationData }),
       });
       const data = await res.json();
       if (!res.ok) {
