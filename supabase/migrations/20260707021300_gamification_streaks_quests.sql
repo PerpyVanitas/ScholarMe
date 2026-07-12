@@ -9,8 +9,11 @@ CREATE TABLE IF NOT EXISTS public.user_streaks (
 );
 
 ALTER TABLE public.user_streaks ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own streaks" ON public.user_streaks;
 CREATE POLICY "Users can view own streaks" ON public.user_streaks FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own streaks" ON public.user_streaks;
 CREATE POLICY "Users can update own streaks" ON public.user_streaks FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own streaks" ON public.user_streaks;
 CREATE POLICY "Users can insert own streaks" ON public.user_streaks FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 CREATE TABLE IF NOT EXISTS public.user_quests (
@@ -28,11 +31,18 @@ CREATE TABLE IF NOT EXISTS public.user_quests (
 );
 
 ALTER TABLE public.user_quests ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own quests" ON public.user_quests;
 CREATE POLICY "Users can view own quests" ON public.user_quests FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own quests" ON public.user_quests;
 CREATE POLICY "Users can update own quests" ON public.user_quests FOR UPDATE USING (auth.uid() = user_id);
 
+CREATE EXTENSION IF NOT EXISTS moddatetime SCHEMA extensions;
+
+DROP TRIGGER IF EXISTS handle_updated_at ON public.user_streaks;
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.user_streaks
   FOR EACH ROW EXECUTE PROCEDURE moddatetime (updated_at);
+  
+DROP TRIGGER IF EXISTS handle_updated_at ON public.user_quests;
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.user_quests
   FOR EACH ROW EXECUTE PROCEDURE moddatetime (updated_at);
 
