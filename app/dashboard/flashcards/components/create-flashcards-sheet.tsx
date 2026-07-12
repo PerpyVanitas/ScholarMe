@@ -25,7 +25,7 @@ import {
 import { Loader2, CheckCircle, BookOpen, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
-import { CreateMLCEngine } from "@mlc-ai/web-llm";
+import { CreateWebWorkerMLCEngine } from "@mlc-ai/web-llm";
 
 interface CreateFlashcardsSheetProps {
   open: boolean;
@@ -67,7 +67,6 @@ export function CreateFlashcardsSheet({
   const [generating, setGenerating] = useState(false);
   const [tagging, setTagging] = useState(false);
   const [creationMethod, setCreationMethod] = useState("manual");
-  const [useLocalAI, setUseLocalAI] = useState(false);
   const [localAIProgress, setLocalAIProgress] = useState("");
 
   useEffect(() => {
@@ -127,96 +126,63 @@ export function CreateFlashcardsSheet({
 
     try {
       setGenerating(true);
+      setLocalAIProgress("Loading model... (This may take a minute)");
 
-      if (useLocalAI) {
-        setLocalAIProgress("Loading model... (This may take a minute)");
-        const engine = await CreateMLCEngine(
-          "Llama-3.2-1B-Instruct-q4f32_1-MLC",
-          {
-            initProgressCallback: (progress) => {
-              setLocalAIProgress(
-                `Loading Local AI: ${Math.round(progress.progress * 100)}%`,
-              );
-            },
+      const worker = new Worker(
+        new URL("../../lib/workers/webllm.worker.ts", import.meta.url),
+        { type: "module" },
+      );
+
+      const engine = await CreateWebWorkerMLCEngine(
+        worker,
+        "Llama-3.2-1B-Instruct-q4f32_1-MLC",
+        {
+          initProgressCallback: (progress) => {
+            setLocalAIProgress(
+              `Loading Local AI: ${Math.round(progress.progress * 100)}%`,
+            );
           },
-        );
+        },
+      );
 
-        setLocalAIProgress("Generating flashcards...");
-        const systemPrompt = `You are an expert flashcard generator. Given a topic, generate ${aiCount} flashcards. 
+      setLocalAIProgress("Generating flashcards...");
+      const systemPrompt = `You are an expert flashcard generator. Given a topic, generate ${aiCount} flashcards. 
 Respond ONLY with a valid JSON array of objects, where each object has a "question" string and an "answer" string.
 No other text, markdown blocks, or explanations. Just the JSON array.`;
 
-        const reply = await engine.chat.completions.create({
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: `Topic: ${aiPrompt}` },
-          ],
-          response_format: { type: "json_object" },
-        });
+      const reply = await engine.chat.completions.create({
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Topic: ${aiPrompt}` },
+        ],
+        response_format: { type: "json_object" },
+      });
 
-        const rawContent = reply.choices[0]?.message.content || "[]";
-        let parsedData = [];
-        try {
-          parsedData = JSON.parse(rawContent);
-        } catch (e) {
-          // Fallback if the model wrapped it in markdown
-          const match = rawContent.match(/\[[\s\S]*\]/);
-          if (match) {
-            parsedData = JSON.parse(match[0]);
-          } else {
-            throw new Error("Failed to parse JSON from Local AI");
-          }
-        }
-
-        const newContent = parsedData
-          .map((item: any) => `Q: ${item.question}\nA: ${item.answer}`)
-          .join("\n\n");
-
-        setFormData((prev) => ({
-          ...prev,
-          content: prev.content
-            ? prev.content + "\n\n" + newContent
-            : newContent,
-        }));
-        toast.success("Questions generated locally successfully!");
-        setCreationMethod("manual");
-        setLocalAIProgress("");
-      } else {
-        const res = await fetch("/api/flashcards/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            topic: aiPrompt,
-            type: "flashcard",
-            count: aiCount,
-          }),
-        });
-
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error || "Failed to generate questions");
-        }
-
-        const data = await res.json();
-        if (data.data && Array.isArray(data.data)) {
-          const newContent = data.data
-            .map(
-              (item: Record<string, string>) =>
-                `Q: ${item.question}\nA: ${item.answer}`,
-            )
-            .join("\n\n");
-
-          setFormData((prev) => ({
-            ...prev,
-            content: prev.content
-              ? prev.content + "\n\n" + newContent
-              : newContent,
-          }));
-
-          toast.success("Questions generated successfully!");
-          setCreationMethod("manual");
+      const rawContent = reply.choices[0]?.message.content || "[]";
+      let parsedData = [];
+      try {
+        parsedData = JSON.parse(rawContent);
+      } catch (e) {
+        // Fallback if the model wrapped it in markdown
+        const match = rawContent.match(/\[[\s\S]*\]/);
+        if (match) {
+          parsedData = JSON.parse(match[0]);
+        } else {
+          throw new Error("Failed to parse JSON from Local AI");
         }
       }
+
+      const newContent = parsedData
+        .map((item: any) => `Q: ${item.question}\nA: ${item.answer}`)
+        .join("\n\n");
+
+      setFormData((prev) => ({
+        ...prev,
+        content: prev.content ? prev.content + "\n\n" + newContent : newContent,
+      }));
+      toast.success("Questions generated locally successfully!");
+      setCreationMethod("manual");
+      setLocalAIProgress("");
     } catch (error) {
       console.error("Error generating questions:", error);
       toast.error(
@@ -237,7 +203,14 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
     try {
       setTagging(true);
       setLocalAIProgress("Loading model for auto-tagging...");
-      const engine = await CreateMLCEngine(
+
+      const worker = new Worker(
+        new URL("../../lib/workers/webllm.worker.ts", import.meta.url),
+        { type: "module" },
+      );
+
+      const engine = await CreateWebWorkerMLCEngine(
+        worker,
         "Llama-3.2-1B-Instruct-q4f32_1-MLC",
         {
           initProgressCallback: (progress) => {
@@ -575,17 +548,9 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
                 />
               </div>
               <div className="flex items-center space-x-2 border rounded-md p-4 bg-muted/20">
-                <Switch
-                  id="local-ai-mode"
-                  checked={useLocalAI}
-                  onCheckedChange={setUseLocalAI}
-                />
-                <Label
-                  htmlFor="local-ai-mode"
-                  className="flex-1 cursor-pointer"
-                >
+                <Label className="flex-1">
                   <div className="font-medium text-primary">
-                    Use Local AI (Free, Unlimited)
+                    Powered by Local AI (Free, Unlimited)
                   </div>
                   <div className="text-xs text-muted-foreground font-normal leading-tight">
                     Generates flashcards directly on your device using WebGPU.

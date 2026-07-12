@@ -26,7 +26,7 @@ import {
 import { Loader2, CheckCircle, BookOpen, FileText, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
-import { CreateMLCEngine } from "@mlc-ai/web-llm";
+import { CreateWebWorkerMLCEngine } from "@mlc-ai/web-llm";
 import { ImageOcclusionEditor } from "@/components/image-occlusion-editor";
 
 interface CreateQuizSheetProps {
@@ -76,7 +76,6 @@ export function CreateQuizSheet({
   const [aiCount] = useState(5);
   const [generating, setGenerating] = useState(false);
   const [creationMethod, setCreationMethod] = useState("manual");
-  const [useLocalAI, setUseLocalAI] = useState(false);
   const [localAIProgress, setLocalAIProgress] = useState("");
 
   useEffect(() => {
@@ -147,21 +146,27 @@ export function CreateQuizSheet({
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         enabledTypes.reduce((acc, [_, conf]) => acc + conf.count, 0) || aiCount;
 
-      if (useLocalAI) {
-        setLocalAIProgress("Loading model... (This may take a minute)");
-        const engine = await CreateMLCEngine(
-          "Llama-3.2-1B-Instruct-q4f32_1-MLC",
-          {
-            initProgressCallback: (progress) => {
-              setLocalAIProgress(
-                `Loading Local AI: ${Math.round(progress.progress * 100)}%`,
-              );
-            },
-          },
-        );
+      setLocalAIProgress("Loading model... (This may take a minute)");
 
-        setLocalAIProgress("Generating quiz...");
-        const systemPrompt = `You are an expert quiz generator. Given a topic, generate ${totalCount} questions.
+      const worker = new Worker(
+        new URL("../../lib/workers/webllm.worker.ts", import.meta.url),
+        { type: "module" },
+      );
+
+      const engine = await CreateWebWorkerMLCEngine(
+        worker,
+        "Llama-3.2-1B-Instruct-q4f32_1-MLC",
+        {
+          initProgressCallback: (progress) => {
+            setLocalAIProgress(
+              `Loading Local AI: ${Math.round(progress.progress * 100)}%`,
+            );
+          },
+        },
+      );
+
+      setLocalAIProgress("Generating quiz...");
+      const systemPrompt = `You are an expert quiz generator. Given a topic, generate ${totalCount} questions.
 The types of questions are: ${enabledTypes.map((t) => t[0]).join(", ")}.
 Respond ONLY with a valid JSON array of objects.
 Each object must have:
@@ -171,77 +176,39 @@ Each object must have:
 "item_type": string (one of the question types)
 No other text, markdown blocks, or explanations. Just the JSON array.`;
 
-        const reply = await engine.chat.completions.create({
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: `Topic: ${aiPrompt}` },
-          ],
-          response_format: { type: "json_object" },
-        });
+      const reply = await engine.chat.completions.create({
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Topic: ${aiPrompt}` },
+        ],
+        response_format: { type: "json_object" },
+      });
 
-        const rawContent = reply.choices[0]?.message.content || "[]";
-        let parsedData = [];
-        try {
-          parsedData = JSON.parse(rawContent);
-        } catch (e) {
-          const match = rawContent.match(/\[[\s\S]*\]/);
-          if (match) {
-            parsedData = JSON.parse(match[0]);
-          } else {
-            throw new Error("Failed to parse JSON from Local AI");
-          }
-        }
-
-        const newContent = parsedData
-          .map((item: any) => `Q: ${item.question}\nA: ${item.answer}`)
-          .join("\n\n");
-
-        setFormData((prev) => ({
-          ...prev,
-          content: prev.content
-            ? prev.content + "\n\n" + newContent
-            : newContent,
-        }));
-
-        toast.success("Questions generated locally successfully!");
-        setCreationMethod("manual");
-        setLocalAIProgress("");
-      } else {
-        const res = await fetch("/api/quizzes/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            topic: aiPrompt,
-            type: derivedType,
-            count: totalCount,
-          }),
-        });
-
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error || "Failed to generate questions");
-        }
-
-        const data = await res.json();
-        if (data.data && Array.isArray(data.data)) {
-          const newContent = data.data
-            .map(
-              (item: Record<string, string>) =>
-                `Q: ${item.question}\nA: ${item.answer}`,
-            )
-            .join("\n\n");
-
-          setFormData((prev) => ({
-            ...prev,
-            content: prev.content
-              ? prev.content + "\n\n" + newContent
-              : newContent,
-          }));
-
-          toast.success("Questions generated successfully!");
-          setCreationMethod("manual");
+      const rawContent = reply.choices[0]?.message.content || "[]";
+      let parsedData = [];
+      try {
+        parsedData = JSON.parse(rawContent);
+      } catch (e) {
+        const match = rawContent.match(/\[[\s\S]*\]/);
+        if (match) {
+          parsedData = JSON.parse(match[0]);
+        } else {
+          throw new Error("Failed to parse JSON from Local AI");
         }
       }
+
+      const newContent = parsedData
+        .map((item: any) => `Q: ${item.question}\nA: ${item.answer}`)
+        .join("\n\n");
+
+      setFormData((prev) => ({
+        ...prev,
+        content: prev.content ? prev.content + "\n\n" + newContent : newContent,
+      }));
+
+      toast.success("Questions generated locally successfully!");
+      setCreationMethod("manual");
+      setLocalAIProgress("");
     } catch (error) {
       console.error("Error generating questions:", error);
       toast.error(
@@ -588,224 +555,226 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
             </TabsList>
 
             {structuredItems.length > 0 && (
-                <div className="space-y-4 mt-6">
-                  <div className="flex items-center justify-between border-b border-border/50 pb-3">
-                    <div>
-                      <Label className="text-base font-semibold">
-                        Generated Preview
-                      </Label>
-                      <p className="text-xs text-muted-foreground">
-                        {structuredItems.length} items ready to save. Edit inline below.
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => setStructuredItems([...structuredItems, { question: "", answer: "", type: "flashcard", image_url: "", occlusion_masks: [] }])}
-                        className="h-8"
-                      >
-                        Add Item
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setStructuredItems([])}
-                        className="h-8"
-                      >
-                        Discard
-                      </Button>
-                    </div>
+              <div className="space-y-4 mt-6">
+                <div className="flex items-center justify-between border-b border-border/50 pb-3">
+                  <div>
+                    <Label className="text-base font-semibold">
+                      Generated Preview
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      {structuredItems.length} items ready to save. Edit inline
+                      below.
+                    </p>
                   </div>
-                  <div className="max-h-[350px] overflow-y-auto space-y-3 pr-2 scrollbar-thin">
-                    {structuredItems.map((item, i) => (
-                      <div
-                        key={i}
-                        className="p-4 bg-muted/30 border border-border/50 rounded-xl text-sm relative group focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/50 transition-all"
-                      >
-                        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                          <Button 
-                            variant="destructive" 
-                            size="icon" 
-                            className="h-6 w-6" 
-                            onClick={() => {
-                              const newItems = [...structuredItems];
-                              newItems.splice(i, 1);
-                              setStructuredItems(newItems);
-                            }}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                          <Badge
-                            variant="outline"
-                            className="text-[10px] uppercase bg-background"
-                          >
-                            {item.type?.replace(/_/g, " ") || formData.type}
-                          </Badge>
-                        </div>
-
-                        <div className="space-y-3">
-                          <div>
-                            <Label className="text-xs text-muted-foreground mb-1 block">
-                              Question
-                            </Label>
-                            <Textarea
-                              value={item.question || item.instructions || ""}
-                              onChange={(e) => {
-                                const newItems = [...structuredItems];
-                                if (newItems[i].question !== undefined)
-                                  newItems[i].question = e.target.value;
-                                else if (newItems[i].instructions !== undefined)
-                                  newItems[i].instructions = e.target.value;
-                                else 
-                                  newItems[i].question = e.target.value;
-                                setStructuredItems(newItems);
-                              }}
-                              className="min-h-[40px] text-sm resize-none bg-background border-none shadow-none px-2 py-2 focus-visible:ring-1"
-                              placeholder="Question text..."
-                            />
-                          </div>
-
-                          <div className="pt-2 border-t border-border/50">
-                            <Label className="text-xs text-muted-foreground mb-1 block">
-                              Answer
-                            </Label>
-                            <Input
-                              value={item.correct_answer || item.answer || ""}
-                              onChange={(e) => {
-                                const newItems = [...structuredItems];
-                                if (newItems[i].correct_answer !== undefined)
-                                  newItems[i].correct_answer = e.target.value;
-                                else if (newItems[i].answer !== undefined)
-                                  newItems[i].answer = e.target.value;
-                                else 
-                                  newItems[i].answer = e.target.value;
-                                setStructuredItems(newItems);
-                              }}
-                              className="h-8 text-sm font-medium bg-background border-none shadow-none px-2 focus-visible:ring-1"
-                              placeholder="Answer text..."
-                            />
-                          </div>
-
-                          <div className="pt-2 border-t border-border/50 flex flex-col gap-2">
-                            <Label className="text-xs text-muted-foreground block">
-                              Image URL (Optional)
-                            </Label>
-                            <div className="flex gap-2">
-                              <Input 
-                                type="url" 
-                                placeholder="https://example.com/image.png" 
-                                className="h-8 text-xs"
-                                value={item.image_url || ""}
-                                onChange={(e) => {
-                                  const newItems = [...structuredItems];
-                                  newItems[i].image_url = e.target.value;
-                                  setStructuredItems(newItems);
-                                }}
-                              />
-                            </div>
-                            {item.image_url && (
-                              <ImageOcclusionEditor 
-                                imageUrl={item.image_url} 
-                                masks={item.occlusion_masks || []} 
-                                onChange={(masks) => {
-                                  const newItems = [...structuredItems];
-                                  newItems[i].occlusion_masks = masks;
-                                  setStructuredItems(newItems);
-                                }} 
-                              />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() =>
+                        setStructuredItems([
+                          ...structuredItems,
+                          {
+                            question: "",
+                            answer: "",
+                            type: "flashcard",
+                            image_url: "",
+                            occlusion_masks: [],
+                          },
+                        ])
+                      }
+                      className="h-8"
+                    >
+                      Add Item
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setStructuredItems([])}
+                      className="h-8"
+                    >
+                      Discard
+                    </Button>
                   </div>
                 </div>
+                <div className="max-h-[350px] overflow-y-auto space-y-3 pr-2 scrollbar-thin">
+                  {structuredItems.map((item, i) => (
+                    <div
+                      key={i}
+                      className="p-4 bg-muted/30 border border-border/50 rounded-xl text-sm relative group focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/50 transition-all"
+                    >
+                      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => {
+                            const newItems = [...structuredItems];
+                            newItems.splice(i, 1);
+                            setStructuredItems(newItems);
+                          }}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] uppercase bg-background"
+                        >
+                          {item.type?.replace(/_/g, " ") || formData.type}
+                        </Badge>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div>
+                          <Label className="text-xs text-muted-foreground mb-1 block">
+                            Question
+                          </Label>
+                          <Textarea
+                            value={item.question || item.instructions || ""}
+                            onChange={(e) => {
+                              const newItems = [...structuredItems];
+                              if (newItems[i].question !== undefined)
+                                newItems[i].question = e.target.value;
+                              else if (newItems[i].instructions !== undefined)
+                                newItems[i].instructions = e.target.value;
+                              else newItems[i].question = e.target.value;
+                              setStructuredItems(newItems);
+                            }}
+                            className="min-h-[40px] text-sm resize-none bg-background border-none shadow-none px-2 py-2 focus-visible:ring-1"
+                            placeholder="Question text..."
+                          />
+                        </div>
+
+                        <div className="pt-2 border-t border-border/50">
+                          <Label className="text-xs text-muted-foreground mb-1 block">
+                            Answer
+                          </Label>
+                          <Input
+                            value={item.correct_answer || item.answer || ""}
+                            onChange={(e) => {
+                              const newItems = [...structuredItems];
+                              if (newItems[i].correct_answer !== undefined)
+                                newItems[i].correct_answer = e.target.value;
+                              else if (newItems[i].answer !== undefined)
+                                newItems[i].answer = e.target.value;
+                              else newItems[i].answer = e.target.value;
+                              setStructuredItems(newItems);
+                            }}
+                            className="h-8 text-sm font-medium bg-background border-none shadow-none px-2 focus-visible:ring-1"
+                            placeholder="Answer text..."
+                          />
+                        </div>
+
+                        <div className="pt-2 border-t border-border/50 flex flex-col gap-2">
+                          <Label className="text-xs text-muted-foreground block">
+                            Image URL (Optional)
+                          </Label>
+                          <div className="flex gap-2">
+                            <Input
+                              type="url"
+                              placeholder="https://example.com/image.png"
+                              className="h-8 text-xs"
+                              value={item.image_url || ""}
+                              onChange={(e) => {
+                                const newItems = [...structuredItems];
+                                newItems[i].image_url = e.target.value;
+                                setStructuredItems(newItems);
+                              }}
+                            />
+                          </div>
+                          {item.image_url && (
+                            <ImageOcclusionEditor
+                              imageUrl={item.image_url}
+                              masks={item.occlusion_masks || []}
+                              onChange={(masks) => {
+                                const newItems = [...structuredItems];
+                                newItems[i].occlusion_masks = masks;
+                                setStructuredItems(newItems);
+                              }}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
 
             <div className={structuredItems.length > 0 ? "hidden" : "block"}>
-            <TabsContent value="manual" className="space-y-2 mt-4">
-              <div className="flex items-center justify-between">
-                <Label>Questions</Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 text-xs"
-                  onClick={() =>
-                    setFormData({
-                      ...formData,
-                      content:
-                        "Q: What is the capital of France?\nA: Paris\n\nQ: What is 2+2?\nA: 4\n\nQ: What is the largest planet in our solar system?\nA: Jupiter",
-                    })
-                  }
-                >
-                  Load Template
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Format: Q: question text A: answer text (one per line)
-              </p>
-              <Textarea
-                placeholder="Q: What is the capital of France? A: Paris&#10;Q: What is 2+2? A: 4"
-                value={formData.content}
-                onChange={(e) =>
-                  setFormData({ ...formData, content: e.target.value })
-                }
-                disabled={creating}
-                rows={6}
-              />
-            </TabsContent>
-
-            <TabsContent value="ai" className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <Label>Topic</Label>
+              <TabsContent value="manual" className="space-y-2 mt-4">
+                <div className="flex items-center justify-between">
+                  <Label>Questions</Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-xs"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        content:
+                          "Q: What is the capital of France?\nA: Paris\n\nQ: What is 2+2?\nA: 4\n\nQ: What is the largest planet in our solar system?\nA: Jupiter",
+                      })
+                    }
+                  >
+                    Load Template
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Format: Q: question text A: answer text (one per line)
+                </p>
                 <Textarea
-                  placeholder="e.g. The history of the Roman Empire"
-                  value={aiPrompt}
-                  onChange={(e) => setAiPrompt(e.target.value)}
-                  disabled={generating}
-                  rows={3}
+                  placeholder="Q: What is the capital of France? A: Paris&#10;Q: What is 2+2? A: 4"
+                  value={formData.content}
+                  onChange={(e) =>
+                    setFormData({ ...formData, content: e.target.value })
+                  }
+                  disabled={creating}
+                  rows={6}
                 />
-              </div>
-              <div className="flex items-center space-x-2 border rounded-md p-4 bg-muted/20">
-                <Switch
-                  id="quiz-local-ai-mode"
-                  checked={useLocalAI}
-                  onCheckedChange={setUseLocalAI}
-                />
-                <Label
-                  htmlFor="quiz-local-ai-mode"
-                  className="flex-1 cursor-pointer"
-                >
-                  <div className="font-medium text-primary">
-                    Use Local AI (Free, Unlimited)
-                  </div>
-                  <div className="text-xs text-muted-foreground font-normal leading-tight">
-                    Generates quizzes directly on your device using WebGPU.
-                    Saves API costs and bypasses rate limits. First run
-                    downloads a ~1GB model.
-                  </div>
-                </Label>
-              </div>
+              </TabsContent>
 
-              <Button
-                type="button"
-                onClick={handleGenerateQuiz}
-                disabled={generating || !aiPrompt}
-                className="w-full"
-              >
-                {generating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
-                    {localAIProgress ? localAIProgress : "Generating..."}
-                  </>
-                ) : (
-                  "Generate Questions"
-                )}
-              </Button>
-            </TabsContent>
+              <TabsContent value="ai" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label>Topic</Label>
+                  <Textarea
+                    placeholder="e.g. The history of the Roman Empire"
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    disabled={generating}
+                    rows={3}
+                  />
+                </div>
+                <div className="flex items-center space-x-2 border rounded-md p-4 bg-muted/20">
+                  <Label className="flex-1">
+                    <div className="font-medium text-primary">
+                      Powered by Local AI (Free, Unlimited)
+                    </div>
+                    <div className="text-xs text-muted-foreground font-normal leading-tight">
+                      Generates quizzes directly on your device using WebGPU.
+                      Saves API costs and bypasses rate limits. First run
+                      downloads a ~1GB model.
+                    </div>
+                  </Label>
+                </div>
+
+                <Button
+                  type="button"
+                  onClick={handleGenerateQuiz}
+                  disabled={generating || !aiPrompt}
+                  className="w-full"
+                >
+                  {generating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
+                      {localAIProgress ? localAIProgress : "Generating..."}
+                    </>
+                  ) : (
+                    "Generate Questions"
+                  )}
+                </Button>
+              </TabsContent>
             </div>
           </Tabs>
 
