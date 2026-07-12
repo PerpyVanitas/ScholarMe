@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { Download, X, File } from "lucide-react";
+import { Download, X, File, FileText } from "lucide-react";
 import { ResourceRow, getTypeInfo } from "../types";
 
 interface ResourcePreviewDialogProps {
@@ -69,7 +69,7 @@ export function ResourcePreviewDialog({
                   asChild
                 >
                   <a
-                    href={resource.url}
+                    href={`${resource.url}?download=`}
                     download
                     target="_blank"
                     rel="noopener noreferrer"
@@ -155,12 +155,25 @@ function PreviewContent({ resource }: { resource: ResourceRow }) {
   // PDF
   if (resource.file_type === "pdf" || ext === ".pdf") {
     return (
-      <iframe
-        src={`${url}#toolbar=1&navpanes=0&view=Fit`}
+      <object
+        data={`${url}#toolbar=1&navpanes=0&view=Fit`}
+        type="application/pdf"
         className="w-full h-full min-h-[75vh] md:min-h-[85vh] max-w-5xl mx-auto border border-zinc-800 rounded-lg bg-zinc-950 shadow-2xl"
-        title={resource.title}
-        frameBorder="0"
-      />
+      >
+        <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-zinc-900/50 rounded-lg border border-zinc-800">
+          <FileText className="h-12 w-12 text-zinc-500 mb-4" />
+          <h3 className="text-lg font-medium text-zinc-200 mb-2">Unable to display PDF preview</h3>
+          <p className="text-sm text-zinc-400 mb-6 max-w-md">
+            Your browser may not support inline PDF viewing, or a plugin is blocking it.
+          </p>
+          <Button asChild className="bg-amber-500 hover:bg-amber-600 text-black">
+            <a href={`${url}?download=`} download target="_blank" rel="noopener noreferrer">
+              <Download className="w-4 h-4 mr-2" />
+              Download PDF
+            </a>
+          </Button>
+        </div>
+      </object>
     );
   }
 
@@ -194,7 +207,7 @@ function PreviewContent({ resource }: { resource: ResourceRow }) {
         className="bg-[#FFD700] hover:bg-[#FFD700]/90 text-black font-semibold"
       >
         <a
-          href={url}
+          href={`${url}?download=`}
           download
           target="_blank"
           rel="noopener noreferrer"

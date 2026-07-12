@@ -497,7 +497,7 @@ export default function ResourcesPage() {
                                     asChild
                                   >
                                     <a
-                                      href={resource.url}
+                                      href={`${resource.url}?download=`}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       aria-label={`Download ${resource.title}`}
