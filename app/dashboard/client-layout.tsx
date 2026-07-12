@@ -10,6 +10,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { FeedbackButton } from "@/components/feedback-button";
+import { A11ySettings } from "@/components/a11y-settings";
 import { UserProvider, useUser } from "@/lib/user-context";
 import { Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -98,6 +99,7 @@ function DashboardLayoutContent({
               <StreakIndicator />
             </div>
             <FeedbackButton />
+            <A11ySettings />
             <ThemeToggle />
           </div>
         </header>

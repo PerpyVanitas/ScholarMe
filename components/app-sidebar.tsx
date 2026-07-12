@@ -78,6 +78,7 @@ import {
   FileSpreadsheet,
   ShieldCheck,
   Receipt,
+  Globe,
 } from "lucide-react";
 import { signOut } from "@/app/auth/actions";
 import { HonorSocietyLogo } from "@/components/honsoc-logo";
@@ -667,9 +668,6 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter>
-        <div className="px-4 pb-2">
-          <A11ySettings />
-        </div>
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
@@ -702,6 +700,13 @@ export function AppSidebar({
                   <Link href="/dashboard/profile">
                     <Settings className="mr-2 h-4 w-4" />
                     Profile Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/settings">
+                    <Globe className="mr-2 h-4 w-4" />
+                    Site Settings
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
