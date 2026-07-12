@@ -11,17 +11,23 @@ CREATE TABLE IF NOT EXISTS public.announcements (
 
 ALTER TABLE public.announcements ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Anyone can view announcements" ON public.announcements;
 CREATE POLICY "Anyone can view announcements" ON public.announcements FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Admins can insert announcements" ON public.announcements;
 CREATE POLICY "Admins can insert announcements" ON public.announcements FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM roles r JOIN user_roles ur ON ur.role_id = r.id WHERE ur.user_id = auth.uid() AND r.name = 'administrator')
+  public.is_admin(auth.uid())
 );
+DROP POLICY IF EXISTS "Admins can update announcements" ON public.announcements;
 CREATE POLICY "Admins can update announcements" ON public.announcements FOR UPDATE USING (
-  EXISTS (SELECT 1 FROM roles r JOIN user_roles ur ON ur.role_id = r.id WHERE ur.user_id = auth.uid() AND r.name = 'administrator')
+  public.is_admin(auth.uid())
 );
+DROP POLICY IF EXISTS "Admins can delete announcements" ON public.announcements;
 CREATE POLICY "Admins can delete announcements" ON public.announcements FOR DELETE USING (
-  EXISTS (SELECT 1 FROM roles r JOIN user_roles ur ON ur.role_id = r.id WHERE ur.user_id = auth.uid() AND r.name = 'administrator')
+  public.is_admin(auth.uid())
 );
 
+CREATE EXTENSION IF NOT EXISTS moddatetime SCHEMA extensions;
+DROP TRIGGER IF EXISTS handle_updated_at ON public.announcements;
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.announcements
   FOR EACH ROW EXECUTE PROCEDURE moddatetime (updated_at);
 
@@ -38,20 +44,25 @@ CREATE TABLE IF NOT EXISTS public.event_rsvps (
 
 ALTER TABLE public.event_rsvps ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Anyone can view event RSVPs" ON public.event_rsvps;
 CREATE POLICY "Anyone can view event RSVPs" ON public.event_rsvps FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Users can insert their own RSVP" ON public.event_rsvps;
 CREATE POLICY "Users can insert their own RSVP" ON public.event_rsvps FOR INSERT WITH CHECK (
   profile_id = auth.uid()
 );
 
+DROP POLICY IF EXISTS "Users can update their own RSVP" ON public.event_rsvps;
 CREATE POLICY "Users can update their own RSVP" ON public.event_rsvps FOR UPDATE USING (
   profile_id = auth.uid()
 );
 
+DROP POLICY IF EXISTS "Users can delete their own RSVP" ON public.event_rsvps;
 CREATE POLICY "Users can delete their own RSVP" ON public.event_rsvps FOR DELETE USING (
   profile_id = auth.uid()
 );
 
+DROP TRIGGER IF EXISTS handle_updated_at ON public.event_rsvps;
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.event_rsvps
   FOR EACH ROW EXECUTE PROCEDURE moddatetime (updated_at);
 
