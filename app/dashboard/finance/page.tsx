@@ -96,21 +96,22 @@ export default async function FinanceDashboard() {
     .maybeSingle();
 
   const semesterBudget = configs?.semester_budget || 100000;
-  
+
   // Calculate total spent (from released/president_approved requests)
   const { data: spentReqs } = await supabase
     .from("finance_budget_requests")
     .select("amount")
     .in("status", ["president_approved", "released"]);
-    
-  const totalSpent = spentReqs?.reduce((sum, req) => sum + Number(req.amount), 0) || 0;
+
+  const totalSpent =
+    spentReqs?.reduce((sum, req) => sum + Number(req.amount), 0) || 0;
   const budgetPercentage = Math.min((totalSpent / semesterBudget) * 100, 100);
 
   const { data: vendorsData } = await supabase
     .from("finance_vendors")
     .select("*")
     .order("name", { ascending: true });
-    
+
   const vendors = (vendorsData || []) as FinanceVendor[];
 
   return (
@@ -128,8 +129,12 @@ export default async function FinanceDashboard() {
 
       <div className="bg-card border rounded-lg p-6">
         <div className="flex justify-between mb-2">
-          <span className="text-sm font-medium text-muted-foreground">Semester Budget Utilization</span>
-          <span className="text-sm font-bold">₱{totalSpent.toLocaleString()} / ₱{semesterBudget.toLocaleString()}</span>
+          <span className="text-sm font-medium text-muted-foreground">
+            Semester Budget Utilization
+          </span>
+          <span className="text-sm font-bold">
+            ₱{totalSpent.toLocaleString()} / ₱{semesterBudget.toLocaleString()}
+          </span>
         </div>
         <Progress value={budgetPercentage} className="h-3" />
       </div>
@@ -171,11 +176,10 @@ export default async function FinanceDashboard() {
 
         <TabsContent value="scards" className="space-y-6">
           <ScardsTab
-          canSubmit={canReview}
-          canAudit={canAudit}
-          scards={scards as Scard[] | null}
-          canReview={canReview}
-        />
+            canSubmit={canReview}
+            canAudit={canAudit}
+            scards={scards as Scard[] | null}
+          />
         </TabsContent>
       </SyncTabs>
     </div>

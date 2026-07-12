@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { processDailyDecay } from "@/app/api/gamification/daily/route";
+import { processDailyDecay } from "@/lib/gamification/daily-decay";
 
 export async function recordLoginHistory(
   supabase: SupabaseClient,

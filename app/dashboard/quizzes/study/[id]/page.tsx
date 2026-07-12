@@ -10,6 +10,14 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import confetti from "canvas-confetti";
 import {
   ArrowLeft,
@@ -73,6 +81,7 @@ export default function StudyModePage({
   const [now, setNow] = useState<number>(0);
 
   // Customization Modes
+  const [showShuffleConfirm, setShowShuffleConfirm] = useState(false);
   const [isTypingMode, setIsTypingMode] = useState(false);
 
   useEffect(() => {
@@ -107,15 +116,15 @@ export default function StudyModePage({
     }
   }
 
-  function shuffleItems() {
-    if (
-      Object.keys(answers).length > 0 &&
-      !confirm(
-        "Are you sure you want to shuffle? You will lose your current session progress.",
-      )
-    ) {
-      return;
+  function requestShuffle() {
+    if (Object.keys(answers).length > 0) {
+      setShowShuffleConfirm(true);
+    } else {
+      executeShuffle();
     }
+  }
+
+  function executeShuffle() {
     const shuffled = [...shuffledItems].sort(() => Math.random() - 0.5);
     setShuffledItems(shuffled);
     setCurrentIndex(0);
@@ -124,6 +133,7 @@ export default function StudyModePage({
     setSelectedAnswer("");
     setTypedAnswer("");
     setIsComplete(false);
+    setShowShuffleConfirm(false);
     toast.success("Cards shuffled!");
   }
 
@@ -387,7 +397,7 @@ export default function StudyModePage({
               onCheckedChange={setIsTypingMode}
             />
           </div>
-          <Button variant="outline" size="sm" onClick={shuffleItems}>
+          <Button variant="outline" size="sm" onClick={requestShuffle}>
             <Shuffle className="mr-2 h-4 w-4" />
             Shuffle
           </Button>
@@ -632,6 +642,29 @@ export default function StudyModePage({
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </div>
+
+      <Dialog open={showShuffleConfirm} onOpenChange={setShowShuffleConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Shuffle Cards?</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to shuffle? You will lose your current
+              session progress and have to start over.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowShuffleConfirm(false)}
+            >
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={executeShuffle}>
+              Shuffle
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

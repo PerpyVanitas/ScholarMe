@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -85,7 +87,8 @@ export function CreateFlashcardsSheet({
   const [generating, setGenerating] = useState(false);
   const [tagging, setTagging] = useState(false);
   const [creationMethod, setCreationMethod] = useState("manual");
-  const [localAIProgress, setLocalAIProgress] = useState("");
+  const [localAIProgressText, setLocalAIProgressText] = useState("");
+  const [localAIProgressValue, setLocalAIProgressValue] = useState(0);
 
   useEffect(() => {
     if (open) {
@@ -145,10 +148,11 @@ export function CreateFlashcardsSheet({
 
     try {
       setGenerating(true);
-      setLocalAIProgress("Loading model... (This may take a minute)");
+      setLocalAIProgressText("Loading model... (This may take a minute)");
+      setLocalAIProgressValue(0);
 
       const worker = new Worker(
-        new URL("../../lib/workers/webllm.worker.ts", import.meta.url),
+        new URL("../../../../lib/workers/webllm.worker.ts", import.meta.url),
         { type: "module" },
       );
 
@@ -157,14 +161,14 @@ export function CreateFlashcardsSheet({
         "Llama-3.2-1B-Instruct-q4f32_1-MLC",
         {
           initProgressCallback: (progress) => {
-            setLocalAIProgress(
-              `Loading Local AI: ${Math.round(progress.progress * 100)}%`,
-            );
+            setLocalAIProgressText(progress.text);
+            setLocalAIProgressValue(Math.round(progress.progress * 100));
           },
         },
       );
 
-      setLocalAIProgress("Generating flashcards...");
+      setLocalAIProgressText("Generating flashcards...");
+      setLocalAIProgressValue(100);
       const systemPrompt = `You are an expert flashcard generator. Given a topic, generate ${aiCount} flashcards. 
 Respond ONLY with a valid JSON array of objects, where each object has a "question" string and an "answer" string.
 No other text, markdown blocks, or explanations. Just the JSON array.`;
@@ -201,13 +205,15 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
       }));
       toast.success("Questions generated locally successfully!");
       setCreationMethod("manual");
-      setLocalAIProgress("");
+      setLocalAIProgressText("");
+      setLocalAIProgressValue(0);
     } catch (error) {
       console.error("Error generating questions:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to generate questions",
       );
-      setLocalAIProgress("");
+      setLocalAIProgressText("");
+      setLocalAIProgressValue(0);
     } finally {
       setGenerating(false);
     }
@@ -221,10 +227,11 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
 
     try {
       setTagging(true);
-      setLocalAIProgress("Loading model for auto-tagging...");
+      setLocalAIProgressText("Loading model for auto-tagging...");
+      setLocalAIProgressValue(0);
 
       const worker = new Worker(
-        new URL("../../lib/workers/webllm.worker.ts", import.meta.url),
+        new URL("../../../../lib/workers/webllm.worker.ts", import.meta.url),
         { type: "module" },
       );
 
@@ -233,14 +240,14 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
         "Llama-3.2-1B-Instruct-q4f32_1-MLC",
         {
           initProgressCallback: (progress) => {
-            setLocalAIProgress(
-              `Loading Local AI: ${Math.round(progress.progress * 100)}%`,
-            );
+            setLocalAIProgressText(progress.text);
+            setLocalAIProgressValue(Math.round(progress.progress * 100));
           },
         },
       );
 
-      setLocalAIProgress("Analyzing flashcards...");
+      setLocalAIProgressText("Analyzing flashcards...");
+      setLocalAIProgressValue(100);
       const systemPrompt = `You are a helpful assistant. Analyze the provided flashcards and output exactly 3 comma-separated tags (e.g. "Biology, Anatomy, Cells"). Do not output anything else.`;
 
       const reply = await engine.chat.completions.create({
@@ -267,7 +274,8 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
       toast.error("Failed to generate tags with AI.");
     } finally {
       setTagging(false);
-      setLocalAIProgress("");
+      setLocalAIProgressText("");
+      setLocalAIProgressValue(0);
     }
   };
 
@@ -590,12 +598,22 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
                 {generating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {localAIProgress ? localAIProgress : "Generating..."}
+                    {localAIProgressText ? "Generating..." : "Generating..."}
                   </>
                 ) : (
                   "Generate Questions"
                 )}
               </Button>
+
+              {generating && localAIProgressText && (
+                <div className="space-y-2 mt-4 border p-4 rounded-lg bg-muted/20">
+                  <div className="flex justify-between text-xs text-muted-foreground font-medium">
+                    <span className="truncate pr-4">{localAIProgressText}</span>
+                    <span>{localAIProgressValue}%</span>
+                  </div>
+                  <Progress value={localAIProgressValue} className="h-2" />
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="resource" className="space-y-5 mt-4">

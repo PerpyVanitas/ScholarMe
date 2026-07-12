@@ -17,11 +17,8 @@ export async function GET(request: Request) {
       .select("roles(name)")
       .eq("id", user.id)
       .single();
-    const rawRole = profile?.roles;
-    type RoleEntry = { name: string };
-    const roleName = Array.isArray(rawRole)
-      ? (rawRole as RoleEntry[])[0]?.name
-      : (rawRole as RoleEntry | null)?.name;
+    const rawRole = profile?.roles as any;
+    const roleName = Array.isArray(rawRole) ? rawRole[0]?.name : rawRole?.name;
     if (!["administrator", "super_admin"].includes(roleName ?? "")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

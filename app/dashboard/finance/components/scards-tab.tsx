@@ -237,7 +237,6 @@ export function ScardsTab({ canSubmit, canAudit, scards }: Props) {
                     {report.status === "draft" && canSubmit && (
                       <form
                         action={async (fd: FormData) => {
-                          "use server";
                           fd.append("scard_id", report.id);
                           await updateScardsReport(fd);
                         }}
@@ -261,7 +260,6 @@ export function ScardsTab({ canSubmit, canAudit, scards }: Props) {
                     {report.status === "draft" && canSubmit && (
                       <form
                         action={async () => {
-                          "use server";
                           await submitScardsForReview(report.id);
                         }}
                       >
@@ -274,7 +272,6 @@ export function ScardsTab({ canSubmit, canAudit, scards }: Props) {
                     {canAudit && report.status === "auditor_review" && (
                       <form
                         action={async () => {
-                          "use server";
                           await cosignScards(report.id);
                         }}
                       >

@@ -62,7 +62,7 @@ export function QuizItemsEditor({
           </Button>
         </div>
       </div>
-      <div className="max-h-[350px] overflow-y-auto space-y-3 pr-2 scrollbar-thin">
+      <div className="max-h-[600px] overflow-y-auto space-y-4 pr-2 scrollbar-thin">
         {structuredItems.map((item, i) => (
           <div
             key={i}

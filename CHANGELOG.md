@@ -1,6 +1,18 @@
-## [2026-07-12] - Free Local AI (WebLLM) Integration
+## [2026-07-12] - QA Audit & Production Build Fixes
+
+### Fixed
+
+- **Production Build Issues**: Resolved multiple severe build-breaking bugs involving Next.js route handlers incorrectly exporting helper functions, strict TypeScript compilation errors across page boundaries, and Webpack conflicts.
+- **WebLLM Imports**: Fixed absolute pathing for local AI Web Worker threads ensuring successful static compilation in the PWA environment.
 
 ### Changed
+
+- **UI/UX QoL Updates**:
+  - Replaced native `confirm()` browser alerts in Quizzes and Flashcards with Radix UI `Dialog` modals for a smoother study experience.
+  - Expanded the `QuizItemsEditor` maximum height to 600px for easier bulk editing.
+  - Implemented a real-time visual progress bar for WebLLM model initializations, providing vital feedback during the heavy download phase.
+
+## [2026-07-12] - Free Local AI (WebLLM) Integration### Changed
 
 - **Manual Flashcards & Quizzes**: Replaced the server-side Gemini fallback with the completely free, unlimited `WebWorkerMLCEngine` (Local AI). This guarantees no API usage costs when users manually prompt to generate flashcards or quizzes.
 
