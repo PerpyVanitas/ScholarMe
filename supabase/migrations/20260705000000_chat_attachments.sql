@@ -14,6 +14,7 @@ ON CONFLICT (id) DO NOTHING;
 -- RLS Policies for chat-attachments
 
 -- Authenticated users can upload to chat-attachments if they are a participant in the conversation
+DROP POLICY IF EXISTS "Users can upload chat attachments" ON storage.objects;
 CREATE POLICY "Users can upload chat attachments"
 ON storage.objects FOR INSERT
 TO authenticated
@@ -27,6 +28,7 @@ WITH CHECK (
 -- For simplicity in this schema update, we allow users to upload into a folder named after their own UID
 -- and anyone in the conversation can view it.
 
+DROP POLICY IF EXISTS "Users can view chat attachments" ON storage.objects;
 CREATE POLICY "Users can view chat attachments"
 ON storage.objects FOR SELECT
 TO authenticated
