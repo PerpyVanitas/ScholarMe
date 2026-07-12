@@ -1,8 +1,69 @@
 SET statement_timeout = 0;
 -- 1. Remove redundant columns from study_sets
+
+-- Drop policies that depend on user_id first
+DROP POLICY IF EXISTS "study_sets_select" ON public.study_sets;
+DROP POLICY IF EXISTS "study_sets_insert" ON public.study_sets;
+DROP POLICY IF EXISTS "study_sets_update" ON public.study_sets;
+DROP POLICY IF EXISTS "study_sets_delete" ON public.study_sets;
+
+DROP POLICY IF EXISTS "study_set_items_select" ON public.study_set_items;
+DROP POLICY IF EXISTS "study_set_items_insert" ON public.study_set_items;
+DROP POLICY IF EXISTS "study_set_items_update" ON public.study_set_items;
+DROP POLICY IF EXISTS "study_set_items_delete" ON public.study_set_items;
+
 ALTER TABLE public.study_sets 
   DROP COLUMN IF EXISTS user_id,
   DROP COLUMN IF EXISTS is_archived;
+
+-- Recreate policies using owner_id
+CREATE POLICY "study_sets_select" ON public.study_sets
+  FOR SELECT USING (auth.uid() = owner_id OR is_public = true);
+
+CREATE POLICY "study_sets_insert" ON public.study_sets
+  FOR INSERT WITH CHECK (auth.uid() = owner_id);
+
+CREATE POLICY "study_sets_update" ON public.study_sets
+  FOR UPDATE USING (auth.uid() = owner_id);
+
+CREATE POLICY "study_sets_delete" ON public.study_sets
+  FOR DELETE USING (auth.uid() = owner_id);
+
+CREATE POLICY "study_set_items_select" ON public.study_set_items
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.study_sets s
+      WHERE s.id = study_set_items.study_set_id
+        AND (s.owner_id = auth.uid() OR s.is_public = true)
+    )
+  );
+
+CREATE POLICY "study_set_items_insert" ON public.study_set_items
+  FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.study_sets s
+      WHERE s.id = study_set_items.study_set_id
+        AND (s.owner_id = auth.uid())
+    )
+  );
+
+CREATE POLICY "study_set_items_update" ON public.study_set_items
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM public.study_sets s
+      WHERE s.id = study_set_items.study_set_id
+        AND (s.owner_id = auth.uid())
+    )
+  );
+
+CREATE POLICY "study_set_items_delete" ON public.study_set_items
+  FOR DELETE USING (
+    EXISTS (
+      SELECT 1 FROM public.study_sets s
+      WHERE s.id = study_set_items.study_set_id
+        AND (s.owner_id = auth.uid())
+    )
+  );
 
 -- 2. Add ON DELETE CASCADE to critical foreign keys
 -- Drop existing constraints
