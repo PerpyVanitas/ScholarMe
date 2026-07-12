@@ -39,6 +39,24 @@ export function CreateFlashcardsSheet({
   onSuccess,
 }: CreateFlashcardsSheetProps) {
   const [creating, setCreating] = useState(false);
+  const [cooldownEnd, setCooldownEnd] = useState<number | null>(null);
+  const [timeLeft, setTimeLeft] = useState(0);
+
+  useEffect(() => {
+    if (!cooldownEnd) return;
+    const interval = setInterval(() => {
+      const remain = Math.ceil((cooldownEnd - Date.now()) / 1000);
+      if (remain <= 0) {
+        setTimeLeft(0);
+        setCooldownEnd(null);
+        clearInterval(interval);
+      } else {
+        setTimeLeft(remain);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [cooldownEnd]);
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -100,6 +118,7 @@ export function CreateFlashcardsSheet({
         }
       } catch (e) {
         console.error(e);
+        toast.error(e instanceof Error ? e.message : "An error occurred");
       } finally {
         setExtractingTopics(false);
       }
@@ -275,6 +294,9 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
 
       if (!res.ok) {
         const errorData = await res.json();
+        if (res.status === 429 && errorData.retryAfter) {
+          setCooldownEnd(errorData.retryAfter);
+        }
         throw new Error(errorData.error || "Failed to generate from resource");
       }
 
@@ -718,26 +740,33 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
                       placeholder="e.g. Focus on definitions"
                       value={userContext}
                       onChange={(e) => setUserContext(e.target.value)}
-                      disabled={generating}
+                      disabled={generating || timeLeft > 0}
                     />
                   </div>
 
-                  <Button
-                    type="button"
-                    onClick={handleGenerateFromResource}
-                    disabled={generating || !selectedResource}
-                    className="w-full mt-2"
-                    variant="secondary"
-                  >
-                    {generating ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
-                        Extracting...
-                      </>
-                    ) : (
-                      "Generate Flashcards"
-                    )}
-                  </Button>
+                  {timeLeft > 0 ? (
+                    <div className="text-center p-3 text-sm text-destructive bg-destructive/10 rounded-md border border-destructive/20 mt-4">
+                      Rate limit reached. Please wait {timeLeft}s before
+                      generating again.
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      onClick={handleGenerateFromResource}
+                      disabled={generating || !selectedResource || timeLeft > 0}
+                      className="w-full mt-4"
+                      variant="secondary"
+                    >
+                      {generating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
+                          Extracting...
+                        </>
+                      ) : (
+                        "Generate Flashcards"
+                      )}
+                    </Button>
+                  )}
                 </>
               )}
             </TabsContent>

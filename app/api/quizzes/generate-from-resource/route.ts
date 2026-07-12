@@ -20,6 +20,7 @@ import {
   MAX_FILE_BYTES,
   logAndSanitizeAIError,
 } from "@/lib/ai/gemini";
+import { rateLimit } from "@/lib/rate-limit";
 
 const supabaseAdmin = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -37,6 +38,21 @@ export async function POST(req: Request) {
     return NextResponse.json(
       { error: "Authentication required" },
       { status: 401 },
+    );
+  }
+
+  // ── [RATE LIMIT] Max 2 generation requests per minute per user ─────────
+  const limiter = rateLimit({ interval: 60 * 1000, limit: 2 });
+  const rlResult = await limiter.check(`gemini_generate_${user.id}`);
+
+  if (!rlResult.success) {
+    return NextResponse.json(
+      {
+        error:
+          "Rate limit exceeded. Please wait 60 seconds before generating again.",
+        retryAfter: rlResult.reset,
+      },
+      { status: 429 },
     );
   }
 

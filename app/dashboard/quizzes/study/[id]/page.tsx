@@ -24,7 +24,7 @@ import {
   Shuffle,
   Flag,
   Volume2,
-  Download
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -71,7 +71,7 @@ export default function StudyModePage({
   const [startTime] = useState(Date.now());
   const [shuffledItems, setShuffledItems] = useState<StudySetItem[]>([]);
   const [now, setNow] = useState<number>(0);
-  
+
   // Customization Modes
   const [isTypingMode, setIsTypingMode] = useState(false);
 
@@ -164,8 +164,9 @@ export default function StudyModePage({
     e.preventDefault();
     if (!typedAnswer.trim()) return;
     const currentItem = shuffledItems[currentIndex];
-    const isCorrect = typedAnswer.trim().toLowerCase() === currentItem.answer.toLowerCase();
-    
+    const isCorrect =
+      typedAnswer.trim().toLowerCase() === currentItem.answer.toLowerCase();
+
     setAnswers({
       ...answers,
       [currentItem.id]: { answer: typedAnswer, correct: isCorrect },
@@ -178,12 +179,12 @@ export default function StudyModePage({
     // For now, record it as correct if good or easy
     const currentItem = shuffledItems[currentIndex];
     const isCorrect = rating === "good" || rating === "easy";
-    
+
     setAnswers({
       ...answers,
       [currentItem.id]: { answer: rating, correct: isCorrect },
     });
-    
+
     toast.success(`Rating recorded: ${rating}`);
     handleNext();
   }
@@ -198,7 +199,7 @@ export default function StudyModePage({
   }
 
   function speakText(text: string) {
-    if ('speechSynthesis' in window) {
+    if ("speechSynthesis" in window) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       window.speechSynthesis.speak(utterance);
@@ -268,6 +269,7 @@ export default function StudyModePage({
       }
     } catch (error) {
       console.error("Failed to save attempt");
+      toast.error("An error occurred");
     }
   }
 
@@ -283,7 +285,8 @@ export default function StudyModePage({
   }
 
   const currentItem = shuffledItems[currentIndex];
-  const progress = ((currentIndex + (showAnswer ? 1 : 0)) / shuffledItems.length) * 100;
+  const progress =
+    ((currentIndex + (showAnswer ? 1 : 0)) / shuffledItems.length) * 100;
 
   if (isComplete) {
     const correctCount = Object.values(answers).filter((a) => a.correct).length;
@@ -358,7 +361,12 @@ export default function StudyModePage({
           <h1 className="text-xl font-bold flex items-center gap-3">
             {studySet.title}
             <Button variant="outline" size="sm" asChild>
-              <a href={`/api/quizzes/${id}/export`} target="_blank" rel="noreferrer" title="Export to Quizlet/Anki CSV">
+              <a
+                href={`/api/quizzes/${id}/export`}
+                target="_blank"
+                rel="noreferrer"
+                title="Export to Quizlet/Anki CSV"
+              >
                 <Download className="mr-1 h-3 w-3" />
                 Export
               </a>
@@ -367,8 +375,17 @@ export default function StudyModePage({
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 mr-2">
-            <Label htmlFor="typing-mode" className="text-xs text-muted-foreground">Typing Mode</Label>
-            <Switch id="typing-mode" checked={isTypingMode} onCheckedChange={setIsTypingMode} />
+            <Label
+              htmlFor="typing-mode"
+              className="text-xs text-muted-foreground"
+            >
+              Typing Mode
+            </Label>
+            <Switch
+              id="typing-mode"
+              checked={isTypingMode}
+              onCheckedChange={setIsTypingMode}
+            />
           </div>
           <Button variant="outline" size="sm" onClick={shuffleItems}>
             <Shuffle className="mr-2 h-4 w-4" />
@@ -392,7 +409,12 @@ export default function StudyModePage({
                 Question
               </p>
               <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" onClick={() => speakText(currentItem.question)} title="Listen">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => speakText(currentItem.question)}
+                  title="Listen"
+                >
                   <Volume2 className="h-4 w-4 text-muted-foreground" />
                 </Button>
                 <Button
@@ -408,10 +430,10 @@ export default function StudyModePage({
             <p className="text-xl font-medium mb-6">{currentItem.question}</p>
             {currentItem.image_url && (
               <div className="flex justify-center mb-6">
-                <ImageOcclusionViewer 
-                  imageUrl={currentItem.image_url} 
-                  masks={currentItem.occlusion_masks || []} 
-                  showAll={showAnswer} 
+                <ImageOcclusionViewer
+                  imageUrl={currentItem.image_url}
+                  masks={currentItem.occlusion_masks || []}
+                  showAll={showAnswer}
                 />
               </div>
             )}
@@ -488,8 +510,8 @@ export default function StudyModePage({
                 {!showAnswer ? (
                   isTypingMode ? (
                     <form onSubmit={handleTypingSubmit} className="flex gap-2">
-                      <Input 
-                        placeholder="Type your answer here..." 
+                      <Input
+                        placeholder="Type your answer here..."
                         value={typedAnswer}
                         onChange={(e) => setTypedAnswer(e.target.value)}
                         autoFocus
@@ -515,16 +537,25 @@ export default function StudyModePage({
                         <p className="font-medium text-primary">
                           {currentItem.answer}
                         </p>
-                        <Button variant="ghost" size="icon" onClick={() => speakText(currentItem.answer)} title="Listen">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => speakText(currentItem.answer)}
+                          title="Listen"
+                        >
                           <Volume2 className="h-4 w-4 text-muted-foreground" />
                         </Button>
                       </div>
                     </div>
-                    
+
                     {isTypingMode && (
                       <div>
-                        <p className="text-sm text-muted-foreground mb-1">Your Answer:</p>
-                        <p className={`font-medium ${answers[currentItem.id]?.correct ? 'text-green-500' : 'text-red-500'}`}>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          Your Answer:
+                        </p>
+                        <p
+                          className={`font-medium ${answers[currentItem.id]?.correct ? "text-green-500" : "text-red-500"}`}
+                        >
                           {typedAnswer}
                         </p>
                       </div>
@@ -532,12 +563,38 @@ export default function StudyModePage({
 
                     {!isTypingMode && (
                       <div className="border-t pt-4 mt-2">
-                        <p className="text-sm font-medium mb-3 text-center">How well did you know this?</p>
+                        <p className="text-sm font-medium mb-3 text-center">
+                          How well did you know this?
+                        </p>
                         <div className="grid grid-cols-4 gap-2">
-                          <Button variant="outline" className="border-red-500/50 hover:bg-red-50 dark:hover:bg-red-950" onClick={() => handleSM2Rating("again")}>Again</Button>
-                          <Button variant="outline" className="border-orange-500/50 hover:bg-orange-50 dark:hover:bg-orange-950" onClick={() => handleSM2Rating("hard")}>Hard</Button>
-                          <Button variant="outline" className="border-blue-500/50 hover:bg-blue-50 dark:hover:bg-blue-950" onClick={() => handleSM2Rating("good")}>Good</Button>
-                          <Button variant="outline" className="border-green-500/50 hover:bg-green-50 dark:hover:bg-green-950" onClick={() => handleSM2Rating("easy")}>Easy</Button>
+                          <Button
+                            variant="outline"
+                            className="border-red-500/50 hover:bg-red-50 dark:hover:bg-red-950"
+                            onClick={() => handleSM2Rating("again")}
+                          >
+                            Again
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="border-orange-500/50 hover:bg-orange-50 dark:hover:bg-orange-950"
+                            onClick={() => handleSM2Rating("hard")}
+                          >
+                            Hard
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="border-blue-500/50 hover:bg-blue-50 dark:hover:bg-blue-950"
+                            onClick={() => handleSM2Rating("good")}
+                          >
+                            Good
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="border-green-500/50 hover:bg-green-50 dark:hover:bg-green-950"
+                            onClick={() => handleSM2Rating("easy")}
+                          >
+                            Easy
+                          </Button>
                         </div>
                       </div>
                     )}

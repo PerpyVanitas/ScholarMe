@@ -1,12 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Check,
-  ChevronsUpDown,
-  Loader2,
-  Search,
-} from "lucide-react";
+import { Check, ChevronsUpDown, Loader2, Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDebounce } from "use-debounce";
 
@@ -26,6 +21,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 
 type UserProfile = {
@@ -67,6 +63,9 @@ export function UserSelector() {
         }
       } catch (error) {
         console.error("Error fetching users:", error);
+        toast.error(
+          error instanceof Error ? error.message : "An error occurred",
+        );
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -102,6 +101,7 @@ export function UserSelector() {
         }
       } catch (e) {
         console.error(e);
+        toast.error(e instanceof Error ? e.message : "An error occurred");
       }
     };
     fetchSelectedUser();
@@ -136,7 +136,9 @@ export function UserSelector() {
                   {displayedSelectedUser.full_name?.charAt(0) || "U"}
                 </AvatarFallback>
               </Avatar>
-              <span className="truncate">{displayedSelectedUser.full_name}</span>
+              <span className="truncate">
+                {displayedSelectedUser.full_name}
+              </span>
             </div>
           ) : (
             <span className="text-muted-foreground flex items-center gap-2">

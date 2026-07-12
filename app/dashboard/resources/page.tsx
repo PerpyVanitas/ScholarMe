@@ -93,7 +93,8 @@ export default function ResourcesPage() {
     null,
   );
 
-  const canManage = role === "tutor" || role === "administrator" || role === "super_admin";
+  const canManage =
+    role === "tutor" || role === "administrator" || role === "super_admin";
 
   const loadRepos = useCallback(async () => {
     const supabase = createClient();
@@ -181,6 +182,7 @@ export default function ResourcesPage() {
         if (error) throw error;
       } catch (err: unknown) {
         console.error("Delete failed in background:", err);
+        toast.error(err instanceof Error ? err.message : "An error occurred");
         // Rollback on failure
         setRepoResources((prev) => ({
           ...prev,
@@ -320,7 +322,8 @@ export default function ResourcesPage() {
             const isLoading = loadingResources === repo.id;
             const items = repoResources[repo.id] || [];
             const isOwner = repo.owner_id === userId;
-            const canAdd = isOwner || role === "administrator" || role === "super_admin";
+            const canAdd =
+              isOwner || role === "administrator" || role === "super_admin";
             const filtered =
               filterType === "all"
                 ? items

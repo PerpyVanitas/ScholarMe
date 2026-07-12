@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { ChatInterface } from "@/features/messaging/components/chat-interface";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { toast } from "sonner";
 import type { Conversation } from "@/lib/types";
 
 export const metadata = {
@@ -56,13 +57,14 @@ export default async function MessagesPage() {
           created_at,
           sender_id
         )
-      `
+      `,
       )
       .in("id", conversationIds)
       .order("updated_at", { ascending: false });
 
     if (error) {
       console.error("Error fetching conversations:", error);
+      toast.error(error instanceof Error ? error.message : "An error occurred");
     } else {
       conversations = data || [];
     }
@@ -72,7 +74,8 @@ export default async function MessagesPage() {
   const formattedConversations = conversations.map((conv) => {
     // Sort messages to get the latest one
     const sortedMessages = conv.messages?.sort(
-      (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      (a: any, b: any) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );
 
     return {
@@ -91,13 +94,13 @@ export default async function MessagesPage() {
           </p>
         </div>
       </div>
-      
+
       {/* Standard direct chat interface for own messages */}
       <div className="flex-1 bg-card rounded-lg border shadow-sm overflow-hidden min-h-[500px]">
         <ErrorBoundary>
-          <ChatInterface 
-            initialConversations={formattedConversations} 
-            currentUserId={user.id} 
+          <ChatInterface
+            initialConversations={formattedConversations}
+            currentUserId={user.id}
             isAdmin={isAdmin}
           />
         </ErrorBoundary>

@@ -38,6 +38,7 @@ export default function SystemHealthPage() {
         }
       } catch (e) {
         console.error("Failed to load health metrics", e);
+        toast.error(e instanceof Error ? e.message : "An error occurred");
       } finally {
         setLoading(false);
       }

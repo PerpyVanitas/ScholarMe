@@ -362,6 +362,7 @@ export function AppSidebar({
       setRecentVisits(visits);
     } catch (e) {
       console.error("Failed to parse recent visits", e);
+      toast.error(e instanceof Error ? e.message : "An error occurred");
     }
   }, [pathname, navGroups]);
 

@@ -25,6 +25,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getTutorLastActive } from "@/app/dashboard/tutors/actions";
 import { formatDistanceToNow } from "date-fns";
 import ReactMarkdown from "react-markdown";
+import { toast } from "sonner";
 
 interface TutorDetailModalProps {
   open: boolean;
@@ -87,6 +88,9 @@ export function TutorDetailModal({
         setHasBooked(!!data);
       } catch (error) {
         console.error("Error checking booking history:", error);
+        toast.error(
+          error instanceof Error ? error.message : "An error occurred",
+        );
       }
     };
 
@@ -97,6 +101,7 @@ export function TutorDetailModal({
         setLastActive(date);
       } catch (e) {
         console.error("Error fetching last active date:", e);
+        toast.error(e instanceof Error ? e.message : "An error occurred");
       } finally {
         setIsLoadingActive(false);
       }

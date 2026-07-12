@@ -45,7 +45,7 @@ export async function POST(req: Request) {
 
     // Group by conversation_id to find which ones include BOTH users
     const counts: Record<string, number> = {};
-    let candidateConvIds: string[] = [];
+    const candidateConvIds: string[] = [];
 
     for (const p of existingConvs || []) {
       counts[p.conversation_id] = (counts[p.conversation_id] || 0) + 1;
@@ -64,10 +64,12 @@ export async function POST(req: Request) {
 
       const totalCounts: Record<string, number> = {};
       for (const p of participantCounts || []) {
-        totalCounts[p.conversation_id] = (totalCounts[p.conversation_id] || 0) + 1;
+        totalCounts[p.conversation_id] =
+          (totalCounts[p.conversation_id] || 0) + 1;
       }
       // Only a true 1-on-1 conversation has exactly 2 participants
-      existingConvId = candidateConvIds.find((id) => totalCounts[id] === 2) ?? null;
+      existingConvId =
+        candidateConvIds.find((id) => totalCounts[id] === 2) ?? null;
     }
 
     if (existingConvId) {
@@ -95,9 +97,17 @@ export async function POST(req: Request) {
 
       if (!fetchError && conv) {
         // Sort messages chronologically
-        type RawMessage = { id: string; content: string; created_at: string; sender_id: string };
-        const sortedMessages = (conv.messages as RawMessage[] | undefined)?.sort(
-          (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+        type RawMessage = {
+          id: string;
+          content: string;
+          created_at: string;
+          sender_id: string;
+        };
+        const sortedMessages = (
+          conv.messages as RawMessage[] | undefined
+        )?.sort(
+          (a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
         );
         return NextResponse.json({
           success: true,

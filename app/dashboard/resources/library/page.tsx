@@ -1,4 +1,5 @@
 import { LibraryCatalog } from "@/features/library/components/library-catalog";
+import { toast } from "sonner";
 import { getLibraryCatalog } from "@/features/library/api/actions";
 
 export const metadata = {
@@ -12,6 +13,7 @@ export default async function LibraryPage() {
     initialResources = await getLibraryCatalog();
   } catch (e) {
     console.error("Error fetching library catalog:", e);
+    toast.error(e instanceof Error ? e.message : "An error occurred");
   }
 
   return (

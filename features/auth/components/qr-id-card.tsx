@@ -18,6 +18,7 @@ import {
 
 import { Profile, HsDesignation } from "@/lib/types";
 import { HonorSocietyLogo } from "@/components/honsoc-logo";
+import { toast } from "sonner";
 import { RotateCw, CreditCard, Download, Loader2 } from "lucide-react";
 
 export interface QrIdCardProps {
@@ -146,6 +147,7 @@ export function QrIdCard({
       const element = document.getElementById(`print-id-card-${profile.id}`);
       if (!element) {
         console.error("Print card element not found");
+        toast.error("An error occurred");
         return;
       }
 
@@ -170,6 +172,7 @@ export function QrIdCard({
       document.body.removeChild(link);
     } catch (err) {
       console.error("Error generating ID card image", err);
+      toast.error(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsDownloading(false);
     }

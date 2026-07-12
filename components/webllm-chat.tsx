@@ -137,6 +137,7 @@ export function WebLLMChat({ initialContext = "" }: WebLLMChatProps) {
       }
     } catch (error) {
       console.error("Chat error:", error);
+      toast.error(error instanceof Error ? error.message : "An error occurred");
       setMessages((prev) => [
         ...prev,
         {

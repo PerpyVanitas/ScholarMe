@@ -45,6 +45,7 @@ export function GlobalAnnouncementBoard() {
       setAnnouncements(data);
     } catch (e) {
       console.error(e);
+      toast.error(e instanceof Error ? e.message : "An error occurred");
     } finally {
       setLoading(false);
     }

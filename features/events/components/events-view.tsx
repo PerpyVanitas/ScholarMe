@@ -2,6 +2,7 @@ import { CalendarDays } from "lucide-react";
 import { addMonths, endOfMonth, startOfMonth, subMonths } from "date-fns";
 import { AnnouncementCalendar } from "@/components/announcement-calendar";
 import { EmptyState } from "@/components/ui/empty-state";
+import { toast } from "sonner";
 import { getEvents } from "@/features/events/api/actions";
 
 interface EventsViewProps {
@@ -26,6 +27,7 @@ export async function EventsView({
     initialEvents = await getEvents(monthStart, monthEnd);
   } catch (error) {
     console.error("Error fetching events:", error);
+    toast.error(error instanceof Error ? error.message : "An error occurred");
   }
 
   return (

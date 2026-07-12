@@ -8,6 +8,7 @@ import { AdminDashboard } from "@/features/admin/components/admin-dashboard";
 import { TutorDashboard } from "@/features/tutors/components/tutor-dashboard";
 import { LearnerDashboard } from "@/features/sessions/components/learner-dashboard";
 import type { Session, Tutor } from "@/lib/types";
+import { toast } from "sonner";
 import { ensureTutor } from "@/app/dashboard/profile/actions";
 
 interface DashboardData {
@@ -179,6 +180,7 @@ export default function DashboardView() {
         setDashboardData(extra);
       } catch (err) {
         console.error("Dashboard load error:", err);
+        toast.error(err instanceof Error ? err.message : "An error occurred");
         setError(true);
       } finally {
         setDataLoading(false);
@@ -223,12 +225,14 @@ export default function DashboardView() {
     return (
       <AdminDashboard
         profile={profile}
-        stats={dashboardData.adminStats || {
-          pendingSessions: 0,
-          clockedInTutors: 0,
-          activeTutors: 0,
-          sessionsToday: 0,
-        }}
+        stats={
+          dashboardData.adminStats || {
+            pendingSessions: 0,
+            clockedInTutors: 0,
+            activeTutors: 0,
+            sessionsToday: 0,
+          }
+        }
         recentSessions={dashboardData.recentSessions || []}
       />
     );
@@ -241,12 +245,14 @@ export default function DashboardView() {
         tutor={dashboardData.tutor || null}
         upcomingSessions={dashboardData.upcomingSessions || []}
         overdueSessions={dashboardData.overdueSessions || []}
-        stats={dashboardData.tutorStats || {
-          completedSessions: 0,
-          upcomingSessions: 0,
-          rating: 0,
-          totalRatings: 0,
-        }}
+        stats={
+          dashboardData.tutorStats || {
+            completedSessions: 0,
+            upcomingSessions: 0,
+            rating: 0,
+            totalRatings: 0,
+          }
+        }
       />
     );
   }
@@ -255,11 +261,13 @@ export default function DashboardView() {
     <LearnerDashboard
       profile={profile}
       upcomingSessions={dashboardData.upcomingSessions || []}
-      stats={dashboardData.learnerStats || {
-        totalSessions: 0,
-        completedSessions: 0,
-        upcomingSessions: 0,
-      }}
+      stats={
+        dashboardData.learnerStats || {
+          totalSessions: 0,
+          completedSessions: 0,
+          upcomingSessions: 0,
+        }
+      }
     />
   );
 }

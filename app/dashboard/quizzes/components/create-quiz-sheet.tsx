@@ -27,7 +27,8 @@ import { Loader2, CheckCircle, BookOpen, FileText, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { CreateWebWorkerMLCEngine } from "@mlc-ai/web-llm";
-import { ImageOcclusionEditor } from "@/components/image-occlusion-editor";
+import { QuizConfigPanel } from "./quiz-config-panel";
+import { QuizItemsEditor } from "./quiz-items-editor";
 
 interface CreateQuizSheetProps {
   open: boolean;
@@ -77,6 +78,23 @@ export function CreateQuizSheet({
   const [generating, setGenerating] = useState(false);
   const [creationMethod, setCreationMethod] = useState("manual");
   const [localAIProgress, setLocalAIProgress] = useState("");
+  const [cooldownEnd, setCooldownEnd] = useState<number | null>(null);
+  const [timeLeft, setTimeLeft] = useState(0);
+
+  useEffect(() => {
+    if (!cooldownEnd) return;
+    const interval = setInterval(() => {
+      const remain = Math.ceil((cooldownEnd - Date.now()) / 1000);
+      if (remain <= 0) {
+        setTimeLeft(0);
+        setCooldownEnd(null);
+        clearInterval(interval);
+      } else {
+        setTimeLeft(remain);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [cooldownEnd]);
 
   useEffect(() => {
     if (open) {
@@ -109,6 +127,7 @@ export function CreateQuizSheet({
         }
       } catch (e) {
         console.error(e);
+        toast.error(e instanceof Error ? e.message : "An error occurred");
       } finally {
         setExtractingTopics(false);
       }
@@ -264,6 +283,9 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
 
       if (!res.ok) {
         const errorData = await res.json();
+        if (res.status === 429 && errorData.retryAfter) {
+          setCooldownEnd(errorData.retryAfter);
+        }
         throw new Error(errorData.error || "Failed to generate from resource");
       }
 
@@ -462,71 +484,12 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
             </div>
           </div>
 
-          <div className="space-y-3 p-4 bg-muted/40 rounded-xl border border-border/50">
-            <div className="flex items-center justify-between mb-2">
-              <Label className="text-sm font-semibold">
-                Question Types Configuration
-              </Label>
-            </div>
-            <p className="text-xs text-muted-foreground mb-3">
-              Select the types and quantities you want to generate.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {Object.entries(quizConfig).map(([key, config]) => (
-                <div
-                  key={key}
-                  className={`flex items-center justify-between p-3 border rounded-lg transition-colors ${
-                    config.enabled
-                      ? "border-primary/50 bg-primary/5"
-                      : "border-border/60 bg-background/50 hover:border-border"
-                  }`}
-                >
-                  <div className="flex items-center space-x-3">
-                    <Switch
-                      id={"quiz_" + key}
-                      checked={config.enabled}
-                      onCheckedChange={(checked) =>
-                        setQuizConfig((prev) => ({
-                          ...prev,
-                          [key]: {
-                            ...prev[key as keyof typeof prev],
-                            enabled: checked,
-                          },
-                        }))
-                      }
-                      disabled={generating || creating}
-                      className="scale-90"
-                    />
-                    <Label
-                      htmlFor={"quiz_" + key}
-                      className="capitalize cursor-pointer text-sm font-medium leading-none"
-                    >
-                      {key.replace(/_/g, " ")}
-                    </Label>
-                  </div>
-                  {config.enabled && (
-                    <Input
-                      type="number"
-                      min="1"
-                      max="50"
-                      className="w-16 h-8 text-xs font-medium text-center"
-                      value={config.count}
-                      onChange={(e) =>
-                        setQuizConfig((prev) => ({
-                          ...prev,
-                          [key]: {
-                            ...prev[key as keyof typeof prev],
-                            count: Math.max(1, parseInt(e.target.value) || 1),
-                          },
-                        }))
-                      }
-                      disabled={generating || creating}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+          <QuizConfigPanel
+            quizConfig={quizConfig}
+            setQuizConfig={setQuizConfig}
+            generating={generating}
+            creating={creating}
+          />
 
           <Tabs
             value={creationMethod}
@@ -555,151 +518,11 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
             </TabsList>
 
             {structuredItems.length > 0 && (
-              <div className="space-y-4 mt-6">
-                <div className="flex items-center justify-between border-b border-border/50 pb-3">
-                  <div>
-                    <Label className="text-base font-semibold">
-                      Generated Preview
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                      {structuredItems.length} items ready to save. Edit inline
-                      below.
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      onClick={() =>
-                        setStructuredItems([
-                          ...structuredItems,
-                          {
-                            question: "",
-                            answer: "",
-                            type: "flashcard",
-                            image_url: "",
-                            occlusion_masks: [],
-                          },
-                        ])
-                      }
-                      className="h-8"
-                    >
-                      Add Item
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setStructuredItems([])}
-                      className="h-8"
-                    >
-                      Discard
-                    </Button>
-                  </div>
-                </div>
-                <div className="max-h-[350px] overflow-y-auto space-y-3 pr-2 scrollbar-thin">
-                  {structuredItems.map((item, i) => (
-                    <div
-                      key={i}
-                      className="p-4 bg-muted/30 border border-border/50 rounded-xl text-sm relative group focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/50 transition-all"
-                    >
-                      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => {
-                            const newItems = [...structuredItems];
-                            newItems.splice(i, 1);
-                            setStructuredItems(newItems);
-                          }}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] uppercase bg-background"
-                        >
-                          {item.type?.replace(/_/g, " ") || formData.type}
-                        </Badge>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div>
-                          <Label className="text-xs text-muted-foreground mb-1 block">
-                            Question
-                          </Label>
-                          <Textarea
-                            value={item.question || item.instructions || ""}
-                            onChange={(e) => {
-                              const newItems = [...structuredItems];
-                              if (newItems[i].question !== undefined)
-                                newItems[i].question = e.target.value;
-                              else if (newItems[i].instructions !== undefined)
-                                newItems[i].instructions = e.target.value;
-                              else newItems[i].question = e.target.value;
-                              setStructuredItems(newItems);
-                            }}
-                            className="min-h-[40px] text-sm resize-none bg-background border-none shadow-none px-2 py-2 focus-visible:ring-1"
-                            placeholder="Question text..."
-                          />
-                        </div>
-
-                        <div className="pt-2 border-t border-border/50">
-                          <Label className="text-xs text-muted-foreground mb-1 block">
-                            Answer
-                          </Label>
-                          <Input
-                            value={item.correct_answer || item.answer || ""}
-                            onChange={(e) => {
-                              const newItems = [...structuredItems];
-                              if (newItems[i].correct_answer !== undefined)
-                                newItems[i].correct_answer = e.target.value;
-                              else if (newItems[i].answer !== undefined)
-                                newItems[i].answer = e.target.value;
-                              else newItems[i].answer = e.target.value;
-                              setStructuredItems(newItems);
-                            }}
-                            className="h-8 text-sm font-medium bg-background border-none shadow-none px-2 focus-visible:ring-1"
-                            placeholder="Answer text..."
-                          />
-                        </div>
-
-                        <div className="pt-2 border-t border-border/50 flex flex-col gap-2">
-                          <Label className="text-xs text-muted-foreground block">
-                            Image URL (Optional)
-                          </Label>
-                          <div className="flex gap-2">
-                            <Input
-                              type="url"
-                              placeholder="https://example.com/image.png"
-                              className="h-8 text-xs"
-                              value={item.image_url || ""}
-                              onChange={(e) => {
-                                const newItems = [...structuredItems];
-                                newItems[i].image_url = e.target.value;
-                                setStructuredItems(newItems);
-                              }}
-                            />
-                          </div>
-                          {item.image_url && (
-                            <ImageOcclusionEditor
-                              imageUrl={item.image_url}
-                              masks={item.occlusion_masks || []}
-                              onChange={(masks) => {
-                                const newItems = [...structuredItems];
-                                newItems[i].occlusion_masks = masks;
-                                setStructuredItems(newItems);
-                              }}
-                            />
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <QuizItemsEditor
+                structuredItems={structuredItems}
+                setStructuredItems={setStructuredItems}
+                formData={formData}
+              />
             )}
 
             <div className={structuredItems.length > 0 ? "hidden" : "block"}>
@@ -774,6 +597,102 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
                     "Generate Questions"
                   )}
                 </Button>
+              </TabsContent>
+
+              <TabsContent value="resource" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label>Select Resource</Label>
+                  <Select
+                    value={selectedResource}
+                    onValueChange={setSelectedResource}
+                    disabled={generating || timeLeft > 0}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a document/PDF" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {resources.map((r) => (
+                        <SelectItem key={r.id} value={r.id}>
+                          {r.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {extractingTopics ? (
+                  <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground bg-muted/50 rounded-lg">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Scanning document for chapters and topics...
+                  </div>
+                ) : extractedTopics.length > 0 ? (
+                  <div className="space-y-2">
+                    <Label>Select Topics to Include</Label>
+                    <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto p-2 border border-border/50 rounded-md bg-muted/50">
+                      {extractedTopics.map((topic) => (
+                        <div key={topic} className="flex items-start space-x-2">
+                          <input
+                            type="checkbox"
+                            id={"topic_" + topic}
+                            checked={selectedTopics.includes(topic)}
+                            onChange={() => toggleTopic(topic)}
+                            className="mt-1 rounded border-zinc-700 bg-zinc-900 w-4 h-4 cursor-pointer shrink-0"
+                          />
+                          <Label
+                            htmlFor={"topic_" + topic}
+                            className="text-xs cursor-pointer leading-tight"
+                          >
+                            {topic}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label>Target Chapters/Topics</Label>
+                    <Input
+                      placeholder="e.g. Chapter 3"
+                      value={targetChapters}
+                      onChange={(e) => setTargetChapters(e.target.value)}
+                      disabled={generating || timeLeft > 0}
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-2 mt-4">
+                  <Label>Context / Instructions</Label>
+                  <Input
+                    placeholder="e.g. Focus on definitions"
+                    value={userContext}
+                    onChange={(e) => setUserContext(e.target.value)}
+                    disabled={generating || timeLeft > 0}
+                  />
+                </div>
+
+                {timeLeft > 0 ? (
+                  <div className="text-center p-3 text-sm text-destructive bg-destructive/10 rounded-md border border-destructive/20 mt-4">
+                    Rate limit reached. Please wait {timeLeft}s before
+                    generating again.
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={handleGenerateFromResource}
+                    disabled={generating || !selectedResource || timeLeft > 0}
+                    className="w-full mt-4"
+                    variant="secondary"
+                  >
+                    {generating ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
+                        Generating...
+                      </>
+                    ) : (
+                      "Generate Quiz"
+                    )}
+                  </Button>
+                )}
               </TabsContent>
             </div>
           </Tabs>

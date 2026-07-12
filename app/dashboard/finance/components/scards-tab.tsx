@@ -16,6 +16,7 @@ import { FileText, Pencil, Send, Download } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { ExportFinanceCsv } from "@/features/finance/components/finance-export-csv";
 import { Scard } from "../types";
+import { toast } from "sonner";
 import {
   saveScards,
   submitScardsForReview,
@@ -40,7 +41,7 @@ export function ScardsTab({ canSubmit, canAudit, scards }: Props) {
     div.style.background = "white";
     div.style.color = "black";
     div.style.fontFamily = "sans-serif";
-    
+
     div.innerHTML = `
       <div style="text-align: center; margin-bottom: 30px;">
         <h2>Official SCARDS Report</h2>
@@ -53,23 +54,24 @@ export function ScardsTab({ canSubmit, canAudit, scards }: Props) {
         <tr><td style="border: 1px solid #ccc; padding: 10px;"><strong>Total Disbursements</strong></td><td style="border: 1px solid #ccc; padding: 10px;">P${report.disbursements_total}</td></tr>
         <tr><td style="border: 1px solid #ccc; padding: 10px;"><strong>Final Balance</strong></td><td style="border: 1px solid #ccc; padding: 10px;"><strong>P${report.balance}</strong></td></tr>
       </table>
-      ${report.status === 'cosigned' ? `<p style="margin-top: 30px;">Co-signed by Auditor on ${new Date(report.cosigned_at!).toLocaleDateString()}</p>` : ''}
-      <p style="margin-top: ${report.status === 'cosigned' ? '10px' : '30px'};">Certified by Finance Officer</p>
+      ${report.status === "cosigned" ? `<p style="margin-top: 30px;">Co-signed by Auditor on ${new Date(report.cosigned_at!).toLocaleDateString()}</p>` : ""}
+      <p style="margin-top: ${report.status === "cosigned" ? "10px" : "30px"};">Certified by Finance Officer</p>
     `;
-    
+
     document.body.appendChild(div);
-    
+
     try {
       const canvas = await html2canvas(div, { scale: 2 });
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("p", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      
+
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
       pdf.save(`SCARDS_${report.event_id}_v${report.version}.pdf`);
     } catch (err) {
       console.error("Failed to generate PDF", err);
+      toast.error(err instanceof Error ? err.message : "An error occurred");
     } finally {
       document.body.removeChild(div);
     }

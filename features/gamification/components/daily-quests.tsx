@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { createClient } from "@/lib/supabase/client";
 import { CheckCircle2, Target } from "lucide-react";
@@ -28,7 +34,7 @@ export function DailyQuests() {
     async function loadQuests() {
       if (!profile) return;
       const supabase = createClient();
-      
+
       // Auto-generate quests if they don't exist for today (Mock logic for demo)
       const { data } = await supabase
         .from("daily_quests")
@@ -36,15 +42,43 @@ export function DailyQuests() {
         .eq("user_id", profile.id)
         .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: false });
-      
+
       if (data && data.length > 0) {
         setQuests(data);
       } else {
-        // Mock default quests for demo
-        setQuests([
-          { id: "1", quest_type: "Complete 1 Tutoring Session", target: 1, progress: 0, completed: false, xp_reward: 50, expires_at: new Date(Date.now() + 86400000).toISOString() },
-          { id: "2", quest_type: "Answer 5 Flashcards", target: 5, progress: 3, completed: false, xp_reward: 20, expires_at: new Date(Date.now() + 86400000).toISOString() }
-        ]);
+        // Generate new quests for today and save to database
+        const tomorrow = new Date();
+        tomorrow.setHours(23, 59, 59, 999);
+
+        const newQuests = [
+          {
+            user_id: profile.id,
+            quest_type: "Complete 1 Tutoring Session",
+            target: 1,
+            progress: 0,
+            completed: false,
+            xp_reward: 50,
+            expires_at: tomorrow.toISOString(),
+          },
+          {
+            user_id: profile.id,
+            quest_type: "Answer 5 Flashcards",
+            target: 5,
+            progress: 0,
+            completed: false,
+            xp_reward: 20,
+            expires_at: tomorrow.toISOString(),
+          },
+        ];
+
+        const { data: insertedQuests, error } = await supabase
+          .from("daily_quests")
+          .insert(newQuests)
+          .select();
+
+        if (!error && insertedQuests) {
+          setQuests(insertedQuests);
+        }
       }
       setLoading(false);
     }
@@ -64,7 +98,10 @@ export function DailyQuests() {
       <CardContent>
         <div className="flex flex-col gap-4 mt-2">
           {quests.map((quest) => {
-            const percent = Math.min(100, Math.round((quest.progress / quest.target) * 100));
+            const percent = Math.min(
+              100,
+              Math.round((quest.progress / quest.target) * 100),
+            );
             return (
               <div key={quest.id} className="flex flex-col gap-2">
                 <div className="flex justify-between items-center text-sm">
@@ -74,11 +111,19 @@ export function DailyQuests() {
                     ) : (
                       <div className="h-4 w-4 rounded-full border-2 border-muted-foreground" />
                     )}
-                    <span className={quest.completed ? "text-muted-foreground line-through" : "font-medium"}>
+                    <span
+                      className={
+                        quest.completed
+                          ? "text-muted-foreground line-through"
+                          : "font-medium"
+                      }
+                    >
                       {quest.quest_type}
                     </span>
                   </div>
-                  <Badge variant="secondary" className="text-[10px]">+{quest.xp_reward} XP</Badge>
+                  <Badge variant="secondary" className="text-[10px]">
+                    +{quest.xp_reward} XP
+                  </Badge>
                 </div>
                 {!quest.completed && (
                   <Progress value={percent} className="h-1.5" />

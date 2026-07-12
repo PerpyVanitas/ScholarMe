@@ -51,6 +51,7 @@ import type {
   Message,
   Profile,
 } from "@/lib/types";
+import { ChatSidebar } from "./chat-sidebar";
 
 interface ChatInterfaceProps {
   initialConversations?: Conversation[];
@@ -82,8 +83,14 @@ export function ChatInterface({
     );
   const currentUserName = currentParticipant?.profiles?.full_name || "Someone";
 
-  const { messages, sendMessage, typingUsers, sendTypingEvent, pinMessage, markAsRead } =
-    useRealtimeMessages(activeConversationId, currentUserId, currentUserName);
+  const {
+    messages,
+    sendMessage,
+    typingUsers,
+    sendTypingEvent,
+    pinMessage,
+    markAsRead,
+  } = useRealtimeMessages(activeConversationId, currentUserId, currentUserName);
   const [newMessage, setNewMessage] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
   const [isSending, setIsSending] = useState(false);
@@ -101,7 +108,10 @@ export function ChatInterface({
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
 
   useEffect(() => {
-    if (messages.length > 0 && messages[messages.length - 1].sender_id !== currentUserId) {
+    if (
+      messages.length > 0 &&
+      messages[messages.length - 1].sender_id !== currentUserId
+    ) {
       markAsRead(messages[messages.length - 1].id);
     }
   }, [messages, currentUserId, markAsRead]);
@@ -452,170 +462,21 @@ export function ChatInterface({
   return (
     <div className="flex h-full w-full bg-background md:divide-x relative">
       {/* Sidebar - Conversation List */}
-      <div
-        className={`w-full md:w-80 flex-col bg-muted/20 ${activeConversationId ? "hidden md:flex" : "flex"}`}
-      >
-        <div className="p-4 border-b flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search conversations..."
-              className="pl-9 bg-background"
-              value={conversationSearch}
-              onChange={(e) => setConversationSearch(e.target.value)}
-            />
-          </div>
-          <Dialog open={showNewChatDialog} onOpenChange={setShowNewChatDialog}>
-            <DialogTrigger asChild>
-              <Button
-                size="icon"
-                variant="outline"
-                className="shrink-0"
-                title="New Message"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>New Chat</DialogTitle>
-                <DialogDescription>
-                  Select a user to start a conversation.
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-4 py-2">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="Search users..."
-                    value={userSearch}
-                    onChange={(e) => setUserSearch(e.target.value)}
-                    className="pl-9 bg-background"
-                  />
-                </div>
-
-                <ScrollArea className="h-[250px] pr-2">
-                  {loadingUsers ? (
-                    <div className="flex items-center justify-center h-40">
-                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : users.length === 0 ? (
-                    <div className="text-center py-10 text-muted-foreground text-sm">
-                      No users found
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-1">
-                      {users.map((u) => (
-                        <button
-                          key={u.id}
-                          onClick={() => startNewConversation(u.id)}
-                          className="flex items-center gap-3 p-3 text-left rounded-md transition-colors hover:bg-muted"
-                        >
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage
-                              src={getAvatarUrl(u.avatar_url) || ""}
-                            />
-                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                              {u.full_name?.charAt(0) || "?"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <p className="text-sm font-medium truncate">
-                                {u.full_name}
-                              </p>
-                              <Badge
-                                variant="secondary"
-                                className="text-[10px] font-normal shrink-0"
-                              >
-                                {Array.isArray(u.roles)
-                                  ? u.roles[0]?.name
-                                  : // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                    (u.roles as any)?.name || "user"}
-                              </Badge>
-                            </div>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {u.email}
-                            </p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </ScrollArea>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        <ScrollArea className="flex-1">
-          {conversations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-40 text-muted-foreground p-4 text-center">
-              <MessageSquare className="h-8 w-8 mb-2 opacity-50" />
-              <p className="text-sm">No conversations yet</p>
-            </div>
-          ) : (
-            <div className="flex flex-col">
-              {conversations
-                .filter((conv) => {
-                  if (!conversationSearch.trim()) return true;
-                  const info = getConversationDisplayInfo(conv);
-                  return info.title
-                    .toLowerCase()
-                    .includes(conversationSearch.toLowerCase());
-                })
-                .map((conv) => {
-                  const displayInfo = getConversationDisplayInfo(conv);
-                  const latestMessage = conv.messages?.[0];
-                  const isActive = conv.id === activeConversationId;
-
-                  return (
-                    <button
-                      key={conv.id}
-                      onClick={() => setActiveConversationId(conv.id)}
-                      className={`flex items-start gap-3 p-4 text-left transition-colors hover:bg-muted/50 ${
-                        isActive ? "bg-muted" : ""
-                      }`}
-                    >
-                      <Avatar>
-                        <AvatarImage
-                          src={getAvatarUrl(displayInfo.avatarUrl) || ""}
-                        />
-                        <AvatarFallback className="bg-primary/10 text-primary">
-                          {displayInfo.initial}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 overflow-hidden">
-                        <div className="flex justify-between items-baseline mb-1">
-                          <span className="font-medium text-sm truncate">
-                            {displayInfo.title}
-                          </span>
-                          {latestMessage && (
-                            <span className="text-[10px] text-muted-foreground whitespace-nowrap ml-2">
-                              {formatDistanceToNow(
-                                new Date(latestMessage.created_at),
-                                { addSuffix: true },
-                              )}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {latestMessage?.content ||
-                            (latestMessage?.file_url
-                              ? "Sent an attachment"
-                              : "No messages yet")}
-                        </p>
-                      </div>
-                    </button>
-                  );
-                })}
-            </div>
-          )}
-        </ScrollArea>
-      </div>
+      <ChatSidebar
+        conversations={conversations}
+        activeConversationId={activeConversationId}
+        setActiveConversationId={setActiveConversationId}
+        conversationSearch={conversationSearch}
+        setConversationSearch={setConversationSearch}
+        showNewChatDialog={showNewChatDialog}
+        setShowNewChatDialog={setShowNewChatDialog}
+        userSearch={userSearch}
+        setUserSearch={setUserSearch}
+        users={users}
+        loadingUsers={loadingUsers}
+        startNewConversation={startNewConversation}
+        getConversationDisplayInfo={getConversationDisplayInfo}
+      />
 
       {/* Main Chat Area */}
       <div
@@ -687,19 +548,27 @@ export function ChatInterface({
             </div>
 
             {/* Pinned Messages */}
-            {messages.filter(m => m.is_pinned).length > 0 && (
+            {messages.filter((m) => m.is_pinned).length > 0 && (
               <div className="bg-primary/5 border-b px-4 py-2 flex flex-col gap-1 max-h-32 overflow-y-auto">
                 <div className="flex items-center gap-2 text-xs font-semibold text-primary">
                   <Pin className="h-3 w-3" /> Pinned Messages
                 </div>
-                {messages.filter(m => m.is_pinned).map(pm => (
-                  <div key={pm.id} className="text-sm truncate text-muted-foreground bg-background/50 p-1.5 rounded border cursor-pointer hover:bg-background/80" onClick={() => {
-                    setMessageSearch(pm.content || "");
-                  }}>
-                    <span className="font-medium mr-1">{pm.profiles?.full_name || "User"}:</span>
-                    {pm.content || "Attachment"}
-                  </div>
-                ))}
+                {messages
+                  .filter((m) => m.is_pinned)
+                  .map((pm) => (
+                    <div
+                      key={pm.id}
+                      className="text-sm truncate text-muted-foreground bg-background/50 p-1.5 rounded border cursor-pointer hover:bg-background/80"
+                      onClick={() => {
+                        setMessageSearch(pm.content || "");
+                      }}
+                    >
+                      <span className="font-medium mr-1">
+                        {pm.profiles?.full_name || "User"}:
+                      </span>
+                      {pm.content || "Attachment"}
+                    </div>
+                  ))}
               </div>
             )}
 
@@ -735,39 +604,59 @@ export function ChatInterface({
                         {!isMe && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity mt-auto">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity mt-auto"
+                              >
                                 <MoreVertical className="h-4 w-4 text-muted-foreground" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => setReplyingTo(msg)}>
+                              <DropdownMenuItem
+                                onClick={() => setReplyingTo(msg)}
+                              >
                                 <Reply className="h-4 w-4 mr-2" /> Reply
                               </DropdownMenuItem>
                               {isAdmin && (
-                                <DropdownMenuItem onClick={() => pinMessage(msg.id, !msg.is_pinned)}>
-                                  <Pin className="h-4 w-4 mr-2" /> {msg.is_pinned ? "Unpin" : "Pin"}
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    pinMessage(msg.id, !msg.is_pinned)
+                                  }
+                                >
+                                  <Pin className="h-4 w-4 mr-2" />{" "}
+                                  {msg.is_pinned ? "Unpin" : "Pin"}
                                 </DropdownMenuItem>
                               )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         )}
-                        <div className={`flex flex-col gap-1 max-w-[75%] ${isMe ? "items-end" : "items-start"}`}>
+                        <div
+                          className={`flex flex-col gap-1 max-w-[75%] ${isMe ? "items-end" : "items-start"}`}
+                        >
                           {showSenderName && (
-                            <span className={`text-[10px] font-semibold text-muted-foreground px-1 ${isMe ? "text-right" : ""}`}>
+                            <span
+                              className={`text-[10px] font-semibold text-muted-foreground px-1 ${isMe ? "text-right" : ""}`}
+                            >
                               {senderName}
                             </span>
                           )}
                           <div
                             className={`flex flex-col gap-1 rounded-lg px-4 py-2 text-sm relative ${
-                              isMe ? "bg-primary text-primary-foreground" : "bg-muted"
+                              isMe
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted"
                             }`}
                           >
                             {msg.is_pinned && (
-                              <Pin className={`absolute -top-2 -right-2 h-4 w-4 rotate-45 ${isMe ? "text-primary-foreground" : "text-primary"} drop-shadow`} />
+                              <Pin
+                                className={`absolute -top-2 -right-2 h-4 w-4 rotate-45 ${isMe ? "text-primary-foreground" : "text-primary"} drop-shadow`}
+                              />
                             )}
                             {msg.reply_to_id && (
                               <div className="text-xs bg-background/20 rounded p-1.5 mb-1 border-l-2 border-primary-foreground/50 opacity-80 truncate">
-                                {messages.find(m => m.id === msg.reply_to_id)?.content || "Replied to a message"}
+                                {messages.find((m) => m.id === msg.reply_to_id)
+                                  ?.content || "Replied to a message"}
                               </div>
                             )}
                             {msg.file_url && (
@@ -778,7 +667,9 @@ export function ChatInterface({
                                     src={msg.file_url}
                                     alt={msg.file_name || "attachment"}
                                     className="max-w-[200px] max-h-[200px] rounded-md object-contain cursor-pointer"
-                                    onClick={() => window.open(msg.file_url!, "_blank")}
+                                    onClick={() =>
+                                      window.open(msg.file_url!, "_blank")
+                                    }
                                   />
                                 ) : (
                                   <a
@@ -798,33 +689,59 @@ export function ChatInterface({
                               </div>
                             )}
                             {/* Rich Media Link Preview (Naive implementation) */}
-                            {msg.content && msg.content.match(/https?:\/\/[^\s]+/) && (
-                              <a href={msg.content.match(/https?:\/\/[^\s]+/)?.[0]} target="_blank" rel="noopener noreferrer" className="block text-blue-300 underline text-xs mb-1 truncate max-w-[200px]">
-                                {msg.content.match(/https?:\/\/[^\s]+/)?.[0]}
-                              </a>
-                            )}
+                            {msg.content &&
+                              msg.content.match(/https?:\/\/[^\s]+/) && (
+                                <a
+                                  href={
+                                    msg.content.match(/https?:\/\/[^\s]+/)?.[0]
+                                  }
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="block text-blue-300 underline text-xs mb-1 truncate max-w-[200px]"
+                                >
+                                  {msg.content.match(/https?:\/\/[^\s]+/)?.[0]}
+                                </a>
+                              )}
                             {msg.content && <span>{msg.content}</span>}
-                            <div className={`flex items-center gap-1 justify-end mt-1 text-[9px] ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                            <div
+                              className={`flex items-center gap-1 justify-end mt-1 text-[9px] ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}
+                            >
                               <span>
-                                {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                {new Date(msg.created_at).toLocaleTimeString(
+                                  [],
+                                  { hour: "2-digit", minute: "2-digit" },
+                                )}
                               </span>
-                              {isMe && <CheckCheck className="h-3 w-3 ml-0.5" />}
+                              {isMe && (
+                                <CheckCheck className="h-3 w-3 ml-0.5" />
+                              )}
                             </div>
                           </div>
                         </div>
                         {isMe && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity mt-auto">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity mt-auto"
+                              >
                                 <MoreVertical className="h-4 w-4 text-muted-foreground" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => setReplyingTo(msg)}>
+                              <DropdownMenuItem
+                                onClick={() => setReplyingTo(msg)}
+                              >
                                 <Reply className="h-4 w-4 mr-2" /> Reply
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => pinMessage(msg.id, !msg.is_pinned)}>
-                                <Pin className="h-4 w-4 mr-2" /> {msg.is_pinned ? "Unpin" : "Pin"}
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  pinMessage(msg.id, !msg.is_pinned)
+                                }
+                              >
+                                <Pin className="h-4 w-4 mr-2" />{" "}
+                                {msg.is_pinned ? "Unpin" : "Pin"}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -870,9 +787,18 @@ export function ChatInterface({
                 {replyingTo && (
                   <div className="mb-2 flex items-center justify-between p-2 text-sm bg-muted/30 border-l-2 border-primary rounded-r">
                     <div className="truncate text-muted-foreground">
-                      Replying to <span className="font-medium text-foreground">{replyingTo.profiles?.full_name || 'Someone'}</span>: {replyingTo.content}
+                      Replying to{" "}
+                      <span className="font-medium text-foreground">
+                        {replyingTo.profiles?.full_name || "Someone"}
+                      </span>
+                      : {replyingTo.content}
                     </div>
-                    <Button variant="ghost" size="icon" className="h-4 w-4" onClick={() => setReplyingTo(null)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-4 w-4"
+                      onClick={() => setReplyingTo(null)}
+                    >
                       <X className="h-3 w-3" />
                     </Button>
                   </div>

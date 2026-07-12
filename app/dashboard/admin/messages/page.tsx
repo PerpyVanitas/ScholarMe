@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ChatInterface } from "@/features/messaging/components/chat-interface";
 import type { Conversation } from "@/lib/types";
 import { UserSelector } from "./components/user-selector";
+import { toast } from "sonner";
 import { ShieldAlert } from "lucide-react";
 
 export const metadata = {
@@ -84,6 +85,9 @@ export default async function AdminMessagesAuditPage({ searchParams }: Props) {
 
       if (error) {
         console.error("Error fetching admin conversations:", error);
+        toast.error(
+          error instanceof Error ? error.message : "An error occurred",
+        );
       }
 
       // Format the conversations data to pass to the Client Component

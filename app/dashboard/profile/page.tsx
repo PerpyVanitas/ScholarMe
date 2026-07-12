@@ -68,6 +68,9 @@ import { HonorSocietyDesignationDialog } from "./components/honor-society-design
 import { MasteryVerificationDialog } from "./components/mastery-verification-dialog";
 import { AchievementsCard } from "./components/achievements-card";
 import { SkillTree } from "./components/skill-tree";
+import { ProfileHeader } from "./components/profile-header";
+import { ProfileInfoCard } from "./components/profile-info-card";
+import { TutorSettingsCard } from "./components/tutor-settings-card";
 import dynamic from "next/dynamic";
 
 const DesignationCard = dynamic(
@@ -639,99 +642,14 @@ export default function ProfilePage() {
   return (
     <div className="container mx-auto max-w-4xl py-8 space-y-6">
       {/* Profile Header */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-            <Avatar
-              className={`h-24 w-24 border-4 shadow-lg ${getLevelColor(profile.current_level || 1)}`}
-            >
-              <AvatarImage
-                src={getAvatarUrl(profile.avatar_url)}
-                alt={displayName}
-              />
-              <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                {getInitials(displayName)}
-              </AvatarFallback>
-            </Avatar>
-
-            <div className="flex-1 text-center sm:text-left space-y-2">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <h1 className="text-2xl font-bold">
-                  {displayName}
-                  {profile.pronouns && (
-                    <span className="text-sm font-normal text-muted-foreground ml-2">
-                      ({profile.pronouns})
-                    </span>
-                  )}
-                </h1>
-                <Badge
-                  variant="secondary"
-                  className="w-fit mx-auto sm:mx-0 capitalize"
-                >
-                  {roleName}
-                </Badge>
-                <Badge
-                  className={`w-fit mx-auto sm:mx-0 ${getLevelColor(profile.current_level || 1)}`}
-                >
-                  Level {profile.current_level || 1} •{" "}
-                  {getLevelTitle(profile.current_level || 1)}
-                </Badge>
-              </div>
-              <p className="text-muted-foreground">{profile.email}</p>
-              {profile.status_message && (
-                <p className="text-sm italic text-foreground/80 mt-1">
-                  "{profile.status_message}"
-                </p>
-              )}
-
-              <div className="flex items-center justify-center sm:justify-start gap-4 mt-2">
-                {profile.social_links?.github && (
-                  <a
-                    href={profile.social_links.github}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    <Github className="h-5 w-5" />
-                  </a>
-                )}
-                {profile.social_links?.linkedin && (
-                  <a
-                    href={profile.social_links.linkedin}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    <Linkedin className="h-5 w-5" />
-                  </a>
-                )}
-              </div>
-
-              <div className="flex items-center justify-center sm:justify-start gap-2 pt-1 text-sm font-medium">
-                <Star className="h-4 w-4 text-yellow-500" />
-                <span className="text-primary">
-                  {profile.total_xp || 0} XP Total
-                </span>
-              </div>
-
-              {specializations.length > 0 && (
-                <div className="flex flex-wrap gap-2 justify-center sm:justify-start pt-2">
-                  {specializations.map((spec) => (
-                    <Badge key={spec.id} variant="outline">
-                      {spec.name}
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <Button onClick={openEditModal} variant="outline" className="gap-2">
-              <Edit2 className="h-4 w-4" />
-              Edit Profile
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <ProfileHeader
+        profile={profile}
+        displayName={displayName}
+        roleName={roleName}
+        specializations={specializations}
+        openEditModal={openEditModal}
+        getInitials={getInitials}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-1">
@@ -742,164 +660,22 @@ export default function ProfilePage() {
         </div>
 
         <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>
-                Your personal details and account information
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                  <User className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium">Full Name</p>
-                    <p className="text-sm text-muted-foreground">
-                      {displayName}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                  <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium">Email</p>
-                    <p className="text-sm text-muted-foreground">
-                      {profile.email}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                  <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium">Phone Number</p>
-                    <p className="text-sm text-muted-foreground">
-                      {profile.phone_number || "Not set"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                  <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium">Birthday</p>
-                    <p className="text-sm text-muted-foreground">
-                      {formatDate(profile.birthdate || profile.date_of_birth)}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                  <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium">Member Since</p>
-                    <p className="text-sm text-muted-foreground">
-                      {formatDate(profile.created_at)}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                  <Award className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium">Student ID Number</p>
-                    <p className="text-sm text-muted-foreground">
-                      {profile.membership_number || "Not set"}
-                    </p>
-                  </div>
-                </div>
-                {!isTutor && (
-                  <>
-                    <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                      <BookOpen className="h-5 w-5 text-muted-foreground mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium">Degree Program</p>
-                        <p className="text-sm text-muted-foreground">
-                          {profile.degree_program || "Not set"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                      <Star className="h-5 w-5 text-muted-foreground mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium">Year Level</p>
-                        <p className="text-sm text-muted-foreground">
-                          {profile.year_level || "Not set"}
-                        </p>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <ProfileInfoCard
+            profile={profile}
+            displayName={displayName}
+            isTutor={isTutor}
+            formatDate={formatDate}
+          />
 
           {isTutor && (
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Award className="h-5 w-5" />
-                    Tutor Settings
-                  </CardTitle>
-                  <CardDescription>
-                    Manage your tutoring profile and specializations
-                  </CardDescription>
-                </div>
-                <Button
-                  onClick={() => setTutorSettingsOpen(true)}
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                >
-                  <Edit2 className="h-4 w-4" />
-                  Edit
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Bio</p>
-                  <p className="text-sm text-muted-foreground">
-                    {tutorBio || "Not set"}
-                  </p>
-                </div>
-                {hourlyRate && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Hourly Rate</p>
-                    <p className="text-sm text-muted-foreground">
-                      ${hourlyRate}/hour
-                    </p>
-                  </div>
-                )}
-                {yearsExperience && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Years of Experience</p>
-                    <p className="text-sm text-muted-foreground">
-                      {yearsExperience} years
-                    </p>
-                  </div>
-                )}
-                {specializations.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium">Specializations</p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setMasteryVerificationOpen(true)}
-                      >
-                        <ShieldCheck className="mr-2 h-3.5 w-3.5" />
-                        Verify Mastery
-                      </Button>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {specializations.map((spec) => (
-                        <Badge key={spec.id} variant="secondary">
-                          {spec.name}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <TutorSettingsCard
+              tutorBio={tutorBio}
+              hourlyRate={hourlyRate}
+              yearsExperience={yearsExperience}
+              specializations={specializations}
+              setTutorSettingsOpen={setTutorSettingsOpen}
+              setMasteryVerificationOpen={setMasteryVerificationOpen}
+            />
           )}
 
           <DesignationCard

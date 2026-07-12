@@ -2,9 +2,17 @@
 
 import React, { useState, useCallback } from "react";
 import Cropper, { Area } from "react-easy-crop";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { toast } from "sonner";
 import { Loader2, ZoomIn, RotateCw } from "lucide-react";
 
 interface ImageCropperProps {
@@ -46,7 +54,7 @@ async function getCroppedImg(imageSrc: string, crop: Area): Promise<Blob> {
     0,
     0,
     canvas.width,
-    canvas.height
+    canvas.height,
   );
 
   return new Promise((resolve, reject) => {
@@ -56,7 +64,7 @@ async function getCroppedImg(imageSrc: string, crop: Area): Promise<Blob> {
         else reject(new Error("Canvas toBlob failed"));
       },
       "image/jpeg",
-      0.92
+      0.92,
     );
   });
 }
@@ -95,6 +103,7 @@ export function ImageCropper({
       onCropComplete(blob);
     } catch (err) {
       console.error("Crop failed:", err);
+      toast.error(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setProcessing(false);
     }
@@ -107,7 +116,12 @@ export function ImageCropper({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) onClose();
+      }}
+    >
       <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle>Crop Photo</DialogTitle>
@@ -145,7 +159,9 @@ export function ImageCropper({
               onValueChange={(v) => setZoom(v[0])}
               className="flex-1"
             />
-            <span className="text-xs text-muted-foreground w-10 text-right">{zoom.toFixed(1)}×</span>
+            <span className="text-xs text-muted-foreground w-10 text-right">
+              {zoom.toFixed(1)}×
+            </span>
           </div>
 
           {/* Rotation */}
@@ -159,7 +175,9 @@ export function ImageCropper({
               onValueChange={(v) => setRotation(v[0])}
               className="flex-1"
             />
-            <span className="text-xs text-muted-foreground w-10 text-right">{rotation}°</span>
+            <span className="text-xs text-muted-foreground w-10 text-right">
+              {rotation}°
+            </span>
           </div>
         </div>
 

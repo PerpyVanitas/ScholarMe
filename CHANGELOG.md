@@ -1,6 +1,27 @@
+## [2026-07-12] - Free Local AI (WebLLM) Integration
+
+### Changed
+
+- **Manual Flashcards & Quizzes**: Replaced the server-side Gemini fallback with the completely free, unlimited `WebWorkerMLCEngine` (Local AI). This guarantees no API usage costs when users manually prompt to generate flashcards or quizzes.
+
+### Added
+
+- **API Rate Limiting**: Added Supabase-backed sliding-window rate limiting to the remaining Gemini-powered document extraction API endpoints (`generate-from-resource` and `extract-topics`). Users are strictly limited to 2 generation requests per minute.
+- **Frontend Debouncing & Cooldowns**: Implemented UI cooldown states for the 'From Resource' tabs in Flashcards and Quizzes. If a user hits the rate limit, the Generate button turns into a live 60-second countdown timer, preventing accidental button mashing and API spam.
+
+## [2026-07-12] - System Audit & Stability Fixes (Batch 4)
+
+### Fixed
+
+- **God Objects Refactored**: Extracted large UI components into modular, manageable chunks for `create-quiz-sheet.tsx`, `profile/page.tsx`, `analytics/page.tsx`, `chat-interface.tsx`, and `sessions/page.tsx`.
+- **Integrations Save Bug**: Re-wrote `saveIntegration` action to use a safe select/update/insert flow instead of an unsafe `upsert` on a non-unique column, fixing the bug that prevented saving configurations.
+- **Mock Data Elimination**: Replaced mocked payload data in `daily-quests.tsx`, `integrations/actions.ts`, and `finance-actions.ts` with authentic Supabase queries for gamification and payroll.
+- **UX Error Handling**: Executed a global pass converting 23+ instances of raw `console.error` into user-facing `toast.error()` notifications, preventing silent failures.
+
 ## [2026-07-12] - System Audit & Stability Fixes (Batch 3)
 
 ### Fixed
+
 - **Integrations Dashboard**: Wired Canvas save, webhook CRUD, and payroll export to real DB tables (`integration_configs` and `attendance_logs`) instead of mock data.
 - **Admin Migrations Endpoint**: Added `exec_sql` RPC function migration and wired the REST API execution path to fix the broken migration endpoint.
 - **Gamification Actions**: Refactored `earnXp` calls across the app to strictly use `XP_AWARDS` constant strings instead of arbitrary numbers. Added missing constants (`SECRET_EGG_FOUND`, `QUIZ_CREATED`).
@@ -13,6 +34,7 @@
 ## [2026-07-12] - Advanced Study Sets & UI Customization
 
 ### Added
+
 - **Export Flashcards**: Added `/api/quizzes/[id]/export` endpoint to export Study Sets to CSV compatible with Anki/Quizlet.
 - **Text-to-Speech (TTS)**: Added browser native speech synthesis buttons for flashcard questions and answers in Study mode.
 - **Typing Mode**: Added a toggle for Spelling/Typing mode where learners must type out exactly the flashcard answer.
@@ -34,7 +56,6 @@
 - **Tutor Office Hours**: Added an "Office Hours" toggle in the create session form for tutors, allowing them to host drop-in group sessions marked specifically as Office Hours.
 - **Finance Module**: Implemented multi-step approvals, OCR receipt parsing support, budget progress bars, partial liquidations, vendor directory, and email/in-app notifications.
 
-
 ### Fixed
 
 - **CSP WebAssembly Error**: Updated `proxy.ts` Content-Security-Policy to allow `'unsafe-eval'` in production to fix the AI Tutor crash.
@@ -45,6 +66,7 @@
 - **Messages Attachments**: Fixed the chat sidebar incorrectly displaying "no messages yet" when a file was sent, and added the HTML5 `download` attribute to attachment links to ensure they download properly.
 
 ## [2026-07-07] - Phase 29 QoL Sprint: Final Backlog Completion
+
 ### Added
 
 - **Study Group Chat**: Real-time group messaging via `study_group_messages` with Supabase Realtime on the group detail page.

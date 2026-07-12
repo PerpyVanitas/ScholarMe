@@ -142,9 +142,11 @@ export default function StudyModePage({
       });
       if (!res.ok) {
         console.error("Failed to save flashcard attempt rating");
+        toast.error("An error occurred");
       }
     } catch (e) {
       console.error(e);
+      toast.error(e instanceof Error ? e.message : "An error occurred");
     }
 
     // Record it in state to calculate the correct percentage
@@ -204,7 +206,10 @@ export default function StudyModePage({
     try {
       // Earn XP for finishing a flashcard set
       const { earnXp } = await import("@/lib/utils/gamification");
-      const xpData = await earnXp("FLASHCARD_REVIEW_COMPLETED", "Reviewed Flashcards");
+      const xpData = await earnXp(
+        "FLASHCARD_REVIEW_COMPLETED",
+        "Reviewed Flashcards",
+      );
       if (xpData.success) {
         toast.success(`🎉 +50 XP Earned!`, {
           description: xpData.current_level
@@ -214,6 +219,7 @@ export default function StudyModePage({
       }
     } catch (error) {
       console.error("Failed to earn XP:", error);
+      toast.error(error instanceof Error ? error.message : "An error occurred");
     }
   }
 
