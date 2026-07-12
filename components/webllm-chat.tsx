@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { CreateWebWorkerMLCEngine, InitProgressReport } from "@mlc-ai/web-llm";
+import {
+  CreateWebWorkerMLCEngine,
+  InitProgressReport,
+  type MLCEngineInterface,
+} from "@mlc-ai/web-llm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -46,7 +50,7 @@ export function WebLLMChat({ initialContext = "" }: WebLLMChatProps) {
   const [initProgress, setInitProgress] = useState<InitProgressReport | null>(
     null,
   );
-  const [engine, setEngine] = useState<any>(null);
+  const [engine, setEngine] = useState<MLCEngineInterface | null>(null);
   const [isReady, setIsReady] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -63,11 +67,12 @@ export function WebLLMChat({ initialContext = "" }: WebLLMChatProps) {
   async function initializeEngine() {
     setIsLoading(true);
     try {
-      // In a real production app we'd use a Web Worker, but for simplicity here we can use the regular engine
-      // OR we can create a simple inline worker. We'll just use the regular engine for this implementation if the worker isn't set up.
-      const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
+      const worker = new Worker(
+        new URL("../lib/workers/webllm.worker.ts", import.meta.url),
+        { type: "module" },
+      );
 
-      const newEngine = await CreateMLCEngine(SELECTED_MODEL, {
+      const newEngine = await CreateWebWorkerMLCEngine(worker, SELECTED_MODEL, {
         initProgressCallback: (progress) => {
           console.log(progress);
           setInitProgress(progress);
@@ -164,7 +169,7 @@ export function WebLLMChat({ initialContext = "" }: WebLLMChatProps) {
             <h3 className="text-xl font-bold mb-2">Initialize Local AI</h3>
             <p className="text-muted-foreground mb-6 max-w-md">
               To chat privately, we need to download a small language model to
-              your browser's cache (~1GB). This only happens once.
+              your browser&apos;s cache (~1GB). This only happens once.
             </p>
 
             {initProgress ? (
