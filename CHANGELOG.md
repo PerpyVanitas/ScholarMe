@@ -339,3 +339,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implemented No-Show Penalties tracking and automatic suspension triggers.
 - Checked off all Learner Experience features in the unimplemented QoL features tracker.
 - Implemented Tutor Experience features: Bulk Availability Editing, Auto-Approve Sessions, Timesheet Auto-Clock Out Protection, Calendar Syncing toggles, and Meeting Link / Rescheduling functionalities.
+
+ # # #   [ 2 0 2 6 - 0 7 - 1 3 ]   -   B u g   F i x e s   &   P r e v i e w s 
+ 
+ -   * * A v a t a r   U p l o a d * * :   F i x e d   a n   i s s u e   w h e r e   t h e   a v a t a r   l o a d i n g   f a i l e d   b y   i m p l e m e n t i n g   a   f a l l b a c k   t o   S u p a b a s e   i f   t h e   i n i t i a l   f e t c h   i s   b l o c k e d . 
+ -   * * R e s o u r c e   D o w n l o a d i n g * * :   F i x e d   a n   i s s u e   w h e r e   d o w n l o a d i n g   r e s o u r c e s   j u s t   o p e n e d   t h e m   i n   a   n e w   t a b   b y   f o r c i n g   t h e   d o w n l o a d   v i a   U R L   p a r a m e t e r s . 
+ -   * * R e s o u r c e   P r e v i e w s * * :   F i x e d   a n   i s s u e   w h e r e   P D F   p r e v i e w s   w e r e   c o m p l e t e l y   b r o k e n   b y   s w i t c h i n g   f r o m   \ < i f r a m e > \   t o   \ < o b j e c t > \   r e n d e r i n g   w i t h   a   d e d i c a t e d   d o w n l o a d   f a l l b a c k   f o r   u n s u p p o r t e d   b r o w s e r s . 
+ -   * * I d l e   T i m e o u t * * :   S e t   t h e   a p p l i c a t i o n   i n a c t i v i t y   l i m i t   t o   5   m i n u t e s ,   e n f o r c i n g   a   l o g o u t   w i t h   a   w a r n i n g   t o   i m p r o v e   s e c u r i t y . 
+ -   * * A c c e s s i b i l i t y   &   S i t e   S e t t i n g s * * :   A d d e d   d e d i c a t e d   A 1 1 y   S e t t i n g s   d i r e c t l y   b e t w e e n   R e p o r t   a   B u g   a n d   D a r k m o d e   t o g g l e   i n   t h e   h e a d e r ,   a n d   c r e a t e d   a   \ S i t e   S e t t i n g s \   p a g e   a c c e s s i b l e   f r o m   t h e   b o t t o m - l e f t   p r o f i l e   d r o p d o w n . 
+  
+ 
