@@ -11,10 +11,12 @@ CREATE TABLE IF NOT EXISTS public.weekly_challenges (
 
 ALTER TABLE public.weekly_challenges ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Weekly challenges are viewable by everyone" ON public.weekly_challenges;
 CREATE POLICY "Weekly challenges are viewable by everyone" 
 ON public.weekly_challenges FOR SELECT 
 USING (true);
 
+DROP POLICY IF EXISTS "Admins can manage weekly challenges" ON public.weekly_challenges;
 CREATE POLICY "Admins can manage weekly challenges"
 ON public.weekly_challenges
 FOR ALL
