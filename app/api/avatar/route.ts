@@ -39,7 +39,45 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Supabase storage path (avatars stored in 'resources' bucket under avatars/ prefix)
+    // 1. Try Vercel Blob first if token is configured
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      try {
+        const result = await get(pathname, {
+          access: "private",
+          ifNoneMatch: request.headers.get("if-none-match") ?? undefined,
+        });
+
+        if (result) {
+          if (result.statusCode === 304) {
+            return new NextResponse(null, {
+              status: 304,
+              headers: {
+                ETag: result.blob.etag,
+                "Cache-Control": "private, no-cache",
+              },
+            });
+          }
+
+          return new NextResponse(result.stream, {
+            headers: {
+              "Content-Type": result.blob.contentType,
+              ETag: result.blob.etag,
+              "Cache-Control": "private, no-cache",
+            },
+          });
+        }
+      } catch (err: any) {
+        // If it's a BlobNotFoundError or token error, we just fall through to Supabase fallback
+        if (
+          err.name !== "BlobNotFoundError" &&
+          err.name !== "BlobStoreNotFoundError"
+        ) {
+          console.error("Vercel Blob get error:", err);
+        }
+      }
+    }
+
+    // 2. Fallback to Supabase if the pathname implies an avatar
     if (pathname.startsWith("avatars/")) {
       const base = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
       if (!base) {
@@ -53,32 +91,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    const result = await get(pathname, {
-      access: "private",
-      ifNoneMatch: request.headers.get("if-none-match") ?? undefined,
-    });
-
-    if (!result) {
-      return new NextResponse("Not found", { status: 404 });
-    }
-
-    if (result.statusCode === 304) {
-      return new NextResponse(null, {
-        status: 304,
-        headers: {
-          ETag: result.blob.etag,
-          "Cache-Control": "private, no-cache",
-        },
-      });
-    }
-
-    return new NextResponse(result.stream, {
-      headers: {
-        "Content-Type": result.blob.contentType,
-        ETag: result.blob.etag,
-        "Cache-Control": "private, no-cache",
-      },
-    });
+    return new NextResponse("Not found", { status: 404 });
   } catch (error) {
     console.error("Error serving avatar:", error);
     return NextResponse.json(
