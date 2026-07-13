@@ -14,8 +14,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
 
-const TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
-const WARNING_MS = 4 * 60 * 1000; // 4 minutes
+const TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+const WARNING_MS = 9 * 60 * 1000; // 9 minutes
 const STORAGE_KEY = "scholarme_last_active";
 const CHECK_INTERVAL_MS = 10000; // 10 seconds
 const THROTTLE_MS = 10000; // Only write to localStorage every 10 seconds max

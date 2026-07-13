@@ -106,6 +106,7 @@ export default function ProfilePage() {
   const [editPhone, setEditPhone] = useState("");
   const [editBirthdate, setEditBirthdate] = useState("");
   const [editMembershipNumber, setEditMembershipNumber] = useState("");
+  const [editUniqueIdNumber, setEditUniqueIdNumber] = useState("");
   const [editDegreeProgram, setEditDegreeProgram] = useState("");
   const [editYearLevel, setEditYearLevel] = useState("");
   const [editAvatarUrl, setEditAvatarUrl] = useState<string | null>(null);
@@ -311,6 +312,7 @@ export default function ProfilePage() {
     setEditPhone(profile.phone_number || "");
     setEditBirthdate(profile.birthdate || profile.date_of_birth || "");
     setEditMembershipNumber(profile.membership_number || "");
+    setEditUniqueIdNumber(profile.unique_id_number || "");
     setEditDegreeProgram(profile.degree_program || "");
     setEditYearLevel(profile.year_level?.toString() || "");
     setEditAcademicYearJoined(profile.academic_year_joined || "");
@@ -343,6 +345,7 @@ export default function ProfilePage() {
         (editBirthdate || "") !==
           (profile.birthdate || profile.date_of_birth || "") ||
         editMembershipNumber.trim() !== (profile.membership_number || "") ||
+        editUniqueIdNumber.trim() !== (profile.unique_id_number || "") ||
         editDegreeProgram.trim() !== (profile.degree_program || "") ||
         editYearLevel !== (profile.year_level?.toString() || "") ||
         editAcademicYearJoined !== (profile.academic_year_joined || "") ||
@@ -504,6 +507,7 @@ export default function ProfilePage() {
       phone_number: editPhone.trim() || null,
       birthdate: editBirthdate || null,
       membership_number: editMembershipNumber.trim() || null,
+      unique_id_number: editUniqueIdNumber.trim() || null,
       degree_program: !isTutor ? editDegreeProgram.trim() || null : null,
       year_level: !isTutor ? parseInt(editYearLevel) || null : null,
       academic_year_joined: editAcademicYearJoined || null,
@@ -528,6 +532,7 @@ export default function ProfilePage() {
               birthdate: updateData.birthdate,
               date_of_birth: updateData.birthdate,
               membership_number: updateData.membership_number,
+              unique_id_number: updateData.unique_id_number,
               degree_program: updateData.degree_program,
               year_level: updateData.year_level,
               academic_year_joined: updateData.academic_year_joined,
@@ -652,17 +657,30 @@ export default function ProfilePage() {
   return (
     <div className="container mx-auto max-w-4xl py-8 space-y-6">
       {/* Profile Header */}
-      <ProfileHeader
-        profile={profile}
-        displayName={displayName}
-        roleName={roleName}
-        specializations={specializations}
-        openEditModal={openEditModal}
-        getInitials={getInitials}
-      />
+      <div
+        data-tour-step="14"
+        data-tour-title="Your Profile"
+        data-tour-description="This is your public profile header. Click the pencil icon to edit your basic information."
+        data-tour-side="bottom"
+      >
+        <ProfileHeader
+          profile={profile}
+          displayName={displayName}
+          roleName={roleName}
+          specializations={specializations}
+          openEditModal={openEditModal}
+          getInitials={getInitials}
+        />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <div className="lg:col-span-1">
+        <div
+          className="lg:col-span-1"
+          data-tour-step="15"
+          data-tour-title="Digital ID Card"
+          data-tour-description="Your scannable QR ID card updates automatically with your current level and designations."
+          data-tour-side="right"
+        >
           <QrIdCard
             profile={{ ...profile, hs_designations: designations }}
             role={roleName}
@@ -720,6 +738,8 @@ export default function ProfilePage() {
         setEditBirthdate={setEditBirthdate}
         editMembershipNumber={editMembershipNumber}
         setEditMembershipNumber={setEditMembershipNumber}
+        editUniqueIdNumber={editUniqueIdNumber}
+        setEditUniqueIdNumber={setEditUniqueIdNumber}
         editDegreeProgram={editDegreeProgram}
         setEditDegreeProgram={setEditDegreeProgram}
         editYearLevel={editYearLevel}

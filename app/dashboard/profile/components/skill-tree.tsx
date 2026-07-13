@@ -59,8 +59,11 @@ export function SkillTree({ profile }: SkillTreeProps) {
   const [loading, setLoading] = useState(false);
   const xp = profile.total_xp || 0;
 
+  const isSuperAdmin =
+    profile.roles?.some((r) => r.name === "super_admin") || false;
+
   async function unlockTheme(theme: (typeof THEMES)[0]) {
-    if (xp < theme.cost) {
+    if (!isSuperAdmin && xp < theme.cost) {
       toast.error("Not enough XP to unlock this theme!");
       return;
     }
@@ -69,7 +72,7 @@ export function SkillTree({ profile }: SkillTreeProps) {
     const supabase = createClient();
 
     // Deduct XP by inserting a negative XP log entry (DB trigger updates profile total)
-    if (theme.cost > 0) {
+    if (!isSuperAdmin && theme.cost > 0) {
       const { error: xpError } = await supabase.from("xp_logs").insert({
         profile_id: profile.id,
         amount: -theme.cost,
@@ -92,9 +95,13 @@ export function SkillTree({ profile }: SkillTreeProps) {
     if (themeError) {
       toast.error("Failed to apply theme");
     } else {
-      toast.success(
-        `Theme "${theme.name}" equipped! −${theme.cost.toLocaleString()} XP`,
-      );
+      if (!isSuperAdmin && theme.cost > 0) {
+        toast.success(
+          `Theme "${theme.name}" equipped! −${theme.cost.toLocaleString()} XP`,
+        );
+      } else {
+        toast.success(`Theme "${theme.name}" equipped!`);
+      }
       router.refresh();
     }
     setLoading(false);
@@ -120,7 +127,7 @@ export function SkillTree({ profile }: SkillTreeProps) {
             const isEquipped =
               profile.profile_theme_color === theme.id ||
               (!profile.profile_theme_color && theme.id === "default");
-            const canAfford = xp >= theme.cost;
+            const canAfford = isSuperAdmin || xp >= theme.cost;
             return (
               <div
                 key={theme.id}
@@ -136,8 +143,14 @@ export function SkillTree({ profile }: SkillTreeProps) {
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
                       {theme.cost > 0 ? (
                         <>
-                          <Zap className="h-3 w-3 text-orange-500 fill-orange-500" />{" "}
-                          {theme.cost.toLocaleString()} XP
+                          {isSuperAdmin ? (
+                            <Zap className="h-3 w-3 text-orange-500 fill-orange-500" />
+                          ) : (
+                            <Zap className="h-3 w-3 text-orange-500 fill-orange-500" />
+                          )}{" "}
+                          {isSuperAdmin
+                            ? "Unlocked (Admin)"
+                            : `${theme.cost.toLocaleString()} XP`}
                         </>
                       ) : (
                         "Free"

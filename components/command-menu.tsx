@@ -20,6 +20,8 @@ import {
   TEAMWORK_ROLES,
   hasAnyRole,
 } from "@/lib/utils/roles";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getAvatarUrl } from "@/lib/utils";
 
 import {
   CommandDialog,
@@ -40,6 +42,12 @@ export function CommandMenu() {
   const showAdmin = hasAnyRole(role, GOVERNANCE_ROLES);
   const showTeam = hasAnyRole(role, TEAMWORK_ROLES);
 
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [users, setUsers] = React.useState<
+    { id: string; full_name: string; avatar_url: string | null }[]
+  >([]);
+  const [isSearchingUsers, setIsSearchingUsers] = React.useState(false);
+
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
@@ -51,6 +59,33 @@ export function CommandMenu() {
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
   }, []);
+
+  React.useEffect(() => {
+    if (!open || searchQuery.trim().length < 2) {
+      setUsers([]);
+      return;
+    }
+
+    const fetchUsers = async () => {
+      setIsSearchingUsers(true);
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url")
+        .ilike("full_name", `%${searchQuery}%`)
+        .limit(5);
+
+      if (data) {
+        setUsers(data);
+      }
+      setIsSearchingUsers(false);
+    };
+
+    const timer = setTimeout(fetchUsers, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, open]);
 
   const runCommand = React.useCallback((command: () => unknown) => {
     setOpen(false);
@@ -71,7 +106,11 @@ export function CommandMenu() {
         </kbd>
       </button>
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder="Type a command or search..." />
+        <CommandInput
+          placeholder="Type a command or search users..."
+          value={searchQuery}
+          onValueChange={setSearchQuery}
+        />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
           <CommandGroup heading="Suggestions">
@@ -108,6 +147,31 @@ export function CommandMenu() {
               </CommandItem>
             )}
           </CommandGroup>
+          {users.length > 0 && (
+            <>
+              <CommandSeparator />
+              <CommandGroup heading="Users">
+                {users.map((user) => (
+                  <CommandItem
+                    key={user.id}
+                    onSelect={() =>
+                      runCommand(() =>
+                        router.push(`/dashboard/users/${user.id}`),
+                      )
+                    }
+                  >
+                    <Avatar className="h-6 w-6 mr-2">
+                      <AvatarImage src={getAvatarUrl(user.avatar_url)} />
+                      <AvatarFallback>
+                        {user.full_name?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span>{user.full_name}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </>
+          )}
           {(showAdmin || showTeam) && (
             <>
               <CommandSeparator />

@@ -67,7 +67,13 @@ export function LearnerDashboard({
       </div>
 
       {/* Gamification Progress Card */}
-      <Card className="border-primary/20 bg-primary/[0.02]">
+      <Card
+        className="border-primary/20 bg-primary/[0.02]"
+        data-tour-step="10"
+        data-tour-title="Your Level & Progress"
+        data-tour-description="Earn XP by completing sessions and daily quests to level up your profile!"
+        data-tour-side="bottom"
+      >
         <CardContent className="p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
@@ -120,7 +126,13 @@ export function LearnerDashboard({
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div
+        className="grid grid-cols-1 gap-4 sm:grid-cols-3"
+        data-tour-step="11"
+        data-tour-title="Session Stats"
+        data-tour-description="Keep track of your total, completed, and upcoming tutoring sessions here."
+        data-tour-side="top"
+      >
         <StatCard
           icon={<Calendar className="h-5 w-5 text-primary" />}
           label="Total Sessions"
@@ -138,10 +150,23 @@ export function LearnerDashboard({
         />
       </div>
 
-      <SmartTutorRecommendations />
+      <div
+        data-tour-step="12"
+        data-tour-title="Smart Recommendations"
+        data-tour-description="We automatically recommend tutors based on your selected degree program and needs."
+        data-tour-side="top"
+      >
+        <SmartTutorRecommendations />
+      </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card className="border-border/60">
+        <Card
+          className="border-border/60"
+          data-tour-step="13"
+          data-tour-title="Upcoming Sessions"
+          data-tour-description="View and jump directly into your scheduled video calls from this panel."
+          data-tour-side="top"
+        >
           <CardHeader className="flex flex-col gap-2 pb-2">
             <div className="flex flex-row items-center justify-between">
               <div>

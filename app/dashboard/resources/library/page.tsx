@@ -2,6 +2,8 @@ import { LibraryCatalog } from "@/features/library/components/library-catalog";
 import { toast } from "sonner";
 import { getLibraryCatalog } from "@/features/library/api/actions";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Library Catalog | ScholarMe",
   description: "Browse physical books and equipment available at the facility.",

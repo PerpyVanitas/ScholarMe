@@ -1,5 +1,7 @@
 import { EventsView } from "@/features/events/components/events-view";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Events & Announcements | ScholarMe",
   description: "View upcoming facility events and announcements.",

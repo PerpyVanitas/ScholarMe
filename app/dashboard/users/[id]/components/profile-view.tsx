@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
+import { useChatStore } from "@/features/messaging/store/use-chat-store";
 
 export function ProfileView({
   profile,
@@ -31,6 +32,7 @@ export function ProfileView({
   currentUserId: string;
 }) {
   const router = useRouter();
+  const { openChat } = useChatStore();
   const [friendStatus, setFriendStatus] = useState<
     "none" | "pending" | "accepted" | "blocked"
   >("none");
@@ -76,7 +78,7 @@ export function ProfileView({
     try {
       const res = await startConversationWithUser(profile.id);
       if (res.success && res.conversationId) {
-        router.push(`/dashboard/messages?conversationId=${res.conversationId}`);
+        openChat(res.conversationId);
       } else {
         toast.error("Failed to start conversation");
       }

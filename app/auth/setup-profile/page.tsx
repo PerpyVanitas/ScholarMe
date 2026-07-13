@@ -189,6 +189,11 @@ export default function SetupProfilePage() {
       return;
     }
 
+    if (isTutor && !membershipNumber.trim()) {
+      toast.error("Membership number is required for tutors");
+      return;
+    }
+
     setSaving(true);
     try {
       // Update profile

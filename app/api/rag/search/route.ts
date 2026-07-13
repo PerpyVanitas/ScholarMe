@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { GoogleGenAI } from "@google/genai";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const aiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+const serviceClient = createClient(supabaseUrl, supabaseKey);
 
 function cosineSimilarity(vecA: number[], vecB: number[]): number {
   let dotProduct = 0;
@@ -52,12 +53,23 @@ export async function POST(req: Request) {
     }
 
     // 2. Fetch all embeddings the user can access
-    // For now, we will fetch embeddings that belong to the user's profile
+    const userClient = await createServerClient();
+    const { data: accessibleResources } = await userClient
+      .from("resources")
+      .select("id");
+
+    const accessibleResourceIds = accessibleResources?.map((r) => r.id) || [];
+
+    if (accessibleResourceIds.length === 0) {
+      return NextResponse.json({ chunks: [] });
+    }
+
     // In a real production environment with many users and large data,
     // we would use pgvector or a dedicated vector DB.
-    const { data: embeddingsData, error } = await supabase
+    const { data: embeddingsData, error } = await serviceClient
       .from("resource_embeddings")
-      .select("id, content, embedding, resource_id");
+      .select("id, content, embedding, resource_id")
+      .in("resource_id", accessibleResourceIds);
 
     if (error) {
       throw new Error("Failed to fetch embeddings from DB");

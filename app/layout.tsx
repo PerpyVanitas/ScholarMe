@@ -8,7 +8,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PwaRegistration } from "@/components/pwa-registration";
-import { SupportChatWidget } from "@/components/support-chat-widget";
+
 import "./globals.css";
 
 // Per SSD Section 7.0: Inter font family, responsive sizing
@@ -57,7 +57,7 @@ export default async function RootLayout({
         >
           <TooltipProvider delayDuration={0}>
             {children}
-            <SupportChatWidget />
+
             <Toaster richColors position="top-right" />
           </TooltipProvider>
         </ThemeProvider>

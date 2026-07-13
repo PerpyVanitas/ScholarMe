@@ -25,7 +25,8 @@ import { OnboardingTour } from "@/features/onboarding/components/onboarding-tour
 import { MobileFab } from "@/components/mobile-fab";
 import { PageTutorialButton } from "@/components/page-tutorial-button";
 import { AnalyticsPageTracker } from "@/components/analytics-page-tracker";
-import { GlobalChat } from "@/features/messaging/components/global-chat";
+import { ChatHeadsContainer } from "@/features/messaging/components/chat-heads-container";
+
 import {
   Dialog,
   DialogContent,
@@ -88,7 +89,15 @@ function DashboardLayoutContent({
       />
       <SidebarInset>
         <header className="flex h-14 items-center gap-2 border-b border-border/60 px-4">
-          <SidebarTrigger className="-ml-1" />
+          <div
+            data-tour-step="0"
+            data-tour-title="Sidebar Navigation"
+            data-tour-description="Access all areas of ScholarMe from the sidebar menu. If it's closed, you can toggle it here."
+            data-tour-side="bottom"
+            data-tour-align="start"
+          >
+            <SidebarTrigger className="-ml-1" />
+          </div>
           <Separator
             orientation="vertical"
             className="mr-2 h-4 hidden md:flex"
@@ -97,16 +106,44 @@ function DashboardLayoutContent({
           <div
             id="tour-command-menu"
             className="flex-1 flex justify-center max-w-md mx-auto hidden md:flex"
+            data-tour-step="1"
+            data-tour-title="Global Search"
+            data-tour-description="Press Cmd+K or Ctrl+K anywhere to jump between features, study tools, or profile settings instantly. You can also search for other users here!"
+            data-tour-side="bottom"
+            data-tour-align="start"
           >
             <CommandMenu />
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <div id="tour-streak-indicator">
+            <div
+              id="tour-streak-indicator"
+              data-tour-step="2"
+              data-tour-title="Study Streaks"
+              data-tour-description="Log in and complete sessions daily to build your streak and earn more XP!"
+              data-tour-side="bottom"
+              data-tour-align="center"
+            >
               <StreakIndicator />
             </div>
-            <FeedbackButton />
+            <div
+              data-tour-step="3"
+              data-tour-title="Report Feedback"
+              data-tour-description="Found a bug or have a suggestion? Click here to let us know!"
+              data-tour-side="bottom"
+              data-tour-align="center"
+            >
+              <FeedbackButton />
+            </div>
             <PageTutorialButton />
-            <A11ySettings />
+            <div
+              data-tour-step="4"
+              data-tour-title="Accessibility Settings"
+              data-tour-description="Customize the site appearance, text size, animations, and high contrast settings here."
+              data-tour-side="bottom"
+              data-tour-align="end"
+            >
+              <A11ySettings />
+            </div>
             <ThemeToggle />
           </div>
         </header>
@@ -146,10 +183,8 @@ function DashboardLayoutContent({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <GlobalChat
-        currentUserId={profile?.id || ""}
-        isAdmin={role === "super_admin" || role === "administrator"}
-      />
+
+      <ChatHeadsContainer currentUserId={profile?.id || ""} />
       <ScrollToTopFab />
     </SidebarProvider>
   );

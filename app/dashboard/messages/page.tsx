@@ -94,27 +94,15 @@ export default async function MessagesPage({
   }) as Conversation[];
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Messages</h1>
-          <p className="text-muted-foreground">
-            Connect directly with your peers and tutors.
-          </p>
-        </div>
-      </div>
-
-      {/* Standard direct chat interface for own messages */}
-      <div className="flex-1 bg-card rounded-lg border shadow-sm overflow-hidden min-h-[500px]">
-        <ErrorBoundary>
-          <ChatInterface
-            initialConversations={formattedConversations}
-            currentUserId={user.id}
-            isAdmin={isAdmin}
-            defaultActiveConversationId={defaultConversationId}
-          />
-        </ErrorBoundary>
-      </div>
+    <div className="flex flex-col h-[calc(100vh-3.5rem)] -m-4 md:-m-6 pb-20 md:pb-0 overflow-hidden bg-background">
+      <ErrorBoundary>
+        <ChatInterface
+          initialConversations={formattedConversations}
+          currentUserId={user.id}
+          isAdmin={isAdmin}
+          defaultActiveConversationId={defaultConversationId}
+        />
+      </ErrorBoundary>
     </div>
   );
 }

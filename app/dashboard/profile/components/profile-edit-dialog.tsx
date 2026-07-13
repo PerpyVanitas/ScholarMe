@@ -29,6 +29,8 @@ interface ProfileEditDialogProps {
   setEditBirthdate: (v: string) => void;
   editMembershipNumber: string;
   setEditMembershipNumber: (v: string) => void;
+  editUniqueIdNumber: string;
+  setEditUniqueIdNumber: (v: string) => void;
   editDegreeProgram: string;
   setEditDegreeProgram: (v: string) => void;
   editYearLevel: string;
@@ -69,6 +71,8 @@ export function ProfileEditDialog({
   setEditBirthdate,
   editMembershipNumber,
   setEditMembershipNumber,
+  editUniqueIdNumber,
+  setEditUniqueIdNumber,
   editDegreeProgram,
   setEditDegreeProgram,
   editYearLevel,
@@ -261,14 +265,25 @@ export function ProfileEditDialog({
             </select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="editMembershipNumber">Student ID Number</Label>
-            <Input
-              id="editMembershipNumber"
-              value={editMembershipNumber}
-              onChange={(e) => setEditMembershipNumber(e.target.value)}
-              placeholder="e.g. 21-1234-567"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="editMembershipNumber">Student ID Number</Label>
+              <Input
+                id="editMembershipNumber"
+                value={editMembershipNumber}
+                onChange={(e) => setEditMembershipNumber(e.target.value)}
+                placeholder="e.g. 21-1234-567"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editUniqueIdNumber">Honor Society ID</Label>
+              <Input
+                id="editUniqueIdNumber"
+                value={editUniqueIdNumber}
+                onChange={(e) => setEditUniqueIdNumber(e.target.value)}
+                placeholder="e.g. 24-XXXX-XXX"
+              />
+            </div>
           </div>
 
           {!isTutor && (
