@@ -50,6 +50,7 @@ export default function SetupProfilePage() {
   const [yearsExperience, setYearsExperience] = useState<number | "">("");
   const [degreeProgram, setDegreeProgram] = useState("");
   const [yearLevel, setYearLevel] = useState<number | "">("");
+  const [academicYearJoined, setAcademicYearJoined] = useState("");
 
   // Data
   const [specializations, setSpecializations] = useState<Specialization[]>([]);
@@ -82,6 +83,7 @@ export default function SetupProfilePage() {
         setRoleName(getRoleName(profile));
         setDegreeProgram(profile.degree_program || "");
         if (profile.year_level) setYearLevel(profile.year_level);
+        setAcademicYearJoined(profile.academic_year_joined || "");
 
         // If profile already completed, go to dashboard
         if (profile.profile_completed) {
@@ -200,6 +202,7 @@ export default function SetupProfilePage() {
           membership_number: isTutor ? membershipNumber.trim() || null : null,
           degree_program: !isTutor ? degreeProgram.trim() || null : null,
           year_level: !isTutor && yearLevel !== "" ? Number(yearLevel) : null,
+          academic_year_joined: academicYearJoined || null,
           profile_completed: true,
         })
         .eq("id", userId);
@@ -266,28 +269,6 @@ export default function SetupProfilePage() {
       toast.error(
         err instanceof Error ? err.message : "Failed to save profile",
       );
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleSkip() {
-    if (!userId) return;
-    setSaving(true);
-    try {
-      const profileResult = await ensureProfile();
-      if (!profileResult.success) {
-        throw new Error(profileResult.error || "Could not save profile");
-      }
-      if (isTutor) {
-        const tutorResult = await ensureTutor();
-        if (!tutorResult.success) {
-          throw new Error(tutorResult.error || "Could not create tutor record");
-        }
-      }
-      window.location.href = "/dashboard";
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not continue");
     } finally {
       setSaving(false);
     }
@@ -380,6 +361,24 @@ export default function SetupProfilePage() {
                 placeholder="Dela Cruz"
               />
             </div>
+          </div>
+
+          {/* Academic Year Joined (Required for all) */}
+          <div className="space-y-2">
+            <Label htmlFor="academicYearJoined">Academic Year Joined *</Label>
+            <select
+              id="academicYearJoined"
+              value={academicYearJoined}
+              onChange={(e) => setAcademicYearJoined(e.target.value)}
+              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value="">Select academic year</option>
+              <option value="2022-2023">2022-2023</option>
+              <option value="2023-2024">2023-2024</option>
+              <option value="2024-2025">2024-2025</option>
+              <option value="2025-2026">2025-2026</option>
+              <option value="2026-2027">2026-2027</option>
+            </select>
           </div>
 
           {/* Learner-specific fields */}
@@ -508,7 +507,9 @@ export default function SetupProfilePage() {
               saving ||
               !firstName.trim() ||
               !lastName.trim() ||
-              (isTutor && (!bio.trim() || selectedSpecs.length === 0))
+              !academicYearJoined ||
+              (isTutor && (!bio.trim() || selectedSpecs.length === 0)) ||
+              (!isTutor && (!degreeProgram.trim() || yearLevel === ""))
             }
             className="w-full"
             size="lg"
@@ -522,17 +523,6 @@ export default function SetupProfilePage() {
               "Complete Setup"
             )}
           </Button>
-
-          {!isTutor && (
-            <button
-              type="button"
-              onClick={handleSkip}
-              disabled={saving}
-              className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-            >
-              Skip for now — finish later in Profile
-            </button>
-          )}
         </CardContent>
       </Card>
     </div>

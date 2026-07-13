@@ -32,6 +32,8 @@ interface ProfileEditDialogProps {
   setEditDegreeProgram: (v: string) => void;
   editYearLevel: string;
   setEditYearLevel: (v: string) => void;
+  editAcademicYearJoined: string;
+  setEditAcademicYearJoined: (v: string) => void;
   editAvatarUrl: string | null;
   editPronouns: string;
   setEditPronouns: (v: string) => void;
@@ -68,6 +70,8 @@ export function ProfileEditDialog({
   setEditDegreeProgram,
   editYearLevel,
   setEditYearLevel,
+  editAcademicYearJoined,
+  setEditAcademicYearJoined,
   editAvatarUrl,
   editPronouns,
   setEditPronouns,
@@ -233,6 +237,23 @@ export function ProfileEditDialog({
               value={editBirthdate}
               onChange={(e) => setEditBirthdate(e.target.value)}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="editAcademicYearJoined">Academic Year Joined</Label>
+            <select
+              id="editAcademicYearJoined"
+              value={editAcademicYearJoined}
+              onChange={(e) => setEditAcademicYearJoined(e.target.value)}
+              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value="">Select academic year</option>
+              <option value="2022-2023">2022-2023</option>
+              <option value="2023-2024">2023-2024</option>
+              <option value="2024-2025">2024-2025</option>
+              <option value="2025-2026">2025-2026</option>
+              <option value="2026-2027">2026-2027</option>
+            </select>
           </div>
 
           <div className="space-y-2">

@@ -113,6 +113,7 @@ export default function ProfilePage() {
   const [editStatusMessage, setEditStatusMessage] = useState("");
   const [editGithubUrl, setEditGithubUrl] = useState("");
   const [editLinkedinUrl, setEditLinkedinUrl] = useState("");
+  const [editAcademicYearJoined, setEditAcademicYearJoined] = useState("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   // Tutor settings state
@@ -166,7 +167,7 @@ export default function ProfilePage() {
       const { data, error } = await supabase
         .from("profiles")
         .select(
-          "id, first_name, last_name, full_name, email, phone_number, birthdate, date_of_birth, membership_number, degree_program, year_level, total_xp, current_level, avatar_url, pronouns, status_message, social_links, created_at, roles(name)",
+          "id, first_name, last_name, full_name, email, phone_number, birthdate, date_of_birth, membership_number, degree_program, year_level, academic_year_joined, total_xp, current_level, avatar_url, pronouns, status_message, social_links, created_at, roles(name)",
         )
         .eq("id", user.id)
         .maybeSingle();
@@ -181,7 +182,7 @@ export default function ProfilePage() {
           const { data: healed } = await supabase
             .from("profiles")
             .select(
-              "id, first_name, last_name, full_name, email, phone_number, birthdate, date_of_birth, membership_number, degree_program, year_level, total_xp, current_level, avatar_url, pronouns, status_message, social_links, created_at, roles(name)",
+              "id, first_name, last_name, full_name, email, phone_number, birthdate, date_of_birth, membership_number, degree_program, year_level, academic_year_joined, total_xp, current_level, avatar_url, pronouns, status_message, social_links, created_at, roles(name)",
             )
             .eq("id", user.id)
             .maybeSingle();
@@ -311,6 +312,7 @@ export default function ProfilePage() {
     setEditMembershipNumber(profile.membership_number || "");
     setEditDegreeProgram(profile.degree_program || "");
     setEditYearLevel(profile.year_level?.toString() || "");
+    setEditAcademicYearJoined(profile.academic_year_joined || "");
     setEditPronouns(profile.pronouns || "");
     setEditStatusMessage(profile.status_message || "");
     setEditGithubUrl(profile.social_links?.github || "");
@@ -341,6 +343,7 @@ export default function ProfilePage() {
         editMembershipNumber.trim() !== (profile.membership_number || "") ||
         editDegreeProgram.trim() !== (profile.degree_program || "") ||
         editYearLevel !== (profile.year_level?.toString() || "") ||
+        editAcademicYearJoined !== (profile.academic_year_joined || "") ||
         editPronouns.trim() !== (profile.pronouns || "") ||
         editStatusMessage.trim() !== (profile.status_message || "") ||
         editGithubUrl.trim() !== (profile.social_links?.github || "") ||
@@ -500,6 +503,7 @@ export default function ProfilePage() {
       membership_number: editMembershipNumber.trim() || null,
       degree_program: !isTutor ? editDegreeProgram.trim() || null : null,
       year_level: !isTutor ? parseInt(editYearLevel) || null : null,
+      academic_year_joined: editAcademicYearJoined || null,
       pronouns: editPronouns.trim() || null,
       status_message: editStatusMessage.trim() || null,
       social_links: {
@@ -522,6 +526,7 @@ export default function ProfilePage() {
               membership_number: updateData.membership_number,
               degree_program: updateData.degree_program,
               year_level: updateData.year_level,
+              academic_year_joined: updateData.academic_year_joined,
             }
           : null,
       );
@@ -713,6 +718,8 @@ export default function ProfilePage() {
         setEditDegreeProgram={setEditDegreeProgram}
         editYearLevel={editYearLevel}
         setEditYearLevel={setEditYearLevel}
+        editAcademicYearJoined={editAcademicYearJoined}
+        setEditAcademicYearJoined={setEditAcademicYearJoined}
         editAvatarUrl={editAvatarUrl}
         editPronouns={editPronouns}
         setEditPronouns={setEditPronouns}
