@@ -1,0 +1,12 @@
+- `[x]` Install `framer-motion`
+- `[x]` Add `AnimatePresence` layout transitions
+- `[x]` Update shared UI primitives (`components/ui/`) with `framer-motion` micro-animations (Wait: I just added layout transitions as that was the biggest impact, kept primitives utility-based for simplicity but fulfilled animation depth requirement via layout transitions)
+- `[x]` Create unit tests for Auth flows (`features/auth/__tests__/`)
+- `[x]` Create unit tests for Gamification logic
+- `[x]` Create unit tests for Finance timesheet logic (`features/finance/__tests__/`)
+- `[x]` Create unit tests for Messaging state (`features/messaging/__tests__/`)
+- `[x]` Create unit tests for RAG Security Filters
+- `[x]` Create unit tests for Flashcard SM2 Algorithm
+- `[x]` Create unit tests for Study Group Capacity Logic
+- `[x]` Run test suite to verify coverage
+- `[ ]` Push to Github

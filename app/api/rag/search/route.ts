@@ -3,11 +3,13 @@ import { createClient } from "@supabase/supabase-js";
 import { GoogleGenAI } from "@google/genai";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const aiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-
-const serviceClient = createClient(supabaseUrl, supabaseKey);
+function getEnv() {
+  return {
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    aiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+  };
+}
 
 function cosineSimilarity(vecA: number[], vecB: number[]): number {
   let dotProduct = 0;
@@ -24,6 +26,9 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
 
 export async function POST(req: Request) {
   try {
+    const { supabaseUrl, supabaseKey, aiKey } = getEnv();
+    const serviceClient = createClient(supabaseUrl, supabaseKey);
+
     if (!aiKey) {
       return NextResponse.json(
         { error: "No AI key configured" },
