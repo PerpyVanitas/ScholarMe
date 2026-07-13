@@ -78,7 +78,9 @@ function DashboardLayoutContent({
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
-      <ThemeApplicator profileThemeColor={profile?.profile_theme_color} />
+      <ThemeApplicator
+        profileThemeColor={profile?.profile_theme_color || undefined}
+      />
       <AppSidebar
         profile={profile!}
         role={role}

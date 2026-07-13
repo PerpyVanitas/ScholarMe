@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { GoogleGenAI } from "@google/genai";
-import pdf from "pdf-parse";
+
+// Use require for pdf-parse to avoid TypeScript default export issues with its ESM build
+
+const pdfParse = require("pdf-parse");
 
 // We have to use the service role key to insert embeddings securely or just standard NEXT_PUBLIC if RLS allows.
 // resource_embeddings has no RLS right now since it's just a raw table created via script.
@@ -61,7 +64,7 @@ export async function POST(req: Request) {
     // 2. Extract text
     let text = "";
     if (url.toLowerCase().endsWith(".pdf")) {
-      const data = await pdf(buffer);
+      const data = await pdfParse(buffer);
       text = data.text;
     } else if (
       url.toLowerCase().endsWith(".txt") ||

@@ -36,7 +36,11 @@ export function UsersDirectory({
         const results = await searchUsers(debouncedQuery);
         if (isMounted && results.success && results.data) {
           // Filter out the current user
-          setUsers(results.data.filter((u: Profile) => u.id !== currentUserId));
+          setUsers(
+            results.data.filter(
+              (u: any) => u.id !== currentUserId,
+            ) as Profile[],
+          );
         }
       } catch (error) {
         console.error("Error fetching users:", error);
