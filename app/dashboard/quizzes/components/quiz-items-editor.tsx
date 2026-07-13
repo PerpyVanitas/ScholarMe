@@ -4,7 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Trash2 } from "lucide-react";
-import { ImageOcclusionEditor } from "@/components/image-occlusion-editor";
+import { ImageOcclusionEditor } from "@/features/quizzes/components/image-occlusion-editor";
 
 interface QuizItemsEditorProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

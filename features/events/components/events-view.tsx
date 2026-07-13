@@ -1,6 +1,6 @@
 import { CalendarDays } from "lucide-react";
 import { addMonths, endOfMonth, startOfMonth, subMonths } from "date-fns";
-import { AnnouncementCalendar } from "@/components/announcement-calendar";
+import { AnnouncementCalendar } from "@/features/events/components/announcement-calendar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { getEvents } from "@/features/events/api/actions";

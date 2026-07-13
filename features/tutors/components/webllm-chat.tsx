@@ -68,7 +68,7 @@ export function WebLLMChat({ initialContext = "" }: WebLLMChatProps) {
     setIsLoading(true);
     try {
       const worker = new Worker(
-        new URL("../lib/workers/webllm.worker.ts", import.meta.url),
+        new URL("../../../lib/workers/webllm.worker.ts", import.meta.url),
         { type: "module" },
       );
 

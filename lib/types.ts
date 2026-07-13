@@ -458,3 +458,48 @@ export interface AttendanceLog {
   lng?: number | null;
   location_verified?: boolean;
 }
+
+export interface AuthCard {
+  id: string;
+  user_id: string;
+  card_id: string;
+  pin: string;
+  status: "active" | "revoked";
+  issued_at: string;
+  profiles?: Profile;
+}
+
+export interface Repository {
+  id: string;
+  owner_id: string;
+  title: string;
+  description: string | null;
+  access_role: "all" | "tutor" | "admin";
+  created_at: string;
+  profiles?: Profile;
+  resources?: Resource[];
+}
+
+export interface AnalyticsLog {
+  id: string;
+  user_id: string | null;
+  action: string;
+  entity_type: string | null;
+  entity_id: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export interface DeviceToken {
+  id: string;
+  user_id: string;
+  token: string;
+  platform: "ios" | "android" | "web";
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConversationParticipant {
+  profile_id: string;
+  profiles?: Profile;
+}

@@ -1,4 +1,4 @@
-import { WebLLMChat } from "@/components/webllm-chat";
+import { WebLLMChat } from "@/features/tutors/components/webllm-chat";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {

@@ -36,7 +36,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
-import { ImageOcclusionViewer } from "@/components/image-occlusion-viewer";
+import { ImageOcclusionViewer } from "@/features/quizzes/components/image-occlusion-viewer";
 import { OcclusionMask } from "@/features/quizzes/types";
 
 interface StudySetItem {

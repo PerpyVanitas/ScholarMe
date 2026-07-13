@@ -19,8 +19,8 @@ import { ScrollToTop } from "@/components/scroll-to-top";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { ScrollToTopFab } from "@/components/scroll-to-top-fab";
 import { CommandMenu } from "@/components/command-menu";
-import { StreakIndicator } from "@/components/streak-indicator";
-import { OnboardingTour } from "@/components/onboarding-tour";
+import { StreakIndicator } from "@/features/gamification/components/streak-indicator";
+import { OnboardingTour } from "@/features/onboarding/components/onboarding-tour";
 import { MobileFab } from "@/components/mobile-fab";
 import { AnalyticsPageTracker } from "@/components/analytics-page-tracker";
 import {
