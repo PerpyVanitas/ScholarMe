@@ -20,13 +20,35 @@ export default async function AITutorPage() {
       .eq("user_id", session.user.id)
       .limit(50);
 
+    const { data: resources } = await supabase
+      .from("resources")
+      .select("title, description")
+      .limit(20); // We limit to 20 to avoid exceeding context window length
+
+    const contextBlocks = [];
+
     if (flashcards && flashcards.length > 0) {
-      initialContext =
+      contextBlocks.push(
         "User's current study material (Flashcards):\n" +
-        flashcards
-          .map((f) => `Q: ${f.question} | A: ${f.answer} (${f.subject})`)
-          .join("\n");
+          flashcards
+            .map((f) => `Q: ${f.question} | A: ${f.answer} (${f.subject})`)
+            .join("\n"),
+      );
     }
+
+    if (resources && resources.length > 0) {
+      contextBlocks.push(
+        "Available Library Resources (User has access to these):\n" +
+          resources
+            .map(
+              (r) =>
+                `- Title: ${r.title}\n  Description: ${r.description || "N/A"}`,
+            )
+            .join("\n"),
+      );
+    }
+
+    initialContext = contextBlocks.join("\n\n");
   }
 
   return (

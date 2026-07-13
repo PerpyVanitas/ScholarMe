@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bot, User, Send, Download, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
@@ -37,12 +38,12 @@ export function WebLLMChat({ initialContext = "" }: WebLLMChatProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "system",
-      content: `You are a helpful, encouraging AI tutor designed to help university students understand complex topics. Keep your answers concise, structured, and easy to read. Do not provide direct answers to homework or quizzes; instead, guide the student to the answer using the Socratic method.\n\n${initialContext}`,
+      content: `You are Kuya Nicolai, the friendly, supportive, and knowledgeable mascot of the Honor Society. You act as an AI peer study buddy to university students. You are encouraging, use a friendly tone, and sometimes sprinkle in supportive phrases. Keep your answers concise, structured, and easy to read. Do not provide direct answers to homework or quizzes; instead, guide the student to the answer using the Socratic method.\n\nYou have access to the following resources and study materials that the user can currently access. If they ask about something related to these, you can help them recall it.\n\n${initialContext}`,
     },
     {
       role: "assistant",
       content:
-        "Hello! I am your personal AI Tutor. I run entirely locally in your browser so our conversation is private. What would you like to study today?",
+        "Hello! I am Kuya Nicolai, your friendly peer study buddy from the Honor Society. I'm here to help you study and answer any questions you have about your materials. What would you like to focus on today?",
     },
   ]);
   const [input, setInput] = useState("");
@@ -153,8 +154,11 @@ export function WebLLMChat({ initialContext = "" }: WebLLMChatProps) {
     <Card className="flex flex-col h-[700px] w-full max-w-4xl mx-auto shadow-lg border-primary/10">
       <CardHeader className="bg-muted/30 border-b pb-4">
         <CardTitle className="flex items-center gap-2">
-          <Bot className="h-6 w-6 text-primary" />
-          AI Tutor (On-Device)
+          <Avatar className="h-8 w-8">
+            <AvatarImage src="/kuya-nicolai.png" alt="Kuya Nicolai" />
+            <AvatarFallback>KN</AvatarFallback>
+          </Avatar>
+          Kuya Nicolai (On-Device)
         </CardTitle>
         <CardDescription>
           Powered by On-Device AI technology. This runs 100% locally on your
@@ -165,7 +169,10 @@ export function WebLLMChat({ initialContext = "" }: WebLLMChatProps) {
       <CardContent className="flex-1 p-0 overflow-hidden relative">
         {!isReady && (
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-8 text-center">
-            <Bot className="h-16 w-16 text-primary mb-4 animate-pulse" />
+            <Avatar className="h-20 w-20 mb-4 animate-pulse ring-4 ring-primary/20">
+              <AvatarImage src="/kuya-nicolai.png" alt="Kuya Nicolai" />
+              <AvatarFallback>KN</AvatarFallback>
+            </Avatar>
             <h3 className="text-xl font-bold mb-2">Initialize Local AI</h3>
             <p className="text-muted-foreground mb-6 max-w-md">
               To chat privately, we need to download a small language model to
@@ -218,7 +225,13 @@ export function WebLLMChat({ initialContext = "" }: WebLLMChatProps) {
                     {msg.role === "user" ? (
                       <User className="h-5 w-5" />
                     ) : (
-                      <Bot className="h-5 w-5" />
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage
+                          src="/kuya-nicolai.png"
+                          alt="Kuya Nicolai"
+                        />
+                        <AvatarFallback>KN</AvatarFallback>
+                      </Avatar>
                     )}
                   </div>
                   <div
@@ -237,7 +250,10 @@ export function WebLLMChat({ initialContext = "" }: WebLLMChatProps) {
             {isLoading && isReady && (
               <div className="flex gap-3 mr-auto max-w-[85%] animate-pulse">
                 <div className="flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-full bg-muted text-muted-foreground border">
-                  <Bot className="h-5 w-5" />
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src="/kuya-nicolai.png" alt="Kuya Nicolai" />
+                    <AvatarFallback>KN</AvatarFallback>
+                  </Avatar>
                 </div>
                 <div className="rounded-lg p-4 bg-muted border shadow-sm flex items-center gap-2">
                   <div
