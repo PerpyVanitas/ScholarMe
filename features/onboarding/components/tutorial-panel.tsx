@@ -71,7 +71,7 @@ const TUTORIAL_CONTENT: Record<
   "/dashboard/ai-tutor": {
     title: "AI Tutor",
     description:
-      "Chat with an AI tutor powered by a local WebLLM model. Your data stays on your device.",
+      "Chat with an AI tutor powered by a local AI model. Your data stays entirely on your device.",
     tips: [
       "Download the model once — it is cached locally for offline use.",
       "Ask the AI to explain concepts, check your work, or generate practice questions.",

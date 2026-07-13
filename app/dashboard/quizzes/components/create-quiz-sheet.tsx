@@ -582,12 +582,10 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
                 <div className="flex items-center space-x-2 border rounded-md p-4 bg-muted/20">
                   <Label className="flex-1">
                     <div className="font-medium text-primary">
-                      Powered by Local AI (Free, Unlimited)
+                      Powered by Local AI
                     </div>
                     <div className="text-xs text-muted-foreground font-normal leading-tight">
-                      Generates quizzes directly on your device using WebGPU.
-                      Saves API costs and bypasses rate limits. First run
-                      downloads a ~1GB model.
+                      Generates quizzes securely and directly on your device.
                     </div>
                   </Label>
                 </div>

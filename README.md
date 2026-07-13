@@ -71,7 +71,7 @@ ScholarMe was built to replace disconnected spreadsheets, manual session logs, a
 ### 📚 Study & AI Generation Suite
 
 - **Study Sets**: Users create study sets manually or from uploaded files, choosing from `flashcard`, `multiple_choice`, `true_false`, `identification`, or `matching` modes.
-- **AI Generation**: Powered by **Google Gemini** (`@google/genai`). Users describe a topic and the AI generates a full set of questions and answers.
+- **AI Generation**: Powered by cloud AI generation. Users describe a topic and the AI generates a full set of questions and answers.
 - **Quiz Attempts**: Tracked in `quiz_attempts` with score, time spent, and individual answers stored as JSONB for detailed review.
 - **File Uploads**: Users can upload documents; extracted text is stored in `user_uploads` and used as source material for AI generation.
 - **Image Occlusion**: Specialized quiz type where users identify masked parts of an uploaded image.
@@ -154,7 +154,7 @@ ScholarMe was built to replace disconnected spreadsheets, manual session logs, a
 | **Language**             | [TypeScript 5.7](https://www.typescriptlang.org/) — `strict: true` enforced                                    |
 | **UI Components**        | [shadcn/ui](https://ui.shadcn.com) + [Radix UI](https://www.radix-ui.com) + [Lucide Icons](https://lucide.dev) |
 | **Charts**               | [Recharts](https://recharts.org)                                                                               |
-| **AI**                   | [Google Gemini](https://ai.google.dev) via `@google/genai`                                                     |
+| **AI**                   | Cloud AI & Local On-Device AI models                                                                           |
 | **Forms**                | [React Hook Form](https://react-hook-form.com) + [Zod](https://zod.dev)                                        |
 | **Real-Time**            | [Supabase Realtime](https://supabase.com/realtime) — `postgres_changes` + Broadcast                            |
 | **File Storage**         | [Vercel Blob](https://vercel.com/storage/blob) + Supabase Storage                                              |

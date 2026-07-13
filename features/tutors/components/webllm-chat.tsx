@@ -157,7 +157,7 @@ export function WebLLMChat({ initialContext = "" }: WebLLMChatProps) {
           AI Tutor (On-Device)
         </CardTitle>
         <CardDescription>
-          Powered by WebGPU and Llama 3. This AI runs 100% locally on your
+          Powered by On-Device AI technology. This runs 100% locally on your
           machine for ultimate privacy.
         </CardDescription>
       </CardHeader>
