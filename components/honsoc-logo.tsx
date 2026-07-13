@@ -1,45 +1,39 @@
 import React from "react";
-import { useTheme } from "next-themes";
+import Image from "next/image";
 
 interface HonorSocietyLogoProps extends Omit<
   React.ImgHTMLAttributes<HTMLImageElement>,
-  "src"
+  "src" | "width" | "height"
 > {
   size?: number;
+  variant?: "auto" | "white" | "black" | "gold"; // kept for backwards compatibility but we will just use black or the specific variants if they exist
 }
 
 export function HonorSocietyLogo({
-  size,
+  size = 40,
+  variant = "auto",
   className = "",
   style,
   ...props
 }: HonorSocietyLogoProps) {
+  // The user explicitly requested to just use the black logo version so it is more visible
+  const src =
+    variant === "white"
+      ? "/honsoc-logo-white.png"
+      : variant === "gold"
+        ? "/honsoc-logo-gold.png"
+        : "/honsoc-logo-black.png";
+
   return (
-    <>
-      {/* Light Mode Logo */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/logo-light.png"
-        alt="CIT-U Honor Society Logo"
-        width={size}
-        height={size}
-        className={`${className} block dark:hidden`}
-        style={style}
-        draggable={false}
-        {...props}
-      />
-      {/* Dark Mode Logo */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/logo-dark.png"
-        alt="CIT-U Honor Society Logo"
-        width={size}
-        height={size}
-        className={`${className} hidden dark:block`}
-        style={style}
-        draggable={false}
-        {...props}
-      />
-    </>
+    <Image
+      src={src}
+      alt="CIT-U Honor Society Logo"
+      width={size}
+      height={size}
+      className={className}
+      style={style}
+      draggable={false}
+      {...props}
+    />
   );
 }

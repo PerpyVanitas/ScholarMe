@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, Camera, X } from "lucide-react";
 
@@ -43,6 +44,8 @@ interface ProfileEditDialogProps {
   setEditGithubUrl: (v: string) => void;
   editLinkedinUrl: string;
   setEditLinkedinUrl: (v: string) => void;
+  editIsPrivate: boolean;
+  setEditIsPrivate: (v: boolean) => void;
   uploadingAvatar: boolean;
   isTutor: boolean;
   displayName: string;
@@ -81,6 +84,8 @@ export function ProfileEditDialog({
   setEditGithubUrl,
   editLinkedinUrl,
   setEditLinkedinUrl,
+  editIsPrivate,
+  setEditIsPrivate,
   uploadingAvatar,
   isTutor,
   displayName,
@@ -289,6 +294,21 @@ export function ProfileEditDialog({
               </div>
             </>
           )}
+
+          <div className="flex items-center space-x-2 pt-4 pb-2">
+            <Switch
+              id="editIsPrivate"
+              checked={editIsPrivate}
+              onCheckedChange={setEditIsPrivate}
+            />
+            <Label htmlFor="editIsPrivate" className="flex flex-col space-y-1">
+              <span>Private Profile</span>
+              <span className="font-normal text-xs text-muted-foreground">
+                Hide your profile from the public directory. Tutors will still
+                appear on the Tutors page.
+              </span>
+            </Label>
+          </div>
         </div>
 
         <DialogFooter>

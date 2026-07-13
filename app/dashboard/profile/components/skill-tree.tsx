@@ -160,10 +160,11 @@ export function SkillTree({ profile }: SkillTreeProps) {
                         trigger={
                           <Button
                             variant="default"
-                            className="w-full"
+                            className="w-full whitespace-normal h-auto py-2"
                             disabled={loading}
                           >
-                            <Paintbrush className="h-4 w-4 mr-2" /> Equip (−
+                            <Paintbrush className="h-4 w-4 mr-2 shrink-0" />{" "}
+                            Equip (−
                             {theme.cost.toLocaleString()} XP)
                           </Button>
                         }
@@ -171,16 +172,21 @@ export function SkillTree({ profile }: SkillTreeProps) {
                     ) : (
                       <Button
                         variant="default"
-                        className="w-full"
+                        className="w-full whitespace-normal h-auto py-2"
                         onClick={() => unlockTheme(theme)}
                         disabled={loading}
                       >
-                        <Paintbrush className="h-4 w-4 mr-2" /> Equip (Free)
+                        <Paintbrush className="h-4 w-4 mr-2 shrink-0" /> Equip
+                        (Free)
                       </Button>
                     )
                   ) : (
-                    <Button variant="outline" className="w-full" disabled>
-                      <Lock className="h-4 w-4 mr-2" /> Need{" "}
+                    <Button
+                      variant="outline"
+                      className="w-full whitespace-normal h-auto py-2 text-xs"
+                      disabled
+                    >
+                      <Lock className="h-3 w-3 mr-1.5 shrink-0" /> Need{" "}
                       {(theme.cost - xp).toLocaleString()} more XP
                     </Button>
                   )}

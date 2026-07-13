@@ -15,6 +15,7 @@ import { UserProvider, useUser } from "@/lib/user-context";
 import { Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BreadcrumbNav } from "@/components/breadcrumb-nav";
+import { ThemeApplicator } from "@/components/theme-applicator";
 import { ScrollToTop } from "@/components/scroll-to-top";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { ScrollToTopFab } from "@/components/scroll-to-top-fab";
@@ -23,6 +24,7 @@ import { StreakIndicator } from "@/features/gamification/components/streak-indic
 import { OnboardingTour } from "@/features/onboarding/components/onboarding-tour";
 import { MobileFab } from "@/components/mobile-fab";
 import { AnalyticsPageTracker } from "@/components/analytics-page-tracker";
+import { GlobalChat } from "@/features/messaging/components/global-chat";
 import {
   Dialog,
   DialogContent,
@@ -75,6 +77,7 @@ function DashboardLayoutContent({
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
+      <ThemeApplicator profileThemeColor={profile?.profile_theme_color} />
       <AppSidebar
         profile={profile!}
         role={role}
@@ -139,6 +142,10 @@ function DashboardLayoutContent({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <GlobalChat
+        currentUserId={profile?.id || ""}
+        isAdmin={role === "super_admin" || role === "administrator"}
+      />
       <ScrollToTopFab />
     </SidebarProvider>
   );

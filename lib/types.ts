@@ -58,6 +58,7 @@ export interface Profile {
   is_card_issued?: boolean | null;
   membership_classification?: "learner" | "regular_member" | "esas_scholar";
   committee?: string | null;
+  is_private?: boolean | null;
   service_hours_balance?: number;
   role_expires_at?: string | null;
   pronouns?: string | null;
@@ -502,4 +503,13 @@ export interface DeviceToken {
 export interface ConversationParticipant {
   profile_id: string;
   profiles?: Profile;
+}
+
+export interface Friend {
+  id: string;
+  user_id1: string;
+  user_id2: string;
+  status: "pending" | "accepted" | "blocked";
+  created_at: string;
+  updated_at: string;
 }

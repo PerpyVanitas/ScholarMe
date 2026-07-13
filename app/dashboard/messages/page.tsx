@@ -10,7 +10,13 @@ export const metadata = {
   description: "Chat with your tutors and learners.",
 };
 
-export default async function MessagesPage() {
+export default async function MessagesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ conversationId?: string }>;
+}) {
+  const resolvedParams = await searchParams;
+  const defaultConversationId = resolvedParams.conversationId;
   const supabase = await createClient();
 
   const {
@@ -105,6 +111,7 @@ export default async function MessagesPage() {
             initialConversations={formattedConversations}
             currentUserId={user.id}
             isAdmin={isAdmin}
+            defaultActiveConversationId={defaultConversationId}
           />
         </ErrorBoundary>
       </div>

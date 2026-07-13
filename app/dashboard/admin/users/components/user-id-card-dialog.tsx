@@ -63,8 +63,8 @@ export function UserIdCardDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl bg-zinc-950 border-zinc-800 text-white p-6 outline-none relative">
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none flex items-center justify-center">
-          <HonorSocietyLogo className="w-[500px] h-[500px]" />
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none flex items-center justify-center overflow-hidden rounded-lg">
+          <HonorSocietyLogo variant="white" className="w-[500px] h-[500px]" />
         </div>
 
         <div className="flex flex-col md:flex-row items-stretch gap-6 relative z-10">

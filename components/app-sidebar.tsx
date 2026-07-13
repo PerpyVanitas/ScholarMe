@@ -125,6 +125,8 @@ function getNavItems(role: UserRole, profile: Profile) {
   // Community items depending on role
   const communityItems = [
     { title: "Events Calendar", href: "/dashboard/calendar", icon: Calendar },
+    { title: "Users Directory", href: "/dashboard/users", icon: Users },
+    { title: "My Friends", href: "/dashboard/friends", icon: Users },
     ...(role === "learner"
       ? [
           { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
@@ -466,7 +468,7 @@ export function AppSidebar({
                         handleLogoClick(e as any);
                       }}
                     >
-                      <HonorSocietyLogo className="h-6 w-6" />
+                      <HonorSocietyLogo variant="black" className="h-6 w-6" />
                     </div>
                     <div className="flex flex-col gap-0.5 leading-none">
                       <span className="font-semibold">
@@ -510,7 +512,7 @@ export function AppSidebar({
                     className="flex h-8 w-8 items-center justify-center rounded-lg bg-transparent cursor-pointer"
                     onClick={handleLogoClick}
                   >
-                    <HonorSocietyLogo className="h-6 w-6" />
+                    <HonorSocietyLogo variant="black" className="h-6 w-6" />
                   </div>
                   <div className="flex flex-col gap-0.5 leading-none">
                     <span className="font-semibold">ScholarMe</span>

@@ -34,6 +34,10 @@ export async function signUp(formData: FormData) {
     (formData.get("academic_year_joined") as string) || "2024-2025";
   const esasScholar = formData.get("esas_scholar") === "true";
 
+  const degreeProgram = formData.get("degree_program") as string;
+  const yearLevelStr = formData.get("year_level") as string;
+  const yearLevel = yearLevelStr ? parseInt(yearLevelStr) : null;
+
   // Check if phone number is already registered
   if (phoneNumber) {
     const { data: existingPhone } = await adminClient
@@ -65,6 +69,8 @@ export async function signUp(formData: FormData) {
         role_id: roleId,
         role_name: selectedRole,
         academic_year_joined: academicYearJoined,
+        degree_program: degreeProgram || null,
+        year_level: yearLevel,
         esas_scholar: esasScholar,
       },
     },
@@ -83,6 +89,8 @@ export async function signUp(formData: FormData) {
         ...birthdateFields(dateOfBirth || null),
         role_id: roleId,
         academic_year_joined: academicYearJoined,
+        degree_program: degreeProgram || null,
+        year_level: yearLevel,
         esas_scholar: esasScholar,
         terms_accepted_at: new Date().toISOString(),
       },

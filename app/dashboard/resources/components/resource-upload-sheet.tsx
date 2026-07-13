@@ -146,6 +146,17 @@ export function ResourceUploadSheet({
 
       toast.success("Resource uploaded!");
 
+      // Trigger embedding ingestion in the background
+      fetch("/api/rag/ingest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resourceId: data.id,
+          url: publicUrl,
+          profileId: userId,
+        }),
+      }).catch((err) => console.error("Ingest API call failed", err));
+
       // Earn XP
       const { earnXp } = await import("@/lib/utils/gamification");
       const xpData = await earnXp("RESOURCE_UPLOADED", "Uploaded Resource");

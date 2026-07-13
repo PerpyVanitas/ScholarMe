@@ -113,6 +113,7 @@ export default function ProfilePage() {
   const [editStatusMessage, setEditStatusMessage] = useState("");
   const [editGithubUrl, setEditGithubUrl] = useState("");
   const [editLinkedinUrl, setEditLinkedinUrl] = useState("");
+  const [editIsPrivate, setEditIsPrivate] = useState(false);
   const [editAcademicYearJoined, setEditAcademicYearJoined] = useState("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
@@ -317,6 +318,7 @@ export default function ProfilePage() {
     setEditStatusMessage(profile.status_message || "");
     setEditGithubUrl(profile.social_links?.github || "");
     setEditLinkedinUrl(profile.social_links?.linkedin || "");
+    setEditIsPrivate(profile.is_private || false);
     if (profile.avatar_url?.startsWith("avatars/")) {
       setEditAvatarUrl(
         `/api/avatar?pathname=${encodeURIComponent(profile.avatar_url)}`,
@@ -347,7 +349,8 @@ export default function ProfilePage() {
         editPronouns.trim() !== (profile.pronouns || "") ||
         editStatusMessage.trim() !== (profile.status_message || "") ||
         editGithubUrl.trim() !== (profile.social_links?.github || "") ||
-        editLinkedinUrl.trim() !== (profile.social_links?.linkedin || "");
+        editLinkedinUrl.trim() !== (profile.social_links?.linkedin || "") ||
+        editIsPrivate !== (profile.is_private || false);
 
       if (hasUnsaved) {
         if (
@@ -510,6 +513,7 @@ export default function ProfilePage() {
         github: editGithubUrl.trim(),
         linkedin: editLinkedinUrl.trim(),
       },
+      is_private: editIsPrivate,
     };
     const result = await updateProfile(updateData);
     if (result.success) {
@@ -695,7 +699,9 @@ export default function ProfilePage() {
             setDesignationDialogOpen={setDesignationDialogOpen}
           />
           <AchievementsCard />
-          <SkillTree profile={profile} />
+          {hasAnyRole(roleName, ["administrator", "super_admin"]) && (
+            <SkillTree profile={profile} />
+          )}
           <SecuritySettings />
         </div>
       </div>
@@ -729,6 +735,8 @@ export default function ProfilePage() {
         setEditGithubUrl={setEditGithubUrl}
         editLinkedinUrl={editLinkedinUrl}
         setEditLinkedinUrl={setEditLinkedinUrl}
+        editIsPrivate={editIsPrivate}
+        setEditIsPrivate={setEditIsPrivate}
         uploadingAvatar={uploadingAvatar}
         isTutor={isTutor}
         displayName={displayName}

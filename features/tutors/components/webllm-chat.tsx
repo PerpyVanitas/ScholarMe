@@ -30,11 +30,15 @@ type Message = {
 
 interface WebLLMChatProps {
   initialContext?: string;
+  profileId?: string;
 }
 
 // Use the WebWorker engine to offload ML computations from the main thread.
 // We will create the worker from a separate file to ensure it bundles correctly.
-export function WebLLMChat({ initialContext = "" }: WebLLMChatProps) {
+export function WebLLMChat({
+  initialContext = "",
+  profileId,
+}: WebLLMChatProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "system",
@@ -63,36 +67,32 @@ export function WebLLMChat({ initialContext = "" }: WebLLMChatProps) {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, initProgress]);
 
   async function initializeEngine() {
+    if (engine || isLoading) return;
     setIsLoading(true);
+
     try {
-      const worker = new Worker(
-        new URL("../../../lib/workers/webllm.worker.ts", import.meta.url),
-        { type: "module" },
+      const newEngine = await CreateWebWorkerMLCEngine(
+        new Worker(
+          new URL("../../../lib/workers/webllm.worker.ts", import.meta.url),
+          { type: "module" },
+        ),
+        SELECTED_MODEL,
+        {
+          initProgressCallback: (progress) => {
+            setInitProgress(progress);
+          },
+        },
       );
 
-      const newEngine = await CreateWebWorkerMLCEngine(worker, SELECTED_MODEL, {
-        initProgressCallback: (progress) => {
-          setInitProgress(progress);
-        },
-      });
       setEngine(newEngine);
       setIsReady(true);
-    } catch (error: unknown) {
-      console.error("Failed to initialize WebLLM:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to download model",
-      );
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content:
-            "Sorry, my systems failed to initialize. Your device might not support WebGPU, or there was a network error downloading the model.",
-        },
-      ]);
+      toast.success("AI Tutor is ready!");
+    } catch (error) {
+      console.error("Failed to initialize engine:", error);
+      toast.error("Failed to load the AI model. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -105,13 +105,36 @@ export function WebLLMChat({ initialContext = "" }: WebLLMChatProps) {
     const userMessage = input.trim();
     setInput("");
 
+    setIsLoading(true);
+    let extraContext = "";
+
+    try {
+      if (profileId) {
+        // Fetch context from RAG
+        const searchRes = await fetch("/api/rag/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: userMessage, profileId }),
+        });
+        if (searchRes.ok) {
+          const searchData = await searchRes.json();
+          if (searchData.chunks && searchData.chunks.length > 0) {
+            extraContext =
+              "\n\nRelevant information from the user's library resources:\n" +
+              searchData.chunks.join("\n\n");
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch RAG context", e);
+    }
+
     const updatedMessages: Message[] = [
       ...messages,
-      { role: "user", content: userMessage },
+      { role: "user", content: userMessage + extraContext },
     ];
 
-    setMessages(updatedMessages);
-    setIsLoading(true);
+    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
 
     try {
       // Add a placeholder for the assistant's response
@@ -158,12 +181,8 @@ export function WebLLMChat({ initialContext = "" }: WebLLMChatProps) {
             <AvatarImage src="/kuya-nicolai.png" alt="Kuya Nicolai" />
             <AvatarFallback>KN</AvatarFallback>
           </Avatar>
-          Kuya Nicolai (On-Device)
+          Kuya Nicolai
         </CardTitle>
-        <CardDescription>
-          Powered by On-Device AI technology. This runs 100% locally on your
-          machine for ultimate privacy.
-        </CardDescription>
       </CardHeader>
 
       <CardContent className="flex-1 p-0 overflow-hidden relative">

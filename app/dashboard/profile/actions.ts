@@ -20,6 +20,7 @@ export interface UpdateProfileData {
   status_message?: string | null;
   social_links?: Record<string, string> | null;
   referral_code?: string | null;
+  is_private?: boolean;
 }
 
 export async function updateProfile(data: UpdateProfileData) {
@@ -57,6 +58,7 @@ export async function updateProfile(data: UpdateProfileData) {
       status_message: data.status_message,
       social_links: data.social_links,
       referral_code: data.referral_code,
+      is_private: data.is_private,
       profile_completed: true,
     })
     .eq("id", user.id)

@@ -167,7 +167,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="h-9 w-9 bg-zinc-950 dark:bg-zinc-900 border border-primary/40 group-hover:border-primary rounded-xl flex items-center justify-center shadow-md transition-all duration-300 group-hover:shadow-[0_0_12px_hsl(var(--primary)/0.3)]">
-              <HonorSocietyLogo className="h-5 w-5" />
+              <HonorSocietyLogo variant="white" className="h-5 w-5" />
             </div>
             <span className="font-extrabold text-lg tracking-tight">
               ScholarMe{" "}
@@ -658,7 +658,7 @@ export default function HomePage() {
             <div className="space-y-4">
               <div className="flex items-center gap-2.5">
                 <div className="h-8 w-8 bg-zinc-950 dark:bg-zinc-900 border border-primary/40 rounded-xl flex items-center justify-center">
-                  <HonorSocietyLogo className="h-4 w-4" />
+                  <HonorSocietyLogo variant="white" className="h-4 w-4" />
                 </div>
                 <span className="font-extrabold tracking-tight">ScholarMe</span>
               </div>

@@ -381,39 +381,7 @@ export default function SetupProfilePage() {
             </select>
           </div>
 
-          {/* Learner-specific fields */}
-          {!isTutor && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="degreeProgram">Degree Program *</Label>
-                <Input
-                  id="degreeProgram"
-                  value={degreeProgram}
-                  onChange={(e) => setDegreeProgram(e.target.value)}
-                  placeholder="e.g. BS Computer Science"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="yearLevel">Year Level *</Label>
-                <select
-                  id="yearLevel"
-                  value={yearLevel}
-                  onChange={(e) =>
-                    setYearLevel(e.target.value ? Number(e.target.value) : "")
-                  }
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                >
-                  <option value="">Select year level</option>
-                  <option value="1">1st Year</option>
-                  <option value="2">2nd Year</option>
-                  <option value="3">3rd Year</option>
-                  <option value="4">4th Year</option>
-                  <option value="5">5th Year</option>
-                </select>
-              </div>
-            </div>
-          )}
-
+          {/* Learner-specific fields have been moved to sign-up */}
           {/* Tutor-specific fields */}
           {isTutor && (
             <>

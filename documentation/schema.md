@@ -14,14 +14,14 @@ ScholarMe uses a **relational Postgres database** (hosted via Supabase), leverag
 
 The database is divided into distinct domains:
 
-| Layer | Primary Tables | Description |
-|-------|----------------|-------------|
-| **1. Identity & RBAC** | `profiles`, `roles`, `org_assignments` | Maps users to their Honor Society roles and permissions. |
-| **2. Operations** | `sessions`, `attendance_logs` | The core Peer Learning Center (PLC) tutoring and scheduling engine. |
-| **3. Learning** | `study_sets`, `flashcard_attempts` | The AI-powered content and Spaced Repetition System (SRS). |
-| **4. Library** | `resources`, `physical_resources` | Digital file uploads and physical book inventory tracking. |
-| **5. Gamification** | `xp_events`, `user_achievements` | Tracks member progression and daily streaks. |
-| **6. Finance** | `finance_budget_requests` | Organizational accounting and budget approvals. |
+| Layer                  | Primary Tables                         | Description                                                         |
+| ---------------------- | -------------------------------------- | ------------------------------------------------------------------- |
+| **1. Identity & RBAC** | `profiles`, `roles`, `org_assignments` | Maps users to their Honor Society roles and permissions.            |
+| **2. Operations**      | `sessions`, `attendance_logs`          | The core Peer Learning Center (PLC) tutoring and scheduling engine. |
+| **3. Learning**        | `study_sets`, `flashcard_attempts`     | The AI-powered content and Spaced Repetition System (SRS).          |
+| **4. Library**         | `resources`, `physical_resources`      | Digital file uploads and physical book inventory tracking.          |
+| **5. Gamification**    | `xp_events`, `user_achievements`       | Tracks member progression and daily streaks.                        |
+| **6. Finance**         | `finance_budget_requests`              | Organizational accounting and budget approvals.                     |
 
 ---
 
@@ -30,23 +30,27 @@ The database is divided into distinct domains:
 The core identity layer. Supabase Auth (`auth.users`) handles authentication, while our public `profiles` table stores application-specific identity data, enforcing the **Four Status Layers** defined in the RBAC.
 
 ### `roles`
+
 Defines the base roles available in the system.
-- **`id`** *(uuid, PK)*
-- **`name`** *(text, Unique)* — `tutor`, `learner`, `super_admin`, `administrator`.
+
+- **`id`** _(uuid, PK)_
+- **`name`** _(text, Unique)_ — `tutor`, `learner`, `super_admin`, `administrator`.
 
 ### `profiles`
+
 The primary user table. Assembles a user's full identity.
-- **`id`** *(uuid, PK)* — References `auth.users(id)` ON DELETE CASCADE.
-- **`role_id`** *(uuid, FK)* — The user's system role (System Role Overlay layer).
-- **`org_assignment_id`** *(uuid, nullable, FK)* — Link to their current position (Org Position layer).
-- **`full_name`** *(text)*
-- **`email`** *(text)*
-- **`avatar_url`** *(text, nullable)*
-- **`membership_classification`** *(text)* — `regular_member` or `esas_scholar` (Membership layer).
-- **`committee`** *(text, nullable)* — Which committee they belong to (e.g., Main Committees or ESAS Committees).
-- **`service_hours_balance`** *(numeric, default 0)* — Tracks the mandatory 90-hour requirement for ESAS Scholars. 
-- **`role_expires_at`** *(timestamptz, nullable)* — When their org role reverts to `tutor`.
-- **`booking_suspended_until`** *(timestamptz, nullable)* — Hard lock on booking capabilities.
+
+- **`id`** _(uuid, PK)_ — References `auth.users(id)` ON DELETE CASCADE.
+- **`role_id`** _(uuid, FK)_ — The user's system role (System Role Overlay layer).
+- **`org_assignment_id`** _(uuid, nullable, FK)_ — Link to their current position (Org Position layer).
+- **`full_name`** _(text)_
+- **`email`** _(text)_
+- **`avatar_url`** _(text, nullable)_
+- **`membership_classification`** _(text)_ — `regular_member` or `esas_scholar` (Membership layer).
+- **`committee`** _(text, nullable)_ — Which committee they belong to (e.g., Main Committees or ESAS Committees).
+- **`service_hours_balance`** _(numeric, default 0)_ — Tracks the mandatory 90-hour requirement for ESAS Scholars.
+- **`role_expires_at`** _(timestamptz, nullable)_ — When their org role reverts to `tutor`.
+- **`booking_suspended_until`** _(timestamptz, nullable)_ — Hard lock on booking capabilities.
 
 > [!CAUTION]
 > **The Learner Firewall**: Database triggers must prevent any `profiles` row with a `learner` role_id from being inserted into `org_assignments`. Learners are strictly external.
@@ -58,20 +62,24 @@ The primary user table. Assembles a user's full identity.
 Manages the Honor Society's yearly terms and executive/committee board assignments.
 
 ### `org_terms`
+
 Represents an academic year.
-- **`id`** *(uuid, PK)*
-- **`label`** *(text)*
-- **`term_start`** *(date)*
-- **`term_end`** *(date)*
-- **`is_current`** *(boolean)*
+
+- **`id`** _(uuid, PK)_
+- **`label`** _(text)_
+- **`term_start`** _(date)_
+- **`term_end`** _(date)_
+- **`is_current`** _(boolean)_
 
 ### `org_assignments`
+
 Maps a user to a specific position within a term, representing the Main Committees, ESAS Committees, and the Executives.
-- **`id`** *(uuid, PK)*
-- **`term_id`** *(uuid, FK)*
-- **`user_id`** *(uuid, FK)*
-- **`position`** *(text)* — The explicit org role (e.g., `president`, `committee_head`).
-- **`committee`** *(text, nullable)* — The specific committee assigned.
+
+- **`id`** _(uuid, PK)_
+- **`term_id`** _(uuid, FK)_
+- **`user_id`** _(uuid, FK)_
+- **`position`** _(text)_ — The explicit org role (e.g., `president`, `committee_head`).
+- **`committee`** _(text, nullable)_ — The specific committee assigned.
 
 ---
 
@@ -80,28 +88,34 @@ Maps a user to a specific position within a term, representing the Main Committe
 Manages the core tutoring capabilities, booking, and attendance tracking for the Peer Learning Center.
 
 ### `tutor_profiles`
+
 Extended details specifically for Honor Society members who maintain a Tutor Account.
-- **`id`** *(uuid, PK, FK to `profiles`)*
-- **`bio`** *(text)*
-- **`subjects`** *(text[])* — Areas of expertise.
-- **`rating`** *(numeric, default 5.0)* — Aggregate peer/student rating.
+
+- **`id`** _(uuid, PK, FK to `profiles`)_
+- **`bio`** _(text)_
+- **`subjects`** _(text[])_ — Areas of expertise.
+- **`rating`** _(numeric, default 5.0)_ — Aggregate peer/student rating.
 
 ### `sessions`
+
 Represents a booked tutoring block.
-- **`id`** *(uuid, PK)*
-- **`tutor_id`** *(uuid, FK)*
-- **`student_id`** *(uuid, FK)*
-- **`status`** *(text)* — `pending`, `scheduled`, `completed`, `cancelled`, `no_show`.
-- **`duration_minutes`** *(integer)*
-- **`max_participants`** *(integer, default 1)*
-- **`is_office_hours`** *(boolean, default false)*
+
+- **`id`** _(uuid, PK)_
+- **`tutor_id`** _(uuid, FK)_
+- **`student_id`** _(uuid, FK)_
+- **`status`** _(text)_ — `pending`, `scheduled`, `completed`, `cancelled`, `no_show`.
+- **`duration_minutes`** _(integer)_
+- **`max_participants`** _(integer, default 1)_
+- **`is_office_hours`** _(boolean, default false)_
 
 ### `attendance_logs`
+
 Tracks tutor presence in the PLC.
-- **`id`** *(uuid, PK)*
-- **`tutor_id`** *(uuid, FK)*
-- **`clock_in`** *(timestamptz)*
-- **`clock_out`** *(timestamptz, nullable)*
+
+- **`id`** _(uuid, PK)_
+- **`tutor_id`** _(uuid, FK)_
+- **`clock_in`** _(timestamptz)_
+- **`clock_out`** _(timestamptz, nullable)_
 
 > **Note on Service Hours:** ESAS tutors do not have to get a booked session in order to gain credits for their 90 hours. They accumulate credits simply by being clocked in (present) in the PLC via `attendance_logs`.
 
@@ -112,28 +126,33 @@ Tracks tutor presence in the PLC.
 The AI-powered study tools and spaced repetition system.
 
 ### `study_sets`
-- **`id`** *(uuid, PK)*
-- **`owner_id`** *(uuid, FK)*
-- **`title`** *(text)*
+
+- **`id`** _(uuid, PK)_
+- **`owner_id`** _(uuid, FK)_
+- **`title`** _(text)_
 
 ### `study_items`
+
 Individual questions or flashcards.
-- **`id`** *(uuid, PK)*
-- **`study_set_id`** *(uuid, FK)*
-- **`question`** *(text)*
-- **`answer`** *(text)*
-- **`item_type`** *(text)*
-- **`image_url`** *(text, nullable)*
-- **`occlusion_masks`** *(jsonb, nullable)* — Stores coordinates for image occlusion bounding boxes.
+
+- **`id`** _(uuid, PK)_
+- **`study_set_id`** _(uuid, FK)_
+- **`question`** _(text)_
+- **`answer`** _(text)_
+- **`item_type`** _(text)_
+- **`image_url`** _(text, nullable)_
+- **`occlusion_masks`** _(jsonb, nullable)_ — Stores coordinates for image occlusion bounding boxes.
 
 ### `flashcard_attempts`
+
 Tracks the SM2 spaced repetition algorithm for a specific user and flashcard.
-- **`id`** *(uuid, PK)*
-- **`user_id`** *(uuid, FK)*
-- **`study_set_item_id`** *(uuid, FK)*
-- **`ease_factor`** *(numeric)*
-- **`interval_days`** *(integer)*
-- **`next_review_date`** *(timestamptz)*
+
+- **`id`** _(uuid, PK)_
+- **`user_id`** _(uuid, FK)_
+- **`study_set_item_id`** _(uuid, FK)_
+- **`ease_factor`** _(numeric)_
+- **`interval_days`** _(integer)_
+- **`next_review_date`** _(timestamptz)_
 
 ---
 
@@ -142,22 +161,46 @@ Tracks the SM2 spaced repetition algorithm for a specific user and flashcard.
 Digital and Physical asset management for the Peer Learning Center.
 
 ### `resources` (Digital)
-- **`id`** *(uuid, PK)*
-- **`file_url`** *(text)*
-- **`is_public`** *(boolean, default false)*
-- **`uploaded_by`** *(uuid, FK)*
+
+- **`id`** _(uuid, PK)_
+- **`file_url`** _(text)_
+- **`is_public`** _(boolean, default false)_
+- **`uploaded_by`** _(uuid, FK)_
 
 ### `physical_resources` (CFMR Inventory)
-- **`id`** *(uuid, PK)*
-- **`title`** *(text)*
-- **`isbn`** *(text, Unique)*
-- **`available_quantity`** *(integer)*
+
+- **`id`** _(uuid, PK)_
+- **`title`** _(text)_
+- **`isbn`** _(text, Unique)_
+- **`available_quantity`** _(integer)_
 
 ### `resource_checkouts`
-- **`id`** *(uuid, PK)*
-- **`resource_id`** *(uuid, FK)*
-- **`user_id`** *(uuid, FK)*
-- **`status`** *(text)* — `active`, `returned`, `overdue`.
+
+- **`id`** _(uuid, PK)_
+- **`resource_id`** _(uuid, FK)_
+- **`user_id`** _(uuid, FK)_
+- **`status`** _(text)_ — `active`, `returned`, `overdue`.
+
+### `resource_embeddings`
+
+- **`id`** _(uuid, PK)_
+- **`resource_id`** _(uuid, FK)_
+- **`profile_id`** _(uuid, FK)_
+- **`content`** _(text)_ — Text chunk from the document.
+- **`embedding`** _(jsonb)_ — Vector array (fallback implementation for RAG without `pgvector`).
+
+---
+
+## 🤝 Social and Directory
+
+Manages user connections and directory visibility.
+
+### `friends`
+
+- **`id`** _(uuid, PK)_
+- **`user_id1`** _(uuid, FK)_ — The initiator.
+- **`user_id2`** _(uuid, FK)_ — The receiver.
+- **`status`** _(text)_ — `pending`, `accepted`, `declined`, `blocked`. (A status of `blocked` means `user_id1` blocked `user_id2`).
 
 ---
 
@@ -166,22 +209,24 @@ Digital and Physical asset management for the Peer Learning Center.
 Module for managing organizational funds, strictly guarded by Executive access.
 
 ### `finance_budget_requests`
-- **`id`** *(uuid, PK)*
-- **`activity_title`** *(text)*
-- **`amount`** *(numeric)*
-- **`status`** *(text)*
+
+- **`id`** _(uuid, PK)_
+- **`activity_title`** _(text)_
+- **`amount`** _(numeric)_
+- **`status`** _(text)_
 
 ### `finance_liquidations`
-- **`id`** *(uuid, PK)*
-- **`request_id`** *(uuid, FK)*
-- **`receipt_urls`** *(text[])*
+
+- **`id`** _(uuid, PK)_
+- **`request_id`** _(uuid, FK)_
+- **`receipt_urls`** _(text[])_
 
 ---
 
 ## ⚙️ Critical Database Triggers and Functions
 
-| Trigger Name | Purpose | Rule Enforcement |
-|--------------|---------|------------------|
-| **`trg_enforce_single_super_admin`** | Prevents multiple rows in `profiles` from holding the `super_admin` role_id concurrently. | Ensures only one `super_admin` exists system-wide. |
-| **`calculate_xp_curve`** | Computes a user's `current_level` based on their `total_xp`. | Gamification auto-scaling. |
-| **`tutor_analytics_trigger`** | Automatically increments `total_sessions` and awards XP upon completion of a session. | Maintains data integrity without requiring backend API orchestration. |
+| Trigger Name                         | Purpose                                                                                   | Rule Enforcement                                                      |
+| ------------------------------------ | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| **`trg_enforce_single_super_admin`** | Prevents multiple rows in `profiles` from holding the `super_admin` role_id concurrently. | Ensures only one `super_admin` exists system-wide.                    |
+| **`calculate_xp_curve`**             | Computes a user's `current_level` based on their `total_xp`.                              | Gamification auto-scaling.                                            |
+| **`tutor_analytics_trigger`**        | Automatically increments `total_sessions` and awards XP upon completion of a session.     | Maintains data integrity without requiring backend API orchestration. |

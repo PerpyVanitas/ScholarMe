@@ -60,6 +60,7 @@ interface ChatInterfaceProps {
   currentUserId?: string;
   isAdmin?: boolean;
   forceAuditMode?: boolean;
+  defaultActiveConversationId?: string;
 }
 
 export function ChatInterface({
@@ -67,13 +68,17 @@ export function ChatInterface({
   currentUserId,
   isAdmin = false,
   forceAuditMode = false,
+  defaultActiveConversationId,
 }: ChatInterfaceProps) {
   const [supabase] = useState(() => createClient());
   const [conversations, setConversations] =
     useState<Conversation[]>(initialConversations);
   const [activeConversationId, setActiveConversationId] = useState<
     string | null
-  >(initialConversations.length > 0 ? initialConversations[0].id : null);
+  >(
+    defaultActiveConversationId ||
+      (initialConversations.length > 0 ? initialConversations[0].id : null),
+  );
 
   const activeConversation = conversations.find(
     (c) => c.id === activeConversationId,

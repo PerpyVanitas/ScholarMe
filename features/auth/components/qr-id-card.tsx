@@ -187,10 +187,10 @@ export function QrIdCard({
       {/* FRONT SIDE (FLAT) */}
       <div className="w-[320px] h-[480px] rounded-2xl p-5 flex flex-col justify-between border-2 border-[#FFD700]/30 shadow-2xl overflow-hidden bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-black text-white relative">
         <div className="absolute inset-0 opacity-[0.08] pointer-events-none flex items-center justify-center">
-          <HonorSocietyLogo className="w-80 h-80" />
+          <HonorSocietyLogo variant="white" className="w-80 h-80" />
         </div>
         <div className="relative flex items-center gap-3 border-b border-[#FFD700]/20 pb-3">
-          <HonorSocietyLogo className="h-9 w-9 drop-shadow" />
+          <HonorSocietyLogo variant="white" className="h-9 w-9 drop-shadow" />
           <div className="flex flex-col text-left">
             <span className="text-[10px] font-extrabold tracking-wider leading-none text-zinc-200">
               CIT UNIVERSITY
@@ -270,7 +270,10 @@ export function QrIdCard({
       {/* BACK SIDE (FLAT) */}
       <div className="w-[320px] h-[480px] rounded-2xl p-5 flex flex-col justify-between border-2 border-[#FFD700]/30 shadow-2xl bg-gradient-to-b from-[#2d2d2d] to-[#1a1a1a] text-white relative">
         <div className="absolute top-8 left-0 right-0 h-10 bg-black/90 z-0 flex items-center justify-center gap-2">
-          <HonorSocietyLogo className="w-5 h-5 object-contain" />
+          <HonorSocietyLogo
+            variant="white"
+            className="w-5 h-5 object-contain"
+          />
           <span className="text-[10px] font-bold tracking-widest leading-none text-[#FFD700] pt-0.5">
             CIT-U HONOR SOCIETY
           </span>
@@ -329,10 +332,10 @@ export function QrIdCard({
       {/* FRONT SIDE */}
       <div className="card-front absolute w-full h-full rounded-2xl p-5 flex flex-col justify-between border-2 border-[#FFD700]/30 shadow-2xl overflow-hidden select-none bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-black text-white">
         <div className="absolute inset-0 opacity-[0.08] pointer-events-none flex items-center justify-center">
-          <HonorSocietyLogo className="w-80 h-80" />
+          <HonorSocietyLogo variant="white" className="w-80 h-80" />
         </div>
         <div className="relative flex items-center gap-3 border-b border-[#FFD700]/20 pb-3">
-          <HonorSocietyLogo className="h-9 w-9 drop-shadow" />
+          <HonorSocietyLogo variant="white" className="h-9 w-9 drop-shadow" />
           <div className="flex flex-col text-left">
             <span className="text-[10px] font-extrabold tracking-wider leading-none text-zinc-200">
               CIT UNIVERSITY
@@ -412,7 +415,10 @@ export function QrIdCard({
       {/* BACK SIDE */}
       <div className="card-back absolute w-full h-full rounded-2xl p-5 flex flex-col justify-between border-2 border-[#FFD700]/30 shadow-2xl select-none bg-gradient-to-b from-[#2d2d2d] to-[#1a1a1a] text-white">
         <div className="absolute top-8 left-0 right-0 h-10 bg-black/90 z-0 flex items-center justify-center gap-2">
-          <HonorSocietyLogo className="w-5 h-5 object-contain" />
+          <HonorSocietyLogo
+            variant="white"
+            className="w-5 h-5 object-contain"
+          />
           <span className="text-[10px] font-bold tracking-widest leading-none text-[#FFD700] pt-0.5">
             CIT-U HONOR SOCIETY
           </span>
@@ -608,7 +614,7 @@ export function QrIdCard({
 
             <DialogContent className="sm:max-w-md bg-zinc-950 border-zinc-800 text-white flex flex-col items-center p-6 gap-4 outline-none overflow-visible relative">
               <div className="absolute inset-0 opacity-[0.03] pointer-events-none flex items-center justify-center overflow-hidden rounded-lg">
-                <HonorSocietyLogo className="w-96 h-96" />
+                <HonorSocietyLogo variant="white" className="w-96 h-96" />
               </div>
 
               <DialogHeader className="text-center w-full relative z-10">
