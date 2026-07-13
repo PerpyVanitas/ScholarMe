@@ -22,6 +22,14 @@
 - **RBAC (`rbac.md`)**: Added full "Concurrent Status Model" section covering: four status layers, position exclusivity tables (singleton vs. per-committee vs. multi-person), all valid/invalid concurrent status combinations, maximum stack chart, Learner Firewall rules, and profile display guide.
 - **Schema (`schema.md`)**: Added `org_terms`, `org_assignments` table docs, `org_assignment_id` column on profiles, and DB trigger note.
 
+## [2026-07-13] - Bug Fixes & Previews
+
+- **Avatar Upload**: Fixed an issue where the avatar loading failed by implementing a fallback to Supabase if the initial fetch is blocked.
+- **Resource Downloading**: Fixed an issue where downloading resources just opened them in a new tab by forcing the download via URL parameters.
+- **Resource Previews**: Fixed an issue where PDF previews were completely broken by switching from `<iframe>` to `<object>` rendering with a dedicated download fallback for unsupported browsers.
+- **Idle Timeout**: Set the application inactivity limit to 5 minutes, enforcing a logout with a warning to improve security.
+- **Accessibility & Site Settings**: Added dedicated A11y Settings directly between Report a Bug and Darkmode toggle in the header, and created a "Site Settings" page accessible from the bottom-left profile dropdown.
+
 ## [2026-07-13] - Implementation Cycle: UX/QA fixes & Visibility Updates
 
 ### Added
@@ -56,7 +64,9 @@
   - Expanded the `QuizItemsEditor` maximum height to 600px for easier bulk editing.
   - Implemented a real-time visual progress bar for WebLLM model initializations, providing vital feedback during the heavy download phase.
 
-## [2026-07-12] - Free Local AI (WebLLM) Integration### Changed
+## [2026-07-12] - Free Local AI (WebLLM) Integration
+
+### Changed
 
 - **Manual Flashcards & Quizzes**: Replaced the server-side Gemini fallback with the completely free, unlimited `WebWorkerMLCEngine` (Local AI). This guarantees no API usage costs when users manually prompt to generate flashcards or quizzes.
 
@@ -175,9 +185,7 @@
 - **Auto-Clock Out Protection Alert**: The Tutor Dashboard now visually alerts the user with a warning banner if they have been clocked in for more than 12 hours consecutively.
 - **Calendar Syncing**: Tutors can now generate a personal .ics Subscription URL for their confirmed sessions, exportable directly from their Profile Settings.
 - **Auto-Approve Past Learners**: Added a toggle for tutors to automatically approve session requests from learners they have previously had completed sessions with.
-- **Subject Mastery Verification**: Tutors can now submit "Verification Claims" for specific specializations (e.g., transcripts) which Admins can review and approve in a new dmin/verifications dashboard.
-
-# Changelog
+- **Subject Mastery Verification**: Tutors can now submit "Verification Claims" for specific specializations (e.g., transcripts) which Admins can review and approve in a new dmin/verifications dashboard.
 
 ## [2026-07-07] - Phase 26 QoL Sprint: Announcements & Library Reminders
 
@@ -264,12 +272,7 @@
 - Dynamically imported the newly extracted modal components in Quizzes, Flashcards, and Resources using `next/dynamic` for better lazy loading and reduced initial bundle size.
 - Improved TypeScript strictness by replacing unstructured `any` types in refactored components with explicit types and replacing empty `catch(e)` blocks with proper `unknown` typing.
 
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
+## [2026-07-06] - Older Releases
 
 ### Added
 
@@ -282,48 +285,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Polls UI**: Transformed the inline Poll History list on the voting page into a cleaner Dialog Modal.
-
-### Fixed
-
-- **Security**: Patched Next.js dependencies to `16.2.5+` resolving multiple High severity cache-poisoning and CSRF vulnerabilities flagged by `pnpm audit`.
-- **Orphaned Admin Pages**: Integrated the previously inaccessible `Role Management` and `ID QR Scanner` tools directly into the Admin Sidebar and Admin Dashboard Quick Links.
-- **Tutor Analytics Bug**: Authored a Postgres SQL Trigger (`20260706173500_tutor_analytics_trigger.sql`) to automatically calculate and increment a tutor's `total_sessions_completed`, `total_hours_tutored`, and `total_students_helped` in real-time when a session status is marked as 'completed'.
-- **Mobile Responsiveness**: Fixed several layout bugs causing the UI to clip or stretch horizontally on mobile devices.
-  - Wrapped data tables in the Admin Sessions, Logs, and Users pages with `overflow-x-auto` to allow horizontal scrolling on small screens.
-  - Adjusted rigid grid layouts on the Analytics page to scale down to a single column on phones before expanding to multiple columns on tablets and desktops.
-- **Critical Security (IDOR)**: Fixed a Broken Object Level Authorization vulnerability in the Teamwork tracker. Restricted `team_tasks` RLS and added server-side verification to `app/actions/team.ts` so that only Officers can modify executive tasks.
-- **Critical Security (Finance)**: Authored a Postgres Migration (`20260706180000_patch_finance_security.sql`) to completely lock down the `finance_budget_requests`, `finance_liquidations`, `finance_petty_cash`, and `finance_scards` tables. Prior to this patch, ANY authenticated user could theoretically view and mutate all organizational financial data due to permissive `USING (true)` policies.
-- **TypeScript Build Error**: Resolved a fatal type clash in `app/dashboard/tutors/page.tsx` that was causing Vercel builds to fail (`Property 'name' does not exist on type 'never'`).
-- **Orphaned Features**:
-  - Linked the previously inaccessible `/dashboard/team` Teamwork Workspace into the primary app sidebar for Officers and Admins.
-  - Linked the completely orphaned `/dashboard/finance` Finance Module into the primary app sidebar so that Finance Managers, Treasurers, and Auditors can actually access it.
-- **Gamification**: Upgraded the Tutor Analytics trigger to automatically award Tutors 50 XP to their `profiles` for every hour of tutoring they complete!
-- **Tutor Onboarding**: Improved the tutor profile setup flow by making it mandatory to provide a Bio and select at least one Specialization during registration. The "Skip for now" option is removed for Tutors, and fields for Hourly Rate and Years of Experience are now collected upfront.
-- **Find Tutors Logic**: Updated API and client-side filtering to ensure Learner, Admin, and Super Admin accounts do not appear on the Find Tutors page.
-- **Audit Findings Remediation**:
-  - Replaced numerous empty `catch {}` blocks across the codebase with structured error logging.
-  - Authored SQL migration to fix the `profiles` table Row Level Security (RLS) leak to prevent PII exposure.
-- Comprehensive Code Audit Report detailing Security (OWASP Top 10), Code Quality, and Performance findings.
-- Android Native Gamification integration (XP triggers, Dynamic Leaderboards, Level-colored Avatar Borders).
-- Android Native AI Generation Screens (`QuizCreateScreen`, `FlashcardCreateScreen`).
-- Android Native Honor Society Designations rendered on the Profile screen alongside the Digital ID Card.
-- Exponential XP Scaling Curve database migration and recalculation logic (`Level = FLOOR(0.1 * SQRT(total_xp)) + 1`).
-- Swagger/OpenAPI Documentation to Spring Boot controllers.
-- Spring Boot Actuator Health Endpoint.
-- Structured Request Logging with Correlation IDs in Spring Boot (`RequestLoggingFilter`).
-- Server-side gamification XP validation and anti-cheat mechanism.
-- Android Network Security Configuration to block cleartext traffic.
-- Android ProGuard rules for Retrofit and Hilt to prevent aggressive stripping.
-- Environment variable startup validation for Next.js (`lib/env.ts`).
-- React component-level Error Boundaries around major dashboard sections.
-- Accessibility audit step (`axe-core`) to CI pipeline.
-- Vercel production deployment step to CI pipeline.
-- Secrets scanning (TruffleHog) to CI pipeline.
-- This `CHANGELOG.md` file.
-- `CONTRIBUTING.md` guidelines.
-
-### Changed
-
 - Enforced strict Role-Based Access Control (RBAC) tying the `super_admin` designation explicitly to the user's role rather than a hardcoded email.
 - Updated README.md to reflect recent updates to Gamification, Organization Voting, and Dynamic ID Cards.
 - Completely refactored Next.js `app-sidebar.tsx` with rigorous Role-Based Access Control and categorized navigation groups (Core, Academics, Community, Tools).
@@ -344,33 +305,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added database indexes (`supabase/migrations/`) to optimize commonly queried columns on `sessions`, `auth_cards`, `resources`, and `analytics_logs`.
 - Created database migration (`20260706183030_schema_cleanup.sql`) to clean up duplicate columns in `study_sets`, enforce `ON DELETE CASCADE` for critical relational tables (e.g., polls, study set items), and added indexes on foreign keys to prevent full table scans and improve query speeds.
-
-## [2026-07-06] - Architecture & DDD Refactoring
-
-- **Refactor**: Reorganized project structure from layered (components/dashboard/, lib/ specific) to Domain-Driven Design under the eatures/ directory.
-- **Moved**: Extracted profiles, sessions, quizzes, study-sets, tutors, finance, and admin domains into eatures/ directory.
-- **Fixed**: Successfully remediated all import paths globally to fix sc and lint errors.
-- **Cleaned**: Removed dead code, optimized imports, and eliminated
-  eact-hooks/exhaustive-deps warnings across the dashboard.
-
-### 2026-07-07
-
-- Implemented Flashcard Spaced Repetition (SRS) integration in the frontend.
-- Implemented Study Groups feature with a new dashboard page for discovering and joining groups.
-- Implemented AI Quiz Flagging feature allowing users to flag inaccurate AI-generated questions.
-- Implemented Recurring Sessions functionality (repeating for 4 weeks) in the booking dialog.
-- Implemented Group Tutoring Sessions support via a new session_participants schema.
-- Implemented No-Show Penalties tracking and automatic suspension triggers.
-- Checked off all Learner Experience features in the unimplemented QoL features tracker.
-- Implemented Tutor Experience features: Bulk Availability Editing, Auto-Approve Sessions, Timesheet Auto-Clock Out Protection, Calendar Syncing toggles, and Meeting Link / Rescheduling functionalities.
-
- # # #   [ 2 0 2 6 - 0 7 - 1 3 ]   -   B u g   F i x e s   &   P r e v i e w s 
- 
- -   * * A v a t a r   U p l o a d * * :   F i x e d   a n   i s s u e   w h e r e   t h e   a v a t a r   l o a d i n g   f a i l e d   b y   i m p l e m e n t i n g   a   f a l l b a c k   t o   S u p a b a s e   i f   t h e   i n i t i a l   f e t c h   i s   b l o c k e d . 
- -   * * R e s o u r c e   D o w n l o a d i n g * * :   F i x e d   a n   i s s u e   w h e r e   d o w n l o a d i n g   r e s o u r c e s   j u s t   o p e n e d   t h e m   i n   a   n e w   t a b   b y   f o r c i n g   t h e   d o w n l o a d   v i a   U R L   p a r a m e t e r s . 
- -   * * R e s o u r c e   P r e v i e w s * * :   F i x e d   a n   i s s u e   w h e r e   P D F   p r e v i e w s   w e r e   c o m p l e t e l y   b r o k e n   b y   s w i t c h i n g   f r o m   \ < i f r a m e > \   t o   \ < o b j e c t > \   r e n d e r i n g   w i t h   a   d e d i c a t e d   d o w n l o a d   f a l l b a c k   f o r   u n s u p p o r t e d   b r o w s e r s . 
- -   * * I d l e   T i m e o u t * * :   S e t   t h e   a p p l i c a t i o n   i n a c t i v i t y   l i m i t   t o   5   m i n u t e s ,   e n f o r c i n g   a   l o g o u t   w i t h   a   w a r n i n g   t o   i m p r o v e   s e c u r i t y . 
- -   * * A c c e s s i b i l i t y   &   S i t e   S e t t i n g s * * :   A d d e d   d e d i c a t e d   A 1 1 y   S e t t i n g s   d i r e c t l y   b e t w e e n   R e p o r t   a   B u g   a n d   D a r k m o d e   t o g g l e   i n   t h e   h e a d e r ,   a n d   c r e a t e d   a   \ S i t e   S e t t i n g s \   p a g e   a c c e s s i b l e   f r o m   t h e   b o t t o m - l e f t   p r o f i l e   d r o p d o w n . 
- 
- 
- 
