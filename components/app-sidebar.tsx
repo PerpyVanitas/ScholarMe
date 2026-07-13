@@ -459,14 +459,14 @@ export function AppSidebar({
                     className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                   >
                     <div
-                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary cursor-pointer text-primary-foreground"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-transparent cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         handleLogoClick(e as any);
                       }}
                     >
-                      <HonorSocietyLogo variant="auto" className="h-6 w-6" />
+                      <HonorSocietyLogo className="h-6 w-6" />
                     </div>
                     <div className="flex flex-col gap-0.5 leading-none">
                       <span className="font-semibold">
@@ -507,10 +507,10 @@ export function AppSidebar({
               <SidebarMenuButton size="lg" asChild>
                 <Link href="/dashboard/home">
                   <div
-                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary cursor-pointer text-primary-foreground"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-transparent cursor-pointer"
                     onClick={handleLogoClick}
                   >
-                    <HonorSocietyLogo variant="auto" className="h-6 w-6" />
+                    <HonorSocietyLogo className="h-6 w-6" />
                   </div>
                   <div className="flex flex-col gap-0.5 leading-none">
                     <span className="font-semibold">ScholarMe</span>

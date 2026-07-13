@@ -93,7 +93,9 @@ export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [statsVisible, setStatsVisible] = useState(false);
-  const [orgSettings, setOrgSettings] = useState<OrganizationSettings | null>(null);
+  const [orgSettings, setOrgSettings] = useState<OrganizationSettings | null>(
+    null,
+  );
   const statsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -117,7 +119,7 @@ export default function HomePage() {
         .select("*")
         .limit(1)
         .single();
-      
+
       if (settings) {
         setOrgSettings(settings);
       }
@@ -144,11 +146,15 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300 overflow-x-hidden">
       {orgSettings?.primary_color && (
-        <style dangerouslySetInnerHTML={{__html: `
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
           :root {
             --primary: ${orgSettings.primary_color};
           }
-        `}} />
+        `,
+          }}
+        />
       )}
       {/* ── NAV ── */}
       <nav
@@ -161,7 +167,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="h-9 w-9 bg-zinc-950 dark:bg-zinc-900 border border-primary/40 group-hover:border-primary rounded-xl flex items-center justify-center shadow-md transition-all duration-300 group-hover:shadow-[0_0_12px_hsl(var(--primary)/0.3)]">
-              <HonorSocietyLogo variant="gold" className="h-5 w-5" />
+              <HonorSocietyLogo className="h-5 w-5" />
             </div>
             <span className="font-extrabold text-lg tracking-tight">
               ScholarMe{" "}
@@ -290,7 +296,9 @@ export default function HomePage() {
                   {orgSettings?.hero_title || "Ace Your Courses"}
                 </span>
                 <br />
-                <span className="text-foreground">{orgSettings?.hero_subtitle || "With Elite Peer Tutors"}</span>
+                <span className="text-foreground">
+                  {orgSettings?.hero_subtitle || "With Elite Peer Tutors"}
+                </span>
               </h1>
               <p
                 className="text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto animate-fade-in-up"
@@ -650,7 +658,7 @@ export default function HomePage() {
             <div className="space-y-4">
               <div className="flex items-center gap-2.5">
                 <div className="h-8 w-8 bg-zinc-950 dark:bg-zinc-900 border border-primary/40 rounded-xl flex items-center justify-center">
-                  <HonorSocietyLogo variant="gold" className="h-4 w-4" />
+                  <HonorSocietyLogo className="h-4 w-4" />
                 </div>
                 <span className="font-extrabold tracking-tight">ScholarMe</span>
               </div>
