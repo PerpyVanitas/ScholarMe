@@ -427,6 +427,7 @@ export default function ProfilePage() {
         const updated = { ...profile, avatar_url: data.pathname || data.url };
         setProfile(updated as Profile);
       }
+      await refreshProfile();
       toast.success("Photo updated!");
     } catch (err) {
       toast.error(
