@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { hasAnyRole, TUTOR_ROLES } from "@/lib/utils/roles";
 
 export default async function TutorLayout({
   children,
@@ -29,7 +30,7 @@ export default async function TutorLayout({
     : (rawRole as any)?.name;
 
   // Gate: Only tutors can access timesheet routes
-  if (roleName !== "tutor") {
+  if (!hasAnyRole(roleName, TUTOR_ROLES)) {
     redirect("/dashboard/home");
   }
 

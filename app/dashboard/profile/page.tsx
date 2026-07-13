@@ -58,7 +58,7 @@ import {
 } from "./actions";
 import { useUser } from "@/lib/user-context";
 import { QrIdCard } from "@/features/auth/components/qr-id-card";
-import { getRoleName } from "@/lib/utils/roles";
+import { getRoleName, hasAnyRole, TUTOR_ROLES } from "@/lib/utils/roles";
 import { roleNameFromUser } from "@/features/profiles/api/db";
 
 // Import modular components
@@ -134,7 +134,7 @@ export default function ProfilePage() {
   );
   const [savingTutor, setSavingTutor] = useState(false);
 
-  const isTutor = roleName === "tutor";
+  const isTutor = hasAnyRole(roleName, TUTOR_ROLES);
 
   // Designation state
   const [designations, setDesignations] = useState<HsDesignation[]>([]);

@@ -206,6 +206,11 @@ function getNavItems(role: UserRole, profile: Profile) {
           href: "/dashboard/admin/tutor-stats",
           icon: BarChart,
         },
+        {
+          title: "Payroll & Timesheets",
+          href: "/dashboard/admin/timesheets",
+          icon: Clock,
+        },
       ],
     });
   }
