@@ -30,55 +30,86 @@ export function OnboardingTour() {
   useEffect(() => {
     if (!mounted || !profile) return;
 
-    // Check if they've seen it before
-    const hasSeenTour = localStorage.getItem("hasSeenOnboardingTour");
-    if (hasSeenTour) return;
+    const handleStartTour = () => {
+      const tourElements = document.querySelectorAll("[data-tour-step]");
+      let steps = [];
 
-    const tour = driver({
-      showProgress: true,
-      animate: true,
-      steps: [
-        {
-          element: "#tour-command-menu",
-          popover: {
-            title: "Global Search",
-            description:
-              "Press Cmd+K or Ctrl+K anywhere to jump between features, study tools, or profile settings instantly.",
-            side: "bottom",
-            align: "start",
+      if (tourElements.length > 0) {
+        steps = Array.from(tourElements)
+          .sort(
+            (a, b) =>
+              Number(a.getAttribute("data-tour-step")) -
+              Number(b.getAttribute("data-tour-step")),
+          )
+          .map((el) => ({
+            element: el,
+            popover: {
+              title: el.getAttribute("data-tour-title") || "Info",
+              description: el.getAttribute("data-tour-description") || "",
+              side: (el.getAttribute("data-tour-side") as any) || "bottom",
+              align: (el.getAttribute("data-tour-align") as any) || "start",
+            },
+          }));
+      } else {
+        // Fallback to global steps
+        steps = [
+          {
+            element: "#tour-command-menu",
+            popover: {
+              title: "Global Search",
+              description:
+                "Press Cmd+K or Ctrl+K anywhere to jump between features, study tools, or profile settings instantly.",
+              side: "bottom" as const,
+              align: "start" as const,
+            },
           },
-        },
-        {
-          element: "#tour-streak-indicator",
-          popover: {
-            title: "Study Streaks",
-            description:
-              "Log in and complete sessions daily to build your streak and earn more XP!",
-            side: "bottom",
-            align: "center",
+          {
+            element: "#tour-streak-indicator",
+            popover: {
+              title: "Study Streaks",
+              description:
+                "Log in and complete sessions daily to build your streak and earn more XP!",
+              side: "bottom" as const,
+              align: "center" as const,
+            },
           },
-        },
-      ],
-      onDestroyStarted: () => {
-        if (!tour.hasNextStep()) {
-          localStorage.setItem("hasSeenOnboardingTour", "true");
-          tour.destroy();
-        } else {
-          setTourInstance(tour);
-          setShowSkipConfirm(true);
-        }
-      },
-    });
-
-    // Small timeout to let UI mount
-    setTimeout(() => {
-      try {
-        tour.drive();
-      } catch (e) {
-        console.error("Tour failed to start", e);
-        toast.error(e instanceof Error ? e.message : "An error occurred");
+        ];
       }
-    }, 1500);
+
+      const tour = driver({
+        showProgress: true,
+        animate: true,
+        steps,
+        onDestroyStarted: () => {
+          if (!tour.hasNextStep()) {
+            localStorage.setItem("hasSeenOnboardingTour", "true");
+            tour.destroy();
+          } else {
+            setTourInstance(tour);
+            setShowSkipConfirm(true);
+          }
+        },
+      });
+
+      tour.drive();
+    };
+
+    // Auto-run logic
+    const hasSeenTour = localStorage.getItem("hasSeenOnboardingTour");
+    if (!hasSeenTour) {
+      setTimeout(() => {
+        try {
+          handleStartTour();
+        } catch (e) {
+          console.error("Tour failed to start", e);
+        }
+      }, 1500);
+    }
+
+    // Listen to custom event for manual trigger
+    const listener = () => handleStartTour();
+    window.addEventListener("start-page-tour", listener);
+    return () => window.removeEventListener("start-page-tour", listener);
   }, [mounted, profile]);
 
   if (!mounted) return null;

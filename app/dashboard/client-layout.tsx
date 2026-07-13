@@ -23,6 +23,7 @@ import { CommandMenu } from "@/components/command-menu";
 import { StreakIndicator } from "@/features/gamification/components/streak-indicator";
 import { OnboardingTour } from "@/features/onboarding/components/onboarding-tour";
 import { MobileFab } from "@/components/mobile-fab";
+import { PageTutorialButton } from "@/components/page-tutorial-button";
 import { AnalyticsPageTracker } from "@/components/analytics-page-tracker";
 import { GlobalChat } from "@/features/messaging/components/global-chat";
 import {
@@ -102,6 +103,7 @@ function DashboardLayoutContent({
               <StreakIndicator />
             </div>
             <FeedbackButton />
+            <PageTutorialButton />
             <A11ySettings />
             <ThemeToggle />
           </div>
