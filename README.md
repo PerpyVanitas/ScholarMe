@@ -9,13 +9,14 @@
 - [Overview](#overview)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
+- [Architecture & Project Structure](#architecture--project-structure)
 - [Database Schema](#database-schema)
 - [Getting Started](#getting-started)
 - [Authentication & Identity](#authentication--identity)
 - [Gamification Engine](#gamification-engine)
 - [CI/CD Pipeline](#cicd-pipeline)
 - [Development Workflow](#development-workflow)
+- [Contributing](#contributing)
 
 ---
 
@@ -73,6 +74,7 @@ ScholarMe was built to replace disconnected spreadsheets, manual session logs, a
 - **AI Generation**: Powered by **Google Gemini** (`@google/genai`). Users describe a topic and the AI generates a full set of questions and answers.
 - **Quiz Attempts**: Tracked in `quiz_attempts` with score, time spent, and individual answers stored as JSONB for detailed review.
 - **File Uploads**: Users can upload documents; extracted text is stored in `user_uploads` and used as source material for AI generation.
+- **Image Occlusion**: Specialized quiz type where users identify masked parts of an uploaded image.
 
 ### 📂 Resource Repository
 
@@ -169,74 +171,49 @@ ScholarMe was built to replace disconnected spreadsheets, manual session logs, a
 
 ---
 
-## Project Structure
+## Architecture & Project Structure
+
+ScholarMe uses a Domain-Driven Design (DDD) feature-based architecture to prevent component and logic sprawl.
+
+### Directory Layout
 
 ```
 scholarme/
-├── app/                          # Next.js App Router
-│   ├── actions/                  # Server Actions (team, sessions, etc.)
+├── app/                          # Next.js App Router (Routing & Pages)
+│   ├── actions/                  # Global Server Actions
 │   ├── api/                      # Serverless API routes
-│   │   ├── auth/                 # Auth callbacks and card login
-│   │   ├── feedback/             # User feedback submission
-│   │   ├── notifications/        # Push notification dispatch
-│   │   ├── push/                 # VAPID web push subscription
-│   │   ├── study-sets/           # AI generation endpoints
-│   │   └── uploads/              # File upload handling
-│   ├── auth/                     # Login, signup, and onboarding pages
-│   └── dashboard/                # All role-specific dashboard pages
-│       ├── admin/                # Admin-only tools
-│       │   ├── analytics/        # KPIs, leaderboards, Hall of Fame
-│       │   ├── feedback/         # Super Admin feedback review
-│       │   ├── logs/             # Analytics event logs
-│       │   ├── messages/         # Admin messaging
-│       │   ├── reports/          # Reporting tools
-│       │   ├── roles/            # Role management
-│       │   ├── scanner/          # QR ID scanner
-│       │   ├── sessions/         # Session oversight
-│       │   ├── timesheets/       # Tutor timesheet review
-│       │   ├── tutor-stats/      # Tutor performance stats
-│       │   └── users/            # User management
-│       ├── availability/         # Tutor availability settings
-│       ├── finance/              # Finance module (requests, petty cash, etc.)
-│       ├── flashcards/           # AI flashcard study sets
-│       ├── home/                 # Role-aware dashboard home
-│       ├── leaderboard/          # XP leaderboard
-│       ├── messages/             # Real-time messaging
-│       ├── notifications/        # Notification center
-│       ├── profile/              # User profile + Digital ID Card
-│       ├── quizzes/              # AI quiz generation & attempts
-│       ├── resources/            # Resource repository browser
-│       ├── sessions/             # Session booking & history
-│       ├── team/                 # Teamwork tracker (officers only)
-│       ├── timesheet/            # Tutor timesheet clock-in/out
-│       ├── tutors/               # Find & browse tutors
-│       └── voting/               # Organization polls & voting
-├── components/                   # Reusable cross-cutting UI components
-│   ├── landing/                  # Landing page specific components
-│   └── ui/                       # shadcn/ui primitives
-├── features/                     # Domain-Driven Design (DDD) feature modules
+│   └── dashboard/                # Role-specific dashboard pages
+├── components/                   # Reusable cross-cutting UI components (shadcn/ui primitives)
+├── features/                     # Domain-Driven feature modules (The Core Logic)
 │   ├── admin/                    # Admin tools, user management, and roles
+│   ├── events/                   # Calendar and events logic
 │   ├── finance/                  # Finance module logic and SCARDS
-│   ├── profiles/                 # Profile management and onboarding
-│   ├── quizzes/                  # AI generation, flashcards, study sets
+│   ├── gamification/             # XP, streaks, and leaderboards
+│   ├── onboarding/               # User onboarding flows
+│   ├── profiles/                 # Profile management and ID cards
+│   ├── quizzes/                  # AI generation, flashcards, image occlusion
 │   ├── sessions/                 # Tutoring session booking and logic
 │   └── tutors/                   # Tutor availability and discovery
 ├── hooks/                        # Custom React hooks
-├── lib/                          # Shared utilities & database clients
-│   ├── supabase*.ts              # Supabase client factories (server, client, admin)
-│   ├── user-context.tsx          # Global auth context provider
-│   ├── env.ts                    # Environment variable validation on startup
-│   └── rate-limit.ts             # Rate limiting (Supabase-backed)
+├── lib/                          # Shared utilities & central types
+│   ├── types.ts                  # Centralized TypeScript interfaces
+│   ├── supabase*.ts              # Supabase client factories
+│   └── env.ts                    # Env var validation
 ├── scripts/                      # Dev utility scripts
 ├── supabase/
-│   └── migrations/               # Chronological SQL migration files
-├── types/                        # TypeScript type declarations
-├── __tests__/                    # Vitest test suite
-├── .github/
-│   └── workflows/
-│       └── ci.yml                # GitHub Actions CI/CD pipeline
-└── public/                       # Static assets
+│   └── migrations/               # Chronological SQL migration files (14-digit format)
+└── __tests__/                    # Vitest test suite
 ```
+
+### Feature Architecture
+
+We strictly isolate domain logic into the `features/` directory. Each feature folder contains its own:
+
+- `components/` (UI components specific to the feature)
+- `hooks/` (Feature-specific React hooks)
+- `utils/` (Helper functions for the feature)
+
+**Rule of Thumb:** If a component is used across multiple domains (like a Button or Card), it goes in `components/ui/`. If it belongs to a specific business domain (like `image-occlusion-editor.tsx`), it goes in `features/quizzes/components/`.
 
 ---
 
@@ -337,7 +314,7 @@ Row Level Security (RLS) is enabled across all tables containing user data. Poli
    npx supabase db push --include-all
    ```
 
-   Or paste the files from `supabase/migrations/` in order into the Supabase SQL Editor.
+   _Note: Ensure your migration files use the standard 14-digit timestamp format (e.g., `20260713000001_name.sql`)._
 
 5. **Start the development server**:
    ```bash
@@ -419,4 +396,9 @@ pnpm run format
 pnpm run build
 ```
 
-New database changes should be written as a new `.sql` file in `supabase/migrations/` with a timestamp prefix (e.g., `20260706120000_my_change.sql`). Once pushed to `main`, the CI pipeline will automatically apply the migration to the production database.
+## Contributing
+
+1. **Feature Branches**: Branch off `main` for all new features.
+2. **Domain-Driven Design**: When adding new functionality, place domain-specific logic, hooks, and components into the respective directory under `features/`. Avoid dumping everything into `components/`.
+3. **Type Safety**: Use the centralized types in `lib/types.ts` rather than creating redundant local types.
+4. **Database Migrations**: Generate a new timestamped migration via the Supabase CLI (`npx supabase migration new <name>`) and push to `main` for the CI to apply it automatically.
