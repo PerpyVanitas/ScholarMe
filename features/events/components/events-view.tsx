@@ -22,6 +22,7 @@ export async function EventsView({
   const monthStart = subMonths(startOfMonth(now), 1);
   const monthEnd = addMonths(endOfMonth(now), 1);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let initialEvents: any[] = [];
   try {
     initialEvents = await getEvents(monthStart, monthEnd);

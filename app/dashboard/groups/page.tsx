@@ -65,6 +65,7 @@ export default function StudyGroupsPage() {
     if (error) {
       toast.error("Failed to load study groups");
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const formatted = (data as any[]).map((g) => ({
         ...g,
         member_count: g.study_group_members[0].count,

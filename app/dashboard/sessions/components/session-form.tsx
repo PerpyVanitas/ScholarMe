@@ -52,6 +52,7 @@ export function SessionForm({ onSuccess, onCancel }: { onSuccess: () => void, on
       } else {
         toast.error("Failed to schedule session");
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       toast.error(e.message || "An error occurred");
     } finally {

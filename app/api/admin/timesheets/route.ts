@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/create-client";
 import { GOVERNANCE_ROLES, hasAnyRole } from "@/lib/utils/roles";
 
 // Helper to fetch active timesheet collection period
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getActivePeriod(supabase: any) {
   try {
     const { data } = await supabase

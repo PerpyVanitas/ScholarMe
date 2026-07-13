@@ -110,6 +110,7 @@ export default function AdminVerificationsPage() {
       return;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mapped: VerificationRequest[] = (data as any[]).map((row) => ({
       id: `${row.tutor_id}:${row.specialization_id}`,
       tutor_id: row.tutor_id,

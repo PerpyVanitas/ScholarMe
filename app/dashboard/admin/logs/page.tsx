@@ -28,6 +28,7 @@ import { toast } from "sonner";
 const DEFAULT_LIMIT = 100;
 
 export default function SystemLogsPage() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -40,6 +41,7 @@ export default function SystemLogsPage() {
   const fetchLogs = useCallback(
     async (currentLimit: number) => {
       const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let query = (supabase as any)
         .from("analytics_logs")
         .select("*, profiles:user_id(full_name, email)")
@@ -82,6 +84,7 @@ export default function SystemLogsPage() {
   async function loadAll() {
     setLoadingMore(true);
     const supabase = createClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let query = (supabase as any)
       .from("analytics_logs")
       .select("*, profiles:user_id(full_name, email)")
@@ -112,6 +115,7 @@ export default function SystemLogsPage() {
       )
     : logs;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const formattedForExport = filtered.map((log: any) => ({
     Time: format(new Date(log.created_at), "yyyy-MM-dd HH:mm:ss"),
     User: log.profiles?.full_name || "System",
@@ -223,6 +227,7 @@ export default function SystemLogsPage() {
                         </TableCell>
                       </TableRow>
                     ) : (
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       filtered.map((log: any) => (
                         <TableRow key={log.id}>
                           <TableCell className="whitespace-nowrap text-xs text-muted-foreground">

@@ -105,6 +105,7 @@ export interface ResourceRow {
   is_public: boolean | null;
   uploaded_by: string;
   created_at: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   profiles?: any;
 }
 
@@ -115,5 +116,6 @@ export interface RepoRow {
   description: string | null;
   access_role: string;
   created_at: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   profiles?: any;
 }

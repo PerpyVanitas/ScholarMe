@@ -36,89 +36,20 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-// ── Constants ───────────────────────────────────────────────────────────────
+import {
+  EXECUTIVE_POSITIONS,
+  MAIN_COMMITTEES,
+  ESAS_COMMITTEES,
+  Member,
+  Assignment,
+  OrgTerm,
+  AssignmentMap,
+  fmtDate,
+  assignKey,
+} from "./components/shared";
 
-const EXECUTIVE_POSITIONS = [
-  { key: "president", label: "President", committee: null },
-  { key: "vice_president", label: "Vice President", committee: null },
-  { key: "secretary", label: "Secretary", committee: null },
-  { key: "treasurer", label: "Treasurer", committee: null },
-  { key: "auditor", label: "Auditor", committee: null },
-];
-
-const MAIN_COMMITTEES = [
-  { key: "Secretariat", label: "Secretariat" },
-  { key: "CSR", label: "Committee on Social Responsibility (CSR)" },
-  { key: "COF", label: "Committee on Finance (COF)" },
-  { key: "CIA", label: "Committee on Internal Affairs (CIA)" },
-  { key: "CMSS", label: "Committee on Member Success & Scholarship (CMSS)" },
-  { key: "CPR", label: "Committee on Public Relations (CPR)" },
-  { key: "CRAR", label: "Committee on Rules & Regulations (CRAR)" },
-  { key: "COD", label: "Committee on Documentations (COD)" },
-  { key: "CFMR", label: "Committee on Facility Management & Reception (CFMR)" },
-  { key: "COR", label: "Committee on Research (COR)" },
-  { key: "CKA", label: "Committee on Knowledge & Archives (CKA)" },
-];
-
-const ESAS_COMMITTEES = [
-  { key: "CHR", label: "Committee on Human Resources (CHR)" },
-  { key: "COM", label: "Committee on Mentorship (COM)" },
-  { key: "CEP", label: "Committee on Events & Planning (CEP)" },
-  { key: "CNL", label: "Committee on Networks & Linkages (CNL)" },
-  { key: "CMP", label: "Committee on Marketing & Procurement (CMP)" },
-  { key: "CBAMM", label: "Committee on Branding & Media Management (CBAMM)" },
-  { key: "COI", label: "Committee on Investigation (COI)" },
-];
-
-// ── Types ────────────────────────────────────────────────────────────────────
-
-interface Member {
-  id: string;
-  full_name: string;
-  email: string;
-  esas_scholar: boolean;
-  roles: { name: string } | { name: string }[];
-}
-
-interface Assignment {
-  id: string;
-  position: string;
-  committee: string | null;
-  user_id: string;
-  profiles: {
-    id: string;
-    full_name: string;
-    email: string;
-    esas_scholar: boolean;
-  };
-}
-
-interface OrgTerm {
-  id: string;
-  label: string;
-  term_start: string;
-  term_end: string;
-  is_current: boolean;
-}
-
-// assignment map key: `${position}__${committee ?? "exec"}`
-type AssignmentMap = Record<string, string | null>; // key → user_id | null
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-function fmtDate(d: string) {
-  const dt = new Date(d + "T00:00:00Z");
-  return dt.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-}
-
-function assignKey(position: string, committee: string | null) {
-  return `${position}__${committee ?? "exec"}`;
-}
+import { ExecutiveBoard } from "./components/executive-board";
+import { MainCommittees, EsasCommittees } from "./components/committee-grid";
 
 // ── Member Combobox ───────────────────────────────────────────────────────────
 
@@ -258,6 +189,7 @@ export default function OrgStructurePage() {
       }
       setAssignmentMap(map);
       setHasChanges(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       toast.error(e.message || "Failed to load org structure");
     } finally {
@@ -338,6 +270,7 @@ export default function OrgStructurePage() {
       }
       setHasChanges(false);
       await fetchData();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       toast.error(e.message || "Failed to save");
     } finally {
@@ -372,6 +305,7 @@ export default function OrgStructurePage() {
       setNewStart("");
       setNewEnd("");
       await fetchData();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       toast.error(e.message || "Failed to create term");
     } finally {
@@ -475,135 +409,28 @@ export default function OrgStructurePage() {
           </div>
 
           {/* ── Executive Board ── */}
-          <Card className="border-border/60">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-primary" />
-                Executive Board
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-4">
-              {EXECUTIVE_POSITIONS.map((ep) => (
-                <AssignmentRow
-                  key={ep.key}
-                  label={ep.label}
-                  positionKey={ep.key}
-                  committee={null}
-                  termStart={term.term_start}
-                  termEnd={term.term_end}
-                  members={members}
-                  value={assignmentMap[assignKey(ep.key, null)] ?? null}
-                  onChange={(uid) => updateAssignment(ep.key, null, uid)}
-                />
-              ))}
-            </CardContent>
-          </Card>
+          <ExecutiveBoard
+            term={term}
+            members={members}
+            assignmentMap={assignmentMap}
+            updateAssignment={updateAssignment}
+          />
 
           {/* ── Main Committees ── */}
-          <Card className="border-border/60">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Users className="h-4 w-4 text-primary" />
-                Main Committees (Constitutional)
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-4">
-              {MAIN_COMMITTEES.map((c) => (
-                <div key={c.key} className="mb-4 last:mb-0">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 mt-1">
-                    {c.label}
-                  </p>
-                  <AssignmentRow
-                    label="Committee Head"
-                    positionKey="committee_head"
-                    committee={c.key}
-                    termStart={term.term_start}
-                    termEnd={term.term_end}
-                    members={members}
-                    value={
-                      assignmentMap[assignKey("committee_head", c.key)] ?? null
-                    }
-                    onChange={(uid) =>
-                      updateAssignment("committee_head", c.key, uid)
-                    }
-                  />
-                  <AssignmentRow
-                    label="Asst. Committee Head"
-                    positionKey="assistant_committee_head"
-                    committee={c.key}
-                    termStart={term.term_start}
-                    termEnd={term.term_end}
-                    members={members}
-                    value={
-                      assignmentMap[
-                        assignKey("assistant_committee_head", c.key)
-                      ] ?? null
-                    }
-                    onChange={(uid) =>
-                      updateAssignment("assistant_committee_head", c.key, uid)
-                    }
-                  />
-                  <Separator className="mt-3 opacity-40" />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          <MainCommittees
+            term={term}
+            members={members}
+            assignmentMap={assignmentMap}
+            updateAssignment={updateAssignment}
+          />
 
           {/* ── ESAS Committees ── */}
-          <Card className="border-border/60">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Users className="h-4 w-4 text-yellow-500" />
-                ESAS Committees (Subordinate)
-                <Badge
-                  variant="outline"
-                  className="text-[10px] border-yellow-500/30 text-yellow-600 dark:text-yellow-400"
-                >
-                  Scholars Only
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-4">
-              {ESAS_COMMITTEES.map((c) => (
-                <div key={c.key} className="mb-4 last:mb-0">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 mt-1">
-                    {c.label}
-                  </p>
-                  <AssignmentRow
-                    label="Committee Head"
-                    positionKey="committee_head"
-                    committee={c.key}
-                    termStart={term.term_start}
-                    termEnd={term.term_end}
-                    members={members}
-                    value={
-                      assignmentMap[assignKey("committee_head", c.key)] ?? null
-                    }
-                    onChange={(uid) =>
-                      updateAssignment("committee_head", c.key, uid)
-                    }
-                  />
-                  <AssignmentRow
-                    label="Asst. Committee Head"
-                    positionKey="assistant_committee_head"
-                    committee={c.key}
-                    termStart={term.term_start}
-                    termEnd={term.term_end}
-                    members={members}
-                    value={
-                      assignmentMap[
-                        assignKey("assistant_committee_head", c.key)
-                      ] ?? null
-                    }
-                    onChange={(uid) =>
-                      updateAssignment("assistant_committee_head", c.key, uid)
-                    }
-                  />
-                  <Separator className="mt-3 opacity-40" />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          <EsasCommittees
+            term={term}
+            members={members}
+            assignmentMap={assignmentMap}
+            updateAssignment={updateAssignment}
+          />
 
           {/* ── Sticky Save Bar ── */}
           {hasChanges && (

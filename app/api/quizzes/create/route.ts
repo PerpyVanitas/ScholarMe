@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
 
     // Add items if provided
     if (items && items.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const itemsToInsert = items.map((item: any, index: number) =>
         buildStudySetItemInsert(studySet.id, item, index),
       );

@@ -60,6 +60,7 @@ export async function sendPushNotification(
   if (tokens.web && tokens.web.length > 0) {
     const webPromises = tokens.web.map((sub) =>
       webpush
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .sendNotification(sub as any, JSON.stringify(payload))
         .catch((err) => console.error("Web Push error for sub:", err)),
     );

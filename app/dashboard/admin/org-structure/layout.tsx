@@ -20,7 +20,9 @@ export default async function OrgStructureLayout({
     .single();
 
   const roleName = Array.isArray(profile?.roles)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ? (profile.roles as any[])[0]?.name
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     : (profile?.roles as any)?.name;
 
   if (roleName !== "super_admin") {

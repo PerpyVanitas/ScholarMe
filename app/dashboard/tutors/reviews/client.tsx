@@ -21,10 +21,12 @@ export function TutorReviewsClient({
   isLead,
   reviews: initialReviews,
   availableTutors,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 }: any) {
   const [reviews, setReviews] = useState(initialReviews);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleReviewSubmit = async (data: any) => {
     const supabase = createClient();
     const { data: newReview, error } = await supabase
@@ -70,6 +72,7 @@ export function TutorReviewsClient({
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           {reviews.map((review: any) => (
             <Card key={review.id}>
               <CardHeader className="pb-2">

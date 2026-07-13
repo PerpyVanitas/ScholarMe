@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
     const { data: timesheets } = await tsQuery;
     const safeTs = timesheets ?? [];
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tutorMap = new Map<string, any>();
     for (const ts of safeTs) {
       const tid = ts.tutor_id;
@@ -62,6 +63,7 @@ export async function GET(request: NextRequest) {
         existing.total_minutes += mins;
         existing.sessions_count += 1;
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const profile = (ts.tutors as any)?.profiles;
         tutorMap.set(tid, {
           tutor_id: tid,

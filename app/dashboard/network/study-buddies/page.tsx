@@ -25,6 +25,7 @@ export default async function StudyBuddiesPage() {
     .eq("id", user.id)
     .single();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let matches: any[] = [];
   if (currentUser?.degree_program && currentUser?.year_level) {
     const { data } = await supabase

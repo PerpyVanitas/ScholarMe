@@ -27,6 +27,7 @@ interface DesignationCardProps {
   designations: HsDesignation[];
   setDesignations: Dispatch<SetStateAction<HsDesignation[]>>;
   setEditingDesignation: (d: HsDesignation | null) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setDesigType: (t: any) => void;
   setDesigPosition: (p: string) => void;
   setDesigAcademicYear: (y: string) => void;

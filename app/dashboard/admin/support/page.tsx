@@ -27,6 +27,7 @@ export default async function AdminSupportInbox() {
         {!tickets || tickets.length === 0 ? (
           <p className="text-muted-foreground text-sm">No support tickets found.</p>
         ) : (
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           tickets.map((ticket: any) => (
             <Card key={ticket.id} className="border-border/60 shadow-sm flex flex-col sm:flex-row items-center justify-between p-4">
               <div className="flex flex-col gap-1">

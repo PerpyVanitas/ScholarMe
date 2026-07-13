@@ -226,6 +226,7 @@ export async function PATCH(request: NextRequest) {
         .single();
       const memberRole = Array.isArray(memberProfile?.roles)
         ? memberProfile.roles[0]?.name
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         : (memberProfile?.roles as any)?.name;
       if (memberRole === "learner") {
         return NextResponse.json(
@@ -238,6 +239,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const errors: string[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updatedAssignments: any[] = [];
 
     for (const a of assignments) {
@@ -369,6 +371,7 @@ async function applyRoleFromPosition(
 
   const currentRole = Array.isArray(currentProfile?.roles)
     ? currentProfile.roles[0]?.name
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     : (currentProfile?.roles as any)?.name;
 
   if (currentRole === "super_admin" || currentRole === "administrator") {
@@ -413,6 +416,7 @@ async function revertToTutorIfUnassigned(
 
   const currentRole = Array.isArray(currentProfile?.roles)
     ? currentProfile.roles[0]?.name
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     : (currentProfile?.roles as any)?.name;
 
   if (currentRole === "super_admin" || currentRole === "administrator") return;

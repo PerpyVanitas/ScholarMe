@@ -89,6 +89,7 @@ export function LibraryCatalog({ initialResources }: LibraryCatalogProps) {
       toast.success("Resource added successfully.");
       setOpenCreate(false);
       // Ideally we would re-fetch or optimistically update, but revalidatePath will refresh the page.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       toast.error(e.message);
     } finally {

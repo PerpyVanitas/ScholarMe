@@ -6,6 +6,7 @@ import { toast } from "sonner";
  * 2. Parsing JSON responses
  * 3. Showing toast notifications on failure (by default)
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function apiClient<T = any>(
   input: RequestInfo | URL,
   init?: RequestInit & { showErrorToast?: boolean },

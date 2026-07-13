@@ -114,9 +114,17 @@ export function LeaderboardTable({
       })}
 
       {profiles.length === 0 && (
-        <div className="p-12 text-center text-muted-foreground border rounded-lg border-dashed">
-          No scholars on the leaderboard yet. Be the first to earn XP!
-        </div>
+        <Card className="border-dashed border-2 bg-muted/10 shadow-sm">
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="rounded-full bg-muted/50 p-5 mb-4 ring-1 ring-border shadow-inner">
+              <Trophy className="h-10 w-10 text-muted-foreground/60" />
+            </div>
+            <h3 className="text-xl font-bold tracking-tight mb-2 text-foreground">The Leaderboard is Quiet...</h3>
+            <p className="text-sm text-muted-foreground max-w-sm">
+              No scholars have earned XP this season yet. Complete a study session or daily quest to claim the #1 spot!
+            </p>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

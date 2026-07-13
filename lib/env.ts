@@ -16,8 +16,11 @@ for (const key of requiredEnvVars) {
 if (!process.env.NEXT_PUBLIC_APP_URL) {
   if (process.env.NEXT_PUBLIC_VERCEL_URL) {
     process.env.NEXT_PUBLIC_APP_URL = `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+  } else if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "Missing NEXT_PUBLIC_APP_URL in production environment. This is required for proper origin checks."
+    );
   } else {
-    // We only throw if we aren't in Vercel and it's missing
     console.warn("Missing NEXT_PUBLIC_APP_URL. Falling back to localhost.");
     process.env.NEXT_PUBLIC_APP_URL = "http://localhost:3000";
   }

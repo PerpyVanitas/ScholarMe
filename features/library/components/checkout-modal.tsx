@@ -44,6 +44,7 @@ export function CheckoutModal({
       toast.success(`${resource.title} checked out successfully`);
       onOpenChange(false);
       setLearnerId("");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       toast.error(e.message || "Failed to checkout resource");
     } finally {

@@ -28,6 +28,7 @@ export default async function MessagesPage() {
     .eq("id", user.id)
     .single();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const isAdmin = (profile as any)?.roles?.name === "administrator";
 
   // First, get list of conversation IDs the user is a participant in
@@ -39,6 +40,7 @@ export default async function MessagesPage() {
   const conversationIds = (participants || []).map((p) => p.conversation_id);
 
   // Fetch full details only for conversations the user belongs to
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let conversations: any[] = [];
   if (conversationIds.length > 0) {
     const { data, error } = await supabase
@@ -74,6 +76,7 @@ export default async function MessagesPage() {
   const formattedConversations = conversations.map((conv) => {
     // Sort messages to get the latest one
     const sortedMessages = conv.messages?.sort(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (a: any, b: any) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );

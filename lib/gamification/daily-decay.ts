@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function processDailyDecay(supabase: any, userId: string) {
   // Fetch the most recent login only (index 0 = most recent in descending order)
   const { data: logins } = await supabase

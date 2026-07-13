@@ -15,7 +15,7 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
 
 async function notifyStatusChange(email: string, title: string, status: string) {
   if (!resend) {
-    console.log(`[Notification Mock] Email to ${email}: ${title} status changed to ${status}`);
+    console.warn(`[finance] RESEND_API_KEY missing. Unable to send notification to ${email}`);
     return;
   }
   try {
@@ -191,6 +191,7 @@ export async function updateBudgetRequestStatus(
 
   if (error) throw new Error(error.message);
   
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const profileData = existing.profiles as any;
   const userEmail = profileData ? (Array.isArray(profileData) ? profileData[0]?.email : profileData.email) : null;
   

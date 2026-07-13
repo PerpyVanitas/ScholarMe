@@ -35,6 +35,7 @@ export function UserProfileDialog({
       .slice(0, 2);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function getUserRoleName(roles: any): string {
     if (Array.isArray(roles) && roles.length > 0) return roles[0].name;
     if (roles && typeof roles === "object" && !Array.isArray(roles))
@@ -137,6 +138,7 @@ export function UserProfileDialog({
                 Status
               </span>
               <span className="text-sm font-medium">
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 {(user as any).is_active ? "Active" : "Inactive"}
               </span>
             </div>

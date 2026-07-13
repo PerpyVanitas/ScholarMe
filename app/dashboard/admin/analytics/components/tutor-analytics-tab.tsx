@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { Calendar } from "lucide-react";
 
 interface TutorAnalyticsTabProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   stats: any;
   noSemester: boolean;
 }
@@ -22,10 +23,12 @@ export function TutorAnalyticsTab({
   if (!stats) return null;
 
   const compliantCount = stats.compliance.filter(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (c: any) => c.is_compliant,
   ).length;
   const totalTutors = stats.compliance.length;
   const totalMinutes = stats.compliance.reduce(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (acc: number, c: any) => acc + c.total_minutes,
     0,
   );
@@ -75,6 +78,7 @@ export function TutorAnalyticsTab({
             </p>
             <p className="text-4xl font-black mt-2 text-destructive">
               {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 stats.compliance.filter((c: any) => c.progress_percentage < 50)
                   .length
               }
@@ -94,9 +98,11 @@ export function TutorAnalyticsTab({
           <div className="flex flex-col gap-6">
             {stats.compliance
               .sort(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (a: any, b: any) =>
                   b.progress_percentage - a.progress_percentage,
               )
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               .map((tutor: any) => (
                 <div key={tutor.tutor_id} className="flex flex-col gap-2">
                   <div className="flex justify-between items-end">

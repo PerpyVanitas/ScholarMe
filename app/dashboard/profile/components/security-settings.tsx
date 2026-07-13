@@ -4,7 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Key, Eye, EyeOff, AlertTriangle, Loader2, Trash2 } from "lucide-react";
+import { Key, Eye, EyeOff, AlertTriangle, Loader2, Trash2, ShieldOff } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -15,6 +15,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useUser } from "@/lib/user-context";
 import { useEffect } from "react";
 import { Download } from "lucide-react";
 
@@ -35,8 +47,29 @@ export function SecuritySettings() {
   const [changingPassword, setChangingPassword] = useState(false);
   const [showPasswords, setShowPasswords] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const { role } = useUser();
+  const [resigning, setResigning] = useState(false);
   const [loginHistory, setLoginHistory] = useState<LoginHistory[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+
+  async function handleResignAdmin() {
+    setResigning(true);
+    try {
+      const res = await fetch("/api/admin/resign-role", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to resign role");
+      toast.success("Role resigned successfully", {
+        description: "Your role has been reverted to Tutor. Redirecting...",
+      });
+      // Force refresh to pick up new role
+      setTimeout(() => router.push("/dashboard"), 1500);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      toast.error(e.message || "Failed to resign role");
+    } finally {
+      setResigning(false);
+    }
+  }
 
   useEffect(() => {
     async function fetchHistory() {
@@ -176,6 +209,65 @@ export function SecuritySettings() {
           </Button>
         </CardContent>
       </Card>
+
+      {role === "administrator" && (
+        <Card className="border-destructive/30 bg-destructive/5">
+          <CardHeader>
+            <CardTitle className="text-base text-destructive flex items-center gap-2">
+              <ShieldOff className="h-4 w-4" />
+              Resign Administrator Role
+            </CardTitle>
+            <CardDescription>
+              This action cannot be undone. Only the Super Administrator can
+              restore your admin access.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" disabled={resigning}>
+                  {resigning ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <ShieldOff className="mr-2 h-4 w-4" />
+                      Resign Admin Role
+                    </>
+                  )}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    You are about to resign your <strong>Administrator</strong>{" "}
+                    role. This will immediately revert your account to{" "}
+                    <strong>Tutor</strong> and you will lose all access to the
+                    Admin panel, User Management, Analytics, and other
+                    administrative features.
+                    <br />
+                    <br />
+                    Only the <strong>Super Administrator</strong> can restore
+                    your admin role.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleResignAdmin}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Yes, Resign My Role
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-destructive/30">
         <CardHeader>

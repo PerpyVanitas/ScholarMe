@@ -1,4 +1,4 @@
-﻿import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import {
   Card,
@@ -59,44 +59,63 @@ export default async function AdminDashboardPage() {
     .from("tutors")
     .select("*", { count: "exact", head: true });
 
-  // Retention Data (mock)
+  // Retention Data (Active vs Inactive approximation)
+  const { count: activeCount } = await supabase
+    .from("profiles")
+    .select("*", { count: "exact", head: true })
+    .not("role_expires_at", "is", null);
+
   const retentionData = {
-    active: 85,
-    inactive: 15,
+    active: activeCount || 0,
+    inactive: Math.max(0, (usersCount || 0) - (activeCount || 0)),
   };
 
-  // Top No-Shows Data (mock)
-  const topNoShows = [
-    {
-      name: "John Doe",
-      count: 5,
-    },
-    {
-      name: "Jane Smith",
-      count: 3,
-    },
-    {
-      name: "Mike Johnson",
-      count: 2,
-    },
-  ];
+  // Top No-Shows Data
+  const { data: noShowData } = await supabase
+    .from("sessions")
+    .select("student_id, profiles!student_id(full_name)")
+    .eq("status", "no_show");
+
+  const noShowMap = new Map<string, { name: string; count: number }>();
+  if (noShowData) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    noShowData.forEach((s: any) => {
+      const name = s.profiles?.full_name || "Unknown";
+      if (!noShowMap.has(name)) noShowMap.set(name, { name, count: 0 });
+      noShowMap.get(name)!.count++;
+    });
+  }
+  const topNoShows = Array.from(noShowMap.values())
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
 
   // User Growth Data
-  const userGrowthData = [
-    { date: "Jan", users: 120 },
-    { date: "Feb", users: 150 },
-    { date: "Mar", users: 200 },
-    { date: "Apr", users: 280 },
-    { date: "May", users: 350 },
-    { date: "Jun", users: 450 },
-  ];
+  const { data: userDates } = await supabase.from("profiles").select("created_at");
+  const growthMap = new Map<string, number>();
+  if (userDates) {
+    userDates.forEach((u) => {
+      const month = new Date(u.created_at).toLocaleString("default", { month: "short" });
+      growthMap.set(month, (growthMap.get(month) || 0) + 1);
+    });
+  }
+  const userGrowthData = Array.from(growthMap.entries()).map(([date, users]) => ({ date, users }));
 
   // Session Activity Data
+  const { data: sessionStats } = await supabase.from("sessions").select("status");
+  const sessionCounts = { completed: 0, scheduled: 0, cancelled: 0, no_show: 0 };
+  if (sessionStats) {
+    sessionStats.forEach((s) => {
+      if (s.status === "completed") sessionCounts.completed++;
+      if (s.status === "scheduled") sessionCounts.scheduled++;
+      if (s.status === "cancelled") sessionCounts.cancelled++;
+      if (s.status === "no_show") sessionCounts.no_show++;
+    });
+  }
   const sessionActivityData = [
-    { status: "Completed", count: 400 },
-    { status: "Scheduled", count: 300 },
-    { status: "Cancelled", count: 150 },
-    { status: "No Show", count: 50 },
+    { status: "Completed", count: sessionCounts.completed },
+    { status: "Scheduled", count: sessionCounts.scheduled },
+    { status: "Cancelled", count: sessionCounts.cancelled },
+    { status: "No Show", count: sessionCounts.no_show },
   ];
 
   return (

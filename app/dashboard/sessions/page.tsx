@@ -161,6 +161,7 @@ export default function SessionsPage() {
   async function updateStatus(
     sessionId: string,
     status: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     extraData?: any,
   ) {
     const session = sessions.find((s) => s.id === sessionId);

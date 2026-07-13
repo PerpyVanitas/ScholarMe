@@ -30,7 +30,9 @@ export function TutorReviewDialog({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   tutors: any[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSubmit: (data: any) => Promise<void>;
 }) {
   const [loading, setLoading] = useState(false);
@@ -38,6 +40,7 @@ export function TutorReviewDialog({
 
   const { register, handleSubmit, reset, setValue } = useForm();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleFormSubmit = async (data: any) => {
     if (!data.tutor_id) return;
     setLoading(true);

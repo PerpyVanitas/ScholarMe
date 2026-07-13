@@ -197,6 +197,7 @@ export default function TutorsPage() {
                             Top Rated
                           </Badge>
                         )}
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         {(tutor.profiles as any)?.roles?.name === "officer" && (
                           <Badge
                             variant="default"

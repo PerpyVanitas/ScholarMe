@@ -53,7 +53,9 @@ export async function POST(req: Request) {
       if (tutorRole) {
         for (const profile of expiredRoles) {
           const roleName = Array.isArray(profile.roles)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ? (profile.roles as any[])[0]?.name
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             : (profile.roles as any)?.name;
 
           // Only revert org roles — never touch system roles
@@ -99,6 +101,7 @@ export async function POST(req: Request) {
       errors.push(eventsError);
     } else if (upcomingEvents) {
       for (const event of upcomingEvents) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const goingRsvps = (event.event_rsvps || []).filter((r: any) => {
           const p = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
           return r.status === "going" && p?.email;
@@ -160,6 +163,7 @@ export async function POST(req: Request) {
       errors.push(checkoutsError);
     } else if (overdueCheckouts && overdueCheckouts.length > 0) {
       // Update statuses to overdue
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const overdueIds = overdueCheckouts.map((c: any) => c.id);
 
       const { error: updateError } = await supabase

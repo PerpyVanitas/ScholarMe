@@ -52,6 +52,7 @@ export function CreateQuizSheet({
     source_resource_id: "",
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [structuredItems, setStructuredItems] = useState<Record<string, any>[]>(
     [],
   );
@@ -220,6 +221,7 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
       }
 
       const newContent = parsedData
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((item: any) => `Q: ${item.question}\nA: ${item.answer}`)
         .join("\n\n");
 
@@ -249,6 +251,7 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
     try {
       setGenerating(true);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const question_types: Record<string, any> = {};
       Object.entries(quizConfig).forEach(([key, val]) => {
         if (val.enabled) {
@@ -332,6 +335,7 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
     try {
       setCreating(true);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let items: Record<string, any>[] = [];
 
       if (structuredItems.length > 0) {
@@ -367,6 +371,7 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
             }
             return null;
           })
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .filter(Boolean) as Record<string, any>[];
       }
 

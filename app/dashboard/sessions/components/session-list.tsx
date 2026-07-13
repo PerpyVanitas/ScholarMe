@@ -47,6 +47,7 @@ export function SessionList({
 }: {
   sessions: Session[];
   role: UserRole;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onUpdateStatus: (id: string, status: string, extraData?: any) => void;
   onRate: (session: Session) => void;
   onSummary: (session: Session) => void;
@@ -63,6 +64,7 @@ export function SessionList({
   const [newEnd, setNewEnd] = useState("");
 
   const [transferSession, setTransferSession] = useState<Session | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [availableTutors, setAvailableTutors] = useState<any[]>([]);
   const [selectedTutorId, setSelectedTutorId] = useState("");
   const [transferLoading, setTransferLoading] = useState(false);

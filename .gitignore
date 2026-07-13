@@ -43,3 +43,6 @@ lib/demo.ts
 scratch/
 .idea/
 test-update.js
+audit_results.md
+console_logs.txt
+temp.md

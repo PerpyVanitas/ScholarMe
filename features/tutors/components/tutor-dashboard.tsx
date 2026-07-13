@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import {
   Card,
@@ -132,21 +132,22 @@ export function TutorDashboard({
   const [clockedIn, setClockedIn] = useState(false);
   const [clockInTime, setClockInTime] = useState<string | null>(null);
   const [clockLoading, setClockLoading] = useState(false);
-  const [clockCheckDone, setClockCheckDone] = useState(false);
+  const [clockCheckDone, setClockCheckDone] = useState(!tutor);
 
-  const [layout, setLayout] = useState<string[]>(DEFAULT_LAYOUT);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const savedWidgets = (profile as any)?.dashboard_layout?.widgets;
+  const initialLayout = useMemo(() => {
+    if (Array.isArray(savedWidgets)) {
+      return [...new Set([...savedWidgets, ...DEFAULT_LAYOUT])].filter((id) =>
+        DEFAULT_LAYOUT.includes(id)
+      );
+    }
+    return DEFAULT_LAYOUT;
+  }, [savedWidgets]);
+
+  const [layout, setLayout] = useState<string[]>(initialLayout);
   const [isEditingLayout, setIsEditingLayout] = useState(false);
   const [savingLayout, setSavingLayout] = useState(false);
-
-  useEffect(() => {
-    const widgets = (profile as any)?.dashboard_layout?.widgets;
-    if (Array.isArray(widgets)) {
-      const merged = [...new Set([...widgets, ...DEFAULT_LAYOUT])].filter(
-        (id) => DEFAULT_LAYOUT.includes(id),
-      );
-      setLayout(merged);
-    }
-  }, [profile]);
 
   const checkClockStatus = useCallback(async () => {
     try {
@@ -166,9 +167,6 @@ export function TutorDashboard({
 
   useEffect(() => {
     if (tutor) checkClockStatus();
-    else {
-      setClockCheckDone(true);
-    }
   }, [tutor, checkClockStatus]);
 
   async function handleClock(action: "clock_in" | "clock_out") {
@@ -228,6 +226,7 @@ export function TutorDashboard({
     try {
       const supabase = createClient();
       const baseLayout =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ((profile as any)?.dashboard_layout as Record<string, unknown>) || {};
       const updatedLayout = { ...baseLayout, widgets: layout };
       const { error } = await supabase

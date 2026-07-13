@@ -48,6 +48,7 @@ export function CreateAdminCard() {
         password: "",
         confirmPassword: "",
       });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setAdminFormError(e.message || "An error occurred");
       toast.error(e.message || "Failed to create admin");

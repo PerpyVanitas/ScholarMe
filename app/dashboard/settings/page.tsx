@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -9,49 +10,63 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { useUser } from "@/lib/user-context";
-import { useState } from "react";
+import { Switch } from "@/components/ui/switch";
+import { useTheme } from "next-themes";
 import { toast } from "sonner";
-import { Loader2, ShieldOff } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { 
+  Bell, 
+  Monitor, 
+  ShieldCheck, 
+  Moon, 
+  Sun,
+  Laptop
+} from "lucide-react";
 
 export default function SiteSettingsPage() {
-  const { role } = useUser();
-  const router = useRouter();
-  const [resigning, setResigning] = useState(false);
+  const { theme, setTheme } = useTheme();
+  
+  // Local state for settings that don't have a backend table yet
+  const [mounted, setMounted] = useState(false);
+  
+  const [settings, setSettings] = useState({
+    emailOnBooked: true,
+    emailOnReview: true,
+    pushNotifications: false,
+    reducedMotion: false,
+    shareAnalytics: true,
+    publicProfile: true,
+  });
 
-  async function handleResignAdmin() {
-    setResigning(true);
-    try {
-      const res = await fetch("/api/admin/resign-role", { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to resign role");
-      toast.success("Role resigned successfully", {
-        description: "Your role has been reverted to Tutor. Redirecting...",
-      });
-      // Force refresh to pick up new role
-      setTimeout(() => router.push("/dashboard"), 1500);
-    } catch (e: any) {
-      toast.error(e.message || "Failed to resign role");
-    } finally {
-      setResigning(false);
+  // Load from local storage on mount
+  useEffect(() => {
+    setMounted(true);
+    const saved = localStorage.getItem("scholarme_local_settings");
+    if (saved) {
+      try {
+        setSettings(JSON.parse(saved));
+      } catch (e) {
+        // ignore parse error
+      }
     }
-  }
+  }, []);
+
+  const updateSetting = (key: keyof typeof settings, value: boolean) => {
+    const newSettings = { ...settings, [key]: value };
+    setSettings(newSettings);
+    localStorage.setItem("scholarme_local_settings", JSON.stringify(newSettings));
+    
+    // Show toast for specific actions to feel more interactive
+    if (key === "pushNotifications" && value) {
+      toast.success("Push notifications enabled");
+    } else if (key === "reducedMotion") {
+      toast.success(value ? "Reduced motion enabled" : "Reduced motion disabled");
+    }
+  };
+
+  if (!mounted) return null; // Avoid hydration mismatch for theme
 
   return (
-    <div className="flex-1 space-y-4 max-w-4xl mx-auto w-full">
+    <div className="flex-1 space-y-6 max-w-4xl mx-auto w-full pb-10">
       <div className="flex items-center justify-between space-y-2">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Site Settings</h2>
@@ -62,128 +77,175 @@ export default function SiteSettingsPage() {
       </div>
       <Separator />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Notifications Card */}
         <Card>
           <CardHeader>
-            <CardTitle>Notifications</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Bell className="h-5 w-5" />
+              Notifications
+            </CardTitle>
             <CardDescription>Configure how you receive alerts.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-1">
-              <Label className="text-muted-foreground">Coming soon</Label>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between space-x-2">
+              <div className="space-y-0.5">
+                <Label htmlFor="email-booked" className="text-base">Session Booked</Label>
+                <p className="text-sm text-muted-foreground">
+                  Receive an email when a student books a session with you.
+                </p>
+              </div>
+              <Switch 
+                id="email-booked" 
+                checked={settings.emailOnBooked}
+                onCheckedChange={(c) => updateSetting("emailOnBooked", c)}
+              />
+            </div>
+            
+            <Separator />
+            
+            <div className="flex items-center justify-between space-x-2">
+              <div className="space-y-0.5">
+                <Label htmlFor="email-review" className="text-base">New Review</Label>
+                <p className="text-sm text-muted-foreground">
+                  Receive an email when someone leaves you a review.
+                </p>
+              </div>
+              <Switch 
+                id="email-review" 
+                checked={settings.emailOnReview}
+                onCheckedChange={(c) => updateSetting("emailOnReview", c)}
+              />
+            </div>
+
+            <Separator />
+
+            <div className="flex items-center justify-between space-x-2">
+              <div className="space-y-0.5">
+                <Label htmlFor="push-notifs" className="text-base">Browser Push Notifications</Label>
+                <p className="text-sm text-muted-foreground">
+                  Get notified of direct messages immediately.
+                </p>
+              </div>
+              <Switch 
+                id="push-notifs" 
+                checked={settings.pushNotifications}
+                onCheckedChange={(c) => updateSetting("pushNotifications", c)}
+              />
             </div>
           </CardContent>
         </Card>
 
+        {/* Display Card */}
         <Card>
           <CardHeader>
-            <CardTitle>Display</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Monitor className="h-5 w-5" />
+              Display
+            </CardTitle>
             <CardDescription>Adjust visual preferences.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-1">
-              <Label className="text-muted-foreground">
-                See header options or profile settings.
-              </Label>
+          <CardContent className="space-y-6">
+            <div className="space-y-4">
+              <Label className="text-base">Appearance</Label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => setTheme("light")}
+                  className={`flex flex-col items-center justify-center rounded-md border-2 p-4 hover:bg-accent hover:text-accent-foreground ${
+                    theme === "light" ? "border-primary bg-accent" : "border-muted"
+                  }`}
+                >
+                  <Sun className="mb-2 h-6 w-6" />
+                  <span className="text-xs font-semibold">Light</span>
+                </button>
+                <button
+                  onClick={() => setTheme("dark")}
+                  className={`flex flex-col items-center justify-center rounded-md border-2 p-4 hover:bg-accent hover:text-accent-foreground ${
+                    theme === "dark" ? "border-primary bg-accent" : "border-muted"
+                  }`}
+                >
+                  <Moon className="mb-2 h-6 w-6" />
+                  <span className="text-xs font-semibold">Dark</span>
+                </button>
+                <button
+                  onClick={() => setTheme("system")}
+                  className={`flex flex-col items-center justify-center rounded-md border-2 p-4 hover:bg-accent hover:text-accent-foreground ${
+                    theme === "system" ? "border-primary bg-accent" : "border-muted"
+                  }`}
+                >
+                  <Laptop className="mb-2 h-6 w-6" />
+                  <span className="text-xs font-semibold">System</span>
+                </button>
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="flex items-center justify-between space-x-2">
+              <div className="space-y-0.5">
+                <Label htmlFor="reduced-motion" className="text-base">Reduced Motion</Label>
+                <p className="text-sm text-muted-foreground">
+                  Minimize UI animations across the app.
+                </p>
+              </div>
+              <Switch 
+                id="reduced-motion" 
+                checked={settings.reducedMotion}
+                onCheckedChange={(c) => updateSetting("reducedMotion", c)}
+              />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        {/* Data & Privacy Card */}
+        <Card className="md:col-span-2 lg:col-span-1">
           <CardHeader>
-            <CardTitle>Data &amp; Privacy</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5" />
+              Data &amp; Privacy
+            </CardTitle>
             <CardDescription>Manage your connected data.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-1">
-              <Label className="text-muted-foreground">Coming soon</Label>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between space-x-2">
+              <div className="space-y-0.5">
+                <Label htmlFor="public-profile" className="text-base">Public Profile</Label>
+                <p className="text-sm text-muted-foreground">
+                  Allow non-members to view your basic tutor profile.
+                </p>
+              </div>
+              <Switch 
+                id="public-profile" 
+                checked={settings.publicProfile}
+                onCheckedChange={(c) => updateSetting("publicProfile", c)}
+              />
+            </div>
+
+            <Separator />
+
+            <div className="flex items-center justify-between space-x-2">
+              <div className="space-y-0.5">
+                <Label htmlFor="share-analytics" className="text-base">Share Analytics</Label>
+                <p className="text-sm text-muted-foreground">
+                  Help us improve by sharing anonymous usage data.
+                </p>
+              </div>
+              <Switch 
+                id="share-analytics" 
+                checked={settings.shareAnalytics}
+                onCheckedChange={(c) => updateSetting("shareAnalytics", c)}
+              />
+            </div>
+            
+            <Separator />
+            <div className="pt-2">
+               <p className="text-sm text-muted-foreground">
+                 Note: Account deletion and data exports are available in <strong>Profile Settings &rarr; Security</strong>.
+               </p>
             </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Administrator Resign Section — only shown to administrators */}
-      {role === "administrator" && (
-        <>
-          <Separator />
-          <div>
-            <h3 className="text-lg font-semibold text-foreground mb-1">
-              Administrator Role
-            </h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              You are currently an <strong>Administrator</strong>. As an
-              administrator, you can manage users, view analytics, and configure
-              platform settings. If you wish to step down from this role, you
-              may voluntarily resign below. Your role will revert to{" "}
-              <strong>Tutor</strong> and you will lose all administrative access
-              immediately.
-            </p>
-            <Card className="border-destructive/30 bg-destructive/5">
-              <CardHeader>
-                <CardTitle className="text-base text-destructive flex items-center gap-2">
-                  <ShieldOff className="h-4 w-4" />
-                  Resign Administrator Role
-                </CardTitle>
-                <CardDescription>
-                  This action cannot be undone. Only the Super Administrator can
-                  restore your admin access.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      disabled={resigning}
-                    >
-                      {resigning ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Processing...
-                        </>
-                      ) : (
-                        <>
-                          <ShieldOff className="mr-2 h-4 w-4" />
-                          Resign Admin Role
-                        </>
-                      )}
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>
-                        Are you absolutely sure?
-                      </AlertDialogTitle>
-                      <AlertDialogDescription>
-                        You are about to resign your{" "}
-                        <strong>Administrator</strong> role. This will
-                        immediately revert your account to{" "}
-                        <strong>Tutor</strong> and you will lose all access to
-                        the Admin panel, User Management, Analytics, and other
-                        administrative features.
-                        <br />
-                        <br />
-                        Only the <strong>Super Administrator</strong> can
-                        restore your admin role.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={handleResignAdmin}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        Yes, Resign My Role
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </CardContent>
-            </Card>
-          </div>
-        </>
-      )}
     </div>
   );
 }

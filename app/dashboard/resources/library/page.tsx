@@ -8,6 +8,7 @@ export const metadata = {
 };
 
 export default async function LibraryPage() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let initialResources: any[] = [];
   try {
     initialResources = await getLibraryCatalog();

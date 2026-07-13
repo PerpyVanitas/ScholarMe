@@ -6,58 +6,73 @@
 
 ---
 
-## 🔐 Auth & Onboarding
+## Feature Domains Overview
 
-- **Sign up / Login**: Users can authenticate via Email/Password or OAuth providers.
-- **Onboarding Flow**: First-time login forces users into a multi-step onboarding wizard:
-  1. Accept Terms & Conditions.
-  2. Complete profile details (Full Name, Avatar).
-  3. Enter academic details (`degree_program`, `year_level`).
-  - _Constraint:_ Users cannot bypass onboarding. The dashboard routes redirect back to setup if `profile_completed` is false.
+ScholarMe is divided into several primary domains, each governed by the access controls defined in the [RBAC Reference](./rbac.md).
+
+| Domain | Scope | Primary Users |
+|--------|-------|---------------|
+| **Auth & Onboarding** | Account creation, mandatory profile setup | All users |
+| **Study Tools** | Local AI quizzes, spaced repetition flashcards | Learners, Tutors |
+| **Tutoring & Sessions** | Peer Learning Center booking engine | Learners, Tutors, Admins |
+| **Library & Resources** | Digital file sharing and CFMR physical inventory | All users |
+| **Community** | Forums, DMs, Study Groups | Honor Society Members |
+| **Finance** | Executive budget tracking and liquidations | Executives, Admins |
+| **IT Administration** | Role management, logs, system integrations | Super Admin, Administrators |
 
 ---
 
-## 📚 Study & Learning Tools (AI Powered)
+## 🚪 Auth and Onboarding
 
-- **Quizzes & Flashcards Module**:
+- **Sign up / Login**: Users can authenticate via Email/Password or OAuth providers.
+- **Onboarding Flow**: First-time login forces users into a multi-step onboarding wizard.
+  - Accept Terms and Conditions.
+  - Complete profile details (Full Name, Avatar).
+  - Enter academic details (`degree_program`, `year_level`).
+  - **Lockout**: Users cannot bypass onboarding. The dashboard routes continuously redirect back to setup if `profile_completed` is false.
+
+---
+
+## 🧠 Study and Learning Tools (AI Powered)
+
+- **Quizzes and Flashcards Module**:
   - **Create Study Sets**: Users can create study sets manually, or generate them using AI by uploading a PDF resource.
   - **AI Generation**: Powered completely free by Local AI (`WebWorkerMLCEngine`) running in the browser. Server-side Gemini API acts as a rate-limited fallback (2 requests/min) for large document extraction.
   - **Image Occlusion**: Users can attach an image to a flashcard and draw interactive occlusion masks (rectangles) over it. During study mode, clicking the mask reveals the hidden part.
-  - **Study Modes**:
-    - _Spaced Repetition (SRS)_: Replaces standard self-grading. Users rate their confidence (Again/Hard/Good/Easy), powering the SM2 algorithm.
-    - _Typing Mode_: Forces learners to type the exact answer.
-    - _TTS_: Native browser Text-to-Speech reads questions and answers.
-  - **Exporting**: Users can export any study set to an Anki/Quizlet compatible CSV format.
-  - **Flagging**: Users can flag inaccurate AI-generated questions for admin review.
+- **Study Modes**:
+  - **Spaced Repetition (SRS)**: Replaces standard self-grading. Users rate their confidence (Again/Hard/Good/Easy), powering the SM2 algorithm.
+  - **Typing Mode**: Forces learners to type the exact answer.
+  - **TTS**: Native browser Text-to-Speech reads questions and answers.
+- **Exporting**: Users can export any study set to an Anki/Quizlet compatible CSV format.
 - **AI Tutor (WebLLM)**: An omnipresent chat interface where users can ask academic questions to a locally running AI model.
 
 ---
 
-## 📅 Tutoring & Sessions
+## 📅 Tutoring and Sessions
 
-- **Find a Tutor**: Learners browse the active roster of tutors. (`super_admin`, `administrator`, and `learner` accounts are excluded from search results).
+- **Find a Tutor**: Learners browse the active roster of tutors. 
+  - `super_admin`, `administrator`, and `learner` accounts are excluded from search results.
+  - All Honor Society members must have a Tutor Account and can act as both learners (receiving tutoring) and tutors (providing tutoring).
 - **Booking Flow**:
   - **1-on-1 Sessions**: Learner selects a subject, picks an available timeslot from the tutor's schedule, and adds prep notes.
   - **Group Sessions**: Learner can specify `max_participants` (up to 5).
   - **Recurring**: Tutors can accept 4-week recurring session blocks.
-- **Waitlists & Open Groups**:
+- **Waitlists and Open Groups**:
   - Learners can browse "Open Groups" and join them.
-  - If a group is full, learners can join a Waitlist. If a participant cancels, the first waitlisted user is auto-promoted.
+  - If a group is full, learners can join a Waitlist. Auto-promotion occurs upon cancellation.
 - **Session Management (Tutor)**:
   - **Substitute**: A tutor can send a transfer request to another tutor if they cannot make a confirmed session.
   - **Reschedule**: Propose a new time to the learner instead of forcing a change.
-  - **Auto-Approve**: Toggle to auto-accept bookings from learners they've successfully tutored before.
-- **Mastery Verification**: Tutors upload physical documents (transcripts) to prove they can teach a subject. Admins review and approve these in the dashboard.
 - **Peer Reviews**: Lead Tutors and Committee Heads can write 1-5 star evaluations for junior tutors. Regular tutors can only read their own reviews.
 
 ---
 
-## 📁 Library & Resources
+## 📚 Library and Resources
 
 - **Digital Resources**:
   - Upload PDFs, Images, Docs.
   - **Visibility**: Toggle `is_public` to lock resources to authenticated org members only.
-  - **Preview & Download**: In-browser object preview (PDFs) with fallback download links.
+  - **Preview**: In-browser object preview (PDFs) with fallback download links.
 - **Physical Library (CFMR Only)**:
   - **Catalog**: Inventory of actual books.
   - **Barcode Scanner**: Scan ISBNs via webcam using `html5-qrcode` to find or add books.
@@ -66,61 +81,62 @@
 
 ---
 
-## 👥 Community & Networking
+## 👥 Community and Networking
 
 - **Study Groups**: Users can create public or private study groups. Includes a Supabase Realtime chat interface.
 - **Forums (Discussions)**: Organization-wide discussion boards. Users can post, reply, and upvote.
-- **Direct Messaging**: 1-on-1 chats with read receipts, pinned messages, threaded replies, and file attachments (with proper HTML5 download attributes).
-- **Networking**:
-  - _Study Buddies_: Algorithmic matching of peers in the same degree program and year.
-  - _Alumni Directory_: Connect with graduated students.
+- **Direct Messaging**: 1-on-1 chats with read receipts, pinned messages, threaded replies, and file attachments.
+- **Networking Algorithms**:
+  - **Study Buddies**: Algorithmic matching of peers in the same degree program and year.
+  - **Alumni Directory**: Connect with graduated students.
 - **Live Support Chat**: Floating widget connecting users directly to a Super Admin for immediate help.
 
 ---
 
 ## 💰 Finance Module
 
-- **Role Constraints**: Heavily locked down. Final approval on large requests is restricted exclusively to the `president`.
+> [!CAUTION]
+> **Executive Lock**: Final approval on large requests is restricted exclusively to the `president`. Admins cannot override financial approvals.
+
 - **Workflows**:
   - **Budget Requests**: Save as draft, submit, multi-step approval.
   - **Petty Cash**: Track small expenditures.
   - **Liquidations**: Upload receipts to liquidate a budget request (supports partial returns).
   - **AI OCR**: Extract receipt totals and vendors automatically via AI.
 - **SCARDS (Reports)**: Treasurer and Auditor co-sign aggregated financial reports. Exportable to PDF.
-- **Dashboards**: Budget remaining progress bars, CSV exports of all financial tables.
 
 ---
 
-## 🛡️ Admin & IT Operations
+## 🛡️ Admin and IT Operations
 
-- **System Roles**: Only `super_admin` can assign new administrators, delete users, or impersonate accounts.
-- **Org Structure Page** (`super_admin` only):
-  - Toastmasters-style interface to assign the Executive Board (President, VP, etc.) and Committee Heads.
-  - Supports Term Management (e.g., A.Y. 2026-2027).
-  - Automatically updates the user's `role_id` and sets `role_expires_at` (June 30).
+- **System Roles (`super_admin` / `administrator`)**: 
+  - The `super_admin` can assign new administrators, delete users, impersonate accounts, and act as both a learner and tutor for diagnostic reasons.
+  - Officers (Main Committee Heads and above) can manually append service hours to ESAS Scholars.
+- **Org Structure Page**:
+  - Super admins can assign the Executive Board (President, VP, etc.) and Committee Heads.
+  - Automatically updates the user's `role_id` and sets `role_expires_at` to June 30.
 - **User Management**:
   - Inline role editing, suspension, and designation management.
-  - QR Scanner for logging physical attendance.
-- **Telemetry & Logs**:
+  - QR Scanner for logging physical attendance in the Peer Learning Center.
+- **Telemetry and Logs**:
   - Live system health dashboard (real row counts).
   - Interactive raw audit logs with filtering.
-- **Cron Jobs & Reminders**:
-  - `/api/admin/cron/reminders` sweeps for overdue books, event RSVPs, and auto-reverts expired org roles. Outputs a digest to a Discord Webhook.
-- **Organization Settings**: Change the global primary theme color (white-labeling) and landing page hero text.
+- **Cron Jobs**:
+  - Sweeps for overdue books, event RSVPs, and auto-reverts expired org roles. Outputs a digest to a Discord Webhook.
 
 ---
 
-## 🎮 Gamification & Customization
+## 🏆 Gamification and Customization
 
-- **Leveling System**: XP is awarded securely via backend triggers (e.g., +50 XP per hour tutored). Level scaling follows `FLOOR(0.1 * SQRT(total_xp)) + 1`.
+- **Leveling System**: XP is awarded securely via backend triggers (e.g., +50 XP per hour tutored).
 - **Badges**: Auto-unlocked for milestones (e.g., 7-day streak, perfect quiz score).
-- **Leaderboard**: Global ranking based on XP.
-- **A11y**: High Contrast Mode and Dyslexia Font toggles in the header. Dark/Light mode support.
+- **Accessibility and Display**: High Contrast Mode and Dyslexia Font toggles in the header. Full Dark/Light/System theme toggling and Reduced Motion preferences available via the Settings panel.
 
 ---
 
-## 📱 Mobile & PWA Experience
+## ⚙️ Application Preferences (Local)
 
-- **Responsive Layouts**: Data tables wrap with horizontal scrolling; grid layouts collapse to single columns.
-- **Sidebar**: Mobile hamburger drawer exposes all navigation links.
-- **PWA**: WebWorkerMLCEngine guarantees offline-capable AI generations once models are cached.
+- **Settings Panel (`/dashboard/settings`)**:
+  - **Notifications**: Toggles for Session Booked emails, Review emails, and Browser Push notifications.
+  - **Display**: Theme switching (Light/Dark/System) and Reduced Motion.
+  - **Data & Privacy**: Toggles for Public Profile visibility and Analytics sharing. (Account deletion/export is handled securely under Profile Settings).

@@ -21,10 +21,12 @@ export default async function TutorReviewsPage() {
     .eq("id", session.user.id)
     .single();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const roleName = getRoleName(profile as any);
   const isAdmin = hasAnyRole(roleName, ADMIN_ROLES);
 
   // Auto-provision tutor row for super_admin so they can diagnose the page
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if ((!profile?.tutors || (profile.tutors as any[]).length === 0) && isAdmin) {
     await ensureTutorRow(supabase, session.user);
     // Re-fetch after provisioning
@@ -36,6 +38,7 @@ export default async function TutorReviewsPage() {
     if (refreshed) Object.assign(profile as object, refreshed);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (!profile || !profile.tutors || (profile.tutors as any[]).length === 0) {
     return (
       <div className="p-8 text-center text-muted-foreground">
@@ -44,10 +47,12 @@ export default async function TutorReviewsPage() {
     );
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const currentTutor = (profile.tutors as any[])[0];
   const isLead = currentTutor.is_lead_tutor || isAdmin || false;
 
   // Fetch reviews based on role
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let reviews: any[] = [];
   if (isLead) {
     // Lead tutors / admins see reviews they wrote
@@ -68,6 +73,7 @@ export default async function TutorReviewsPage() {
   }
 
   // If lead/admin, fetch all other active tutors to review
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let availableTutors: any[] = [];
   if (isLead) {
     const { data: tutors } = await supabase

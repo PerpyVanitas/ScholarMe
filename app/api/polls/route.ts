@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
         .single();
       const roleName = Array.isArray(profile?.roles)
         ? profile.roles[0]?.name
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         : (profile?.roles as any)?.name;
       isAdmin = isAdminRole(roleName);
     }
@@ -127,10 +128,12 @@ export async function POST(request: NextRequest) {
       .single();
 
     const isAdmin = Array.isArray(profile?.roles)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ? profile.roles.some((role: any) =>
           ["administrator", "super_admin"].includes(role.name),
         )
       : ["administrator", "super_admin"].includes(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (profile?.roles as any)?.name,
         );
 

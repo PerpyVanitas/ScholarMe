@@ -20,6 +20,7 @@ export function OnboardingTour() {
   const { profile } = useUser();
   const [mounted, setMounted] = useState(false);
   const [showSkipConfirm, setShowSkipConfirm] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [tourInstance, setTourInstance] = useState<any>(null);
 
   useEffect(() => {

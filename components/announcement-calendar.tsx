@@ -106,6 +106,7 @@ export function AnnouncementCalendar({
     try {
       await updateEventRsvp(eventId, status);
       toast.success(`RSVP updated to ${status}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       toast.error("Failed to RSVP: " + e.message);
     }
@@ -129,6 +130,7 @@ export function AnnouncementCalendar({
       });
       toast.success("Event created!");
       setOpenCreate(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       toast.error(e.message);
     } finally {
@@ -140,6 +142,7 @@ export function AnnouncementCalendar({
     try {
       await deleteEvent(id);
       toast.success("Event deleted");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       toast.error("Failed to delete event: " + e.message);
     }
@@ -288,6 +291,7 @@ END:VCALENDAR`;
 
           <Select
             value={filterType}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onValueChange={(val: any) => setFilterType(val)}
           >
             <SelectTrigger className="w-[160px]">

@@ -353,6 +353,7 @@ export function AppSidebar({
       if (stored) setFavorites(JSON.parse(stored));
     } catch (e) {
       console.warn("Failed to parse favorites from localStorage", e);
+      toast.error("Failed to load your pinned favorites.");
     }
   }, []);
 
@@ -420,6 +421,7 @@ export function AppSidebar({
       if (stored) setRecentVisits(JSON.parse(stored));
     } catch (e) {
       console.warn("Failed to parse recent visits from localStorage", e);
+      toast.error("Failed to load your recent visits.");
     }
   }, []);
 
@@ -460,6 +462,7 @@ export function AppSidebar({
                       className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary cursor-pointer text-primary-foreground"
                       onClick={(e) => {
                         e.stopPropagation();
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         handleLogoClick(e as any);
                       }}
                     >

@@ -37,6 +37,7 @@ interface UserDesignationsDialogProps {
   user: Profile | null;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getUserRoleName(roles: any): string {
   if (Array.isArray(roles) && roles.length > 0) return roles[0].name;
   if (roles && typeof roles === "object" && !Array.isArray(roles))
@@ -139,6 +140,7 @@ export function UserDesignationsDialog({
       setDesigPosition("");
       setDesigAcademicYear("");
       setDesigIsCurrent(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       toast.error(e.message || "Failed to save designation");
     } finally {
@@ -157,6 +159,7 @@ export function UserDesignationsDialog({
       if (!res.ok) throw new Error((await res.json()).error);
       setDesignations((prev) => prev.filter((d) => d.id !== id));
       toast.success("Designation removed");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       toast.error(e.message || "Failed to remove designation");
     }

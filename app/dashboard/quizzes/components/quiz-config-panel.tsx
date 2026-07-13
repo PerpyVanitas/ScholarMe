@@ -7,6 +7,7 @@ interface QuizConfigPanelProps {
     string,
     { enabled: boolean; count: number; choices?: number }
   >;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setQuizConfig: React.Dispatch<React.SetStateAction<any>>;
   generating: boolean;
   creating: boolean;
@@ -43,6 +44,7 @@ export function QuizConfigPanel({
                 id={"quiz_" + key}
                 checked={config.enabled}
                 onCheckedChange={(checked) =>
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   setQuizConfig((prev: any) => ({
                     ...prev,
                     [key]: {
@@ -69,6 +71,7 @@ export function QuizConfigPanel({
                 className="w-16 h-8 text-xs font-medium text-center"
                 value={config.count}
                 onChange={(e) =>
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   setQuizConfig((prev: any) => ({
                     ...prev,
                     [key]: {

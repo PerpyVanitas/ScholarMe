@@ -26,6 +26,7 @@ export default async function TutorLayout({
   const rawRole = profile?.roles;
   const roleName = Array.isArray(rawRole)
     ? rawRole[0]?.name
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     : (rawRole as any)?.name;
 
   // Gate: Only tutors can access availability routes

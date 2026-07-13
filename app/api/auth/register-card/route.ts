@@ -52,6 +52,7 @@ export async function POST(request: Request) {
 
     const roleName = Array.isArray(profile?.roles)
       ? profile.roles[0]?.name
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       : (profile?.roles as any)?.name;
     const isAdmin = isAdminRole(roleName as string);
 

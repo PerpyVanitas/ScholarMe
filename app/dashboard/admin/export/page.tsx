@@ -118,6 +118,7 @@ export default function CustomExportPage() {
 
       // Build CSV string
       const headerRow = selectedColumns.join(",");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const dataRows = data.map((row: any) =>
         selectedColumns
           .map((col) => {

@@ -47,7 +47,11 @@ export default function IntegrationsDashboard() {
   // Webhook form state
   const [addWebhookOpen, setAddWebhookOpen] = useState(false);
   const [newWebhookUrl, setNewWebhookUrl] = useState("");
-  const [newWebhookSecret, setNewWebhookSecret] = useState("secret");
+  const [newWebhookSecret, setNewWebhookSecret] = useState(() =>
+    typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID().replace(/-/g, "")
+      : "change_this_secret_" + Date.now()
+  );
 
   useEffect(() => {
     async function loadData() {
@@ -108,7 +112,11 @@ export default function IntegrationsDashboard() {
       toast.success("Webhook added successfully");
       setAddWebhookOpen(false);
       setNewWebhookUrl("");
-      setNewWebhookSecret("secret");
+      setNewWebhookSecret(
+        typeof crypto !== "undefined" && crypto.randomUUID
+          ? crypto.randomUUID().replace(/-/g, "")
+          : "change_this_secret_" + Date.now()
+      );
     } else {
       toast.error("Failed to add webhook");
     }

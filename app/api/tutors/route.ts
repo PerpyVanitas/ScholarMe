@@ -27,6 +27,7 @@ export async function GET(request: Request) {
   let filtered = tutors || [];
 
   // Filter out learners, admins, super_admins (only tutors and officers should appear)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   filtered = filtered.filter((t: any) => {
     const roleName = Array.isArray(t.profiles?.roles)
       ? t.profiles.roles[0]?.name

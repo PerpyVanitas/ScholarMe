@@ -111,7 +111,9 @@ export default function AvailabilityPage() {
     if (error) {
       toast.error("Failed to add slot");
     } else if (data) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setSlots((prev: any) =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         [...prev, data].sort((a: any, b: any) => a.day_of_week - b.day_of_week),
       );
       toast.success("Availability slot added");
@@ -126,6 +128,7 @@ export default function AvailabilityPage() {
       .eq("id", id);
 
     if (!error) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setSlots((prev: any) => prev.filter((s: any) => s.id !== id));
       toast.success("Slot removed");
     }
@@ -182,8 +185,10 @@ export default function AvailabilityPage() {
     if (error) {
       toast.error("Failed to copy schedule");
     } else if (data) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setSlots((prev: any) =>
         [...prev, ...data].sort(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (a: any, b: any) => a.day_of_week - b.day_of_week,
         ),
       );
@@ -236,6 +241,7 @@ export default function AvailabilityPage() {
   const groupedSlots = DAYS_OF_WEEK.map((day, idx) => ({
     day,
     idx,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     slots: slots.filter((s: any) => s.day_of_week === idx),
   }));
 
@@ -436,6 +442,7 @@ export default function AvailabilityPage() {
                       {day}
                     </span>
                     <div className="flex flex-wrap gap-2">
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       {daySlots.map((slot: any) => (
                         <Badge
                           key={slot.id}

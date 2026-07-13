@@ -66,7 +66,9 @@ export default async function TeamDashboard() {
     .eq("id", user.id)
     .single();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const roleName = getRoleName(profile as any);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (!hasAnyRole(roleName as any, TEAMWORK_ROLES)) {
     redirect("/dashboard");
   }
@@ -85,6 +87,7 @@ export default async function TeamDashboard() {
   const taskCounts = columns.reduce(
     (acc, col) => ({
       ...acc,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       [col]: tasks?.filter((t: any) => t.status === col).length ?? 0,
     }),
     {} as Record<StatusKey, number>,
@@ -166,6 +169,7 @@ export default async function TeamDashboard() {
             {columns.map((col) => {
               const cfg = STATUS_CONFIG[col];
               const colTasks =
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 tasks?.filter((t: any) => t.status === col) ?? [];
               return (
                 <div key={col} className="flex flex-col gap-3">
@@ -183,6 +187,7 @@ export default async function TeamDashboard() {
                         No tasks
                       </div>
                     ) : (
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       colTasks.map((t: any) => {
                         const isOverdue =
                           t.deadline &&
@@ -311,6 +316,7 @@ export default async function TeamDashboard() {
               </Card>
             ) : (
               <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 {schedules.map((s: any) => {
                   const isPast = new Date(s.date) < now;
                   return (

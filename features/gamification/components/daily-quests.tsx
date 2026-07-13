@@ -35,50 +35,17 @@ export function DailyQuests() {
       if (!profile) return;
       const supabase = createClient();
 
-      // Auto-generate quests if they don't exist for today (Mock logic for demo)
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("daily_quests")
         .select("*")
         .eq("user_id", profile.id)
         .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: false });
 
-      if (data && data.length > 0) {
+      if (!error && data) {
         setQuests(data);
       } else {
-        // Generate new quests for today and save to database
-        const tomorrow = new Date();
-        tomorrow.setHours(23, 59, 59, 999);
-
-        const newQuests = [
-          {
-            user_id: profile.id,
-            quest_type: "Complete 1 Tutoring Session",
-            target: 1,
-            progress: 0,
-            completed: false,
-            xp_reward: 50,
-            expires_at: tomorrow.toISOString(),
-          },
-          {
-            user_id: profile.id,
-            quest_type: "Answer 5 Flashcards",
-            target: 5,
-            progress: 0,
-            completed: false,
-            xp_reward: 20,
-            expires_at: tomorrow.toISOString(),
-          },
-        ];
-
-        const { data: insertedQuests, error } = await supabase
-          .from("daily_quests")
-          .insert(newQuests)
-          .select();
-
-        if (!error && insertedQuests) {
-          setQuests(insertedQuests);
-        }
+        setQuests([]);
       }
       setLoading(false);
     }

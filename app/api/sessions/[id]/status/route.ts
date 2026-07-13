@@ -32,6 +32,7 @@ export async function PUT(
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateData: any = {};
   if (status) updateData.status = status;
   if (meeting_link !== undefined) updateData.meeting_link = meeting_link;

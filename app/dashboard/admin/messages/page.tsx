@@ -42,6 +42,7 @@ export default async function AdminMessagesAuditPage({ searchParams }: Props) {
   const rawRole = profile?.roles;
   const roleName = Array.isArray(rawRole)
     ? rawRole[0]?.name
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     : (rawRole as any)?.name;
 
   if (roleName !== "super_admin") {
@@ -58,6 +59,7 @@ export default async function AdminMessagesAuditPage({ searchParams }: Props) {
       .eq("profile_id", userId);
 
     const conversationIds =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       participantData?.map((p: any) => p.conversation_id) || [];
 
     if (conversationIds.length > 0) {
@@ -94,6 +96,7 @@ export default async function AdminMessagesAuditPage({ searchParams }: Props) {
       formattedConversations = (conversations || []).map((conv) => {
         // Sort messages to get the latest one
         const sortedMessages = conv.messages?.sort(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (a: any, b: any) =>
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
         );
