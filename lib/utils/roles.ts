@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Shared role normalization utilities.
  *
  * Supabase returns joined `roles(id, name)` relations as arrays even when
@@ -70,6 +70,15 @@ export const MEMBER_ROLES = [
 export const TUTOR_ROLES = [
   ...MEMBER_ROLES,
   "super_admin",
+] as const satisfies readonly UserRole[];
+
+/**
+ * Roles that are allowed to act as a learner (book sessions, find tutors).
+ * All roles qualify — Honor Society members may also receive tutoring.
+ */
+export const LEARNER_ELIGIBLE_ROLES = [
+  "learner",
+  ...TUTOR_ROLES,
 ] as const satisfies readonly UserRole[];
 
 export const GOVERNANCE_ROLES = [

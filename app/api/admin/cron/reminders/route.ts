@@ -18,7 +18,61 @@ export async function POST(req: Request) {
 
     let remindersSent = 0;
     let overdueNoticesSent = 0;
+    let rolesReverted = 0;
     const errors: { message: string; detail?: string }[] = [];
+
+    // 0. Auto-expire org roles — revert users whose role_expires_at is in the past
+    //    but only if their role is an org role (not a system role like administrator/super_admin)
+    const ORG_ROLES = [
+      "president",
+      "vice_president",
+      "secretary",
+      "treasurer",
+      "auditor",
+      "committee_head",
+      "assistant_committee_head",
+    ];
+
+    const { data: expiredRoles, error: expiredError } = await supabase
+      .from("profiles")
+      .select("id, roles(name)")
+      .lt("role_expires_at", now.toISOString())
+      .not("role_expires_at", "is", null);
+
+    if (expiredError) {
+      console.error("Error fetching expired roles:", expiredError);
+      errors.push(expiredError);
+    } else if (expiredRoles && expiredRoles.length > 0) {
+      // Get tutor role id
+      const { data: tutorRole } = await supabase
+        .from("roles")
+        .select("id")
+        .eq("name", "tutor")
+        .single();
+
+      if (tutorRole) {
+        for (const profile of expiredRoles) {
+          const roleName = Array.isArray(profile.roles)
+            ? (profile.roles as any[])[0]?.name
+            : (profile.roles as any)?.name;
+
+          // Only revert org roles — never touch system roles
+          if (ORG_ROLES.includes(roleName)) {
+            const { error: revertError } = await supabase
+              .from("profiles")
+              .update({ role_id: tutorRole.id, role_expires_at: null })
+              .eq("id", profile.id);
+
+            if (!revertError) {
+              rolesReverted++;
+              console.log(
+                `Reverted expired org role '${roleName}' for profile ${profile.id}`,
+              );
+            }
+          }
+        }
+      }
+    }
 
     // 1. Event RSVP Reminders
     const { data: upcomingEvents, error: eventsError } = await supabase
@@ -162,7 +216,7 @@ export async function POST(req: Request) {
     }
 
     // 3. Discord Digest
-    if (remindersSent > 0 || overdueNoticesSent > 0) {
+    if (remindersSent > 0 || overdueNoticesSent > 0 || rolesReverted > 0) {
       const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
       if (DISCORD_WEBHOOK_URL) {
         const discordMessage = {
@@ -180,6 +234,11 @@ export async function POST(req: Request) {
                 {
                   name: "Overdue Notices Sent",
                   value: overdueNoticesSent.toString(),
+                  inline: true,
+                },
+                {
+                  name: "Org Roles Reverted",
+                  value: rolesReverted.toString(),
                   inline: true,
                 },
               ],

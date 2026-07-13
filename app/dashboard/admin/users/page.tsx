@@ -405,6 +405,7 @@ function AdminUsersContent() {
                     onPrintId={openPrintId}
                     onDesignations={openDesignations}
                     onImpersonate={handleImpersonate}
+                    currentUserRole={role}
                   />
                 </CardContent>
               </Card>
@@ -481,9 +482,12 @@ function AdminUsersContent() {
                           <SelectContent>
                             <SelectItem value="learner">Learner</SelectItem>
                             <SelectItem value="tutor">Tutor</SelectItem>
-                            <SelectItem value="administrator">
-                              Administrator
-                            </SelectItem>
+                            {/* System roles — super_admin only */}
+                            {role === "super_admin" && (
+                              <SelectItem value="administrator">
+                                Administrator
+                              </SelectItem>
+                            )}
                             <SelectItem value="finance_manager">
                               Finance
                             </SelectItem>
@@ -491,9 +495,11 @@ function AdminUsersContent() {
                             <SelectItem value="president">President</SelectItem>
                             <SelectItem value="treasurer">Treasurer</SelectItem>
                             <SelectItem value="officer">Officer</SelectItem>
-                            <SelectItem value="super_admin">
-                              Super Admin
-                            </SelectItem>
+                            {role === "super_admin" && (
+                              <SelectItem value="super_admin">
+                                Super Admin
+                              </SelectItem>
+                            )}
                           </SelectContent>
                         </Select>
                       </TableCell>
@@ -524,6 +530,7 @@ function AdminUsersContent() {
                             onPrintId={openPrintId}
                             onDesignations={openDesignations}
                             onImpersonate={handleImpersonate}
+                            currentUserRole={role}
                           />
                         </div>
                       </TableCell>
@@ -658,6 +665,7 @@ function UserActionsMenu({
   onPrintId,
   onDesignations,
   onImpersonate,
+  currentUserRole,
 }: {
   profile: Profile;
   onProfile: (p: Profile) => void;
@@ -667,7 +675,9 @@ function UserActionsMenu({
   onPrintId: (p: Profile) => void;
   onDesignations: (p: Profile) => void;
   onImpersonate: (p: Profile) => void;
+  currentUserRole: string | undefined;
 }) {
+  const isSuperAdmin = currentUserRole === "super_admin";
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -697,18 +707,25 @@ function UserActionsMenu({
           <Award className="mr-2 h-4 w-4" />
           Manage Status
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onImpersonate(profile)}>
-          <UserCog className="mr-2 h-4 w-4" />
-          Impersonate User
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => onDelete(profile)}
-          className="text-destructive focus:text-destructive"
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          Delete User
-        </DropdownMenuItem>
+        {/* Impersonate & Delete — super_admin only */}
+        {isSuperAdmin && (
+          <DropdownMenuItem onClick={() => onImpersonate(profile)}>
+            <UserCog className="mr-2 h-4 w-4" />
+            Impersonate User
+          </DropdownMenuItem>
+        )}
+        {isSuperAdmin && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => onDelete(profile)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete User
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -79,6 +79,7 @@ import {
   ShieldCheck,
   Receipt,
   Globe,
+  Network,
 } from "lucide-react";
 import { signOut } from "@/app/auth/actions";
 import { HonorSocietyLogo } from "@/components/honsoc-logo";
@@ -282,6 +283,11 @@ function getNavItems(role: UserRole, profile: Profile) {
     ];
     if (role === "super_admin") {
       adminItems.push(
+        {
+          title: "Org Structure",
+          href: "/dashboard/admin/org-structure",
+          icon: Network,
+        },
         {
           title: "Message Audit",
           href: "/dashboard/admin/messages",

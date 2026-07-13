@@ -1,4 +1,4 @@
-/** POST /api/admin/create-admin — creates a new administrator account. Only callable by administrators. */
+/** POST /api/admin/create-admin — creates a new administrator account. Only callable by super_admin. */
 import { createClient, createAdminClient } from "@/lib/supabase/create-client";
 import { NextRequest, NextResponse } from "next/server";
 import { createSuccessResponse, createErrorResponse } from "@/lib/api-errors";
@@ -21,28 +21,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify the caller is an administrator
+    // Verify the caller is SUPER ADMIN only — regular admins cannot provision admins
     const { data: callerProfile, error: callerError } = await supabase
       .from("profiles")
       .select("roles(name)")
       .eq("id", user.id)
       .single();
 
-    const isAdmin = Array.isArray(callerProfile?.roles)
-      ? callerProfile.roles.some(
-          (role: { name: string }) =>
-            ["administrator", "super_admin"].includes(role.name) ||
-            role.name === "super_admin",
-        )
-      : ["administrator", "super_admin"].includes(
-          (callerProfile?.roles as { name: string } | undefined)?.name || "",
-        );
+    const roleName = Array.isArray(callerProfile?.roles)
+      ? callerProfile.roles[0]?.name
+      : (callerProfile?.roles as { name: string } | undefined)?.name;
 
-    if (callerError || !isAdmin) {
+    const isSuperAdmin = roleName === "super_admin";
+
+    if (callerError || !isSuperAdmin) {
       return NextResponse.json(
         createErrorResponse(
-          "AUTH_003_ADMIN_ONLY",
-          "Only administrators can create admin accounts",
+          "AUTH_003_ROLE_NOT_PERMITTED",
+          "Only the Super Administrator can provision new administrator accounts",
         ),
         { status: 403 },
       );

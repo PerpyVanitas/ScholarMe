@@ -1,3 +1,27 @@
+## [2026-07-13] — Org Officer Assignment Page & Admin Privilege Restrictions
+
+### Added
+
+- **Org Structure Page** (`/dashboard/admin/org-structure`, `super_admin` only): Toastmasters-style officer assignment interface. Lists all 5 executive positions and all 18 committees (11 Main + 7 ESAS), each with Committee Head and Assistant Committee Head slots. Saving assignments automatically updates user `role_id` and `role_expires_at` in the database.
+- **"New Term" Dialog**: Super admin can create a new academic term (Jul 1 → Jun 30 by convention). Activating a new term preserves the old one as historical record.
+- **Term History Panel**: Displays all past and current org terms below the assignment form.
+- **Resign Admin Role** button in Site Settings (Settings page): Administrators can voluntarily resign their admin role, reverting to Tutor. A confirmation dialog prevents accidental clicks. Only `administrator` role users see this; super_admin cannot self-resign.
+- **DB Migration** (`20260713_org_structure.sql`): Creates `org_terms` and `org_assignments` tables with RLS policies, a `one_current_term` unique partial index, and a `trg_enforce_single_super_admin` DB trigger. Also adds `org_assignment_id` column to `profiles`.
+- **Resign Role API** (`POST /api/admin/resign-role`): Allows administrators to self-demote to tutor. Blocked for super_admin.
+- **Org Structure API** (`/api/admin/org-structure`, GET/POST/PATCH): Fetches current term and assignments, creates new terms, saves assignments with position-to-role mapping.
+
+### Changed
+
+- **Admin Privilege Restriction**: `POST /api/admin/create-admin` is now restricted to `super_admin` only. Regular administrators can no longer provision new admin accounts.
+- **User Management Page**: `Delete User` and `Impersonate User` actions are now hidden from non-super_admin users. `administrator` and `super_admin` options are hidden from the quick-role dropdown for non-super_admin users.
+- **Sidebar**: Added `Org Structure` link (Network icon) to the IT Administration group, visible to `super_admin` only.
+- **Cron Job**: Added step 0 — auto-reverts expired org roles (`role_expires_at < now()`) back to `tutor`, without touching system roles (administrator/super_admin). Result count included in Discord digest.
+
+### Documented
+
+- **RBAC (`rbac.md`)**: Added full "Concurrent Status Model" section covering: four status layers, position exclusivity tables (singleton vs. per-committee vs. multi-person), all valid/invalid concurrent status combinations, maximum stack chart, Learner Firewall rules, and profile display guide.
+- **Schema (`schema.md`)**: Added `org_terms`, `org_assignments` table docs, `org_assignment_id` column on profiles, and DB trigger note.
+
 ## [2026-07-13] - Implementation Cycle: UX/QA fixes & Visibility Updates
 
 ### Added
@@ -347,5 +371,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  -   * * R e s o u r c e   P r e v i e w s * * :   F i x e d   a n   i s s u e   w h e r e   P D F   p r e v i e w s   w e r e   c o m p l e t e l y   b r o k e n   b y   s w i t c h i n g   f r o m   \ < i f r a m e > \   t o   \ < o b j e c t > \   r e n d e r i n g   w i t h   a   d e d i c a t e d   d o w n l o a d   f a l l b a c k   f o r   u n s u p p o r t e d   b r o w s e r s . 
  -   * * I d l e   T i m e o u t * * :   S e t   t h e   a p p l i c a t i o n   i n a c t i v i t y   l i m i t   t o   5   m i n u t e s ,   e n f o r c i n g   a   l o g o u t   w i t h   a   w a r n i n g   t o   i m p r o v e   s e c u r i t y . 
  -   * * A c c e s s i b i l i t y   &   S i t e   S e t t i n g s * * :   A d d e d   d e d i c a t e d   A 1 1 y   S e t t i n g s   d i r e c t l y   b e t w e e n   R e p o r t   a   B u g   a n d   D a r k m o d e   t o g g l e   i n   t h e   h e a d e r ,   a n d   c r e a t e d   a   \ S i t e   S e t t i n g s \   p a g e   a c c e s s i b l e   f r o m   t h e   b o t t o m - l e f t   p r o f i l e   d r o p d o w n . 
-  
+ 
+ 
  
