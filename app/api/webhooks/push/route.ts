@@ -6,10 +6,10 @@ export async function POST(req: Request) {
   try {
     const supabase = await createClient();
     const {
-      data: { session },
-    } = await supabase.auth.getSession();
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    if (!session) {
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     // Upsert subscription into push_subscriptions table
     const { error } = await supabase.from("push_subscriptions").upsert(
       {
-        user_id: session.user.id,
+        user_id: user.id,
         subscription: subscription,
         updated_at: new Date().toISOString(),
       },

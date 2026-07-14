@@ -5,14 +5,14 @@ export async function GET() {
   const supabase = await createClient();
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     return new NextResponse("Unauthorized", { status: 401 });
   }
 
-  const userId = session.user.id;
+  const userId = user.id;
 
   const [profile, studySets, learnerSessions, designations, quizAttempts] =
     await Promise.all([
@@ -25,7 +25,7 @@ export async function GET() {
 
   const exportData = {
     generated_at: new Date().toISOString(),
-    user: session.user,
+    user: user,
     profile: profile.data,
     designations: designations.data,
     study_sets: studySets.data,

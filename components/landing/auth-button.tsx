@@ -1,26 +1,28 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { createClient } from "@/lib/supabase/client"
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
 
 export function AuthButton() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function checkAuth() {
-      const supabase = createClient()
-      const { data: { session } } = await supabase.auth.getSession()
-      setIsLoggedIn(!!session)
-      setLoading(false)
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setIsLoggedIn(!!user);
+      setLoading(false);
     }
-    checkAuth()
-  }, [])
+    checkAuth();
+  }, []);
 
   if (loading) {
-    return <Button disabled>Loading...</Button>
+    return <Button disabled>Loading...</Button>;
   }
 
   return (
@@ -29,5 +31,5 @@ export function AuthButton() {
         {isLoggedIn ? "Dashboard" : "Sign In"}
       </Link>
     </Button>
-  )
+  );
 }

@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { createErrorResponse, createSuccessResponse } from "@/lib/api-errors";
 import { isAdminRole } from "@/lib/utils/roles";
-
+import bcrypt from "bcryptjs";
 export async function POST(request: Request) {
   try {
     const { card_id, pin, assigned_to_user_id } = await request.json();
@@ -52,8 +52,8 @@ export async function POST(request: Request) {
 
     const roleName = Array.isArray(profile?.roles)
       ? profile.roles[0]?.name
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      : (profile?.roles as any)?.name;
+      : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (profile?.roles as any)?.name;
     const isAdmin = isAdminRole(roleName as string);
 
     if (profileError || !profile || !isAdmin) {
@@ -80,12 +80,16 @@ export async function POST(request: Request) {
       );
     }
 
+    // Hash the PIN
+    const salt = await bcrypt.genSalt(10);
+    const hashedPin = await bcrypt.hash(pin, salt);
+
     // Create new card
     const { data: newCard, error: createError } = await supabase
       .from("auth_cards")
       .insert({
         card_id,
-        pin,
+        pin: hashedPin,
         assigned_to: assigned_to_user_id || null,
         status: "active",
       })

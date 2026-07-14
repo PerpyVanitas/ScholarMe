@@ -230,3 +230,4 @@ Module for managing organizational funds, strictly guarded by Executive access.
 | **`trg_enforce_single_super_admin`** | Prevents multiple rows in `profiles` from holding the `super_admin` role_id concurrently. | Ensures only one `super_admin` exists system-wide.                    |
 | **`calculate_xp_curve`**             | Computes a user's `current_level` based on their `total_xp`.                              | Gamification auto-scaling.                                            |
 | **`tutor_analytics_trigger`**        | Automatically increments `total_sessions` and awards XP upon completion of a session.     | Maintains data integrity without requiring backend API orchestration. |
+| **`increment_rate_limit`**           | Atomically increments rate limit timestamp arrays in `ratelimit_windows`.                 | Prevents concurrency race conditions during rate limiting checks.     |

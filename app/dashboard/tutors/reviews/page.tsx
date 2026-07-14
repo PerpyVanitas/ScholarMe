@@ -7,10 +7,10 @@ import { ensureTutorRow } from "@/features/tutors/api/db";
 export default async function TutorReviewsPage() {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session?.user) {
+  if (!user) {
     redirect("/auth/signin");
   }
 
@@ -18,7 +18,7 @@ export default async function TutorReviewsPage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select("*, roles(name), tutors(*)")
-    .eq("id", session.user.id)
+    .eq("id", user.id)
     .single();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -28,12 +28,12 @@ export default async function TutorReviewsPage() {
   // Auto-provision tutor row for super_admin so they can diagnose the page
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if ((!profile?.tutors || (profile.tutors as any[]).length === 0) && isAdmin) {
-    await ensureTutorRow(supabase, session.user);
+    await ensureTutorRow(supabase, user);
     // Re-fetch after provisioning
     const { data: refreshed } = await supabase
       .from("profiles")
       .select("*, roles(name), tutors(*)")
-      .eq("id", session.user.id)
+      .eq("id", user.id)
       .single();
     if (refreshed) Object.assign(profile as object, refreshed);
   }

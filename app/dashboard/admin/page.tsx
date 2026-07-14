@@ -20,17 +20,17 @@ export const metadata = {
 export default async function AdminDashboardPage() {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     redirect("/auth/signin");
   }
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("roles(name)")
-    .eq("id", session.user.id)
+    .eq("id", user.id)
     .single();
 
   const roleName = profile ? getRoleName(profile) : undefined;
@@ -90,19 +90,32 @@ export default async function AdminDashboardPage() {
     .slice(0, 5);
 
   // User Growth Data
-  const { data: userDates } = await supabase.from("profiles").select("created_at");
+  const { data: userDates } = await supabase
+    .from("profiles")
+    .select("created_at");
   const growthMap = new Map<string, number>();
   if (userDates) {
     userDates.forEach((u) => {
-      const month = new Date(u.created_at).toLocaleString("default", { month: "short" });
+      const month = new Date(u.created_at).toLocaleString("default", {
+        month: "short",
+      });
       growthMap.set(month, (growthMap.get(month) || 0) + 1);
     });
   }
-  const userGrowthData = Array.from(growthMap.entries()).map(([date, users]) => ({ date, users }));
+  const userGrowthData = Array.from(growthMap.entries()).map(
+    ([date, users]) => ({ date, users }),
+  );
 
   // Session Activity Data
-  const { data: sessionStats } = await supabase.from("sessions").select("status");
-  const sessionCounts = { completed: 0, scheduled: 0, cancelled: 0, no_show: 0 };
+  const { data: sessionStats } = await supabase
+    .from("sessions")
+    .select("status");
+  const sessionCounts = {
+    completed: 0,
+    scheduled: 0,
+    cancelled: 0,
+    no_show: 0,
+  };
   if (sessionStats) {
     sessionStats.forEach((s) => {
       if (s.status === "completed") sessionCounts.completed++;

@@ -31,7 +31,9 @@ export function rateLimit({ interval, limit }: RateLimitOptions) {
       if (!supabaseUrl || !supabaseKey) {
         // Fail closed: if env vars are missing, block requests rather than allow them
         // This prevents a misconfigured environment from bypassing rate limiting entirely
-        console.error("[RateLimit] NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set — rate limiter blocking all requests.");
+        console.error(
+          "[RateLimit] NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set — rate limiter blocking all requests.",
+        );
         return {
           success: false,
           remaining: 0,
@@ -43,34 +45,28 @@ export function rateLimit({ interval, limit }: RateLimitOptions) {
       const now = Date.now();
       const windowStart = now - interval;
 
-      // Fetch existing entry
-      const { data } = await supabase
-        .from("ratelimit_windows")
-        .select("timestamps")
-        .eq("identifier", identifier)
-        .single();
+      const { data, error } = await supabase.rpc("increment_rate_limit", {
+        p_identifier: identifier,
+        p_interval: interval,
+        p_limit: limit,
+      });
 
-      let timestamps: number[] = data?.timestamps || [];
-
-      // Remove timestamps outside the current window
-      timestamps = timestamps.filter((t: number) => t > windowStart);
-
-      const remaining = Math.max(0, limit - timestamps.length);
-      const success = timestamps.length < limit;
-
-      if (success) {
-        timestamps.push(now);
+      if (error || !data || data.length === 0) {
+        console.error("[RateLimit] Error calling RPC:", error);
+        // Fail closed on database error
+        return {
+          success: false,
+          remaining: 0,
+          reset: now + interval,
+        };
       }
 
-      // Upsert the updated timestamps
-      await supabase
-        .from("ratelimit_windows")
-        .upsert({ identifier, timestamps }, { onConflict: "identifier" });
-
-      const reset =
-        timestamps.length > 0 ? timestamps[0] + interval : now + interval;
-
-      return { success, remaining: success ? remaining - 1 : 0, reset };
+      const row = data[0];
+      return {
+        success: row.success,
+        remaining: row.remaining,
+        reset: Number(row.reset),
+      };
     },
   };
 }

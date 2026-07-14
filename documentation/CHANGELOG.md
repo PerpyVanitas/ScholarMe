@@ -1,3 +1,36 @@
+## [2026-07-14] — Phase 2: Constraint & Boundary Testing (Completed)
+
+### Security & Financial Constraints
+
+- **Budget & Petty Cash**: Implemented strict anti-splitting for Petty Cash ($300/24h limit) and enforced the budget state machine (blocking `finance_review` -> `released` bypass for >$5000 requests without `president_approved`).
+- **Liquidation Guardrails**: Blocked new budget requests if the user has late liquidations. Enforced idempotency on liquidation submissions and rejected submissions on unreleased/rejected budgets.
+- **File Validation & Safety**: Added `isValidFileType` using Magic Numbers (file signatures) to strictly validate PDF/Image uploads instead of relying on spoofable extensions. Hard-capped file sizes to 50MB. Fixed floating point math issues in `roundCurrency`.
+
+### Timesheet Guardrails
+
+- **Clock-In Constraints**: Addressed race conditions in simultaneous clock-ins by performing manual checks after insert and rolling back if multiple open entries exist.
+- **Data Integrity**: Enforced Zod schema validation for timesheet corrections to prevent negative, zero, or excessively long manual duration inputs. Ensured `calcMinutes` correctly computes durations across midnight boundaries.
+- **Orphan Cleanup**: Verified auto-clock-out logic during `signOut` and the automated nightly cron job sweeps to close orphaned shifts.
+
+## [2026-07-14] — Phase 1: Security Testing & Lockdown
+
+### Security & Testing
+
+- **Comprehensive Security Test Suite**: Implemented 10+ integration and unit tests for critical security vulnerabilities using Vitest. Verified protection against RAG Prompt Injection (P1-11), Avatar URL XSS (P1-14), Account Enumeration (P1-23), CSRF (P1-12), CORS (P1-13), and CSP (P1-22).
+- **Rate Limit Fixes**: Resolved HTTP 500 error on the `/api/auth/card-login` route by correctly mapping the rate limit exception to `SYSTEM_001_RATE_LIMITED` instead of an invalid error code.
+- **Session API Refactoring**: Refactored `app/dashboard/leaderboard/page.tsx` to completely remove the last usage of `getSession()`, migrating it to automatically use Next.js cookie-based authentication via same-origin fetch. The codebase is now 100% compliant with the strict `getUser()` rule.
+- **CI Test Script**: Added `test:security` script to `package.json` to enforce security regression checks in CI.
+
+## [2026-07-14] — Phase 0: Critical Security Fixes
+
+### Security
+
+- **Authentication Resiliency**: Migrated PIN storage from plaintext to `bcryptjs` hashing. Created a database migration (`20260714153500_hash_existing_pins.sql`) that retroactively hashes all existing plaintext PINs in the `auth_cards` table using `pgcrypto`.
+- **Atomic Rate Limiting**: Fixed a dangerous concurrency race condition (read-filter-write pattern) in the rate limiter. Created a new Postgres RPC function (`increment_rate_limit`) to handle rate limit array mutations atomically at the database level, and updated `lib/rate-limit.ts` to consume it.
+- **Brute Force Protection**: Implemented a 15-minute sliding-window rate limit (5 attempts max) on the `/api/auth/card-login` endpoint, keyed by `cardId`, to prevent PIN brute-forcing.
+- **Authorization Boundary Enforcement**: Replaced insecure `getSession()` calls with strict `getUser()` calls across 8 critical routes (including Webhooks, Account Export, Admin Dashboards, and Leaderboard) to ensure identities are cryptographically validated by the Supabase Auth server, closing session-spoofing vectors.
+- **Open-Relay Prevention**: Locked down the `/api/webhooks/email` endpoint by enforcing strict RBAC. The endpoint now requires the authenticated user to hold an Officer or Admin role to trigger emails, mitigating potential spam and domain reputation risks.
+
 ## [2026-07-14] — AI Tutor Optimization
 
 ### Changed

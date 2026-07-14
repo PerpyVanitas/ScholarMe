@@ -8,22 +8,22 @@ export default async function OrgStructureLayout({
 }) {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session?.user) redirect("/auth/signin");
+  if (!user) redirect("/auth/signin");
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("roles(name)")
-    .eq("id", session.user.id)
+    .eq("id", user.id)
     .single();
 
   const roleName = Array.isArray(profile?.roles)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ? (profile.roles as any[])[0]?.name
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    : (profile?.roles as any)?.name;
+    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (profile.roles as any[])[0]?.name
+    : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (profile?.roles as any)?.name;
 
   if (roleName !== "super_admin") {
     redirect("/dashboard/admin");

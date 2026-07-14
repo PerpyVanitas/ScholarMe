@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { birthdateFields, ensureProfileRow } from "@/features/profiles/api/db";
 import { ensureTutorRow } from "@/features/tutors/api/db";
+import { z } from "zod";
 
 export interface UpdateProfileData {
   first_name: string;
@@ -132,6 +133,27 @@ export async function ensureTutor() {
 }
 
 export async function updateAvatar(avatarUrl: string) {
+  // P1-14: Validate protocol to prevent javascript: XSS
+  const urlSchema = z
+    .string()
+    .url()
+    .refine(
+      (url) => {
+        try {
+          const parsed = new URL(url);
+          return ["http:", "https:"].includes(parsed.protocol);
+        } catch {
+          return false;
+        }
+      },
+      { message: "Invalid URL protocol" },
+    );
+
+  const parseResult = urlSchema.safeParse(avatarUrl);
+  if (!parseResult.success) {
+    return { success: false, error: "Invalid avatar URL" };
+  }
+
   const supabase = await createClient();
 
   const {

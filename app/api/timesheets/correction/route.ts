@@ -1,6 +1,7 @@
 /** POST /api/timesheets/correction — Submit a time correction request for admin review */
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/create-client";
+import { TimesheetCorrectionSchema } from "@/features/timesheets/schema";
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
   // Verify the timesheet belongs to this user
   const { data: entry } = await supabase
     .from("timesheets")
-    .select("id, user_id")
+    .select("id, user_id, clock_in")
     .eq("id", timesheet_id)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -32,6 +33,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { error: "Timesheet entry not found" },
       { status: 404 },
+    );
+  }
+
+  const validation = TimesheetCorrectionSchema.safeParse({
+    timesheet_id,
+    requested_clock_out,
+    reason: reason.trim(),
+    original_clock_in: entry.clock_in,
+  });
+
+  if (!validation.success) {
+    return NextResponse.json(
+      { error: validation.error.errors[0].message },
+      { status: 400 },
     );
   }
 

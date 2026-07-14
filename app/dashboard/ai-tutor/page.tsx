@@ -9,15 +9,15 @@ export const metadata = {
 export default async function AITutorPage() {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
   let initialContext = "";
-  if (session) {
+  if (user) {
     const { data: flashcards } = await supabase
       .from("flashcards")
       .select("question, answer, subject")
-      .eq("user_id", session.user.id)
+      .eq("user_id", user.id)
       .limit(50);
 
     const { data: resources } = await supabase
@@ -57,10 +57,7 @@ export default async function AITutorPage() {
         <h2 className="text-3xl font-bold tracking-tight">AI Tutor</h2>
       </div>
       <div className="h-full w-full flex items-center justify-center p-4">
-        <WebLLMChat
-          initialContext={initialContext}
-          profileId={session?.user?.id}
-        />
+        <WebLLMChat initialContext={initialContext} profileId={user?.id} />
       </div>
     </div>
   );

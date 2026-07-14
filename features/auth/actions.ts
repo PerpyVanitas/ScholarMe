@@ -10,7 +10,7 @@ export async function loginWithEmail(formData: FormData) {
     email: formData.get("email") as string,
     password: formData.get("password") as string,
   });
-  if (error) return { error: error.message };
+  if (error) return { error: "Invalid login credentials" };
   return { success: true };
 }
 
@@ -38,7 +38,7 @@ export async function signUp(formData: FormData) {
     if (existingPhone) {
       return {
         error:
-          "This phone number is already registered. Please use a different number or sign in to your existing account.",
+          "Registration failed. Please check your information and try again.",
       };
     }
   }
@@ -60,7 +60,11 @@ export async function signUp(formData: FormData) {
         role_name: selectedRole,
       },
     });
-  if (createError) return { error: createError.message };
+  if (createError)
+    return {
+      error:
+        "Registration failed. Please check your information and try again.",
+    };
 
   if (created?.user) {
     const { error: profileError } = await adminClient.from("profiles").upsert(

@@ -10,12 +10,21 @@ import {
   FINANCE_SUBMIT_ROLES,
   PRESIDENT_APPROVAL_ROLES,
 } from "@/lib/utils/roles";
+import { isValidFileType, roundCurrency } from "../utils";
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
 
-async function notifyStatusChange(email: string, title: string, status: string) {
+async function notifyStatusChange(
+  email: string,
+  title: string,
+  status: string,
+) {
   if (!resend) {
-    console.warn(`[finance] RESEND_API_KEY missing. Unable to send notification to ${email}`);
+    console.warn(
+      `[finance] RESEND_API_KEY missing. Unable to send notification to ${email}`,
+    );
     return;
   }
   try {
@@ -106,6 +115,9 @@ export async function createBudgetRequest(formData: FormData) {
   let attachmentUrl = null;
 
   if (attachment && attachment.size > 0) {
+    if (!(await isValidFileType(attachment))) {
+      throw new Error("Invalid attachment file type");
+    }
     const ext = attachment.name.split(".").pop()?.toLowerCase() || "pdf";
     const filePath = `${user.id}/${Date.now()}-budget.${ext}`;
     const { error: uploadError } = await supabase.storage
@@ -166,18 +178,31 @@ export async function updateBudgetRequestStatus(
   const amount = Number(existing.amount);
   const canReview = await checkCanReviewFinance(supabase, user.id);
   const canApprove = await checkCanApproveFinance(supabase, user.id);
-  
+
   // Fast-track: if <= 5000, Finance Review can jump straight to Released.
   let allowed = false;
   if (amount <= 5000) {
     allowed =
-      (currentStatus === "pending" && ["released", "rejected"].includes(status) && canReview) ||
-      (currentStatus === "pending" && status === "finance_review" && canReview);
+      (currentStatus === "pending" &&
+        ["released", "rejected"].includes(status) &&
+        canReview) ||
+      (currentStatus === "pending" &&
+        status === "finance_review" &&
+        canReview) ||
+      (currentStatus === "finance_review" &&
+        status === "released" &&
+        canReview);
   } else {
     allowed =
-      (currentStatus === "pending" && ["finance_review", "rejected"].includes(status) && canReview) ||
-      (currentStatus === "finance_review" && ["president_approved", "rejected"].includes(status) && canApprove) ||
-      (currentStatus === "president_approved" && status === "released" && canReview);
+      (currentStatus === "pending" &&
+        ["finance_review", "rejected"].includes(status) &&
+        canReview) ||
+      (currentStatus === "finance_review" &&
+        ["president_approved", "rejected"].includes(status) &&
+        canApprove) ||
+      (currentStatus === "president_approved" &&
+        status === "released" &&
+        canReview);
   }
 
   if (!allowed) {
@@ -190,11 +215,15 @@ export async function updateBudgetRequestStatus(
     .eq("id", requestId);
 
   if (error) throw new Error(error.message);
-  
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const profileData = existing.profiles as any;
-  const userEmail = profileData ? (Array.isArray(profileData) ? profileData[0]?.email : profileData.email) : null;
-  
+  const userEmail = profileData
+    ? Array.isArray(profileData)
+      ? profileData[0]?.email
+      : profileData.email
+    : null;
+
   if (userEmail) {
     await notifyStatusChange(userEmail, existing.activity_title, status);
   }
@@ -246,6 +275,9 @@ export async function createPettyCash(formData: FormData) {
   let attachmentUrl = null;
 
   if (attachment && attachment.size > 0) {
+    if (!(await isValidFileType(attachment))) {
+      throw new Error("Invalid attachment file type");
+    }
     const ext = attachment.name.split(".").pop()?.toLowerCase() || "pdf";
     const filePath = `${user.id}/${Date.now()}-pettycash.${ext}`;
     const { error: uploadError } = await supabase.storage
@@ -340,7 +372,8 @@ export async function submitPettyCashForReview(id: string) {
 
 export async function submitLiquidation(formData: FormData) {
   const requestId = formData.get("request_id") as string;
-  const returnedAmount = parseFloat(formData.get("returned_amount") as string) || 0;
+  const returnedAmount =
+    parseFloat(formData.get("returned_amount") as string) || 0;
 
   // Handle multiple file uploads for receipts and proofs
   const receipts = formData.getAll("receipts") as File[];
@@ -355,12 +388,27 @@ export async function submitLiquidation(formData: FormData) {
   const canSubmit = await checkCanSubmitFinance(supabase, user.id);
   if (!canSubmit) throw new Error("Unauthorized to submit liquidations");
 
+  // Idempotency check
+  const { data: existingLiquidation } = await supabase
+    .from("finance_liquidations")
+    .select("id")
+    .eq("request_id", requestId)
+    .maybeSingle();
+
+  if (existingLiquidation) {
+    throw new Error("Liquidation already submitted for this request");
+  }
+
   // Check if it's late (e.g. > 7 days since request created or released)
   const { data: reqData } = await supabase
     .from("finance_budget_requests")
-    .select("created_at")
+    .select("created_at, status")
     .eq("id", requestId)
     .single();
+
+  if (!reqData || reqData.status !== "released") {
+    throw new Error("Cannot liquidate an unreleased or rejected budget");
+  }
 
   let isLate = false;
   if (reqData) {
@@ -379,6 +427,9 @@ export async function submitLiquidation(formData: FormData) {
 
   for (const file of receipts) {
     if (file && file.size > 0) {
+      if (file.size > 50 * 1024 * 1024) throw new Error("File too large");
+      if (!(await isValidFileType(file)))
+        throw new Error("Invalid receipt file type");
       const ext = file.name.split(".").pop()?.toLowerCase() || "pdf";
       const filePath = `${user.id}/${Date.now()}-receipt-${Math.random().toString(36).slice(2, 7)}.${ext}`;
       await supabase.storage
@@ -390,6 +441,9 @@ export async function submitLiquidation(formData: FormData) {
 
   for (const file of proofs) {
     if (file && file.size > 0) {
+      if (file.size > 50 * 1024 * 1024) throw new Error("File too large");
+      if (!(await isValidFileType(file)))
+        throw new Error("Invalid proof file type");
       const ext = file.name.split(".").pop()?.toLowerCase() || "pdf";
       const filePath = `${user.id}/${Date.now()}-proof-${Math.random().toString(36).slice(2, 7)}.${ext}`;
       await supabase.storage
@@ -442,7 +496,7 @@ export async function saveScards(formData: FormData) {
   const canReview = await checkCanReviewFinance(supabase, user.id);
   if (!canReview) throw new Error("Unauthorized to prepare SCARDS");
 
-  const balance = receipts - disbursements;
+  const balance = roundCurrency(receipts - disbursements);
 
   // Check existing version
   const { data: existing } = await supabase
@@ -529,7 +583,7 @@ export async function updateScardsReport(formData: FormData) {
   const disbursements =
     parseFloat(formData.get("disbursements_total") as string) || 0;
   const attachment = formData.get("attachment") as File | null;
-  const balance = receipts - disbursements;
+  const balance = roundCurrency(receipts - disbursements);
 
   let attachmentUrl: string | null = null;
   if (attachment && attachment.size > 0) {

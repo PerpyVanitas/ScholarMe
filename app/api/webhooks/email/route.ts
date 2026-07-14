@@ -6,13 +6,43 @@ export async function POST(req: Request) {
   try {
     const supabase = await createClient();
     const {
-      data: { session },
-    } = await supabase.auth.getSession();
+      data: { user },
+    } = await supabase.auth.getUser();
 
     // In a real scenario, this could be authenticated by a webhooks secret
     // For now, we secure it by user session
-    if (!session) {
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Role check to prevent open-relay
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("roles(name)")
+      .eq("id", user.id)
+      .single();
+
+    const roleName = Array.isArray(profile?.roles)
+      ? (profile?.roles as any[])[0]?.name
+      : (profile?.roles as any)?.name;
+
+    // Only allow admins or officers
+    const allowedRoles = [
+      "super_admin",
+      "administrator",
+      "president",
+      "vice_president",
+      "secretary",
+      "treasurer",
+      "auditor",
+      "committee_head",
+      "assistant_committee_head",
+    ];
+    if (!roleName || !allowedRoles.includes(roleName)) {
+      return NextResponse.json(
+        { error: "Forbidden: insufficient permissions to relay email" },
+        { status: 403 },
+      );
     }
 
     const { to, subject, html } = await req.json();

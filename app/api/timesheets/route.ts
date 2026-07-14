@@ -12,7 +12,10 @@ async function getActivePeriod(supabase: SupabaseClient) {
       .eq("id", 1)
       .maybeSingle();
     if (error) {
-      console.error("[Timesheets] Failed to fetch active period config:", error.message);
+      console.error(
+        "[Timesheets] Failed to fetch active period config:",
+        error.message,
+      );
       return null;
     }
     return data || null;
@@ -117,11 +120,30 @@ export async function POST(req: Request) {
         lng,
         location_verified,
       })
-      .select("id, tutor_id, user_id, clock_in, clock_out, lat, lng, location_verified")
+      .select(
+        "id, tutor_id, user_id, clock_in, clock_out, lat, lng, location_verified",
+      )
       .single();
 
     if (error)
       return NextResponse.json({ error: error.message }, { status: 500 });
+
+    // Race condition check: ensure we didn't just insert a duplicate open entry
+    const { data: openEntries } = await supabase
+      .from("timesheets")
+      .select("id")
+      .eq("user_id", user.id)
+      .is("clock_out", null);
+
+    if (openEntries && openEntries.length > 1) {
+      // Rollback the newly created entry
+      await supabase.from("timesheets").delete().eq("id", data.id);
+      return NextResponse.json(
+        { error: "Already clocked in" },
+        { status: 400 },
+      );
+    }
+
     return NextResponse.json(data);
   }
 
