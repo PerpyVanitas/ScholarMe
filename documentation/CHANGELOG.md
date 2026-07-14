@@ -1,3 +1,9 @@
+## [2026-07-14] — AI Tutor Optimization
+
+### Changed
+
+- **AI Tutor UX**: Improved the `WebLLMChat` component so it now silently and seamlessly auto-initializes the local AI model on mount for returning users if the model is already in the browser's cache, preventing the annoying download prompt on subsequent visits. The explicit download prompt remains in place for first-time users to prevent silent 1GB downloads that could impact data caps and battery life, adhering to ethical UX practices.
+
 ## [2026-07-13] — System Audit & Code Quality Fixes
 
 ### Changed
@@ -348,3 +354,6 @@
 - Updated import statements globally to refer to the new component locations.
 - Verified successful production build using \
   pm run build\ and confirmed no type errors remain.
+
+ 
+ 

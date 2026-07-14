@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   CreateWebWorkerMLCEngine,
   InitProgressReport,
+  hasModelInCache,
   type MLCEngineInterface,
 } from "@mlc-ai/web-llm";
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,21 @@ export function WebLLMChat({
 
   // We recommend using Llama-3.2-1B-Instruct-q4f16_1-MLC as it is fast and lightweight (under 1GB VRAM).
   const SELECTED_MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
+
+  useEffect(() => {
+    const checkCache = async () => {
+      try {
+        const isCached = await hasModelInCache(SELECTED_MODEL);
+        if (isCached) {
+          initializeEngine();
+        }
+      } catch (error) {
+        console.error("Failed to check cache:", error);
+      }
+    };
+    checkCache();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     // Scroll to bottom on new message
