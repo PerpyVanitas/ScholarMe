@@ -23,7 +23,7 @@ export function ChatHeadsContainer({ currentUserId }: ChatHeadsContainerProps) {
 
   return (
     <div className="fixed bottom-0 right-16 z-50 flex items-end gap-3 pointer-events-none p-4">
-      {activeChats.map((conversationId) => (
+      {activeChats.map((conversationId: string) => (
         <MiniChatWindow
           key={conversationId}
           conversationId={conversationId}

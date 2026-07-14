@@ -1,45 +1,45 @@
 if (!self.define) {
-  let e,
-    a = {};
+  let a,
+    e = {};
   const s = (s, c) => (
     (s = new URL(s + ".js", c).href),
-    a[s] ||
-      new Promise((a) => {
+    e[s] ||
+      new Promise((e) => {
         if ("document" in self) {
-          const e = document.createElement("script");
-          ((e.src = s), (e.onload = a), document.head.appendChild(e));
-        } else ((e = s), importScripts(s), a());
+          const a = document.createElement("script");
+          ((a.src = s), (a.onload = e), document.head.appendChild(a));
+        } else ((a = s), importScripts(s), e());
       }).then(() => {
-        let e = a[s];
-        if (!e) throw new Error(`Module ${s} didn’t register its module`);
-        return e;
+        let a = e[s];
+        if (!a) throw new Error(`Module ${s} didn’t register its module`);
+        return a;
       })
   );
   self.define = (c, i) => {
     const t =
-      e ||
+      a ||
       ("document" in self ? document.currentScript.src : "") ||
       location.href;
-    if (a[t]) return;
+    if (e[t]) return;
     let n = {};
-    const r = (e) => s(e, t),
+    const r = (a) => s(a, t),
       b = { module: { uri: t }, exports: n, require: r };
-    a[t] = Promise.all(c.map((e) => b[e] || r(e))).then((e) => (i(...e), n));
+    e[t] = Promise.all(c.map((a) => b[a] || r(a))).then((a) => (i(...a), n));
   };
 }
-define(["./workbox-3c9d0171"], function (e) {
+define(["./workbox-3c9d0171"], function (a) {
   "use strict";
   (importScripts(),
     self.skipWaiting(),
-    e.clientsClaim(),
-    e.precacheAndRoute(
+    a.clientsClaim(),
+    a.precacheAndRoute(
       [
         {
-          url: "/_next/static/5on7C4pOVnKZTe4zDSkYV/_buildManifest.js",
+          url: "/_next/static/AqrzA5vMlj8btA0-LICF7/_buildManifest.js",
           revision: "d8d3a863a57290f912b2b8f6cd3a1a7f",
         },
         {
-          url: "/_next/static/5on7C4pOVnKZTe4zDSkYV/_ssgManifest.js",
+          url: "/_next/static/AqrzA5vMlj8btA0-LICF7/_ssgManifest.js",
           revision: "b6652df95db52feb4daf4eca35380933",
         },
         {
@@ -299,6 +299,10 @@ define(["./workbox-3c9d0171"], function (e) {
           revision: "3f0f71a2f139dcbf",
         },
         {
+          url: "/_next/static/chunks/2763-58120a2f801378e9.js",
+          revision: "58120a2f801378e9",
+        },
+        {
           url: "/_next/static/chunks/2840-e662c7e691473530.js",
           revision: "e662c7e691473530",
         },
@@ -327,8 +331,8 @@ define(["./workbox-3c9d0171"], function (e) {
           revision: "84dd55e3e07d9e79",
         },
         {
-          url: "/_next/static/chunks/3140.49349c4c6b268050.js",
-          revision: "49349c4c6b268050",
+          url: "/_next/static/chunks/3140.797fdbab798b2bfb.js",
+          revision: "797fdbab798b2bfb",
         },
         {
           url: "/_next/static/chunks/3183.768ac321efeeeac5.js",
@@ -611,8 +615,8 @@ define(["./workbox-3c9d0171"], function (e) {
           revision: "f636a12bbda4438c",
         },
         {
-          url: "/_next/static/chunks/5997.49349c4c6b268050.js",
-          revision: "49349c4c6b268050",
+          url: "/_next/static/chunks/5997.797fdbab798b2bfb.js",
+          revision: "797fdbab798b2bfb",
         },
         {
           url: "/_next/static/chunks/6064.4472fc95178ca6bb.js",
@@ -775,6 +779,10 @@ define(["./workbox-3c9d0171"], function (e) {
           revision: "830c8696e11a979f",
         },
         {
+          url: "/_next/static/chunks/7377.96fa2f26f51b2105.js",
+          revision: "96fa2f26f51b2105",
+        },
+        {
           url: "/_next/static/chunks/7464-f97f7236e3d1b8a7.js",
           revision: "f97f7236e3d1b8a7",
         },
@@ -791,8 +799,8 @@ define(["./workbox-3c9d0171"], function (e) {
           revision: "111c073567bfe9e6",
         },
         {
-          url: "/_next/static/chunks/759.49349c4c6b268050.js",
-          revision: "49349c4c6b268050",
+          url: "/_next/static/chunks/759.797fdbab798b2bfb.js",
+          revision: "797fdbab798b2bfb",
         },
         {
           url: "/_next/static/chunks/7639-5851e07d82266c3a.js",
@@ -867,8 +875,8 @@ define(["./workbox-3c9d0171"], function (e) {
           revision: "2ae5fd468ce721f5",
         },
         {
-          url: "/_next/static/chunks/8378.49349c4c6b268050.js",
-          revision: "49349c4c6b268050",
+          url: "/_next/static/chunks/8378.797fdbab798b2bfb.js",
+          revision: "797fdbab798b2bfb",
         },
         {
           url: "/_next/static/chunks/8387-5e0b383d75468230.js",
@@ -959,8 +967,8 @@ define(["./workbox-3c9d0171"], function (e) {
           revision: "0ee30d4c275c8667",
         },
         {
-          url: "/_next/static/chunks/92d86bc8.07b999d5642644b7.js",
-          revision: "07b999d5642644b7",
+          url: "/_next/static/chunks/92d86bc8.58b8f9ae52033c59.js",
+          revision: "58b8f9ae52033c59",
         },
         {
           url: "/_next/static/chunks/9360-0e7272459ff66537.js",
@@ -1005,10 +1013,6 @@ define(["./workbox-3c9d0171"], function (e) {
         {
           url: "/_next/static/chunks/9739.3b0ccc5a06f1081e.js",
           revision: "3b0ccc5a06f1081e",
-        },
-        {
-          url: "/_next/static/chunks/9758.b925158f81b3df70.js",
-          revision: "b925158f81b3df70",
         },
         {
           url: "/_next/static/chunks/9761.2dee4b95c0c7f488.js",
@@ -1507,8 +1511,8 @@ define(["./workbox-3c9d0171"], function (e) {
           revision: "9730fcfc596dbc14",
         },
         {
-          url: "/_next/static/chunks/app/dashboard/ai-tutor/page-c46479cb6137716c.js",
-          revision: "c46479cb6137716c",
+          url: "/_next/static/chunks/app/dashboard/ai-tutor/page-658fb160b8647aed.js",
+          revision: "658fb160b8647aed",
         },
         {
           url: "/_next/static/chunks/app/dashboard/availability/layout-692b3b48aafcd580.js",
@@ -1643,6 +1647,10 @@ define(["./workbox-3c9d0171"], function (e) {
           revision: "5a48710e0904b24e",
         },
         {
+          url: "/_next/static/chunks/app/dashboard/template-7ca903c864242400.js",
+          revision: "7ca903c864242400",
+        },
+        {
           url: "/_next/static/chunks/app/dashboard/timesheet/layout-692b3b48aafcd580.js",
           revision: "692b3b48aafcd580",
         },
@@ -1751,8 +1759,8 @@ define(["./workbox-3c9d0171"], function (e) {
           revision: "846118c33b2c0e922d7b3a7676f81f6f",
         },
         {
-          url: "/_next/static/chunks/webpack-a841feed82091dc2.js",
-          revision: "a841feed82091dc2",
+          url: "/_next/static/chunks/webpack-f00afd0a2e8b4416.js",
+          revision: "f00afd0a2e8b4416",
         },
         {
           url: "/_next/static/css/359a6caf690053a5.css",
@@ -1880,202 +1888,202 @@ define(["./workbox-3c9d0171"], function (e) {
       ],
       { ignoreURLParametersMatching: [/^utm_/, /^fbclid$/] },
     ),
-    e.cleanupOutdatedCaches(),
-    e.registerRoute(
+    a.cleanupOutdatedCaches(),
+    a.registerRoute(
       "/",
-      new e.NetworkFirst({
+      new a.NetworkFirst({
         cacheName: "start-url",
         plugins: [
           {
-            cacheWillUpdate: async ({ response: e }) =>
-              e && "opaqueredirect" === e.type
-                ? new Response(e.body, {
+            cacheWillUpdate: async ({ response: a }) =>
+              a && "opaqueredirect" === a.type
+                ? new Response(a.body, {
                     status: 200,
                     statusText: "OK",
-                    headers: e.headers,
+                    headers: a.headers,
                   })
-                : e,
+                : a,
           },
         ],
       }),
       "GET",
     ),
-    e.registerRoute(
+    a.registerRoute(
       /^https:\/\/fonts\.(?:gstatic)\.com\/.*/i,
-      new e.CacheFirst({
+      new a.CacheFirst({
         cacheName: "google-fonts-webfonts",
         plugins: [
-          new e.ExpirationPlugin({ maxEntries: 4, maxAgeSeconds: 31536e3 }),
+          new a.ExpirationPlugin({ maxEntries: 4, maxAgeSeconds: 31536e3 }),
         ],
       }),
       "GET",
     ),
-    e.registerRoute(
+    a.registerRoute(
       /^https:\/\/fonts\.(?:googleapis)\.com\/.*/i,
-      new e.StaleWhileRevalidate({
+      new a.StaleWhileRevalidate({
         cacheName: "google-fonts-stylesheets",
         plugins: [
-          new e.ExpirationPlugin({ maxEntries: 4, maxAgeSeconds: 604800 }),
+          new a.ExpirationPlugin({ maxEntries: 4, maxAgeSeconds: 604800 }),
         ],
       }),
       "GET",
     ),
-    e.registerRoute(
+    a.registerRoute(
       /\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,
-      new e.StaleWhileRevalidate({
+      new a.StaleWhileRevalidate({
         cacheName: "static-font-assets",
         plugins: [
-          new e.ExpirationPlugin({ maxEntries: 4, maxAgeSeconds: 604800 }),
+          new a.ExpirationPlugin({ maxEntries: 4, maxAgeSeconds: 604800 }),
         ],
       }),
       "GET",
     ),
-    e.registerRoute(
+    a.registerRoute(
       /\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,
-      new e.StaleWhileRevalidate({
+      new a.StaleWhileRevalidate({
         cacheName: "static-image-assets",
         plugins: [
-          new e.ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 2592e3 }),
+          new a.ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 2592e3 }),
         ],
       }),
       "GET",
     ),
-    e.registerRoute(
+    a.registerRoute(
       /\/_next\/static.+\.js$/i,
-      new e.CacheFirst({
+      new a.CacheFirst({
         cacheName: "next-static-js-assets",
         plugins: [
-          new e.ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 86400 }),
+          new a.ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 86400 }),
         ],
       }),
       "GET",
     ),
-    e.registerRoute(
+    a.registerRoute(
       /\/_next\/image\?url=.+$/i,
-      new e.StaleWhileRevalidate({
+      new a.StaleWhileRevalidate({
         cacheName: "next-image",
         plugins: [
-          new e.ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 86400 }),
+          new a.ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 86400 }),
         ],
       }),
       "GET",
     ),
-    e.registerRoute(
+    a.registerRoute(
       /\.(?:mp3|wav|ogg)$/i,
-      new e.CacheFirst({
+      new a.CacheFirst({
         cacheName: "static-audio-assets",
         plugins: [
-          new e.RangeRequestsPlugin(),
-          new e.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
+          new a.RangeRequestsPlugin(),
+          new a.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
         ],
       }),
       "GET",
     ),
-    e.registerRoute(
+    a.registerRoute(
       /\.(?:mp4|webm)$/i,
-      new e.CacheFirst({
+      new a.CacheFirst({
         cacheName: "static-video-assets",
         plugins: [
-          new e.RangeRequestsPlugin(),
-          new e.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
+          new a.RangeRequestsPlugin(),
+          new a.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
         ],
       }),
       "GET",
     ),
-    e.registerRoute(
+    a.registerRoute(
       /\.(?:js)$/i,
-      new e.StaleWhileRevalidate({
+      new a.StaleWhileRevalidate({
         cacheName: "static-js-assets",
         plugins: [
-          new e.ExpirationPlugin({ maxEntries: 48, maxAgeSeconds: 86400 }),
+          new a.ExpirationPlugin({ maxEntries: 48, maxAgeSeconds: 86400 }),
         ],
       }),
       "GET",
     ),
-    e.registerRoute(
+    a.registerRoute(
       /\.(?:css|less)$/i,
-      new e.StaleWhileRevalidate({
+      new a.StaleWhileRevalidate({
         cacheName: "static-style-assets",
         plugins: [
-          new e.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
+          new a.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
         ],
       }),
       "GET",
     ),
-    e.registerRoute(
+    a.registerRoute(
       /\/_next\/data\/.+\/.+\.json$/i,
-      new e.StaleWhileRevalidate({
+      new a.StaleWhileRevalidate({
         cacheName: "next-data",
         plugins: [
-          new e.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
+          new a.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
         ],
       }),
       "GET",
     ),
-    e.registerRoute(
+    a.registerRoute(
       /\.(?:json|xml|csv)$/i,
-      new e.NetworkFirst({
+      new a.NetworkFirst({
         cacheName: "static-data-assets",
         plugins: [
-          new e.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
+          new a.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
         ],
       }),
       "GET",
     ),
-    e.registerRoute(
-      ({ sameOrigin: e, url: { pathname: a } }) =>
-        !(!e || a.startsWith("/api/auth/callback") || !a.startsWith("/api/")),
-      new e.NetworkFirst({
+    a.registerRoute(
+      ({ sameOrigin: a, url: { pathname: e } }) =>
+        !(!a || e.startsWith("/api/auth/callback") || !e.startsWith("/api/")),
+      new a.NetworkFirst({
         cacheName: "apis",
         networkTimeoutSeconds: 10,
         plugins: [
-          new e.ExpirationPlugin({ maxEntries: 16, maxAgeSeconds: 86400 }),
+          new a.ExpirationPlugin({ maxEntries: 16, maxAgeSeconds: 86400 }),
         ],
       }),
       "GET",
     ),
-    e.registerRoute(
-      ({ request: e, url: { pathname: a }, sameOrigin: s }) =>
-        "1" === e.headers.get("RSC") &&
-        "1" === e.headers.get("Next-Router-Prefetch") &&
+    a.registerRoute(
+      ({ request: a, url: { pathname: e }, sameOrigin: s }) =>
+        "1" === a.headers.get("RSC") &&
+        "1" === a.headers.get("Next-Router-Prefetch") &&
         s &&
-        !a.startsWith("/api/"),
-      new e.NetworkFirst({
+        !e.startsWith("/api/"),
+      new a.NetworkFirst({
         cacheName: "pages-rsc-prefetch",
         plugins: [
-          new e.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
+          new a.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
         ],
       }),
       "GET",
     ),
-    e.registerRoute(
-      ({ request: e, url: { pathname: a }, sameOrigin: s }) =>
-        "1" === e.headers.get("RSC") && s && !a.startsWith("/api/"),
-      new e.NetworkFirst({
+    a.registerRoute(
+      ({ request: a, url: { pathname: e }, sameOrigin: s }) =>
+        "1" === a.headers.get("RSC") && s && !e.startsWith("/api/"),
+      new a.NetworkFirst({
         cacheName: "pages-rsc",
         plugins: [
-          new e.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
+          new a.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
         ],
       }),
       "GET",
     ),
-    e.registerRoute(
-      ({ url: { pathname: e }, sameOrigin: a }) => a && !e.startsWith("/api/"),
-      new e.NetworkFirst({
+    a.registerRoute(
+      ({ url: { pathname: a }, sameOrigin: e }) => e && !a.startsWith("/api/"),
+      new a.NetworkFirst({
         cacheName: "pages",
         plugins: [
-          new e.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
+          new a.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 86400 }),
         ],
       }),
       "GET",
     ),
-    e.registerRoute(
-      ({ sameOrigin: e }) => !e,
-      new e.NetworkFirst({
+    a.registerRoute(
+      ({ sameOrigin: a }) => !a,
+      new a.NetworkFirst({
         cacheName: "cross-origin",
         networkTimeoutSeconds: 10,
         plugins: [
-          new e.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 3600 }),
+          new a.ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 3600 }),
         ],
       }),
       "GET",
