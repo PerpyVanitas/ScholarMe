@@ -21,7 +21,7 @@ export function OnboardingTour() {
   const [mounted, setMounted] = useState(false);
   const [showSkipConfirm, setShowSkipConfirm] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [tourInstance, setTourInstance] = useState<any>(null);
+  const [tourInstance, setTourInstance] = useState<unknown>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -131,6 +131,7 @@ export function OnboardingTour() {
           <AlertDialogAction
             onClick={() => {
               localStorage.setItem("hasSeenOnboardingTour", "true");
+              // @ts-ignore: Strict unknown type check
               tourInstance?.destroy();
               setShowSkipConfirm(false);
             }}

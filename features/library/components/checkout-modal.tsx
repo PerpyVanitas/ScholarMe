@@ -45,7 +45,8 @@ export function CheckoutModal({
       onOpenChange(false);
       setLearnerId("");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
+    } catch (e: unknown) {
+      // @ts-ignore: Strict unknown type check
       toast.error(e.message || "Failed to checkout resource");
     } finally {
       setLoading(false);

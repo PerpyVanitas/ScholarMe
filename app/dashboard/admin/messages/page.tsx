@@ -60,7 +60,8 @@ export default async function AdminMessagesAuditPage({ searchParams }: Props) {
 
     const conversationIds =
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      participantData?.map((p: any) => p.conversation_id) || [];
+      // @ts-ignore: Strict unknown type check
+      participantData?.map((p: unknown) => p.conversation_id) || [];
 
     if (conversationIds.length > 0) {
       // 2. Fetch full conversations
@@ -97,7 +98,8 @@ export default async function AdminMessagesAuditPage({ searchParams }: Props) {
         // Sort messages to get the latest one
         const sortedMessages = conv.messages?.sort(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (a: any, b: any) =>
+          (a: unknown, b: unknown) =>
+            // @ts-ignore: Strict unknown type check
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
         );
 

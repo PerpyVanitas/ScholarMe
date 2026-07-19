@@ -7,7 +7,7 @@ import { birthdateFields, resolveRoleId } from "@/features/profiles/api/db";
 export async function loginWithEmail(formData: FormData) {
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({
-    email: formData.get("email") as string,
+    email: (formData.get("email") as string).toLowerCase(),
     password: formData.get("password") as string,
   });
   if (error) return { error: "Invalid login credentials" };
@@ -17,7 +17,7 @@ export async function loginWithEmail(formData: FormData) {
 export async function signUp(formData: FormData) {
   const supabase = await createClient();
   const adminClient = await createAdminClient();
-  const email = formData.get("email") as string;
+  const email = (formData.get("email") as string).toLowerCase();
   const password = formData.get("password") as string;
   const firstName = formData.get("first_name") as string;
   const lastName = formData.get("last_name") as string;

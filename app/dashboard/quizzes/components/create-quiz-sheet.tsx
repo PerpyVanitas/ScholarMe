@@ -27,7 +27,7 @@ import {
 import { Loader2, CheckCircle, BookOpen, FileText, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
-import { CreateWebWorkerMLCEngine } from "@mlc-ai/web-llm";
+import { useWebLLM } from "@/hooks/use-webllm";
 import { QuizConfigPanel } from "./quiz-config-panel";
 import { QuizItemsEditor } from "./quiz-items-editor";
 
@@ -42,6 +42,7 @@ export function CreateQuizSheet({
   onOpenChange,
   onSuccess,
 }: CreateQuizSheetProps) {
+  const { initializeEngine } = useWebLLM();
   const [creating, setCreating] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
@@ -171,21 +172,10 @@ export function CreateQuizSheet({
       setLocalAIProgressText("Loading model... (This may take a minute)");
       setLocalAIProgressValue(0);
 
-      const worker = new Worker(
-        new URL("../../../../lib/workers/webllm.worker.ts", import.meta.url),
-        { type: "module" },
-      );
-
-      const engine = await CreateWebWorkerMLCEngine(
-        worker,
-        "Llama-3.2-1B-Instruct-q4f32_1-MLC",
-        {
-          initProgressCallback: (progress) => {
-            setLocalAIProgressText(progress.text);
-            setLocalAIProgressValue(Math.round(progress.progress * 100));
-          },
-        },
-      );
+      const engine = await initializeEngine();
+      if (!engine) {
+        throw new Error("Failed to initialize AI engine");
+      }
 
       setLocalAIProgressText("Generating quiz...");
       setLocalAIProgressValue(100);

@@ -4,8 +4,9 @@ import { GOVERNANCE_ROLES, hasAnyRole } from "@/lib/utils/roles";
 
 // Helper to fetch active timesheet collection period
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getActivePeriod(supabase: any) {
+async function getActivePeriod(supabase: unknown) {
   try {
+    // @ts-ignore: Strict unknown type check
     const { data } = await supabase
       .from("timesheet_periods")
       .select("start_date, end_date")

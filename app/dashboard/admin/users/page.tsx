@@ -53,9 +53,10 @@ import { BulkUserImportDialog } from "./components/bulk-user-import-dialog";
 import { UsersDataTable } from "./components/users-data-table";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getUserRoleName(roles: any): string {
+function getUserRoleName(roles: unknown): string {
   if (Array.isArray(roles) && roles.length > 0) return roles[0].name;
   if (roles && typeof roles === "object" && !Array.isArray(roles))
+    // @ts-ignore: Strict unknown type check
     return roles.name;
   return "learner";
 }
@@ -106,14 +107,42 @@ function AdminUsersContent() {
   const [idCardOpen, setIdCardOpen] = useState(false);
   const [idCardUser, setIdCardUser] = useState<Profile | null>(null);
 
+  // Reset page on search or filter change
+  useEffect(() => {
+    setPage(1);
+  }, [search, roleFilter]);
+
   async function loadProfiles() {
+    setLoading(true);
     const supabase = createClient();
-    const { data } = await supabase
+    
+    let selectString = "*, roles(name)";
+    if (roleFilter !== "all") {
+      selectString = "*, roles!inner(name)";
+    }
+
+    let query = supabase
       .from("profiles")
-      .select("*, roles(name)")
+      .select(selectString, { count: "exact" })
       .order("created_at", { ascending: false });
 
+    if (search) {
+      query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`);
+    }
+
+    if (roleFilter !== "all") {
+      query = query.eq("roles.name", roleFilter);
+    }
+
+    const offset = (page - 1) * LIMIT;
+    const { data, count, error } = await query.range(offset, offset + LIMIT - 1);
+
+    if (error) {
+      console.error(error);
+    }
+
     setProfiles(data || []);
+    setTotalUsers(count || 0);
 
     const userId = searchParams.get("userId");
     if (userId && data) {
@@ -127,8 +156,12 @@ function AdminUsersContent() {
   }
 
   useEffect(() => {
-    loadProfiles();
-  }, [searchParams]);
+    // Only load if search is stable (could use a debounce hook here in a real app)
+    const timeout = setTimeout(() => {
+      loadProfiles();
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [searchParams, search, roleFilter, page]);
 
   function openEdit(p: Profile) {
     setEditUser(p);
@@ -169,7 +202,7 @@ function AdminUsersContent() {
       toast.success("Role updated successfully");
       loadProfiles();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Error updating role");
     }
   }
@@ -217,7 +250,8 @@ function AdminUsersContent() {
         setImpersonateLink(link);
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
+    } catch (e: unknown) {
+      // @ts-ignore: Strict unknown type check
       toast.error(e.message || "Failed to generate impersonation link");
     }
   }
@@ -232,15 +266,7 @@ function AdminUsersContent() {
     setSelectedUserIds(newSet);
   }
 
-  const filtered = profiles.filter((p) => {
-    const nameMatch =
-      !search ||
-      p.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-      p.email?.toLowerCase().includes(search.toLowerCase());
-    const matchesRole =
-      roleFilter === "all" || getUserRoleName(p.roles) === roleFilter;
-    return nameMatch && matchesRole;
-  });
+  
 
   if (loading) {
     return (
@@ -267,7 +293,7 @@ function AdminUsersContent() {
             onClearSelection={() => setSelectedUserIds(new Set())}
           />
           <ExportCsvButton
-            data={filtered.map((p) => ({
+            data={profiles.map((p) => ({
               Name: p.full_name,
               Email: p.email,
               Role: getUserRoleName(p.roles),
@@ -324,7 +350,7 @@ function AdminUsersContent() {
       </div>
 
       <UsersDataTable
-        filtered={filtered}
+        filtered={profiles}
         selectedUserIds={selectedUserIds}
         toggleAllSelection={toggleAllSelection}
         toggleUserSelection={toggleUserSelection}

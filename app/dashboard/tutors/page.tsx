@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Search, Star, Loader2, Users } from "lucide-react";
 import { TutorDetailModal } from "@/features/tutors/components/tutor-detail-modal";
+import { fetchTutors } from "@/features/tutors/api/db";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useDebounce } from "@/hooks/use-debounce";
 import type { Tutor, Specialization } from "@/lib/types";
 
@@ -29,55 +31,38 @@ export default function TutorsPage() {
   const [selectedSpec, setSelectedSpec] = useState("all");
   const [selectedTutor, setSelectedTutor] = useState<Tutor | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalTutors, setTotalTutors] = useState(0);
+  const LIMIT = 12;
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, selectedSpec]);
 
   useEffect(() => {
     async function load() {
+      setLoading(true);
       const supabase = createClient();
+      
       const [tutorRes, specRes] = await Promise.all([
-        supabase
-          .from("tutors")
-          .select(
-            "*, profiles(*, roles(name)), tutor_specializations(specializations(*)), attendance_logs(clock_in, clock_out)",
-          )
-          .order("rating", { ascending: false }),
+        fetchTutors(supabase, {
+          page,
+          limit: LIMIT,
+          searchQuery: debouncedSearch,
+          specialization: selectedSpec
+        }),
         supabase.from("specializations").select("*").order("name"),
       ]);
+      
       setTutors(tutorRes.data || []);
+      setTotalTutors(tutorRes.count || 0);
       setSpecializations(specRes.data || []);
       setLoading(false);
     }
     load();
-  }, []);
+  }, [debouncedSearch, selectedSpec, page]);
 
-  const filtered = tutors.filter((t) => {
-    // Check if the role allows them to tutor
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const roles: any = t.profiles?.roles;
-    const roleName = Array.isArray(roles) ? roles[0]?.name : roles?.name;
-    if (
-      roleName !== "tutor" &&
-      roleName !== "officer" &&
-      roleName !== "super_admin"
-    )
-      return false;
-
-    // Must be clocked into the timesheet system
-    const isClockedIn = t.attendance_logs?.some((log) => !log.clock_out);
-    if (!isClockedIn) return false;
-
-    const nameMatch =
-      !debouncedSearch ||
-      t.profiles?.full_name
-        ?.toLowerCase()
-        .includes(debouncedSearch.toLowerCase());
-    const specMatch =
-      selectedSpec === "all" ||
-      t.tutor_specializations?.some(
-        (ts: { specializations: Specialization }) =>
-          ts.specializations?.name === selectedSpec,
-      );
-    return nameMatch && specMatch;
-  });
+  
 
   if (loading) {
     return (
@@ -123,7 +108,7 @@ export default function TutorsPage() {
         </Select>
       </div>
 
-      {filtered.length === 0 ? (
+      {tutors.length === 0 ? (
         <Card className="border-border/60 bg-muted/20">
           <CardContent className="flex flex-col items-center gap-4 py-16 text-center">
             <div className="rounded-full bg-primary/10 p-5 ring-4 ring-primary/5">
@@ -156,8 +141,9 @@ export default function TutorsPage() {
           </CardContent>
         </Card>
       ) : (
+        <>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((tutor) => {
+          {tutors.map((tutor) => {
             const name = tutor.profiles?.full_name || "Tutor";
             const initials = name
               .split(" ")
@@ -197,7 +183,7 @@ export default function TutorsPage() {
                             Top Rated
                           </Badge>
                         )}
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         {(tutor.profiles as any)?.roles?.name === "officer" && (
                           <Badge
                             variant="default"
@@ -270,6 +256,35 @@ export default function TutorsPage() {
             );
           })}
         </div>
+
+        {totalTutors > LIMIT && (
+          <div className="flex items-center justify-between mt-6 border-t pt-4">
+            <p className="text-sm text-muted-foreground">
+              Showing {((page - 1) * LIMIT) + 1} to {Math.min(page * LIMIT, totalTutors)} of {totalTutors} tutors
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page * LIMIT >= totalTutors}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+        )}
+        </>
       )}
 
       {/* Tutor Detail Modal */}

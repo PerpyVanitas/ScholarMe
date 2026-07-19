@@ -190,7 +190,8 @@ export default function OrgStructurePage() {
       setAssignmentMap(map);
       setHasChanges(false);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
+    } catch (e: unknown) {
+      // @ts-ignore: Strict unknown type check
       toast.error(e.message || "Failed to load org structure");
     } finally {
       setLoading(false);
@@ -271,7 +272,8 @@ export default function OrgStructurePage() {
       setHasChanges(false);
       await fetchData();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
+    } catch (e: unknown) {
+      // @ts-ignore: Strict unknown type check
       toast.error(e.message || "Failed to save");
     } finally {
       setSaving(false);
@@ -306,7 +308,8 @@ export default function OrgStructurePage() {
       setNewEnd("");
       await fetchData();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
+    } catch (e: unknown) {
+      // @ts-ignore: Strict unknown type check
       toast.error(e.message || "Failed to create term");
     } finally {
       setCreatingTerm(false);

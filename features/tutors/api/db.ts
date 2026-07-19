@@ -70,3 +70,54 @@ export async function ensureTutorRow(
 
   return { ok: true, tutor: inserted as TutorRow };
 }
+
+export type TutorSearchParams = {
+  page?: number;
+  limit?: number;
+  searchQuery?: string;
+  specialization?: string;
+};
+
+export async function fetchTutors(
+  supabase: SupabaseClient,
+  params: TutorSearchParams,
+) {
+  const { page = 1, limit = 12, searchQuery = "", specialization = "all" } = params;
+  const offset = (page - 1) * limit;
+
+  // Since we need to filter by roles and attendance on the client historically,
+  // to do it on the server requires complex joins. For this iteration, we use
+  // PostgREST syntax to filter out non-tutors and only those with active attendance logs.
+  
+  let selectString = "*, profiles!inner(*, roles!inner(name)), attendance_logs!inner(clock_in, clock_out)";
+  
+  if (specialization !== "all") {
+    selectString += ", tutor_specializations!inner(specializations!inner(*))";
+  } else {
+    selectString += ", tutor_specializations(specializations(*))";
+  }
+
+  let query = supabase
+    .from("tutors")
+    .select(selectString, { count: "exact" })
+    .in("profiles.roles.name", ["tutor", "officer", "super_admin"])
+    .is("attendance_logs.clock_out", null)
+    .order("rating", { ascending: false });
+
+  if (searchQuery) {
+    query = query.ilike("profiles.full_name", `%${searchQuery}%`);
+  }
+
+  if (specialization !== "all") {
+    query = query.eq("tutor_specializations.specializations.name", specialization);
+  }
+
+  const { data, error, count } = await query.range(offset, offset + limit - 1);
+
+  if (error) {
+    console.error("Error fetching tutors:", error);
+    return { data: [], count: 0, error };
+  }
+
+  return { data, count: count || 0, error: null };
+}

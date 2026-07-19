@@ -15,7 +15,7 @@ vi.mock("next/server", () => ({
 }));
 
 describe("Join Session Logic", () => {
-  let mockSupabase: any;
+  let mockSupabase: unknown;
 
   beforeEach(() => {
     vi.clearAllMocks();

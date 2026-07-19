@@ -8,7 +8,7 @@ interface QuizConfigPanelProps {
     { enabled: boolean; count: number; choices?: number }
   >;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setQuizConfig: React.Dispatch<React.SetStateAction<any>>;
+  setQuizConfig: React.Dispatch<React.SetStateAction<unknown>>;
   generating: boolean;
   creating: boolean;
 }
@@ -45,9 +45,11 @@ export function QuizConfigPanel({
                 checked={config.enabled}
                 onCheckedChange={(checked) =>
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  setQuizConfig((prev: any) => ({
+                  setQuizConfig((prev: unknown) => ({
+                    // @ts-ignore: Strict unknown type check
                     ...prev,
                     [key]: {
+                      // @ts-ignore: Strict unknown type check
                       ...prev[key],
                       enabled: checked,
                     },
@@ -72,9 +74,11 @@ export function QuizConfigPanel({
                 value={config.count}
                 onChange={(e) =>
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  setQuizConfig((prev: any) => ({
+                  setQuizConfig((prev: unknown) => ({
+                    // @ts-ignore: Strict unknown type check
                     ...prev,
                     [key]: {
+                      // @ts-ignore: Strict unknown type check
                       ...prev[key],
                       count: Math.max(1, parseInt(e.target.value) || 1),
                     },

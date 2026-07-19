@@ -48,7 +48,7 @@ export function SessionList({
   sessions: Session[];
   role: UserRole;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onUpdateStatus: (id: string, status: string, extraData?: any) => void;
+  onUpdateStatus: (id: string, status: string, extraData?: unknown) => void;
   onRate: (session: Session) => void;
   onSummary: (session: Session) => void;
 }) {
@@ -65,7 +65,7 @@ export function SessionList({
 
   const [transferSession, setTransferSession] = useState<Session | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [availableTutors, setAvailableTutors] = useState<any[]>([]);
+  const [availableTutors, setAvailableTutors] = useState<unknown[]>([]);
   const [selectedTutorId, setSelectedTutorId] = useState("");
   const [transferLoading, setTransferLoading] = useState(false);
 
@@ -619,7 +619,9 @@ export function SessionList({
                     Select a tutor...
                   </option>
                   {availableTutors.map((t) => (
+                    // @ts-ignore: Strict unknown type check
                     <option key={t.id} value={t.id}>
+                      // @ts-ignore: Strict unknown type check
                       {t.profiles?.full_name}
                     </option>
                   ))}

@@ -1,90 +1,59 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { POST } from "@/app/api/auth/card-login/route";
-import { NextRequest } from "next/server";
+import { POST } from "../../app/api/auth/card-login/route";
 
-let callCount = 0;
-
+// Mock rate limiter
 vi.mock("@/lib/rate-limit", () => ({
   rateLimit: () => ({
-    check: vi.fn(async () => {
-      callCount++;
-      if (callCount >= 6) {
-        return { success: false, remaining: 0, reset: Date.now() + 10000 };
+    check: vi.fn().mockImplementation((id: string) => {
+      if (id === "rate-limited-card") {
+        return Promise.resolve({ success: false });
       }
-      return {
-        success: true,
-        remaining: 5 - callCount,
-        reset: Date.now() + 10000,
-      };
+      return Promise.resolve({ success: true });
     }),
   }),
 }));
 
+// Mock Supabase client
 vi.mock("@supabase/supabase-js", () => ({
-  createClient: vi.fn().mockReturnValue({
+  createClient: vi.fn(() => ({
     from: vi.fn().mockReturnThis(),
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
-    single: vi
-      .fn()
-      .mockResolvedValue({
-        data: {
-          pin: "$2a$10$invalidhash",
-          profiles: { roles: { name: "learner" } },
-        },
-      }),
+    single: vi.fn().mockResolvedValue({ data: { pin: "1234", user_id: "user-123" }, error: null }),
     auth: {
       admin: {
-        getUserById: vi
-          .fn()
-          .mockResolvedValue({ data: { user: { email: "test@example.com" } } }),
-        generateLink: vi
-          .fn()
-          .mockResolvedValue({
-            data: { properties: { hashed_token: "mock" } },
-          }),
+        getUserById: vi.fn().mockResolvedValue({ data: { user: { email: "test@example.com" } }, error: null }),
       },
     },
-  }),
+  })),
 }));
 
-vi.mock("@/lib/supabase/create-client", () => ({
-  createClient: vi.fn().mockResolvedValue({
-    auth: {
-      verifyOtp: vi.fn().mockResolvedValue({ data: { user: { id: "1" } } }),
-    },
-  }),
-}));
-
-describe("Card Login Rate Limit", () => {
+describe("Card Login Rate Limiting (P1-1)", () => {
   beforeEach(() => {
-    callCount = 0;
+    vi.clearAllMocks();
   });
 
-  it("P1-1: 6th rapid failed attempt on same cardId returns 429", async () => {
-    const payload = { cardId: "test-card-limit", pin: "0000" };
-
-    // First 5 attempts should not be 429 (they might be 401 if mocked DB fails, but not 429)
-    for (let i = 0; i < 5; i++) {
-      const req = new NextRequest("http://localhost/api/auth/card-login", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-      const res = await POST(req);
-      expect(res.status).not.toBe(429);
-    }
-
-    // 6th attempt should be blocked by rate limit
-    const req6 = new NextRequest("http://localhost/api/auth/card-login", {
+  it("should return 429 when rate limit is exceeded", async () => {
+    const request = new Request("http://localhost/api/auth/card-login", {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ cardId: "rate-limited-card", pin: "1234" }),
     });
-    const res6 = await POST(req6);
-    expect(res6.status).toBe(429);
 
-    const json = await res6.json();
-    expect(json.error.details).toBe(
-      "Too many attempts. Please try again later.",
-    );
+    const response = await POST(request);
+    expect(response.status).toBe(429);
+    
+    const data = await response.json();
+    expect(data.error.code).toBe("SYSTEM-001");
+  });
+
+  it("should not return 429 when rate limit is not exceeded", async () => {
+    const request = new Request("http://localhost/api/auth/card-login", {
+      method: "POST",
+      body: JSON.stringify({ cardId: "valid-card", pin: "1234" }),
+    });
+
+    const response = await POST(request);
+    // Since we mock the DB but not the actual DB call, it should return 401/400 but NOT 429
+    expect(response.status).not.toBe(429);
   });
 });

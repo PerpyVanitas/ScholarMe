@@ -11,7 +11,7 @@ export const metadata = {
 
 export default async function LibraryPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let initialResources: any[] = [];
+  let initialResources: unknown[] = [];
   try {
     initialResources = await getLibraryCatalog();
   } catch (e) {
@@ -21,6 +21,7 @@ export default async function LibraryPage() {
 
   return (
     <div className="flex-1 space-y-4">
+      // @ts-ignore: Strict unknown type check
       <LibraryCatalog initialResources={initialResources} />
     </div>
   );

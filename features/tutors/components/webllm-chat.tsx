@@ -1,12 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import {
-  CreateWebWorkerMLCEngine,
-  InitProgressReport,
-  hasModelInCache,
-  type MLCEngineInterface,
-} from "@mlc-ai/web-llm";
+import { useWebLLM } from "@/hooks/use-webllm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -52,31 +47,17 @@ export function WebLLMChat({
     },
   ]);
   const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [initProgress, setInitProgress] = useState<InitProgressReport | null>(
-    null,
-  );
-  const [engine, setEngine] = useState<MLCEngineInterface | null>(null);
-  const [isReady, setIsReady] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // We recommend using Llama-3.2-1B-Instruct-q4f16_1-MLC as it is fast and lightweight (under 1GB VRAM).
-  const SELECTED_MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
-
-  useEffect(() => {
-    const checkCache = async () => {
-      try {
-        const isCached = await hasModelInCache(SELECTED_MODEL);
-        if (isCached) {
-          initializeEngine();
-        }
-      } catch (error) {
-        console.error("Failed to check cache:", error);
-      }
-    };
-    checkCache();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const {
+    engine,
+    isLoading,
+    isReady,
+    initProgress,
+    initializeEngine
+  } = useWebLLM({
+    workerUrl: new URL("../../../lib/workers/webllm.worker.ts", import.meta.url)
+  });
 
   useEffect(() => {
     // Scroll to bottom on new message
@@ -84,35 +65,6 @@ export function WebLLMChat({
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, initProgress]);
-
-  async function initializeEngine() {
-    if (engine || isLoading) return;
-    setIsLoading(true);
-
-    try {
-      const newEngine = await CreateWebWorkerMLCEngine(
-        new Worker(
-          new URL("../../../lib/workers/webllm.worker.ts", import.meta.url),
-          { type: "module" },
-        ),
-        SELECTED_MODEL,
-        {
-          initProgressCallback: (progress) => {
-            setInitProgress(progress);
-          },
-        },
-      );
-
-      setEngine(newEngine);
-      setIsReady(true);
-      toast.success("AI Tutor is ready!");
-    } catch (error) {
-      console.error("Failed to initialize engine:", error);
-      toast.error("Failed to load the AI model. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

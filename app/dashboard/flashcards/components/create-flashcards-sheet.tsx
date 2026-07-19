@@ -27,7 +27,7 @@ import {
 import { Loader2, CheckCircle, BookOpen, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
-import { CreateWebWorkerMLCEngine } from "@mlc-ai/web-llm";
+import { useWebLLM } from "@/hooks/use-webllm";
 import { FlashcardItemsEditor } from "./flashcard-items-editor";
 
 interface CreateFlashcardsSheetProps {
@@ -41,6 +41,7 @@ export function CreateFlashcardsSheet({
   onOpenChange,
   onSuccess,
 }: CreateFlashcardsSheetProps) {
+  const { initializeEngine } = useWebLLM();
   const [creating, setCreating] = useState(false);
   const [cooldownEnd, setCooldownEnd] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -153,21 +154,10 @@ export function CreateFlashcardsSheet({
       setLocalAIProgressText("Loading model... (This may take a minute)");
       setLocalAIProgressValue(0);
 
-      const worker = new Worker(
-        new URL("../../../../lib/workers/webllm.worker.ts", import.meta.url),
-        { type: "module" },
-      );
-
-      const engine = await CreateWebWorkerMLCEngine(
-        worker,
-        "Llama-3.2-1B-Instruct-q4f32_1-MLC",
-        {
-          initProgressCallback: (progress) => {
-            setLocalAIProgressText(progress.text);
-            setLocalAIProgressValue(Math.round(progress.progress * 100));
-          },
-        },
-      );
+      const engine = await initializeEngine();
+      if (!engine) {
+        throw new Error("Failed to initialize AI engine");
+      }
 
       setLocalAIProgressText("Generating flashcards...");
       setLocalAIProgressValue(100);
@@ -233,21 +223,10 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
       setLocalAIProgressText("Loading model for auto-tagging...");
       setLocalAIProgressValue(0);
 
-      const worker = new Worker(
-        new URL("../../../../lib/workers/webllm.worker.ts", import.meta.url),
-        { type: "module" },
-      );
-
-      const engine = await CreateWebWorkerMLCEngine(
-        worker,
-        "Llama-3.2-1B-Instruct-q4f32_1-MLC",
-        {
-          initProgressCallback: (progress) => {
-            setLocalAIProgressText(progress.text);
-            setLocalAIProgressValue(Math.round(progress.progress * 100));
-          },
-        },
-      );
+      const engine = await initializeEngine();
+      if (!engine) {
+        throw new Error("Failed to initialize AI engine");
+      }
 
       setLocalAIProgressText("Analyzing flashcards...");
       setLocalAIProgressValue(100);

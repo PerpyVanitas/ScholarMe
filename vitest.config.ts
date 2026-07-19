@@ -11,5 +11,21 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./"),
     },
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "html"],
+      lines: 30,
+      functions: 30,
+      branches: 30,
+      statements: 30,
+      exclude: [
+        "node_modules/**",
+        ".next/**",
+        "**/*.d.ts",
+        "*.config.js",
+        "*.config.ts",
+        "*.config.mjs",
+      ]
+    }
   },
 });

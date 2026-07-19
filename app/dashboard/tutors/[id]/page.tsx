@@ -205,7 +205,7 @@ export default function TutorDetailPage({
       await joinWaitlist(id, new Date().toISOString().split("T")[0]);
       toast.success("Joined waitlist! You will be notified when slots open.");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast.error(e.message || "Failed to join waitlist");
     } finally {
       setWaitlistLoading(false);
@@ -277,7 +277,7 @@ export default function TutorDetailPage({
                 {specs.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-1">
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    {specs.map((s: any) => (
+                    {specs.map((s: unknown) => (
                       <Badge
                         key={s.specializations.id}
                         variant="secondary"
@@ -369,7 +369,7 @@ export default function TutorDetailPage({
                           </SelectTrigger>
                           <SelectContent>
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            {specs.map((s: any) => (
+                            {specs.map((s: unknown) => (
                               <SelectItem
                                 key={s.specializations.id}
                                 value={s.specializations.id}

@@ -60,4 +60,14 @@ const withPWA = require("@ducanh2912/next-pwa").default({
   buildExcludes: [/app-build-manifest.json$/],
 });
 
-module.exports = withPWA(nextConfig);
+const withBundleAnalyzer = require("@next/bundle-analyzer")({
+  enabled: process.env.ANALYZE === "true",
+});
+
+const { withSentryConfig } = require("@sentry/nextjs");
+
+const finalConfig = withBundleAnalyzer(withPWA(nextConfig));
+
+module.exports = process.env.NEXT_PUBLIC_SENTRY_DSN 
+  ? withSentryConfig(finalConfig, { silent: true }) 
+  : finalConfig;

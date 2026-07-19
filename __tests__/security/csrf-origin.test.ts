@@ -19,6 +19,7 @@ describe("CSRF / Origin Validation", () => {
   });
 
   it("Accepts POST with matching Origin", () => {
+    // @ts-ignore: Strict unknown type check
     process.env.NODE_ENV = "development";
     const req = new NextRequest("http://localhost/api/account/password", {
       method: "POST",

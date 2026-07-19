@@ -8,6 +8,12 @@ const { mockSend, mockSingle } = vi.hoisted(() => ({
   mockSingle: vi.fn(),
 }));
 
+vi.mock("@/lib/rate-limit", () => ({
+  rateLimit: vi.fn().mockReturnValue({
+    check: vi.fn().mockResolvedValue({ success: true })
+  })
+}));
+
 vi.mock("resend", () => ({
   Resend: class {
     emails = { send: mockSend };

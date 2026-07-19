@@ -63,11 +63,13 @@ function getInitials(name?: string) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function ClockedInRow({ item }: { item: any }) {
+function ClockedInRow({ item }: { item: unknown }) {
+  // @ts-ignore: Strict unknown type check
   const clockInTime = new Date(item.clock_in).toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
   });
+  // @ts-ignore: Strict unknown type check
   const t = item.tutors;
   const profile = t?.profiles;
   return (

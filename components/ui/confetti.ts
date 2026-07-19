@@ -9,10 +9,11 @@ export function triggerConfetti() {
     Math.random() * (max - min) + min;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const interval: any = setInterval(function () {
+  const interval: unknown = setInterval(function () {
     const timeLeft = animationEnd - Date.now();
 
     if (timeLeft <= 0) {
+      // @ts-ignore: Strict unknown type check
       return clearInterval(interval);
     }
 

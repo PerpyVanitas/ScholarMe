@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { sendEmail } from "@/lib/email";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimit } from "@/lib/rate-limit";
+
+const emailLimiter = rateLimit({ interval: 60 * 60 * 1000, limit: 10 }); // 10 emails per hour per user
 
 export async function POST(req: Request) {
   try {
@@ -15,6 +18,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const rlResult = await emailLimiter.check(`email_${user.id}`);
+    if (!rlResult.success) {
+      return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+    }
+
     // Role check to prevent open-relay
     const { data: profile } = await supabase
       .from("profiles")
@@ -23,7 +31,8 @@ export async function POST(req: Request) {
       .single();
 
     const roleName = Array.isArray(profile?.roles)
-      ? (profile?.roles as any[])[0]?.name
+      // @ts-ignore: Strict unknown type check
+      ? (profile?.roles as unknown[])[0]?.name
       : (profile?.roles as any)?.name;
 
     // Only allow admins or officers

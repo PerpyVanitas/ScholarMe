@@ -24,7 +24,7 @@ export async function GET(
   if (studySet.study_set_items && studySet.study_set_items.length > 0) {
     csvContent = studySet.study_set_items
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map((item: any) => {
+      .map((item: unknown) => {
         const question = item.question.replace(/\n/g, " ").replace(/\t/g, " ");
         const answer = item.answer.replace(/\n/g, " ").replace(/\t/g, " ");
         return `${question}\t${answer}`;

@@ -64,7 +64,8 @@ export function SecuritySettings() {
       // Force refresh to pick up new role
       setTimeout(() => router.push("/dashboard"), 1500);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
+    } catch (e: unknown) {
+      // @ts-ignore: Strict unknown type check
       toast.error(e.message || "Failed to resign role");
     } finally {
       setResigning(false);

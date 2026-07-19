@@ -8,7 +8,7 @@ import { recordLoginHistory } from "@/lib/utils/login-history";
 export async function loginWithEmail(formData: FormData) {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({
-    email: formData.get("email") as string,
+    email: (formData.get("email") as string).toLowerCase(),
     password: formData.get("password") as string,
   });
   if (error) return { error: error.message };
@@ -21,7 +21,7 @@ export async function loginWithEmail(formData: FormData) {
 export async function signUp(formData: FormData) {
   const supabase = await createClient();
   const adminClient = await createAdminClient();
-  const email = formData.get("email") as string;
+  const email = (formData.get("email") as string).toLowerCase();
   const password = formData.get("password") as string;
   const firstName = formData.get("first_name") as string;
   const lastName = formData.get("last_name") as string;
@@ -49,7 +49,7 @@ export async function signUp(formData: FormData) {
     if (existingPhone) {
       return {
         error:
-          "This phone number is already registered. Please use a different number or sign in to your existing account.",
+          "Registration failed or account already exists.",
       };
     }
   }
@@ -75,7 +75,12 @@ export async function signUp(formData: FormData) {
       },
     },
   });
-  if (createError) return { error: createError.message };
+  if (createError) {
+    if (createError.message.toLowerCase().includes("already registered") || createError.status === 422) {
+      return { error: "Registration failed or account already exists." };
+    }
+    return { error: createError.message };
+  }
 
   if (created?.user) {
     const { error: profileError } = await adminClient.from("profiles").upsert(

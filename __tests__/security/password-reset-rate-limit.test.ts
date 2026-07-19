@@ -15,8 +15,8 @@ vi.mock("@/lib/supabase/create-client", () => ({
             user: { id: "rate-limit-user-123", email: "test@example.com" },
           },
         }),
-      signInWithPassword: (...args: any[]) => mockSignInWithPassword(...args),
-      updateUser: (...args: any[]) => mockUpdateUser(...args),
+      signInWithPassword: (...args: unknown[]) => mockSignInWithPassword(...args),
+      updateUser: (...args: unknown[]) => mockUpdateUser(...args),
     },
   }),
 }));

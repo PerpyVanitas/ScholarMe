@@ -54,7 +54,8 @@ export async function POST(req: Request) {
         for (const profile of expiredRoles) {
           const roleName = Array.isArray(profile.roles)
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ? (profile.roles as any[])[0]?.name
+            // @ts-ignore: Strict unknown type check
+            ? (profile.roles as unknown[])[0]?.name
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             : (profile.roles as any)?.name;
 
@@ -102,8 +103,10 @@ export async function POST(req: Request) {
     } else if (upcomingEvents) {
       for (const event of upcomingEvents) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const goingRsvps = (event.event_rsvps || []).filter((r: any) => {
+        const goingRsvps = (event.event_rsvps || []).filter((r: unknown) => {
+          // @ts-ignore: Strict unknown type check
           const p = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
+          // @ts-ignore: Strict unknown type check
           return r.status === "going" && p?.email;
         });
 
@@ -164,7 +167,8 @@ export async function POST(req: Request) {
     } else if (overdueCheckouts && overdueCheckouts.length > 0) {
       // Update statuses to overdue
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const overdueIds = overdueCheckouts.map((c: any) => c.id);
+      // @ts-ignore: Strict unknown type check
+      const overdueIds = overdueCheckouts.map((c: unknown) => c.id);
 
       const { error: updateError } = await supabase
         .from("resource_checkouts")

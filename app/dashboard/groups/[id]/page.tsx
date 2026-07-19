@@ -62,7 +62,7 @@ export default function StudyGroupDetailPage({
       if (groupData) setGroup(groupData);
       if (memberData) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const normalized = (memberData as any[]).map((m) => ({
+        const normalized = (memberData as unknown[]).map((m) => ({
           ...m,
           profiles: Array.isArray(m.profiles) ? m.profiles[0] : m.profiles,
         })) as GroupMember[];

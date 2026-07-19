@@ -13,7 +13,7 @@ const { mockSignInWithPassword, mockAdminSelect, mockCreateUser } = vi.hoisted(
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn().mockResolvedValue({
     auth: {
-      signInWithPassword: (...args: any[]) => mockSignInWithPassword(...args),
+      signInWithPassword: (...args: unknown[]) => mockSignInWithPassword(...args),
       getUser: vi.fn().mockResolvedValue({ data: { user: null } }),
     },
   }),
@@ -21,10 +21,10 @@ vi.mock("@/lib/supabase/server", () => ({
     from: vi.fn().mockReturnThis(),
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
-    maybeSingle: (...args: any[]) => mockAdminSelect(...args),
+    maybeSingle: (...args: unknown[]) => mockAdminSelect(...args),
     auth: {
       admin: {
-        createUser: (...args: any[]) => mockCreateUser(...args),
+        createUser: (...args: unknown[]) => mockCreateUser(...args),
       },
     },
   }),

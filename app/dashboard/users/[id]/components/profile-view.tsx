@@ -28,7 +28,7 @@ export function ProfileView({
   profile,
   currentUserId,
 }: {
-  profile: any;
+  profile: unknown;
   currentUserId: string;
 }) {
   const router = useRouter();

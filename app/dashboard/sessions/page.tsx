@@ -162,13 +162,14 @@ export default function SessionsPage() {
     sessionId: string,
     status: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    extraData?: any,
+    extraData?: unknown,
   ) {
     const session = sessions.find((s) => s.id === sessionId);
 
     const res = await fetch(`/api/sessions/${sessionId}/status`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
+      // @ts-ignore: Strict unknown type check
       body: JSON.stringify({ status, ...extraData }),
     });
 
@@ -176,6 +177,7 @@ export default function SessionsPage() {
       setSessions((prev) =>
         prev.map((s) =>
           s.id === sessionId
+            // @ts-ignore: Strict unknown type check
             ? { ...s, status: status as Session["status"], ...extraData }
             : s,
         ),

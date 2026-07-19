@@ -74,7 +74,7 @@ export async function GET(
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  sessions.forEach((session: any) => {
+  sessions.forEach((session: unknown) => {
     icsContent += "BEGIN:VEVENT\r\n";
     icsContent += `UID:session-${session.id}@scholarme.app\r\n`;
     icsContent += `DTSTAMP:${getStamp()}\r\n`;

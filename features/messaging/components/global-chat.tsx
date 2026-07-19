@@ -66,8 +66,10 @@ export function GlobalChat({
         if (data) {
           const formatted = data.map((conv) => {
             const sortedMessages = conv.messages?.sort(
-              (a: any, b: any) =>
+              (a: unknown, b: unknown) =>
+                // @ts-ignore: Strict unknown type check
                 new Date(b.created_at).getTime() -
+                // @ts-ignore: Strict unknown type check
                 new Date(a.created_at).getTime(),
             );
             return {

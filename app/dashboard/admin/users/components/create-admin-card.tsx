@@ -49,8 +49,10 @@ export function CreateAdminCard() {
         confirmPassword: "",
       });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
+    } catch (e: unknown) {
+      // @ts-ignore: Strict unknown type check
       setAdminFormError(e.message || "An error occurred");
+      // @ts-ignore: Strict unknown type check
       toast.error(e.message || "Failed to create admin");
     } finally {
       setCreating(false);

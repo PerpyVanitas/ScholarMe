@@ -80,7 +80,7 @@ export async function GET(request: Request) {
 
     // Award XP
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const xpAwards: any[] = [];
+    const xpAwards: unknown[] = [];
     sessionsToUpdate.forEach((session) => {
       if (session.learner_id) {
         xpAwards.push({

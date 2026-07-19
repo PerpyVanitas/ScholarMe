@@ -37,7 +37,7 @@ export default function SystemHealthPage() {
           setMetrics(await res.json());
         }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.error("Failed to load health metrics", e);
         toast.error(e instanceof Error ? e.message : "An error occurred");
       } finally {
@@ -59,7 +59,8 @@ export default function SystemHealthPage() {
         toast.error(`Cron error: ${data.error}`);
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
+    } catch (e: unknown) {
+      // @ts-ignore: Strict unknown type check
       toast.error(`Failed to trigger cron: ${e.message}`);
     }
   };

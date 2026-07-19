@@ -21,7 +21,7 @@ export default function AdminSupportChat({
   const router = useRouter();
   const [messages, setMessages] = useState<SupportMessage[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [ticket, setTicket] = useState<any>(null);
+  const [ticket, setTicket] = useState<unknown>(null);
   const [input, setInput] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
   const supabase = createClient();

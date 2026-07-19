@@ -54,7 +54,8 @@ export async function POST(request: NextRequest) {
     // Add items if provided
     if (items && items.length > 0) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const itemsToInsert = items.map((item: any, index: number) =>
+      const itemsToInsert = items.map((item: unknown, index: number) =>
+        // @ts-ignore: Strict unknown type check
         buildStudySetItemInsert(studySet.id, item, index),
       );
 

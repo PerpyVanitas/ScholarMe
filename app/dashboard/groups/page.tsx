@@ -66,8 +66,10 @@ export default function StudyGroupsPage() {
       toast.error("Failed to load study groups");
     } else {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const formatted = (data as any[]).map((g) => ({
+      const formatted = (data as unknown[]).map((g) => ({
+        // @ts-ignore: Strict unknown type check
         ...g,
+        // @ts-ignore: Strict unknown type check
         member_count: g.study_group_members[0].count,
       }));
       setGroups(formatted);

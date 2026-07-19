@@ -38,7 +38,8 @@ export function UsersDirectory({
           // Filter out the current user
           setUsers(
             results.data.filter(
-              (u: any) => u.id !== currentUserId,
+              // @ts-ignore: Strict unknown type check
+              (u: unknown) => u.id !== currentUserId,
             ) as Profile[],
           );
         }

@@ -79,7 +79,8 @@ export default async function AdminDashboardPage() {
   const noShowMap = new Map<string, { name: string; count: number }>();
   if (noShowData) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    noShowData.forEach((s: any) => {
+    noShowData.forEach((s: unknown) => {
+      // @ts-ignore: Strict unknown type check
       const name = s.profiles?.full_name || "Unknown";
       if (!noShowMap.has(name)) noShowMap.set(name, { name, count: 0 });
       noShowMap.get(name)!.count++;

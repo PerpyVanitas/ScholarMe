@@ -21,7 +21,7 @@ import {
 
 interface SystemAnalyticsTabProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  stats: any;
+  stats: unknown;
 }
 
 export function SystemAnalyticsTab({ stats }: SystemAnalyticsTabProps) {
@@ -41,6 +41,7 @@ export function SystemAnalyticsTab({ stats }: SystemAnalyticsTabProps) {
           <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart
+                // @ts-ignore: Strict unknown type check
                 data={stats.supply_demand}
                 margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
               >

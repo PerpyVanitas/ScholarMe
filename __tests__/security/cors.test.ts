@@ -18,6 +18,7 @@ describe("CORS Enforcement", () => {
   });
 
   it("Allows OPTIONS from same origin", () => {
+    // @ts-ignore: Strict unknown type check
     process.env.NODE_ENV = "development";
     const req = new NextRequest("http://localhost/api/auth/login", {
       method: "OPTIONS",

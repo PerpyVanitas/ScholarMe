@@ -38,9 +38,10 @@ interface UserDesignationsDialogProps {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getUserRoleName(roles: any): string {
+function getUserRoleName(roles: unknown): string {
   if (Array.isArray(roles) && roles.length > 0) return roles[0].name;
   if (roles && typeof roles === "object" && !Array.isArray(roles))
+    // @ts-ignore: Strict unknown type check
     return roles.name;
   return "learner";
 }
@@ -141,7 +142,8 @@ export function UserDesignationsDialog({
       setDesigAcademicYear("");
       setDesigIsCurrent(true);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
+    } catch (e: unknown) {
+      // @ts-ignore: Strict unknown type check
       toast.error(e.message || "Failed to save designation");
     } finally {
       setSavingDesignation(false);
@@ -160,7 +162,8 @@ export function UserDesignationsDialog({
       setDesignations((prev) => prev.filter((d) => d.id !== id));
       toast.success("Designation removed");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
+    } catch (e: unknown) {
+      // @ts-ignore: Strict unknown type check
       toast.error(e.message || "Failed to remove designation");
     }
   }

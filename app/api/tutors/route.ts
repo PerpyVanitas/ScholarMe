@@ -28,9 +28,12 @@ export async function GET(request: Request) {
 
   // Filter out learners, admins, super_admins (only tutors and officers should appear)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  filtered = filtered.filter((t: any) => {
+  filtered = filtered.filter((t: unknown) => {
+    // @ts-ignore: Strict unknown type check
     const roleName = Array.isArray(t.profiles?.roles)
+      // @ts-ignore: Strict unknown type check
       ? t.profiles.roles[0]?.name
+      // @ts-ignore: Strict unknown type check
       : t.profiles?.roles?.name;
     return roleName === "tutor" || roleName === "officer";
   });

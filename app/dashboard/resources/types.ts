@@ -106,7 +106,7 @@ export interface ResourceRow {
   uploaded_by: string;
   created_at: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  profiles?: any;
+  profiles?: unknown;
 }
 
 export interface RepoRow {
@@ -117,5 +117,5 @@ export interface RepoRow {
   access_role: string;
   created_at: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  profiles?: any;
+  profiles?: unknown;
 }

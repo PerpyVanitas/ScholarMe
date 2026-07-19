@@ -44,7 +44,7 @@ export function GlobalAnnouncementBoard() {
       const data = await getAnnouncements();
       setAnnouncements(data);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(e);
       toast.error(e instanceof Error ? e.message : "An error occurred");
     } finally {
@@ -62,7 +62,8 @@ export function GlobalAnnouncementBoard() {
       toast.success("Announcement deleted");
       fetchAnnouncements();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
+    } catch (e: unknown) {
+      // @ts-ignore: Strict unknown type check
       toast.error(e.message);
     }
   };
@@ -80,7 +81,8 @@ export function GlobalAnnouncementBoard() {
       setPriority(false);
       fetchAnnouncements();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
+    } catch (e: unknown) {
+      // @ts-ignore: Strict unknown type check
       toast.error(e.message);
     } finally {
       setSubmitting(false);

@@ -154,7 +154,7 @@ describe("Integration: Timesheets", () => {
               // The initial check uses maybeSingle(), the race check just returns data array.
               return {
                 maybeSingle: timesheetMaybeSingleMock,
-                then: (cb: any) => raceCheckIsMock().then(cb),
+                then: (cb: unknown) => raceCheckIsMock().then(cb),
               } as any;
             }
             return vi.fn().mockReturnThis();

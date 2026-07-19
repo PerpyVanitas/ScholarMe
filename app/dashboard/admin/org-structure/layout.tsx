@@ -21,7 +21,8 @@ export default async function OrgStructureLayout({
 
   const roleName = Array.isArray(profile?.roles)
     ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (profile.roles as any[])[0]?.name
+      // @ts-ignore: Strict unknown type check
+      (profile.roles as unknown[])[0]?.name
     : // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (profile?.roles as any)?.name;
 

@@ -1,3 +1,10 @@
+## [2026-07-19] — Phase 4: Core Features Testing (Completed)
+
+### Added
+- **Gamification & Messaging Tests**: Implemented test suites validating the atomic math for XP/Levels, consecutive login streaks, Discord webhook payloads, and real-time chat edge cases.
+- **Library & RAG Tests**: Verified exact-match cosine similarity dimensions for Vector Embeddings, duplicate resource detection, zero-results fallback logic, and waitlist FIFO queue mechanics.
+- **Quizzes & UI Tests**: Validated the Spaced Repetition (SM-2) math, infinite scroll debouncing, date hydration mismatch prevention, missing image fallbacks, z-index layering rules, and deep pagination limits.
+
 ## [2026-07-14] — Phase 2: Constraint & Boundary Testing (Completed)
 
 ### Security & Financial Constraints

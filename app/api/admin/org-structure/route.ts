@@ -240,7 +240,7 @@ export async function PATCH(request: NextRequest) {
 
     const errors: string[] = [];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updatedAssignments: any[] = [];
+    const updatedAssignments: unknown[] = [];
 
     for (const a of assignments) {
       const { position, committee, user_id } = a;

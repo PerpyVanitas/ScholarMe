@@ -15,6 +15,7 @@ import { mapSupabaseErrorToCode, formatErrorForDisplay } from "@/lib/api-errors"
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { LoginInactivityCheck } from "@/features/auth/components/login-inactivity-check";
 import { CardScanner } from "@/features/auth/components/card-scanner";
+import { OAuthButtons } from "@/components/auth/oauth-buttons";
 
 export default function LoginPage() {
   const [emailLoading, setEmailLoading] = useState(false);
@@ -161,6 +162,8 @@ export default function LoginPage() {
                       "Sign In"
                     )}
                   </Button>
+                  
+                  <OAuthButtons />
                 </form>
               </TabsContent>
 
