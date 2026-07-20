@@ -25,12 +25,12 @@ export function TutorReviewsClient({
   reviews: initialReviews,
   // @ts-ignore: Strict unknown type check
   availableTutors,
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 }: unknown) {
   const [reviews, setReviews] = useState(initialReviews);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const handleReviewSubmit = async (data: unknown) => {
     const supabase = createClient();
     const { data: newReview, error } = await supabase

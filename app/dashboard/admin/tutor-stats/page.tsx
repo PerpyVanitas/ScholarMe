@@ -170,39 +170,41 @@ export default function TutorAnalyticsPage() {
                   <CartesianGrid
                     strokeDasharray="3 3"
                     vertical={false}
-                    stroke="#88888833"
+                    stroke="var(--border)"
                   />
                   <XAxis
                     dataKey="name"
-                    stroke="#888888"
+                    stroke="var(--muted-foreground)"
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
                   />
                   <YAxis
-                    stroke="#888888"
+                    stroke="var(--muted-foreground)"
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={(value) => `${value}`}
                   />
                   <Tooltip
-                    cursor={{ fill: "transparent" }}
+                    cursor={{ fill: "var(--accent)" }}
                     contentStyle={{
                       borderRadius: "8px",
-                      border: "1px solid #e2e8f0",
+                      border: "1px solid var(--border)",
+                      backgroundColor: "var(--background)",
+                      color: "var(--foreground)",
                       boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                     }}
                   />
                   <Bar
                     dataKey="sessions"
-                    fill="#3b82f6"
+                    fill="var(--chart-1)"
                     radius={[4, 4, 0, 0]}
                     name="Sessions"
                   />
                   <Bar
                     dataKey="hours"
-                    fill="#10b981"
+                    fill="var(--success)"
                     radius={[4, 4, 0, 0]}
                     name="Hours"
                   />

@@ -15,6 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **P8-4 Monitoring**: Added `docs/monitoring.md` for uptime checking procedures.
 - **P6 Resilience Tests**: Expanded `__tests__/integration/infrastructure/resilience.test.ts` to cover module-level connection accumulation, cron job locks, unhandled promise rejections, and DB pool exhaustion fallbacks.
 
+### Changed
+
+- **UI/UX Phases 1-4**: Implemented a global Role/Mode toggle, split the Auth Signup flow into a 3-step wizard, consolidated the Quizzes & Flashcards routes under Study Sets, and refactored the Settings dashboard into semantic Tabs.
+- **UI/UX Phase 5**: Replaced hardcoded hex colors across Admin Charts, Tooltips, and Gamification with theme-aware CSS variables (e.g. `var(--primary)`).
+- **UI/UX Phase 6 & 7**: Unified "Digital" and "Physical" libraries under `/dashboard/resources`, and created a new `/dashboard/network` hub to cleanly group Users, Friends, Tutors, and Study Groups behind Tabbed navigation.
+- **UI/UX Phase 8**: De-cluttered the app sidebar's Admin Management section into four logical headings (Users & Access, Academic & Tutoring, Financial & Operations, System Settings).
+- **UI/UX Phase 9**: Audited and improved error toasts in Checkout Modal, Tutor Dashboard, and App Sidebar to be warmer and provide actionable next steps.
+
 ### Fixed
 
 - **R-1 & R-2 Error Leakage**: Repaired `/api/health` and all backend routes to strip raw `error.message` strings from 500 responses to clients, migrating them to `Sentry`/`pino` logs instead.

@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { getTutorLastActive } from "@/app/dashboard/tutors/actions";
+import { getTutorLastActive } from "@/app/dashboard/network/tutors/actions";
 import { formatDistanceToNow } from "date-fns";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
-export default function UsersRedirect() {
+export default function NetworkPage() {
   redirect("/dashboard/network/users");
 }

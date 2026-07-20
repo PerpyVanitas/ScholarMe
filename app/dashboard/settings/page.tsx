@@ -21,6 +21,7 @@ import {
   Sun,
   Laptop
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function SiteSettingsPage() {
   const { theme, setTheme } = useTheme();
@@ -77,8 +78,16 @@ export default function SiteSettingsPage() {
       </div>
       <Separator />
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Notifications Card */}
+      <Tabs defaultValue="general" className="w-full">
+        <TabsList className="mb-6 grid w-full grid-cols-3 max-w-[400px]">
+          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="display">Display</TabsTrigger>
+          <TabsTrigger value="privacy">Privacy</TabsTrigger>
+        </TabsList>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Notifications Card */}
+          <TabsContent value="general" className="mt-0">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -135,8 +144,10 @@ export default function SiteSettingsPage() {
             </div>
           </CardContent>
         </Card>
+        </TabsContent>
 
         {/* Display Card */}
+        <TabsContent value="display" className="mt-0">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -196,9 +207,11 @@ export default function SiteSettingsPage() {
             </div>
           </CardContent>
         </Card>
+        </TabsContent>
 
         {/* Data & Privacy Card */}
-        <Card className="md:col-span-2 lg:col-span-1">
+        <TabsContent value="privacy" className="mt-0 md:col-span-2">
+        <Card className="w-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ShieldCheck className="h-5 w-5" />
@@ -245,7 +258,9 @@ export default function SiteSettingsPage() {
             </div>
           </CardContent>
         </Card>
+        </TabsContent>
       </div>
+      </Tabs>
     </div>
   );
 }

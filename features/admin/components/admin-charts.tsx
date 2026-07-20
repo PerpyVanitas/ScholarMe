@@ -36,13 +36,13 @@ export function AdminCharts({
 }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const textColor = isDark ? "#888888" : "#888888";
-  const gridColor = isDark ? "#333333" : "#e5e5e5";
-  const primaryColor = isDark ? "#FFD700" : "#000000";
-  const secondaryColor = isDark ? "#3b82f6" : "#3b82f6";
-  const successColor = isDark ? "#10b981" : "#10b981";
-  const mutedColor = isDark ? "#52525b" : "#a1a1aa";
-  const dangerColor = isDark ? "#ef4444" : "#ef4444";
+  const textColor = "var(--muted-foreground)";
+  const gridColor = "var(--border)";
+  const primaryColor = "var(--primary)";
+  const secondaryColor = "var(--chart-2)";
+  const successColor = "var(--success)";
+  const mutedColor = "var(--muted)";
+  const dangerColor = "var(--destructive)";
 
   const retentionPieData = retentionData ? [
     { name: "Active (30d)", value: retentionData.active, color: successColor },
@@ -100,11 +100,11 @@ export function AdminCharts({
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: isDark ? "#18181b" : "#fff",
-                    borderColor: isDark ? "#27272a" : "#e5e5e5",
+                    backgroundColor: "var(--background)",
+                    borderColor: "var(--border)",
                     borderRadius: "8px",
                   }}
-                  itemStyle={{ color: isDark ? "#fff" : "#000" }}
+                  itemStyle={{ color: "var(--foreground)" }}
                 />
                 <Area
                   type="monotone"
@@ -151,10 +151,10 @@ export function AdminCharts({
                   axisLine={false}
                 />
                 <Tooltip
-                  cursor={{ fill: isDark ? "#27272a" : "#f4f4f5" }}
+                  cursor={{ fill: "var(--accent)" }}
                   contentStyle={{
-                    backgroundColor: isDark ? "#18181b" : "#fff",
-                    borderColor: isDark ? "#27272a" : "#e5e5e5",
+                    backgroundColor: "var(--background)",
+                    borderColor: "var(--border)",
                     borderRadius: "8px",
                   }}
                 />
@@ -187,8 +187,8 @@ export function AdminCharts({
                 <XAxis type="number" stroke={textColor} fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis dataKey="name" type="category" stroke={textColor} fontSize={12} tickLine={false} axisLine={false} width={80} />
                 <Tooltip
-                  cursor={{ fill: isDark ? "#27272a" : "#f4f4f5" }}
-                  contentStyle={{ backgroundColor: isDark ? "#18181b" : "#fff", borderColor: isDark ? "#27272a" : "#e5e5e5", borderRadius: "8px" }}
+                  cursor={{ fill: "var(--accent)" }}
+                  contentStyle={{ backgroundColor: "var(--background)", borderColor: "var(--border)", borderRadius: "8px" }}
                 />
                 <Bar dataKey="count" fill={dangerColor} radius={[0, 4, 4, 0]} />
               </BarChart>
@@ -221,7 +221,7 @@ export function AdminCharts({
                   ))}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ backgroundColor: isDark ? "#18181b" : "#fff", borderColor: isDark ? "#27272a" : "#e5e5e5", borderRadius: "8px" }}
+                  contentStyle={{ backgroundColor: "var(--background)", borderColor: "var(--border)", borderRadius: "8px" }}
                 />
               </PieChart>
             </ResponsiveContainer>

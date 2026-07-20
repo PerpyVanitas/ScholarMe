@@ -45,6 +45,116 @@
           }
         }
       }
+    },
+    "/api/users": {
+      "get": {
+        "description": "Get all users (Admin only)",
+        "responses": {
+          "200": {
+            "description": "Array of users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "role": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string",
+                        "format": "email"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tutors": {
+      "get": {
+        "description": "Get all tutors",
+        "responses": {
+          "200": {
+            "description": "Array of tutors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "user_id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "rating": {
+                        "type": "number"
+                      },
+                      "total_ratings": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sessions": {
+      "get": {
+        "description": "Get sessions for the current user",
+        "responses": {
+          "200": {
+            "description": "Array of sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "tutor_id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "learner_id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "scheduled_date": {
+                        "type": "string",
+                        "format": "date"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

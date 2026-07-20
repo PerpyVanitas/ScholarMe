@@ -9,6 +9,8 @@ import { TutorDashboard } from "@/features/tutors/components/tutor-dashboard";
 import { LearnerDashboard } from "@/features/sessions/components/learner-dashboard";
 import type { Session, Tutor } from "@/lib/types";
 import { toast } from "sonner";
+import { useDashboardMode } from "@/lib/hooks/use-dashboard-mode";
+import { GraduationCap, BookOpen } from "lucide-react";
 
 interface DashboardData {
   adminStats?: {
@@ -36,6 +38,7 @@ interface DashboardData {
 
 export default function DashboardView() {
   const { profile, role, loading: userLoading, isAuthenticated } = useUser();
+  const { viewMode, setViewMode, canSwitch } = useDashboardMode(role);
   const [dashboardData, setDashboardData] = useState<DashboardData>({});
   const [dataLoading, setDataLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -70,6 +73,7 @@ export default function DashboardView() {
             extra.recentSessions = [];
           }
         } else if (role === "tutor") {
+          // Always load both tutor AND learner data so toggling is instant
           const { data: tutor } = await supabase
             .from("tutors")
             .select("*")
@@ -86,64 +90,98 @@ export default function DashboardView() {
               rating: tutor?.rating || 0,
               totalRatings: tutor?.total_ratings || 0,
             };
-            setDashboardData(extra);
-            return;
+          } else {
+            const { data: sessions } = await supabase
+              .from("sessions")
+              .select("*, specializations(*)")
+              .eq("tutor_id", tutor.id)
+              .in("status", ["pending", "confirmed"])
+              .order("scheduled_date", { ascending: true })
+              .limit(5);
+
+            const { count: completedCount } = await supabase
+              .from("sessions")
+              .select("*", { count: "exact", head: true })
+              .eq("tutor_id", tutor.id)
+              .eq("status", "completed");
+
+            const { count: upcomingCount } = await supabase
+              .from("sessions")
+              .select("*", { count: "exact", head: true })
+              .eq("tutor_id", tutor.id)
+              .in("status", ["pending", "confirmed"]);
+
+            const { data: allConfirmed } = await supabase
+              .from("sessions")
+              .select("id, scheduled_date, end_time")
+              .eq("tutor_id", tutor.id)
+              .eq("status", "confirmed");
+
+            const now = new Date();
+            const overdueSessionIds =
+              allConfirmed
+                ?.filter((session) => {
+                  const endDateTime = new Date(
+                    `${session.scheduled_date}T${session.end_time}`,
+                  );
+                  return endDateTime < now;
+                })
+                .map((session) => session.id) || [];
+
+            const { data: overdueSessions } =
+              overdueSessionIds.length > 0
+                ? await supabase
+                    .from("sessions")
+                    .select("*, specializations(*)")
+                    .in("id", overdueSessionIds)
+                : { data: [] };
+
+            extra.tutor = tutor;
+            extra.upcomingSessions = sessions || [];
+            extra.overdueSessions = overdueSessions || [];
+            extra.tutorStats = {
+              completedSessions: completedCount || 0,
+              upcomingSessions: upcomingCount || 0,
+              rating: tutor.rating || 0,
+              totalRatings: tutor.total_ratings || 0,
+            };
           }
 
-          const { data: sessions } = await supabase
+          // Also load learner data for the learner view toggle
+          const { data: learnSessions } = await supabase
             .from("sessions")
-            .select("*, specializations(*)")
-            .eq("tutor_id", tutor.id)
+            .select("*, tutors(*, profiles(*)), specializations(*)")
+            .eq("learner_id", profile?.id || "")
             .in("status", ["pending", "confirmed"])
             .order("scheduled_date", { ascending: true })
             .limit(5);
 
-          const { count: completedCount } = await supabase
+          const { count: learnCompletedCount } = await supabase
             .from("sessions")
             .select("*", { count: "exact", head: true })
-            .eq("tutor_id", tutor.id)
+            .eq("learner_id", profile?.id || "")
             .eq("status", "completed");
 
-          const { count: upcomingCount } = await supabase
+          const { count: learnTotalCount } = await supabase
             .from("sessions")
             .select("*", { count: "exact", head: true })
-            .eq("tutor_id", tutor.id)
-            .in("status", ["pending", "confirmed"]);
+            .eq("learner_id", profile?.id || "");
 
-          const { data: allConfirmed } = await supabase
-            .from("sessions")
-            .select("id, scheduled_date, end_time")
-            .eq("tutor_id", tutor.id)
-            .eq("status", "confirmed");
-
-          const now = new Date();
-          const overdueSessionIds =
-            allConfirmed
-              ?.filter((session) => {
-                const endDateTime = new Date(
-                  `${session.scheduled_date}T${session.end_time}`,
-                );
-                return endDateTime < now;
-              })
-              .map((session) => session.id) || [];
-
-          const { data: overdueSessions } =
-            overdueSessionIds.length > 0
-              ? await supabase
-                  .from("sessions")
-                  .select("*, specializations(*)")
-                  .in("id", overdueSessionIds)
-              : { data: [] };
-
-          extra.tutor = tutor;
-          extra.upcomingSessions = sessions || [];
-          extra.overdueSessions = overdueSessions || [];
-          extra.tutorStats = {
-            completedSessions: completedCount || 0,
-            upcomingSessions: upcomingCount || 0,
-            rating: tutor.rating || 0,
-            totalRatings: tutor.total_ratings || 0,
+          // Store learner data under a separate key; render conditionally
+          // We reuse upcomingSessions for whichever view is active at render
+          // but store learner-specific stats separately
+          extra.learnerStats = {
+            totalSessions: learnTotalCount || 0,
+            completedSessions: learnCompletedCount || 0,
+            upcomingSessions: learnSessions?.length || 0,
           };
+          // Store learner upcoming sessions so we can pass them when in learner view
+          if (!extra.upcomingSessions || viewMode === "learner") {
+            extra.upcomingSessions = learnSessions || [];
+          }
+          // Attach learner sessions as a separate field for toggling
+          (extra as DashboardData & { learnerUpcomingSessions?: Session[] }).learnerUpcomingSessions =
+            learnSessions || [];
         } else {
           const { data: sessions } = await supabase
             .from("sessions")
@@ -175,7 +213,11 @@ export default function DashboardView() {
         setDashboardData(extra);
       } catch (err) {
         console.error("Dashboard load error:", err);
-        toast.error(err instanceof Error ? err.message : "An error occurred");
+        toast.error(
+          err instanceof Error
+            ? err.message
+            : "Unable to load dashboard — try refreshing the page.",
+        );
         setError(true);
       } finally {
         setDataLoading(false);
@@ -183,6 +225,7 @@ export default function DashboardView() {
     }
 
     loadDashboardData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, role, userLoading, isAuthenticated]);
 
   if (userLoading || dataLoading) {
@@ -233,22 +276,75 @@ export default function DashboardView() {
     );
   }
 
+  const extendedData = dashboardData as DashboardData & {
+    learnerUpcomingSessions?: Session[];
+  };
+
   if (role === "tutor") {
     return (
-      <TutorDashboard
-        profile={profile}
-        tutor={dashboardData.tutor || null}
-        upcomingSessions={dashboardData.upcomingSessions || []}
-        overdueSessions={dashboardData.overdueSessions || []}
-        stats={
-          dashboardData.tutorStats || {
-            completedSessions: 0,
-            upcomingSessions: 0,
-            rating: 0,
-            totalRatings: 0,
-          }
-        }
-      />
+      <div className="flex flex-col gap-6 w-full">
+        {/* Role / view mode toggle — only visible to tutors */}
+        {canSwitch && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+              Viewing as:
+            </span>
+            <div className="flex items-center rounded-full border bg-muted p-0.5 gap-0.5">
+              <button
+                onClick={() => setViewMode("tutor")}
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all ${
+                  viewMode === "tutor"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <GraduationCap className="h-3 w-3" />
+                Tutor
+              </button>
+              <button
+                onClick={() => setViewMode("learner")}
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all ${
+                  viewMode === "learner"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <BookOpen className="h-3 w-3" />
+                Learner
+              </button>
+            </div>
+          </div>
+        )}
+
+        {viewMode === "tutor" ? (
+          <TutorDashboard
+            profile={profile}
+            tutor={dashboardData.tutor || null}
+            upcomingSessions={dashboardData.upcomingSessions || []}
+            overdueSessions={dashboardData.overdueSessions || []}
+            stats={
+              dashboardData.tutorStats || {
+                completedSessions: 0,
+                upcomingSessions: 0,
+                rating: 0,
+                totalRatings: 0,
+              }
+            }
+          />
+        ) : (
+          <LearnerDashboard
+            profile={profile}
+            upcomingSessions={extendedData.learnerUpcomingSessions || []}
+            stats={
+              dashboardData.learnerStats || {
+                totalSessions: 0,
+                completedSessions: 0,
+                upcomingSessions: 0,
+              }
+            }
+          />
+        )}
+      </div>
     );
   }
 

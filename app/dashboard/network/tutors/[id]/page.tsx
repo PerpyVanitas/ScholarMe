@@ -205,7 +205,7 @@ export default function TutorDetailPage({
     try {
       await joinWaitlist(id, new Date().toISOString().split("T")[0]);
       toast.success("Joined waitlist! You will be notified when slots open.");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     } catch (e: unknown) {
       // @ts-ignore
       toast.error(e.message || "Failed to join waitlist");

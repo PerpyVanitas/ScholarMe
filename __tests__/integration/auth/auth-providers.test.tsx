@@ -47,7 +47,7 @@ describe("Auth Providers (OAuth & Magic Links)", () => {
 
       render(<OAuthButtons />);
 
-      fireEvent.click(screen.getByRole("button", { name: /GitHub/i }));
+      fireEvent.click(screen.getByRole("button", { name: /Microsoft/i }));
 
       await waitFor(() => {
         expect(consoleErrorSpy).toHaveBeenCalledWith({ message: "OAuth failed" });

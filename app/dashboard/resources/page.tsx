@@ -19,6 +19,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LibraryCatalog } from "@/features/library/components/library-catalog";
+import { getLibraryCatalog } from "@/features/library/api/actions";
 import {
   FolderOpen,
   Plus,
@@ -78,6 +81,8 @@ export default function ResourcesPage() {
   const [userId, setUserId] = useState("");
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
+  const [physicalResources, setPhysicalResources] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState("digital");
 
   const [expandedRepo, setExpandedRepo] = useState<string | null>(null);
   const [repoResources, setRepoResources] = useState<
@@ -149,6 +154,15 @@ export default function ResourcesPage() {
       return false;
     });
     setRepos(visibleRepos);
+    
+    // Fetch physical resources for the LibraryCatalog
+    try {
+      const pResources = await getLibraryCatalog();
+      setPhysicalResources(pResources);
+    } catch (e) {
+      console.error("Failed to load physical resources", e);
+    }
+
     setLoading(false);
   }, []);
 
@@ -289,7 +303,14 @@ export default function ResourcesPage() {
         )}
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="mb-6 grid w-full grid-cols-2 max-w-[400px]">
+          <TabsTrigger value="digital">Digital Repositories</TabsTrigger>
+          <TabsTrigger value="physical">Physical Library</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="digital" className="mt-0 flex flex-col gap-6">
+          <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -532,6 +553,12 @@ export default function ResourcesPage() {
           })}
         </div>
       )}
+      </TabsContent>
+
+      <TabsContent value="physical" className="mt-0">
+        <LibraryCatalog initialResources={physicalResources} />
+      </TabsContent>
+      </Tabs>
 
       {canManage && (
         <RepoCreateDialog

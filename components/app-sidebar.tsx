@@ -3,7 +3,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
+import { useDashboardMode } from "@/lib/hooks/use-dashboard-mode";
 import type { Profile, UserRole } from "@/lib/types";
 import { getAvatarUrl } from "@/lib/utils";
 import {
@@ -80,6 +81,7 @@ import {
   Receipt,
   Globe,
   Network,
+  Layers,
 } from "lucide-react";
 import { signOut } from "@/app/auth/actions";
 import { HonorSocietyLogo } from "@/components/honsoc-logo";
@@ -103,21 +105,15 @@ function getNavItems(role: UserRole, profile: Profile) {
 
   // Study Tools
   const studyItems = [
-    { title: "Study Quizzes", href: "/dashboard/quizzes", icon: Lightbulb },
+    { title: "Study Sets", href: "/dashboard/study-sets", icon: Layers },
     { title: "AI Tutor", href: "/dashboard/ai-tutor", icon: Bot },
-    { title: "Flashcards", href: "/dashboard/flashcards", icon: FolderOpen },
   ];
 
   // Library & Resources
   const libraryItems = [
     {
-      title: "Digital Resources",
+      title: "Library & Resources",
       href: "/dashboard/resources",
-      icon: BookOpen,
-    },
-    {
-      title: "Physical Library",
-      href: "/dashboard/resources/library",
       icon: BookOpen,
     },
   ];
@@ -125,11 +121,9 @@ function getNavItems(role: UserRole, profile: Profile) {
   // Community items depending on role
   const communityItems = [
     { title: "Events Calendar", href: "/dashboard/calendar", icon: Calendar },
-    { title: "Users Directory", href: "/dashboard/users", icon: Users },
-    { title: "My Friends", href: "/dashboard/friends", icon: Users },
+    { title: "People & Network", href: "/dashboard/network", icon: Network },
     ...(role === "learner"
       ? [
-          { title: "Find Tutors", href: "/dashboard/tutors", icon: Users },
           { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
         ]
       : [
@@ -140,170 +134,91 @@ function getNavItems(role: UserRole, profile: Profile) {
           },
         ]),
     { title: "Community Hub", href: "/dashboard/forums", icon: MessageSquare },
-    { title: "Study Groups", href: "/dashboard/groups", icon: Users },
     { title: "My Messages", href: "/dashboard/messages", icon: MessageSquare },
     { title: "Voting", href: "/dashboard/voting", icon: Vote },
     { title: "Leaderboard", href: "/dashboard/leaderboard", icon: Trophy },
   ];
 
-  // Admin/Tutor specific management tools
+  const usersItems = [];
+  const academicItems = [];
+  const financeItems = [];
+  const systemItems = [];
+
+  // 1. Users & Access
+  if (hasAnyRole(role, EXECUTIVE_ROLES) || hasAnyRole(role, ADMIN_ROLES)) {
+    usersItems.push({ title: "User Management", href: "/dashboard/admin/users", icon: Users });
+  }
+  if (role === "super_admin") {
+    usersItems.push(
+      { title: "Org Structure", href: "/dashboard/admin/org-structure", icon: Network },
+      { title: "Message Audit", href: "/dashboard/admin/messages", icon: MessageSquare }
+    );
+  }
+
+  // 2. Academic & Tutoring
+  if (hasAnyRole(role, TUTOR_ROLES)) {
+    academicItems.push(
+      { title: "My Timesheet", href: "/dashboard/timesheet", icon: Timer },
+      { title: "Availability", href: "/dashboard/availability", icon: Clock },
+      { title: "Peer Reviews", href: "/dashboard/tutors/reviews", icon: ShieldCheck }
+    );
+  }
+  if (hasAnyRole(role, EXECUTIVE_ROLES) || hasAnyRole(role, ADMIN_ROLES)) {
+    academicItems.push(
+      { title: "Mastery Verifications", href: "/dashboard/admin/verifications", icon: ShieldCheck },
+      { title: "Tutor Analytics", href: "/dashboard/admin/tutor-stats", icon: BarChart }
+    );
+  }
+
+  // 3. Financial & Operations
+  if (hasAnyRole(role, FINANCE_VIEW_ROLES)) {
+    financeItems.push(
+      { title: "Finance Dashboard", href: "/dashboard/finance", icon: FileText },
+      { title: "Cash Register", href: "/dashboard/finance/register", icon: Receipt }
+    );
+    if (hasAnyRole(role, AUDIT_ROLES) || hasAnyRole(role, FINANCE_REVIEW_ROLES)) {
+      financeItems.push({ title: "Reports Hub", href: "/dashboard/admin/reports", icon: FileText });
+    }
+  }
+  if (hasAnyRole(role, EXECUTIVE_ROLES) || hasAnyRole(role, ADMIN_ROLES)) {
+    financeItems.push(
+      { title: "Payroll & Timesheets", href: "/dashboard/admin/timesheets", icon: Clock }
+    );
+  }
+  if (hasAnyRole(role, COMMITTEE_LEADERSHIP) || hasAnyRole(role, EXECUTIVE_ROLES) || hasAnyRole(role, ADMIN_ROLES)) {
+    financeItems.push(
+      { title: "QR Scanner", href: "/dashboard/admin/scanner", icon: Camera },
+      { title: "Data Export", href: "/dashboard/admin/export", icon: FileSpreadsheet }
+    );
+  }
+
+  // 4. System Settings
+  if (hasAnyRole(role, EXECUTIVE_ROLES) || hasAnyRole(role, ADMIN_ROLES)) {
+    systemItems.push({ title: "Admin Dashboard", href: "/dashboard/admin", icon: LayoutDashboard });
+  }
+  if (hasAnyRole(role, TEAMWORK_ROLES)) {
+    systemItems.push({ title: "Team Workspace", href: "/dashboard/team", icon: Users });
+  }
+  if (hasAnyRole(role, ADMIN_ROLES)) {
+    systemItems.push(
+      { title: "System Logs", href: "/dashboard/admin/logs", icon: ShieldAlert },
+      { title: "Integrations", href: "/dashboard/admin/integrations", icon: Settings },
+      { title: "System Health", href: "/dashboard/admin/health", icon: Activity }
+    );
+    if (role === "super_admin") {
+      systemItems.push({ title: "User Feedback", href: "/dashboard/admin/feedback", icon: Bug });
+    }
+  }
+
   const managementGroups: {
     label: string;
     items: { title: string; href: string; icon: LucideIcon }[];
   }[] = [];
 
-  // Honor Society (Tutor / Officers)
-  if (hasAnyRole(role, TUTOR_ROLES)) {
-    const hsItems = [];
-    if (hasAnyRole(role, TUTOR_ROLES)) {
-      hsItems.push(
-        { title: "My Timesheet", href: "/dashboard/timesheet", icon: Timer },
-        { title: "Availability", href: "/dashboard/availability", icon: Clock },
-        {
-          title: "Peer Reviews",
-          href: "/dashboard/tutors/reviews",
-          icon: ShieldCheck,
-        },
-      );
-    }
-
-    // If ESAS scholar, or anyone we want to track 90 hours for. Currently placing it in profile is better,
-    // but we can add an ESAS Tracker link here.
-
-    if (hasAnyRole(role, TEAMWORK_ROLES)) {
-      hsItems.push({
-        title: "Team Workspace",
-        href: "/dashboard/team",
-        icon: Users,
-      });
-    }
-
-    managementGroups.push({
-      label: "Honor Society",
-      items: hsItems,
-    });
-  }
-
-  // Executive Board
-  if (hasAnyRole(role, EXECUTIVE_ROLES) || hasAnyRole(role, ADMIN_ROLES)) {
-    managementGroups.push({
-      label: "Executive Board",
-      items: [
-        {
-          title: "Admin Dashboard",
-          href: "/dashboard/admin",
-          icon: LayoutDashboard,
-        },
-        {
-          title: "User Management",
-          href: "/dashboard/admin/users",
-          icon: Users,
-        },
-        {
-          title: "Mastery Verifications",
-          href: "/dashboard/admin/verifications",
-          icon: ShieldCheck,
-        },
-        {
-          title: "Tutor Analytics",
-          href: "/dashboard/admin/tutor-stats",
-          icon: BarChart,
-        },
-        {
-          title: "Payroll & Timesheets",
-          href: "/dashboard/admin/timesheets",
-          icon: Clock,
-        },
-      ],
-    });
-  }
-
-  // Committee Management
-  if (
-    hasAnyRole(role, COMMITTEE_LEADERSHIP) ||
-    hasAnyRole(role, EXECUTIVE_ROLES) ||
-    hasAnyRole(role, ADMIN_ROLES)
-  ) {
-    managementGroups.push({
-      label: "Committee Management",
-      items: [
-        { title: "QR Scanner", href: "/dashboard/admin/scanner", icon: Camera },
-        {
-          title: "Data Export",
-          href: "/dashboard/admin/export",
-          icon: FileSpreadsheet,
-        },
-      ],
-    });
-  }
-
-  // Finance & Audit
-  if (hasAnyRole(role, FINANCE_VIEW_ROLES)) {
-    const financeItems = [
-      {
-        title: "Finance Dashboard",
-        href: "/dashboard/finance",
-        icon: FileText,
-      },
-      {
-        title: "Cash Register",
-        href: "/dashboard/finance/register",
-        icon: Receipt,
-      },
-    ];
-    if (
-      hasAnyRole(role, AUDIT_ROLES) ||
-      hasAnyRole(role, FINANCE_REVIEW_ROLES)
-    ) {
-      financeItems.push({
-        title: "Reports Hub",
-        href: "/dashboard/admin/reports",
-        icon: FileText,
-      });
-    }
-    managementGroups.push({ label: "Finance & Audit", items: financeItems });
-  }
-
-  // IT Administration
-  if (hasAnyRole(role, ADMIN_ROLES)) {
-    const adminItems = [
-      {
-        title: "System Logs",
-        href: "/dashboard/admin/logs",
-        icon: ShieldAlert,
-      },
-      {
-        title: "Integrations",
-        href: "/dashboard/admin/integrations",
-        icon: Settings,
-      },
-      {
-        title: "System Health",
-        href: "/dashboard/admin/health",
-        icon: Activity,
-      },
-    ];
-    if (role === "super_admin") {
-      adminItems.push(
-        {
-          title: "Org Structure",
-          href: "/dashboard/admin/org-structure",
-          icon: Network,
-        },
-        {
-          title: "Message Audit",
-          href: "/dashboard/admin/messages",
-          icon: MessageSquare,
-        },
-        {
-          title: "User Feedback",
-          href: "/dashboard/admin/feedback",
-          icon: Bug,
-        },
-      );
-    }
-    managementGroups.push({ label: "IT Administration", items: adminItems });
-  }
+  if (usersItems.length > 0) managementGroups.push({ label: "Users & Access", items: usersItems });
+  if (academicItems.length > 0) managementGroups.push({ label: "Academic & Tutoring", items: academicItems });
+  if (financeItems.length > 0) managementGroups.push({ label: "Financial & Operations", items: financeItems });
+  if (systemItems.length > 0) managementGroups.push({ label: "System Settings", items: systemItems });
 
   const learnerGroups = [
     { label: "Core", items: coreItems },
@@ -328,9 +243,13 @@ export function AppSidebar({
   const pathname = usePathname();
   const { learnerGroups, managementGroups, hasManagement, hasTutorTools } =
     useMemo(() => getNavItems(role, profile), [role, profile]);
-  const [workspace, setWorkspace] = useState<"learner" | "management">(
-    "learner",
-  );
+  // Sync workspace switcher with the shared dashboard mode hook so sidebar
+  // and the dashboard cards always stay in sync.
+  const { viewMode, setViewMode, canSwitch } = useDashboardMode(role);
+  const workspace = canSwitch && viewMode === "learner" ? "learner" : (hasManagement ? (viewMode === "tutor" ? "management" : "learner") : "learner");
+  const setWorkspace = (ws: "learner" | "management") => {
+    if (canSwitch) setViewMode(ws === "management" ? "tutor" : "learner");
+  };
   const navGroups = workspace === "learner" ? learnerGroups : managementGroups;
 
   const initials = profile?.full_name
@@ -355,7 +274,7 @@ export function AppSidebar({
       if (stored) setFavorites(JSON.parse(stored));
     } catch (e) {
       console.warn("Failed to parse favorites from localStorage", e);
-      toast.error("Failed to load your pinned favorites.");
+      toast.error("Hmm, we couldn't load your pinned favorites right now.");
     }
   }, []);
 
@@ -367,7 +286,7 @@ export function AppSidebar({
       newFavs = newFavs.filter((f) => f !== href);
     } else {
       if (newFavs.length >= 5) {
-        toast.error("You can only pin up to 5 favorites");
+        toast.error("Whoa there! You can only pin up to 5 favorites at a time. Unpin one to make room.");
         return;
       }
       newFavs.push(href);
@@ -423,7 +342,7 @@ export function AppSidebar({
       if (stored) setRecentVisits(JSON.parse(stored));
     } catch (e) {
       console.warn("Failed to parse recent visits from localStorage", e);
-      toast.error("Failed to load your recent visits.");
+      toast.error("Hmm, we couldn't load your recent visits.");
     }
   }, []);
 

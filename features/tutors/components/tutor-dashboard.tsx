@@ -171,7 +171,7 @@ export function TutorDashboard({
 
   async function handleClock(action: "clock_in" | "clock_out") {
     if (!tutor) {
-      toast.error("Open Profile to finish tutor setup before clocking in.");
+      toast.error("Almost there! Please finish your tutor profile setup before clocking in.");
       return;
     }
     setClockLoading(true);
@@ -238,7 +238,7 @@ export function TutorDashboard({
       toast.success("Dashboard layout saved!");
       setIsEditingLayout(false);
     } catch (err) {
-      toast.error("Failed to save layout");
+      toast.error("Hmm, we couldn't save your layout right now. Please try again.");
     } finally {
       setSavingLayout(false);
     }

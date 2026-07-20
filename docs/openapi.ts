@@ -22,6 +22,36 @@ const HealthSchema = {
   }
 };
 
+const UserSchema = {
+  type: "object",
+  properties: {
+    id: { type: "string", format: "uuid" },
+    role: { type: "string" },
+    email: { type: "string", format: "email" },
+  }
+};
+
+const TutorSchema = {
+  type: "object",
+  properties: {
+    id: { type: "string", format: "uuid" },
+    user_id: { type: "string", format: "uuid" },
+    rating: { type: "number" },
+    total_ratings: { type: "integer" },
+  }
+};
+
+const SessionSchema = {
+  type: "object",
+  properties: {
+    id: { type: "string", format: "uuid" },
+    tutor_id: { type: "string", format: "uuid" },
+    learner_id: { type: "string", format: "uuid" },
+    status: { type: "string" },
+    scheduled_date: { type: "string", format: "date" },
+  }
+};
+
 registry.registerPath({
   method: "get",
   path: "/api/health",
@@ -29,16 +59,46 @@ registry.registerPath({
   responses: {
     200: {
       description: "Object with health status",
-      content: {
-        "application/json": {
-          schema: HealthSchema as any,
-        },
-      },
+      content: { "application/json": { schema: HealthSchema as any } },
     },
-    503: {
-      description: "Service unavailable",
-    },
+    503: { description: "Service unavailable" },
   },
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/api/users",
+  description: "Get all users (Admin only)",
+  responses: {
+    200: {
+      description: "Array of users",
+      content: { "application/json": { schema: { type: "array", items: UserSchema as any } } },
+    }
+  }
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/api/tutors",
+  description: "Get all tutors",
+  responses: {
+    200: {
+      description: "Array of tutors",
+      content: { "application/json": { schema: { type: "array", items: TutorSchema as any } } },
+    }
+  }
+});
+
+registry.registerPath({
+  method: "get",
+  path: "/api/sessions",
+  description: "Get sessions for the current user",
+  responses: {
+    200: {
+      description: "Array of sessions",
+      content: { "application/json": { schema: { type: "array", items: SessionSchema as any } } },
+    }
+  }
 });
 
 function generateOpenAPI() {
@@ -61,6 +121,5 @@ function generateOpenAPI() {
   console.log("OpenAPI spec written to docs/openapi.json");
 }
 
-if (require.main === module) {
-  generateOpenAPI();
-}
+// Execute the generator
+generateOpenAPI();
