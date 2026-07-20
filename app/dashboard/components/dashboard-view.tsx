@@ -9,7 +9,6 @@ import { TutorDashboard } from "@/features/tutors/components/tutor-dashboard";
 import { LearnerDashboard } from "@/features/sessions/components/learner-dashboard";
 import type { Session, Tutor } from "@/lib/types";
 import { toast } from "sonner";
-import { ensureTutor } from "@/app/dashboard/profile/actions";
 
 interface DashboardData {
   adminStats?: {
@@ -71,10 +70,6 @@ export default function DashboardView() {
             extra.recentSessions = [];
           }
         } else if (role === "tutor") {
-          if (isAuthenticated) {
-            await ensureTutor();
-          }
-
           const { data: tutor } = await supabase
             .from("tutors")
             .select("*")

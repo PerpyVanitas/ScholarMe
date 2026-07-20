@@ -60,7 +60,7 @@ function DashboardLayoutContent({
           </div>
         </div>
         {/* Main Content Skeleton */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <main className="flex-1 flex flex-col min-w-0">
           <header className="flex h-14 items-center gap-2 border-b border-border/60 px-4">
             <Skeleton className="h-6 w-32" />
             <div className="ml-auto flex items-center gap-2">
@@ -72,7 +72,7 @@ function DashboardLayoutContent({
             <Skeleton className="h-8 w-[250px] mb-4" />
             <Skeleton className="h-[200px] w-full rounded-xl" />
           </div>
-        </div>
+        </main>
       </div>
     );
   }
@@ -147,9 +147,9 @@ function DashboardLayoutContent({
             <ThemeToggle />
           </div>
         </header>
-        <div className="flex flex-col gap-6 flex-1 overflow-auto p-4 pb-24 md:pb-6 md:p-6">
+        <main className="flex flex-col gap-6 flex-1 overflow-auto p-4 pb-24 md:pb-6 md:p-6">
           {children}
-        </div>
+        </main>
         <ScrollToTop />
         <OnboardingTour />
         <AnalyticsPageTracker />

@@ -63,7 +63,7 @@ export default function SetupProfilePage() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        router.push("/auth/login");
+        window.location.href = "/auth/login";
         return;
       }
       setUserId(user.id);
@@ -87,7 +87,7 @@ export default function SetupProfilePage() {
 
         // If profile already completed, go to dashboard
         if (profile.profile_completed) {
-          router.push("/dashboard");
+          window.location.href = "/dashboard";
           return;
         }
       }

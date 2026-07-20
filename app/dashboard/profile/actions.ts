@@ -125,10 +125,6 @@ export async function ensureTutor() {
     return { success: false, error: result.error };
   }
 
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/home");
-  revalidatePath("/dashboard/availability");
-  revalidatePath("/dashboard/resources");
   return { success: true, tutorId: result.tutor.id };
 }
 

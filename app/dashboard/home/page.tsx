@@ -11,6 +11,7 @@ export default function DashboardHomePage() {
     <ErrorBoundary>
       <Suspense>
         <div className="space-y-6 max-w-7xl mx-auto w-full">
+          <h1 className="sr-only">Dashboard Home</h1>
           <WelcomeCarousel />
           <GlobalAnnouncementBoard />
           <DashboardView />
