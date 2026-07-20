@@ -17,11 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **UI/UX Phases 1-4**: Implemented a global Role/Mode toggle, split the Auth Signup flow into a 3-step wizard, consolidated the Quizzes & Flashcards routes under Study Sets, and refactored the Settings dashboard into semantic Tabs.
+- **UI/UX Phases 1-4**: Implemented a global Role/Mode toggle, split the Auth Signup flow into a 3-step wizard, consolidated the Quizzes & Flashcards routes under Study Sets, and refactored the local Settings dashboard into semantic Tabs.
+- **UI/UX Phase 9**: Standardized the visual layout across all messaging surfaces (`webllm-chat`, `study-group-chat`, `support-chat-widget`) to unify timestamp formatting, read receipts (`CheckCheck`), and empty states with the global chat format.
 - **UI/UX Phase 5**: Replaced hardcoded hex colors across Admin Charts, Tooltips, and Gamification with theme-aware CSS variables (e.g. `var(--primary)`).
 - **UI/UX Phase 6 & 7**: Unified "Digital" and "Physical" libraries under `/dashboard/resources`, and created a new `/dashboard/network` hub to cleanly group Users, Friends, Tutors, and Study Groups behind Tabbed navigation.
-- **UI/UX Phase 8**: De-cluttered the app sidebar's Admin Management section into four logical headings (Users & Access, Academic & Tutoring, Financial & Operations, System Settings).
-- **UI/UX Phase 9**: Audited and improved error toasts in Checkout Modal, Tutor Dashboard, and App Sidebar to be warmer and provide actionable next steps.
+- **UI/UX Phase 8**: De-cluttered the app sidebar's Admin Management section into four logical headings (Users & Access, Academic & Tutoring, Financial & Operations, System Settings). Expanded navigation cleanly nested using `SidebarMenuSub`.
+- **UI/UX Phase 9**: Refactored the `Admin Settings` and `User Profile` dashboards into a semantic Tabbed interface to match the rest of the application, dramatically reducing vertical scrolling. Audited and improved error toasts in Checkout Modal, Tutor Dashboard, and App Sidebar to be warmer and provide actionable next steps.
 
 ### Fixed
 

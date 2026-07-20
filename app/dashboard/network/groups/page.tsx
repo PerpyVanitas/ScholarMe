@@ -70,7 +70,7 @@ export default function StudyGroupsPage() {
         // @ts-ignore: Strict unknown type check
         ...g,
         // @ts-ignore: Strict unknown type check
-        member_count: g.study_group_members[0].count,
+        member_count: g.study_group_members?.[0]?.count || 0,
       }));
       setGroups(formatted);
     }

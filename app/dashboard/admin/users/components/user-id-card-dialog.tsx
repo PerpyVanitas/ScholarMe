@@ -86,7 +86,7 @@ export function UserIdCardDialog({
 
           <div className="flex-1 flex flex-col justify-start space-y-4 text-left">
             <div>
-              <DialogTitle className="text-xl font-bold tracking-widest text-[#FFD700] uppercase">
+              <DialogTitle className="text-xl font-bold tracking-widest text-primary uppercase">
                 CARD MANAGEMENT
               </DialogTitle>
               <DialogDescription className="text-zinc-400 text-xs font-medium mt-1">
@@ -133,7 +133,7 @@ export function UserIdCardDialog({
                   className={
                     user?.is_card_issued
                       ? "w-full border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
-                      : "w-full bg-[#FFD700] hover:bg-[#FFD700]/90 text-black font-semibold text-sm"
+                      : "w-full bg-primary hover:bg-primary/90 text-black font-semibold text-sm"
                   }
                 >
                   {updatingCard ? (

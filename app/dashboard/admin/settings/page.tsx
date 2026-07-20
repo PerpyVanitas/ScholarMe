@@ -11,9 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/submit-button";
-import { Settings, Save } from "lucide-react";
+import { Settings, Save, PaintBucket, ShieldPlus } from "lucide-react";
 import { revalidatePath } from "next/cache";
 import { CreateAdminCard } from "../users/components/create-admin-card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default async function AdminSettingsPage() {
   const supabase = await createClient();
@@ -72,83 +73,98 @@ export default async function AdminSettingsPage() {
         </p>
       </div>
 
-      <Card className="max-w-2xl border-border/60">
-        <form action={updateSettings}>
-          <CardHeader>
-            <CardTitle>Branding</CardTitle>
-            <CardDescription>
-              Changes apply globally, including the public landing page.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="primary_color">Primary Theme Color (Hex)</Label>
-              <div className="flex gap-4 items-center">
-                <Input
-                  id="primary_color"
-                  name="primary_color"
-                  type="color"
-                  className="w-16 h-10 p-1"
-                  defaultValue={settingsData?.primary_color || "#0f172a"}
-                />
-                <Input
-                  type="text"
-                  className="flex-1"
-                  defaultValue={settingsData?.primary_color || "#0f172a"}
-                  readOnly
-                />
-              </div>
-            </div>
+      <Tabs defaultValue="branding" className="w-full">
+        <TabsList className="mb-6 grid w-full grid-cols-2 max-w-[400px]">
+          <TabsTrigger value="branding" className="gap-2">
+            <PaintBucket className="h-4 w-4" /> Branding
+          </TabsTrigger>
+          <TabsTrigger value="access" className="gap-2">
+            <ShieldPlus className="h-4 w-4" /> Access Control
+          </TabsTrigger>
+        </TabsList>
 
-            <div className="space-y-2">
-              <Label htmlFor="logo_url">Logo URL (Optional)</Label>
-              <Input
-                id="logo_url"
-                name="logo_url"
-                type="url"
-                placeholder="https://example.com/logo.png"
-                defaultValue={settingsData?.logo_url || ""}
-              />
-            </div>
+        <TabsContent value="branding" className="mt-0">
+          <Card className="max-w-2xl border-border/60">
+            <form action={updateSettings}>
+              <CardHeader>
+                <CardTitle>Branding</CardTitle>
+                <CardDescription>
+                  Changes apply globally, including the public landing page.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="primary_color">Primary Theme Color (Hex)</Label>
+                  <div className="flex gap-4 items-center">
+                    <Input
+                      id="primary_color"
+                      name="primary_color"
+                      type="color"
+                      className="w-16 h-10 p-1"
+                      defaultValue={settingsData?.primary_color || "#0f172a"}
+                    />
+                    <Input
+                      type="text"
+                      className="flex-1"
+                      defaultValue={settingsData?.primary_color || "#0f172a"}
+                      readOnly
+                    />
+                  </div>
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="hero_title">Landing Page Hero Title</Label>
-              <Input
-                id="hero_title"
-                name="hero_title"
-                defaultValue={
-                  settingsData?.hero_title || "Empowering Your Academic Journey"
-                }
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="logo_url">Logo URL (Optional)</Label>
+                  <Input
+                    id="logo_url"
+                    name="logo_url"
+                    type="url"
+                    placeholder="https://example.com/logo.png"
+                    defaultValue={settingsData?.logo_url || ""}
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="hero_subtitle">Landing Page Hero Subtitle</Label>
-              <Input
-                id="hero_subtitle"
-                name="hero_subtitle"
-                defaultValue={
-                  settingsData?.hero_subtitle ||
-                  "Join our platform to master your subjects with AI-driven tools."
-                }
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="border-t px-6 py-4 bg-muted/20">
-            <SubmitButton
-              type="submit"
-              className="gap-2"
-              loadingText="Saving..."
-            >
-              <Save className="h-4 w-4" /> Save Settings
-            </SubmitButton>
-          </CardFooter>
-        </form>
-      </Card>
+                <div className="space-y-2">
+                  <Label htmlFor="hero_title">Landing Page Hero Title</Label>
+                  <Input
+                    id="hero_title"
+                    name="hero_title"
+                    defaultValue={
+                      settingsData?.hero_title || "Empowering Your Academic Journey"
+                    }
+                  />
+                </div>
 
-      <div className="max-w-2xl">
-        <CreateAdminCard />
-      </div>
+                <div className="space-y-2">
+                  <Label htmlFor="hero_subtitle">Landing Page Hero Subtitle</Label>
+                  <Input
+                    id="hero_subtitle"
+                    name="hero_subtitle"
+                    defaultValue={
+                      settingsData?.hero_subtitle ||
+                      "Join our platform to master your subjects with AI-driven tools."
+                    }
+                  />
+                </div>
+              </CardContent>
+              <CardFooter className="border-t px-6 py-4 bg-muted/20">
+                <SubmitButton
+                  type="submit"
+                  className="gap-2"
+                  loadingText="Saving..."
+                >
+                  <Save className="h-4 w-4" /> Save Settings
+                </SubmitButton>
+              </CardFooter>
+            </form>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="access" className="mt-0">
+          <div className="max-w-2xl">
+            <CreateAdminCard />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

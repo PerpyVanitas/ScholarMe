@@ -65,10 +65,10 @@ function getDesignationBadgeClass(
   const base =
     "text-[9px] px-2.5 py-0.5 whitespace-normal break-words text-center leading-tight max-w-[180px]";
   if (!designation)
-    return `bg-black/60 hover:bg-black/60 text-[#FFD700] border border-[#FFD700]/30 font-bold ${base}`;
+    return `bg-black/60 hover:bg-black/60 text-primary border border-primary/30 font-bold ${base}`;
   switch (designation.designation) {
     case "esas_scholar":
-      return `bg-[#FFD700] hover:bg-[#FFD700] text-black border border-black font-black ${base}`;
+      return `bg-primary hover:bg-primary text-black border border-black font-black ${base}`;
     case "officer":
       return `bg-gradient-to-r from-[#FFD700] to-[#FFA500] hover:from-[#FFD700] hover:to-[#FFA500] text-black border border-black/20 font-black ${base}`;
     case "administrator":
@@ -77,7 +77,7 @@ function getDesignationBadgeClass(
       return `bg-gradient-to-r from-red-900 to-red-700 hover:from-red-900 hover:to-red-700 text-white border border-red-500 font-black tracking-widest ${base}`;
     case "member":
     default:
-      return `bg-black/60 hover:bg-black/60 text-[#FFD700] border border-[#FFD700]/30 font-bold ${base}`;
+      return `bg-black/60 hover:bg-black/60 text-primary border border-primary/30 font-bold ${base}`;
   }
 }
 
@@ -185,24 +185,24 @@ export function QrIdCard({
       style={{ width: "680px", height: "528px" }}
     >
       {/* FRONT SIDE (FLAT) */}
-      <div className="w-[320px] h-[480px] rounded-2xl p-5 flex flex-col justify-between border-2 border-[#FFD700]/30 shadow-2xl overflow-hidden bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-black text-white relative">
+      <div className="w-[320px] h-[480px] rounded-2xl p-5 flex flex-col justify-between border-2 border-primary/30 shadow-2xl overflow-hidden bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-black text-white relative">
         <div className="absolute inset-0 opacity-[0.08] pointer-events-none flex items-center justify-center">
           <HonorSocietyLogo variant="white" className="w-80 h-80" />
         </div>
-        <div className="relative flex items-center gap-3 border-b border-[#FFD700]/20 pb-3">
+        <div className="relative flex items-center gap-3 border-b border-primary/20 pb-3">
           <HonorSocietyLogo variant="white" className="h-9 w-9 drop-shadow" />
           <div className="flex flex-col text-left">
             <span className="text-[10px] font-extrabold tracking-wider leading-none text-zinc-200">
               CIT UNIVERSITY
             </span>
-            <span className="text-[12px] font-black tracking-widest text-[#FFD700] leading-none mt-0.5">
+            <span className="text-[12px] font-black tracking-widest text-primary leading-none mt-0.5">
               HONOR SOCIETY
             </span>
           </div>
         </div>
         <div className="relative flex flex-col items-center gap-3 py-2 z-10">
           <div className="relative">
-            <Avatar className="h-28 w-28 border-4 border-[#FFD700] shadow-xl rounded-2xl">
+            <Avatar className="h-28 w-28 border-4 border-primary shadow-xl rounded-2xl">
               <AvatarImage
                 src={getAvatarUrl(profile.avatar_url)}
                 alt={displayName}
@@ -226,8 +226,8 @@ export function QrIdCard({
                 </span>
               )}
             </h2>
-            <div className="inline-block bg-black/40 px-3 py-0.5 rounded border border-[#FFD700]/20">
-              <span className="font-mono text-xs font-bold tracking-wider text-[#FFD700]">
+            <div className="inline-block bg-black/40 px-3 py-0.5 rounded border border-primary/20">
+              <span className="font-mono text-xs font-bold tracking-wider text-primary">
                 {profile.unique_id_number || "HS-PENDING"}
               </span>
             </div>
@@ -259,22 +259,22 @@ export function QrIdCard({
             </span>
           </div>
         </div>
-        <div className="flex justify-between items-center text-[8px] font-semibold text-zinc-400 border-t border-[#FFD700]/20 pt-2.5">
+        <div className="flex justify-between items-center text-[8px] font-semibold text-zinc-400 border-t border-primary/20 pt-2.5">
           <span>OFFICIAL DIGITAL PASS</span>
-          <span className="text-[#FFD700] tracking-wider font-extrabold">
+          <span className="text-primary tracking-wider font-extrabold">
             CEBU, PHILIPPINES
           </span>
         </div>
       </div>
 
       {/* BACK SIDE (FLAT) */}
-      <div className="w-[320px] h-[480px] rounded-2xl p-5 flex flex-col justify-between border-2 border-[#FFD700]/30 shadow-2xl bg-gradient-to-b from-[#2d2d2d] to-[#1a1a1a] text-white relative">
+      <div className="w-[320px] h-[480px] rounded-2xl p-5 flex flex-col justify-between border-2 border-primary/30 shadow-2xl bg-gradient-to-b from-[#2d2d2d] to-[#1a1a1a] text-white relative">
         <div className="absolute top-8 left-0 right-0 h-10 bg-black/90 z-0 flex items-center justify-center gap-2">
           <HonorSocietyLogo
             variant="white"
             className="w-5 h-5 object-contain"
           />
-          <span className="text-[10px] font-bold tracking-widest leading-none text-[#FFD700] pt-0.5">
+          <span className="text-[10px] font-bold tracking-widest leading-none text-primary pt-0.5">
             CIT-U HONOR SOCIETY
           </span>
         </div>
@@ -284,7 +284,7 @@ export function QrIdCard({
           </span>
         </div>
         <div className="flex flex-col items-center gap-3 py-4 z-10">
-          <div className="p-3 bg-white rounded-xl shadow-inner border border-[#FFD700]/20">
+          <div className="p-3 bg-white rounded-xl shadow-inner border border-primary/20">
             <QRCodeCanvas
               value={qrPayload}
               size={150}
@@ -306,7 +306,7 @@ export function QrIdCard({
             or notify sso@cit.edu.
           </p>
           <div className="flex flex-col items-center border-t border-white/10 pt-3">
-            <span className="font-serif italic text-sm text-[#FFD700] tracking-wide leading-none">
+            <span className="font-serif italic text-sm text-primary tracking-wide leading-none">
               {presidentName}
             </span>
             <div className="w-24 h-px bg-white/20 my-1"></div>
@@ -330,24 +330,24 @@ export function QrIdCard({
       className={`card-inner w-full h-full relative ${isFlipped ? "card-flipped" : ""}`}
     >
       {/* FRONT SIDE */}
-      <div className="card-front absolute w-full h-full rounded-2xl p-5 flex flex-col justify-between border-2 border-[#FFD700]/30 shadow-2xl overflow-hidden select-none bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-black text-white">
+      <div className="card-front absolute w-full h-full rounded-2xl p-5 flex flex-col justify-between border-2 border-primary/30 shadow-2xl overflow-hidden select-none bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-black text-white">
         <div className="absolute inset-0 opacity-[0.08] pointer-events-none flex items-center justify-center">
           <HonorSocietyLogo variant="white" className="w-80 h-80" />
         </div>
-        <div className="relative flex items-center gap-3 border-b border-[#FFD700]/20 pb-3">
+        <div className="relative flex items-center gap-3 border-b border-primary/20 pb-3">
           <HonorSocietyLogo variant="white" className="h-9 w-9 drop-shadow" />
           <div className="flex flex-col text-left">
             <span className="text-[10px] font-extrabold tracking-wider leading-none text-zinc-200">
               CIT UNIVERSITY
             </span>
-            <span className="text-[12px] font-black tracking-widest text-[#FFD700] leading-none mt-0.5">
+            <span className="text-[12px] font-black tracking-widest text-primary leading-none mt-0.5">
               HONOR SOCIETY
             </span>
           </div>
         </div>
         <div className="relative flex flex-col items-center gap-3 py-2 z-10">
           <div className="relative">
-            <Avatar className="h-28 w-28 border-4 border-[#FFD700] shadow-xl rounded-2xl">
+            <Avatar className="h-28 w-28 border-4 border-primary shadow-xl rounded-2xl">
               <AvatarImage
                 src={getAvatarUrl(profile.avatar_url)}
                 alt={displayName}
@@ -371,8 +371,8 @@ export function QrIdCard({
                 </span>
               )}
             </h2>
-            <div className="inline-block bg-black/40 px-3 py-0.5 rounded border border-[#FFD700]/20">
-              <span className="font-mono text-xs font-bold tracking-wider text-[#FFD700]">
+            <div className="inline-block bg-black/40 px-3 py-0.5 rounded border border-primary/20">
+              <span className="font-mono text-xs font-bold tracking-wider text-primary">
                 {profile.unique_id_number || "HS-PENDING"}
               </span>
             </div>
@@ -404,22 +404,22 @@ export function QrIdCard({
             </span>
           </div>
         </div>
-        <div className="flex justify-between items-center text-[8px] font-semibold text-zinc-400 border-t border-[#FFD700]/20 pt-2.5">
+        <div className="flex justify-between items-center text-[8px] font-semibold text-zinc-400 border-t border-primary/20 pt-2.5">
           <span>OFFICIAL DIGITAL PASS</span>
-          <span className="text-[#FFD700] tracking-wider font-extrabold">
+          <span className="text-primary tracking-wider font-extrabold">
             CEBU, PHILIPPINES
           </span>
         </div>
       </div>
 
       {/* BACK SIDE */}
-      <div className="card-back absolute w-full h-full rounded-2xl p-5 flex flex-col justify-between border-2 border-[#FFD700]/30 shadow-2xl select-none bg-gradient-to-b from-[#2d2d2d] to-[#1a1a1a] text-white">
+      <div className="card-back absolute w-full h-full rounded-2xl p-5 flex flex-col justify-between border-2 border-primary/30 shadow-2xl select-none bg-gradient-to-b from-[#2d2d2d] to-[#1a1a1a] text-white">
         <div className="absolute top-8 left-0 right-0 h-10 bg-black/90 z-0 flex items-center justify-center gap-2">
           <HonorSocietyLogo
             variant="white"
             className="w-5 h-5 object-contain"
           />
-          <span className="text-[10px] font-bold tracking-widest leading-none text-[#FFD700] pt-0.5">
+          <span className="text-[10px] font-bold tracking-widest leading-none text-primary pt-0.5">
             CIT-U HONOR SOCIETY
           </span>
         </div>
@@ -429,7 +429,7 @@ export function QrIdCard({
           </span>
         </div>
         <div className="flex flex-col items-center gap-3 py-4 z-10">
-          <div className="p-3 bg-white rounded-xl shadow-inner border border-[#FFD700]/20">
+          <div className="p-3 bg-white rounded-xl shadow-inner border border-primary/20">
             <QRCodeCanvas
               value={qrPayload}
               size={150}
@@ -451,7 +451,7 @@ export function QrIdCard({
             or notify sso@cit.edu.
           </p>
           <div className="flex flex-col items-center border-t border-white/10 pt-3">
-            <span className="font-serif italic text-sm text-[#FFD700] tracking-wide leading-none">
+            <span className="font-serif italic text-sm text-primary tracking-wide leading-none">
               {presidentName}
             </span>
             <div className="w-24 h-px bg-white/20 my-1"></div>
@@ -482,7 +482,7 @@ export function QrIdCard({
           size="sm"
           className="flex-1 bg-zinc-900 border-zinc-800 hover:bg-zinc-800 hover:text-white text-zinc-200 gap-2 font-semibold"
         >
-          <RotateCw className="h-4 w-4 text-[#FFD700]" />
+          <RotateCw className="h-4 w-4 text-primary" />
           Flip Card
         </Button>
 
@@ -494,9 +494,9 @@ export function QrIdCard({
           className="flex-1 bg-zinc-900 border-zinc-800 hover:bg-zinc-800 hover:text-white text-zinc-200 gap-2 font-semibold"
         >
           {isDownloading ? (
-            <Loader2 className="h-4 w-4 text-[#FFD700] animate-spin" />
+            <Loader2 className="h-4 w-4 text-primary animate-spin" />
           ) : (
-            <Download className="h-4 w-4 text-[#FFD700]" />
+            <Download className="h-4 w-4 text-primary" />
           )}
           {isDownloading ? "Downloading..." : "Download ID"}
         </Button>
@@ -552,7 +552,7 @@ export function QrIdCard({
     <>
       {/* Compact Interactive ID Preview Card */}
       <Card className="w-full max-w-sm mx-auto overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-lg hover:shadow-xl transition-all duration-300 group">
-        <div className="bg-gradient-to-r from-zinc-900 to-zinc-950 p-4 text-white flex flex-col items-center justify-center gap-3 border-b border-[#FFD700]/20 text-center">
+        <div className="bg-gradient-to-r from-zinc-900 to-zinc-950 p-4 text-white flex flex-col items-center justify-center gap-3 border-b border-primary/20 text-center">
           <div className="flex items-center gap-2">
             <HonorSocietyLogo className="h-5 w-5 animate-pulse" />
             <span className="font-bold text-xs tracking-wider uppercase">
@@ -561,7 +561,7 @@ export function QrIdCard({
           </div>
           <Badge
             variant="outline"
-            className="border-[#FFD700]/50 text-[#FFD700] text-[10px] px-3 py-1 font-semibold bg-zinc-900/40 text-center whitespace-normal h-auto break-words leading-tight max-w-full"
+            className="border-primary/50 text-primary text-[10px] px-3 py-1 font-semibold bg-zinc-900/40 text-center whitespace-normal h-auto break-words leading-tight max-w-full"
           >
             {formattedRole}
           </Badge>
@@ -569,7 +569,7 @@ export function QrIdCard({
 
         <CardContent className="p-6 flex flex-col items-center gap-4 text-center">
           <div className="relative">
-            <Avatar className="h-20 w-20 border-2 border-[#FFD700] shadow-md">
+            <Avatar className="h-20 w-20 border-2 border-primary shadow-md">
               <AvatarImage
                 src={getAvatarUrl(profile.avatar_url)}
                 alt={displayName}
@@ -579,14 +579,14 @@ export function QrIdCard({
               </AvatarFallback>
             </Avatar>
             {profile.esas_scholar && role === "tutor" && (
-              <div className="absolute -bottom-1 -right-1 bg-[#FFD700] text-black text-[8px] font-extrabold px-1.5 py-0.5 rounded border border-black shadow">
+              <div className="absolute -bottom-1 -right-1 bg-primary text-black text-[8px] font-extrabold px-1.5 py-0.5 rounded border border-black shadow">
                 ESAS
               </div>
             )}
           </div>
 
           <div className="space-y-1">
-            <h3 className="font-bold text-lg text-zinc-800 dark:text-zinc-100 group-hover:text-amber-600 dark:group-hover:text-[#FFD700] transition-colors line-clamp-1">
+            <h3 className="font-bold text-lg text-zinc-800 dark:text-zinc-100 group-hover:text-amber-600 dark:group-hover:text-primary transition-colors line-clamp-1">
               {displayName}
             </h3>
             <p className="text-xs text-muted-foreground font-mono">
@@ -605,9 +605,9 @@ export function QrIdCard({
             <DialogTrigger asChild>
               <Button
                 size="sm"
-                className="w-full bg-zinc-950 text-white hover:bg-zinc-900 border border-[#FFD700]/30 hover:border-[#FFD700] transition-all duration-300 gap-2 font-semibold"
+                className="w-full bg-zinc-950 text-white hover:bg-zinc-900 border border-primary/30 hover:border-primary transition-all duration-300 gap-2 font-semibold"
               >
-                <CreditCard className="h-3.5 w-3.5 text-[#FFD700]" />
+                <CreditCard className="h-3.5 w-3.5 text-primary" />
                 View Digital ID Card
               </Button>
             </DialogTrigger>
@@ -618,7 +618,7 @@ export function QrIdCard({
               </div>
 
               <DialogHeader className="text-center w-full relative z-10">
-                <DialogTitle className="text-xl font-bold tracking-widest text-center text-[#FFD700] uppercase">
+                <DialogTitle className="text-xl font-bold tracking-widest text-center text-primary uppercase">
                   Digital Identity Card
                 </DialogTitle>
                 <DialogDescription className="text-center text-zinc-400 text-xs font-medium">

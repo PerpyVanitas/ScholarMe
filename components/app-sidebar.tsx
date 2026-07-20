@@ -33,6 +33,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -283,25 +286,49 @@ function getNavItems(role: UserRole, profile: Profile) {
 
   const managementGroups: {
     label: string;
-    items: { title: string; href: string; icon: LucideIcon }[];
+    items: {
+      title: string;
+      href?: string;
+      icon: LucideIcon;
+      subItems?: { title: string; href: string; icon?: LucideIcon }[];
+    }[];
   }[] = [];
 
-  if (usersItems.length > 0)
-    managementGroups.push({ label: "Users & Access", items: usersItems });
-  if (academicItems.length > 0)
-    managementGroups.push({
-      label: "Academic & Tutoring",
-      items: academicItems,
+  const adminCategories = [];
+  if (usersItems.length > 0) {
+    adminCategories.push({
+      title: "Users & Access",
+      icon: Users,
+      subItems: usersItems,
     });
-  if (financeItems.length > 0)
-    managementGroups.push({
-      label: "Financial & Operations",
-      items: financeItems,
+  }
+  if (academicItems.length > 0) {
+    adminCategories.push({
+      title: "Academic & Tutoring",
+      icon: BookOpen,
+      subItems: academicItems,
     });
-  if (systemItems.length > 0)
-    managementGroups.push({ label: "System Settings", items: systemItems });
+  }
+  if (financeItems.length > 0) {
+    adminCategories.push({
+      title: "Financial & Operations",
+      icon: Receipt,
+      subItems: financeItems,
+    });
+  }
+  if (systemItems.length > 0) {
+    adminCategories.push({
+      title: "System Settings",
+      icon: Settings,
+      subItems: systemItems,
+    });
+  }
 
-  const learnerGroups = [
+  if (adminCategories.length > 0) {
+    managementGroups.push({ label: "Management Tools", items: adminCategories });
+  }
+
+  const learnerGroups: typeof managementGroups = [
     { label: "Core", items: coreItems },
     { label: "Study Tools", items: studyItems },
     { label: "Library & Resources", items: libraryItems },
@@ -406,7 +433,15 @@ export function AppSidebar({
             currentTitle = item.title;
             break;
           }
+          if (item.subItems) {
+            const sub = item.subItems.find((s) => s.href === pathname);
+            if (sub) {
+              currentTitle = sub.title;
+              break;
+            }
+          }
         }
+        if (currentTitle !== "Page") break;
       }
 
       // Don't log if it's not a known sidebar item or if it's the exact same page twice in a row
@@ -561,10 +596,22 @@ export function AppSidebar({
                   <SidebarMenu>
                     {favorites.map((favHref) => {
                       // find the item from all possible groups to get the icon and title
-                      let favItem = null;
+                      let favItem: any = null;
                       for (const g of learnerGroups.concat(managementGroups)) {
-                        const found = g.items.find((i) => i.href === favHref);
-                        if (found) favItem = found;
+                        for (const i of g.items) {
+                          if (i.href === favHref) {
+                            favItem = i;
+                            break;
+                          }
+                          if (i.subItems) {
+                            const sub = i.subItems.find((s) => s.href === favHref);
+                            if (sub) {
+                              favItem = { ...sub, icon: sub.icon || i.icon };
+                              break;
+                            }
+                          }
+                        }
+                        if (favItem) break;
                       }
                       if (!favItem) return null;
                       return (
@@ -619,43 +666,90 @@ export function AppSidebar({
                 <CollapsibleContent>
                   <SidebarGroupContent>
                     <SidebarMenu>
-                      {group.items.map((item) => (
-                        <SidebarMenuItem key={item.href}>
-                          <SidebarMenuButton
-                            asChild
-                            isActive={pathname === item.href}
-                            tooltip={item.title}
-                          >
-                            <Link href={item.href}>
-                              <item.icon className="h-4 w-4" />
-                              <span>{item.title}</span>
-                              {item.title === "Notifications" &&
-                                notificationCount > 0 && (
-                                  <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium text-primary-foreground">
-                                    {notificationCount > 99
-                                      ? "99+"
-                                      : notificationCount}
-                                  </span>
-                                )}
-                              <button
-                                onClick={(e) => toggleFavorite(e, item.href)}
-                                className="ml-auto opacity-0 group-hover:opacity-100 p-1 hover:bg-muted rounded"
-                                title={
-                                  favorites.includes(item.href)
-                                    ? "Unpin"
-                                    : "Pin to Favorites"
-                                }
-                              >
-                                {favorites.includes(item.href) ? (
-                                  <PinOff className="h-3 w-3 text-primary" />
-                                ) : (
-                                  <Pin className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                                )}
-                              </button>
-                            </Link>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      ))}
+                      {group.items.map((item) => {
+                        if (item.subItems) {
+                          const isSubActive = item.subItems.some(sub => pathname === sub.href || pathname.startsWith(sub.href + "/"));
+                          return (
+                            <Collapsible key={item.title} defaultOpen={isSubActive} className="group/submenu">
+                              <SidebarMenuItem>
+                                <CollapsibleTrigger asChild>
+                                  <SidebarMenuButton tooltip={item.title}>
+                                    <item.icon className="h-4 w-4" />
+                                    <span>{item.title}</span>
+                                    <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/submenu:rotate-90" />
+                                  </SidebarMenuButton>
+                                </CollapsibleTrigger>
+                                <CollapsibleContent>
+                                  <SidebarMenuSub>
+                                    {item.subItems.map(subItem => (
+                                      <SidebarMenuSubItem key={subItem.title}>
+                                        <SidebarMenuSubButton asChild isActive={pathname === subItem.href}>
+                                          <Link href={subItem.href}>
+                                            <span>{subItem.title}</span>
+                                          </Link>
+                                          <button
+                                            onClick={(e) => toggleFavorite(e, subItem.href)}
+                                            className="ml-auto opacity-0 group-hover/menu-sub-item:opacity-100 p-0.5 hover:bg-muted rounded"
+                                            title={
+                                              favorites.includes(subItem.href)
+                                                ? "Unpin"
+                                                : "Pin to Favorites"
+                                            }
+                                          >
+                                            {favorites.includes(subItem.href) ? (
+                                              <PinOff className="h-3 w-3 text-primary" />
+                                            ) : (
+                                              <Pin className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                                            )}
+                                          </button>
+                                        </SidebarMenuSubButton>
+                                      </SidebarMenuSubItem>
+                                    ))}
+                                  </SidebarMenuSub>
+                                </CollapsibleContent>
+                              </SidebarMenuItem>
+                            </Collapsible>
+                          );
+                        }
+
+                        return (
+                          <SidebarMenuItem key={item.title}>
+                            <SidebarMenuButton
+                              asChild
+                              isActive={pathname === item.href}
+                              tooltip={item.title}
+                            >
+                              <Link href={item.href!}>
+                                <item.icon className="h-4 w-4" />
+                                <span>{item.title}</span>
+                                {item.title === "Notifications" &&
+                                  notificationCount > 0 && (
+                                    <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium text-primary-foreground">
+                                      {notificationCount > 99
+                                        ? "99+"
+                                        : notificationCount}
+                                    </span>
+                                  )}
+                                <button
+                                  onClick={(e) => toggleFavorite(e, item.href!)}
+                                  className="ml-auto opacity-0 group-hover/menu-button:opacity-100 p-1 hover:bg-muted rounded"
+                                  title={
+                                    favorites.includes(item.href!)
+                                      ? "Unpin"
+                                      : "Pin to Favorites"
+                                  }
+                                >
+                                  {favorites.includes(item.href!) ? (
+                                    <PinOff className="h-3 w-3 text-primary" />
+                                  ) : (
+                                    <Pin className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                                  )}
+                                </button>
+                              </Link>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        );
+                      })}
                     </SidebarMenu>
                   </SidebarGroupContent>
                 </CollapsibleContent>

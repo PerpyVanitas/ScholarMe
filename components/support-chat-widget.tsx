@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { MessageCircle, X, Send } from "lucide-react";
+import { MessageCircle, X, Send, CheckCheck } from "lucide-react";
 import { SupportTicket, SupportMessage } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -146,8 +146,16 @@ export function SupportChatWidget() {
                 const isMe = msg.sender_id === userId;
                 return (
                   <div key={msg.id || i} className={`flex flex-col max-w-[85%] ${isMe ? 'self-end' : 'self-start'}`}>
-                    <div className={`px-3 py-2 rounded-2xl text-sm ${isMe ? 'bg-primary text-primary-foreground rounded-br-none' : 'bg-background border shadow-sm rounded-bl-none'}`}>
-                      {msg.content}
+                    <div className={`px-3 py-2 rounded-2xl text-sm flex flex-col gap-1 ${isMe ? 'bg-primary text-primary-foreground rounded-br-none' : 'bg-background border shadow-sm rounded-bl-none'}`}>
+                      <span>{msg.content}</span>
+                      {msg.created_at && (
+                        <div className={`flex items-center gap-1 mt-1 text-[9px] ${isMe ? "text-primary-foreground/70 justify-end" : "text-muted-foreground justify-end"}`}>
+                          <span>
+                            {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                          {isMe && <CheckCheck className="h-3 w-3 ml-0.5" />}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

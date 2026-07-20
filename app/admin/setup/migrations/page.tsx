@@ -16,8 +16,8 @@ export default function MigrationsPage() {
           </p>
         </div>
 
-        <Alert className="border-[#FFD700]/30 bg-zinc-900/50 text-slate-100">
-          <Info className="h-4 w-4 text-[#FFD700]" />
+        <Alert className="border-primary/30 bg-zinc-900/50 text-slate-100">
+          <Info className="h-4 w-4 text-primary" />
           <AlertTitle>Security Update: Manual Execution Required</AlertTitle>
           <AlertDescription>
             To prevent exposing our database schema to the public client bundle, the migration SQL has been moved securely to the backend repository. Please execute the migrations manually via the Supabase dashboard.

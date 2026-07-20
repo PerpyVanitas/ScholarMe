@@ -16,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getAvatarUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -687,41 +688,59 @@ export default function ProfilePage() {
           />
         </div>
 
-        <div className="lg:col-span-2 space-y-6">
-          <ProfileInfoCard
-            profile={profile}
-            displayName={displayName}
-            isTutor={isTutor}
-            formatDate={formatDate}
-          />
+        <div className="md:col-span-2 space-y-6">
+          <Tabs defaultValue="general" className="w-full">
+            <TabsList className="mb-6 grid w-full grid-cols-2 md:grid-cols-4 max-w-[600px] h-auto p-1">
+              <TabsTrigger value="general" className="py-2">General</TabsTrigger>
+              <TabsTrigger value="academic" className="py-2">Academic</TabsTrigger>
+              {isTutor && <TabsTrigger value="tutor" className="py-2">Tutor</TabsTrigger>}
+              <TabsTrigger value="security" className="py-2">Security</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="general" className="mt-0">
+              <ProfileInfoCard
+                profile={profile!}
+                displayName={displayName}
+                isTutor={isTutor}
+                formatDate={formatDate}
+              />
+            </TabsContent>
 
-          {isTutor && (
-            <TutorSettingsCard
-              tutorBio={tutorBio}
-              hourlyRate={hourlyRate}
-              yearsExperience={yearsExperience}
-              specializations={specializations}
-              setTutorSettingsOpen={setTutorSettingsOpen}
-              setMasteryVerificationOpen={setMasteryVerificationOpen}
-            />
-          )}
+            {isTutor && (
+              <TabsContent value="tutor" className="mt-0">
+                <TutorSettingsCard
+                  tutorBio={tutorBio}
+                  hourlyRate={hourlyRate}
+                  yearsExperience={yearsExperience}
+                  specializations={specializations}
+                  setTutorSettingsOpen={setTutorSettingsOpen}
+                  setMasteryVerificationOpen={setMasteryVerificationOpen}
+                />
+              </TabsContent>
+            )}
 
-          <DesignationCard
-            designations={designations}
-            setDesignations={setDesignations}
-            setEditingDesignation={setEditingDesignation}
-            // @ts-ignore: Strict unknown type check
-            setDesigType={setDesigType}
-            setDesigPosition={setDesigPosition}
-            setDesigAcademicYear={setDesigAcademicYear}
-            setDesigIsCurrent={setDesigIsCurrent}
-            setDesignationDialogOpen={setDesignationDialogOpen}
-          />
-          <AchievementsCard />
-          {hasAnyRole(roleName, ["administrator", "super_admin"]) && (
-            <SkillTree profile={profile} />
-          )}
-          <SecuritySettings />
+            <TabsContent value="academic" className="mt-0 space-y-6">
+              <DesignationCard
+                designations={designations}
+                setDesignations={setDesignations}
+                setEditingDesignation={setEditingDesignation}
+                // @ts-ignore: Strict unknown type check
+                setDesigType={setDesigType}
+                setDesigPosition={setDesigPosition}
+                setDesigAcademicYear={setDesigAcademicYear}
+                setDesigIsCurrent={setDesigIsCurrent}
+                setDesignationDialogOpen={setDesignationDialogOpen}
+              />
+              <AchievementsCard />
+              {hasAnyRole(roleName, ["administrator", "super_admin"]) && (
+                <SkillTree profile={profile} />
+              )}
+            </TabsContent>
+
+            <TabsContent value="security" className="mt-0">
+              <SecuritySettings />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
 

@@ -204,7 +204,7 @@ function PreviewContent({ resource }: { resource: ResourceRow }) {
       <Button
         asChild
         size="sm"
-        className="bg-[#FFD700] hover:bg-[#FFD700]/90 text-black font-semibold"
+        className="bg-primary hover:bg-primary/90 text-black font-semibold"
       >
         <a
           href={`${url}?download=`}

@@ -16,12 +16,14 @@ vi.mock("@/lib/supabase/client", () => ({
                 name: "Biology 101",
                 description: "Study group for Bio",
                 created_by: "user123",
+                study_group_members: [{ count: 1 }],
               },
               {
                 id: "2",
                 name: "Calculus II",
                 description: "Math study group",
                 created_by: "user456",
+                study_group_members: [{ count: 1 }],
               },
             ],
             error: null,
@@ -40,6 +42,8 @@ vi.mock("@/lib/supabase/client", () => ({
       }
       if (table === "study_group_members") {
         return {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockResolvedValue({ data: [{ group_id: "1" }], error: null }),
           insert: vi.fn().mockResolvedValue({ error: null }),
         };
       }
@@ -62,6 +66,18 @@ vi.mock("@/lib/supabase/client", () => ({
 
 vi.mock("@/lib/user-context", () => ({
   useUser: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    refresh: vi.fn(),
+    back: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+  usePathname: () => "/dashboard/network/groups",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 describe("Study Groups (Network/Groups)", () => {

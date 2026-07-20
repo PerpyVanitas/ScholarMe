@@ -15,13 +15,14 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bot, User, Send, Download, Loader2 } from "lucide-react";
+import { Bot, User, Send, Download, Loader2, CheckCheck } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 
 type Message = {
   role: "system" | "user" | "assistant";
   content: string;
+  created_at?: string;
 };
 
 interface WebLLMChatProps {
@@ -103,11 +104,12 @@ export function WebLLMChat({
       { role: "user", content: userMessage + extraContext },
     ];
 
-    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
+    const now = new Date().toISOString();
+    setMessages((prev) => [...prev, { role: "user", content: userMessage, created_at: now }]);
 
     try {
       // Add a placeholder for the assistant's response
-      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: "", created_at: new Date().toISOString() }]);
 
       const chunks = await engine.chat.completions.create({
         messages: updatedMessages,
@@ -135,6 +137,7 @@ export function WebLLMChat({
         {
           role: "assistant",
           content: "I encountered an error generating a response.",
+          created_at: new Date().toISOString(),
         },
       ]);
     } finally {
@@ -232,6 +235,14 @@ export function WebLLMChat({
                     <div className="prose prose-sm dark:prose-invert max-w-none break-words">
                       <ReactMarkdown>{msg.content}</ReactMarkdown>
                     </div>
+                    {msg.created_at && (
+                      <div className={`flex items-center gap-1 mt-1 text-[9px] ${msg.role === "user" ? "text-primary-foreground/70 justify-end" : "text-muted-foreground justify-end"}`}>
+                        <span>
+                          {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                        {msg.role === "user" && <CheckCheck className="h-3 w-3 ml-0.5" />}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

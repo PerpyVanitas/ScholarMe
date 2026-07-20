@@ -166,7 +166,7 @@ export default function HomePage() {
       >
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="h-9 w-9 bg-[#FFD700] border border-[#FFD700]/40 group-hover:border-[#FFD700] rounded-xl flex items-center justify-center shadow-md transition-all duration-300 group-hover:shadow-[0_0_12px_hsl(var(--primary)/0.3)]">
+            <div className="h-9 w-9 bg-primary border border-primary/40 group-hover:border-primary rounded-xl flex items-center justify-center shadow-md transition-all duration-300 group-hover:shadow-[0_0_12px_hsl(var(--primary)/0.3)]">
               <HonorSocietyLogo variant="black" className="h-5 w-5" />
             </div>
             <span className="font-extrabold text-lg tracking-tight">
@@ -509,7 +509,7 @@ export default function HomePage() {
         {/* ── HOW IT WORKS ── */}
         <section id="how" className="py-24 px-6 relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-64 bg-amber-500/5 dark:bg-[#FFD700]/3 blur-3xl" />
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-64 bg-amber-500/5 dark:bg-primary/3 blur-3xl" />
           </div>
 
           <div className="max-w-5xl mx-auto relative z-10">
@@ -532,10 +532,10 @@ export default function HomePage() {
               {STEPS.map((step, i) => (
                 <div key={i} className="group relative text-center">
                   <div className="relative inline-flex mb-6">
-                    <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/30 flex items-center justify-center group-hover:bg-amber-500/20 dark:group-hover:bg-[#FFD700]/20 transition-colors duration-300 group-hover:scale-110 transition-transform">
+                    <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/30 flex items-center justify-center group-hover:bg-amber-500/20 dark:group-hover:bg-primary/20 transition-colors duration-300 group-hover:scale-110 transition-transform">
                       <step.icon className="h-7 w-7 text-primary" />
                     </div>
-                    <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-zinc-950 dark:bg-[#FFD700] text-white dark:text-black text-[10px] font-black flex items-center justify-center">
+                    <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-zinc-950 dark:bg-primary text-white dark:text-black text-[10px] font-black flex items-center justify-center">
                       {i + 1}
                     </span>
                   </div>
@@ -582,7 +582,7 @@ export default function HomePage() {
                   ))}
                 </ul>
               </div>
-              <div className="p-6 rounded-2xl border border-primary/30 bg-amber-500/5 dark:bg-[#FFD700]/5">
+              <div className="p-6 rounded-2xl border border-primary/30 bg-amber-500/5 dark:bg-primary/5">
                 <h3 className="font-bold text-primary mb-4 flex items-center gap-2">
                   <CheckCircle className="h-5 w-5" /> With ScholarMe
                 </h3>
@@ -614,7 +614,7 @@ export default function HomePage() {
 
           <div className="max-w-3xl mx-auto text-center relative z-10 space-y-8">
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/15 dark:bg-[#FFD700]/10 border border-amber-500/30 dark:border-[#FFD700]/25 text-primary text-xs font-bold uppercase tracking-widest">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/15 dark:bg-primary/10 border border-amber-500/30 dark:border-primary/25 text-primary text-xs font-bold uppercase tracking-widest">
                 Join ScholarMe Today
               </div>
               <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight">
@@ -657,7 +657,7 @@ export default function HomePage() {
           <div className="grid md:grid-cols-4 gap-10 mb-12">
             <div className="space-y-4">
               <div className="flex items-center gap-2.5">
-                <div className="h-8 w-8 bg-[#FFD700] border border-[#FFD700]/40 rounded-xl flex items-center justify-center">
+                <div className="h-8 w-8 bg-primary border border-primary/40 rounded-xl flex items-center justify-center">
                   <HonorSocietyLogo variant="black" className="h-4 w-4" />
                 </div>
                 <span className="font-extrabold tracking-tight">ScholarMe</span>

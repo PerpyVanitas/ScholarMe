@@ -46,21 +46,9 @@ describe("SignUp Page UI", () => {
 
     render(<SignUpPage />);
 
-    // Fill minimal required fields
-    fireEvent.change(screen.getByLabelText(/First Name/i), {
-      target: { value: "John" },
-    });
-    fireEvent.change(screen.getByLabelText(/Last Name/i), {
-      target: { value: "Doe" },
-    });
+    // Step 1: Account
     fireEvent.change(screen.getByLabelText(/Email/i), {
       target: { value: "john@example.com" },
-    });
-    fireEvent.change(screen.getByLabelText(/Mobile Number/i), {
-      target: { value: "09171234567" },
-    });
-    fireEvent.change(screen.getByLabelText(/Date of Birth/i), {
-      target: { value: "2000-01-01" },
     });
     fireEvent.change(screen.getByLabelText(/^Password/i), {
       target: { value: "Password123!" },
@@ -68,12 +56,28 @@ describe("SignUp Page UI", () => {
     fireEvent.change(screen.getByLabelText(/Confirm Password/i), {
       target: { value: "Password123!" },
     });
+    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+
+    // Step 2: Profile
+    fireEvent.change(screen.getByLabelText(/First Name/i), {
+      target: { value: "John" },
+    });
+    fireEvent.change(screen.getByLabelText(/Last Name/i), {
+      target: { value: "Doe" },
+    });
+    fireEvent.change(screen.getByLabelText(/Mobile Number/i), {
+      target: { value: "09171234567" },
+    });
+    fireEvent.change(screen.getByLabelText(/Date of Birth/i), {
+      target: { value: "2000-01-01" },
+    });
     fireEvent.change(screen.getByLabelText(/Degree Program/i), {
       target: { value: "BS CS" },
     });
     fireEvent.change(screen.getByLabelText(/Year Level/i), {
       target: { value: "1" },
     });
+    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
 
     // Accept terms
     const termsCheckbox = document.getElementById("terms");
@@ -114,21 +118,9 @@ describe("SignUp Page UI", () => {
 
     render(<SignUpPage />);
 
-    // Fill minimal required fields
-    fireEvent.change(screen.getByLabelText(/First Name/i), {
-      target: { value: "John" },
-    });
-    fireEvent.change(screen.getByLabelText(/Last Name/i), {
-      target: { value: "Doe" },
-    });
+    // Step 1: Account
     fireEvent.change(screen.getByLabelText(/Email/i), {
       target: { value: "john@example.com" },
-    });
-    fireEvent.change(screen.getByLabelText(/Mobile Number/i), {
-      target: { value: "09171234567" },
-    });
-    fireEvent.change(screen.getByLabelText(/Date of Birth/i), {
-      target: { value: "2000-01-01" },
     });
     fireEvent.change(screen.getByLabelText(/^Password/i), {
       target: { value: "Password123!" },
@@ -136,12 +128,28 @@ describe("SignUp Page UI", () => {
     fireEvent.change(screen.getByLabelText(/Confirm Password/i), {
       target: { value: "Password123!" },
     });
+    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+
+    // Step 2: Profile
+    fireEvent.change(screen.getByLabelText(/First Name/i), {
+      target: { value: "John" },
+    });
+    fireEvent.change(screen.getByLabelText(/Last Name/i), {
+      target: { value: "Doe" },
+    });
+    fireEvent.change(screen.getByLabelText(/Mobile Number/i), {
+      target: { value: "09171234567" },
+    });
+    fireEvent.change(screen.getByLabelText(/Date of Birth/i), {
+      target: { value: "2000-01-01" },
+    });
     fireEvent.change(screen.getByLabelText(/Degree Program/i), {
       target: { value: "BS CS" },
     });
     fireEvent.change(screen.getByLabelText(/Year Level/i), {
       target: { value: "1" },
     });
+    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
 
     const termsCheckbox = document.getElementById("terms");
     if (termsCheckbox) {

@@ -7,8 +7,7 @@ import { getAvatarUrl } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Send } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { Loader2, Send, MessageCircle, CheckCheck } from "lucide-react";
 
 export interface StudyGroupMessage {
   id: string;
@@ -113,9 +112,10 @@ export function StudyGroupChat({
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto rounded-lg border p-4 bg-muted/20">
         {messages.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-6">
-            No messages yet. Say hello to your study group!
-          </p>
+          <div className="h-full flex items-center justify-center text-center px-4 flex-col gap-2 py-8">
+            <MessageCircle className="h-8 w-8 text-muted-foreground/50" />
+            <p className="text-sm text-muted-foreground">No messages yet. Say hello to your study group!</p>
+          </div>
         ) : (
           messages.map((msg) => {
             const isOwn = msg.user_id === currentUserId;
@@ -143,13 +143,12 @@ export function StudyGroupChat({
                     </p>
                   )}
                   <p className="whitespace-pre-wrap">{msg.content}</p>
-                  <p
-                    className={`text-[10px] mt-1 ${isOwn ? "opacity-70" : "text-muted-foreground"}`}
-                  >
-                    {formatDistanceToNow(new Date(msg.created_at), {
-                      addSuffix: true,
-                    })}
-                  </p>
+                  <div className={`flex items-center gap-1 justify-end mt-1 text-[9px] ${isOwn ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                    <span>
+                      {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                    {isOwn && <CheckCheck className="h-3 w-3 ml-0.5" />}
+                  </div>
                 </div>
               </div>
             );

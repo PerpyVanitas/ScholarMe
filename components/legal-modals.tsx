@@ -46,8 +46,8 @@ function LegalModal({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-border/40 bg-secondary/20 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/15 dark:bg-[#FFD700]/15 border border-amber-500/30 dark:border-[#FFD700]/30 flex items-center justify-center">
-              <Icon className="h-4.5 w-4.5 text-amber-600 dark:text-[#FFD700]" />
+            <div className="w-9 h-9 rounded-xl bg-amber-500/15 dark:bg-primary/15 border border-amber-500/30 dark:border-primary/30 flex items-center justify-center">
+              <Icon className="h-4.5 w-4.5 text-amber-600 dark:text-primary" />
             </div>
             <div>
               <h2 className="font-bold text-base text-foreground">{title}</h2>
@@ -78,7 +78,7 @@ function LegalModal({
           </p>
           <button
             onClick={onClose}
-            className="shrink-0 px-4 py-2 rounded-xl bg-zinc-950 text-white dark:bg-[#FFD700] dark:text-black text-xs font-bold hover:opacity-90 transition-opacity"
+            className="shrink-0 px-4 py-2 rounded-xl bg-zinc-950 text-white dark:bg-primary dark:text-black text-xs font-bold hover:opacity-90 transition-opacity"
           >
             I Understand
           </button>
@@ -101,7 +101,7 @@ function Section({
   return (
     <div className="space-y-2">
       <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
-        <ChevronRight className="h-3.5 w-3.5 text-amber-500 dark:text-[#FFD700] shrink-0" />
+        <ChevronRight className="h-3.5 w-3.5 text-amber-500 dark:text-primary shrink-0" />
         {title}
       </h3>
       <div className="pl-5 space-y-2">{children}</div>
@@ -114,7 +114,7 @@ function BulletList({ items }: { items: string[] }) {
     <ul className="space-y-1.5">
       {items.map((item, i) => (
         <li key={i} className="flex items-start gap-2">
-          <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-amber-500/60 dark:bg-[#FFD700]/60 shrink-0" />
+          <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-amber-500/60 dark:bg-primary/60 shrink-0" />
           <span>{item}</span>
         </li>
       ))}
@@ -139,7 +139,7 @@ function TermsContent() {
         platform.
       </p>
 
-      <div className="p-3 rounded-xl bg-amber-500/8 dark:bg-[#FFD700]/8 border border-amber-500/20 dark:border-[#FFD700]/20 text-xs text-amber-700 dark:text-[#FFD700]/90 font-medium">
+      <div className="p-3 rounded-xl bg-amber-500/8 dark:bg-primary/8 border border-amber-500/20 dark:border-primary/20 text-xs text-amber-700 dark:text-primary/90 font-medium">
         These Terms are governed by the laws of the Republic of the Philippines,
         including RA 8792 (E-Commerce Act 2000) and RA 10175 (Cybercrime
         Prevention Act 2012).
@@ -288,7 +288,7 @@ function PrivacyContent() {
         (Philippines) and internationally recognized data protection standards.
       </p>
 
-      <div className="p-3 rounded-xl bg-amber-500/8 dark:bg-[#FFD700]/8 border border-amber-500/20 dark:border-[#FFD700]/20 text-xs text-amber-700 dark:text-[#FFD700]/90 font-medium">
+      <div className="p-3 rounded-xl bg-amber-500/8 dark:bg-primary/8 border border-amber-500/20 dark:border-primary/20 text-xs text-amber-700 dark:text-primary/90 font-medium">
         Philippine jurisdiction applies. You have the right to file a complaint
         with the <strong>National Privacy Commission (NPC)</strong> if you
         believe your rights have been violated.
