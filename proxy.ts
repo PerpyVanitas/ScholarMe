@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { updateSession } from "@/lib/supabase/middleware";
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // 1. CORS Enforcement
   const origin = request.headers.get("origin") ?? "";
   const host = request.headers.get("host") ?? "";
@@ -69,9 +70,10 @@ export function proxy(request: NextRequest) {
     .replace(/\s{2,}/g, " ")
     .trim();
 
+  // Run Supabase auth session refresh and route protection
   const response = isCorsPreflight
     ? new NextResponse(null, { status: 204 })
-    : NextResponse.next();
+    : await updateSession(request);
 
   if (origin && expectedOrigins.includes(origin)) {
     response.headers.set("Access-Control-Allow-Origin", origin);
