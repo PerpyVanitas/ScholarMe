@@ -1,6 +1,7 @@
 ## [2026-07-19] — Phase 4: Core Features Testing (Completed)
 
 ### Added
+
 - **Gamification & Messaging Tests**: Implemented test suites validating the atomic math for XP/Levels, consecutive login streaks, Discord webhook payloads, and real-time chat edge cases.
 - **Library & RAG Tests**: Verified exact-match cosine similarity dimensions for Vector Embeddings, duplicate resource detection, zero-results fallback logic, and waitlist FIFO queue mechanics.
 - **Quizzes & UI Tests**: Validated the Spaced Repetition (SM-2) math, infinite scroll debouncing, date hydration mismatch prevention, missing image fallbacks, z-index layering rules, and deep pagination limits.
@@ -397,3 +398,7 @@
 
  
  
+
+### 2026-07-20
+
+- **E2E Onboarding Fix:** Disabled Playwright trace recording and moved output directories to dot-folders (\.playwright-results\) to prevent Next.js from detecting file changes and triggering infinite Fast Refresh loops during tests. Fixed an incorrect locator in \ utor-onboarding.spec.ts\ (\cademicYearJoined\ is now a select).
