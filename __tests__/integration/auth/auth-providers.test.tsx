@@ -8,16 +8,16 @@ vi.mock("@/lib/supabase/client", () => ({
 }));
 
 describe("Auth Providers (OAuth & Magic Links)", () => {
-  let mockSupabase: any;
+  let mockSupabase: Record<string, unknown>;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     mockSupabase = {
       auth: {
         signInWithOAuth: vi.fn(),
         verifyOtp: vi.fn(),
-      }
+      },
     };
     (createClient as any).mockReturnValue(mockSupabase);
   });
@@ -42,15 +42,21 @@ describe("Auth Providers (OAuth & Magic Links)", () => {
     });
 
     it("should handle OAuth errors gracefully", async () => {
-      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-      mockSupabase.auth.signInWithOAuth.mockResolvedValue({ error: { message: "OAuth failed" } });
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      mockSupabase.auth.signInWithOAuth.mockResolvedValue({
+        error: { message: "OAuth failed" },
+      });
 
       render(<OAuthButtons />);
 
       fireEvent.click(screen.getByRole("button", { name: /Microsoft/i }));
 
       await waitFor(() => {
-        expect(consoleErrorSpy).toHaveBeenCalledWith({ message: "OAuth failed" });
+        expect(consoleErrorSpy).toHaveBeenCalledWith({
+          message: "OAuth failed",
+        });
       });
 
       consoleErrorSpy.mockRestore();
@@ -59,7 +65,9 @@ describe("Auth Providers (OAuth & Magic Links)", () => {
 
   describe("Magic Link / OTP Expiry", () => {
     it("should return an error when verifyOtp is called with expired token", async () => {
-      mockSupabase.auth.verifyOtp.mockResolvedValue({ error: { message: "Token has expired or is invalid" } });
+      mockSupabase.auth.verifyOtp.mockResolvedValue({
+        error: { message: "Token has expired or is invalid" },
+      });
 
       const { error } = await mockSupabase.auth.verifyOtp({
         type: "magiclink",

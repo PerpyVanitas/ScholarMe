@@ -43,6 +43,7 @@ export function useDashboardMode(role: UserRole): UseDashboardModeResult {
   // Re-sync if role changes (e.g. after profile update)
   useEffect(() => {
     if (!canSwitch) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setViewModeState("learner");
     }
   }, [canSwitch]);

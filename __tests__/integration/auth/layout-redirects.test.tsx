@@ -19,15 +19,19 @@ vi.mock("next/headers", () => ({
 }));
 
 vi.mock("@/app/dashboard/client-layout", () => ({
-  default: ({ children }: any) => <div>{children}</div>,
+  default: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 
-vi.mock("@/components/idle-timeout-provider", () => ({
-  IdleTimeoutProvider: ({ children }: any) => <div>{children}</div>,
+vi.mock("@/components/auth/idle-timeout", () => ({
+  IdleTimeoutProvider: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 
-describe("Dashboard Layout Integration (Auth & Onboarding Gates)", () => {
-  let mockSupabase: any;
+describe("Layout Redirects (Authentication)", () => {
+  let mockSupabase: Record<string, unknown>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -50,7 +54,9 @@ describe("Dashboard Layout Integration (Auth & Onboarding Gates)", () => {
   it("should redirect to /auth/login if unauthenticated", async () => {
     mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null } });
 
-    await expect(DashboardLayout({ children: "Test" })).rejects.toThrowError("NEXT_REDIRECT:/auth/login");
+    await expect(DashboardLayout({ children: "Test" })).rejects.toThrowError(
+      "NEXT_REDIRECT:/auth/login",
+    );
     expect(redirect).toHaveBeenCalledWith("/auth/login");
   });
 
@@ -64,7 +70,9 @@ describe("Dashboard Layout Integration (Auth & Onboarding Gates)", () => {
       single: vi.fn().mockResolvedValue({ data: { profile_completed: false } }),
     }));
 
-    await expect(DashboardLayout({ children: "Test" })).rejects.toThrowError("NEXT_REDIRECT:/auth/setup-profile");
+    await expect(DashboardLayout({ children: "Test" })).rejects.toThrowError(
+      "NEXT_REDIRECT:/auth/setup-profile",
+    );
     expect(redirect).toHaveBeenCalledWith("/auth/setup-profile");
   });
 

@@ -123,9 +123,7 @@ function getNavItems(role: UserRole, profile: Profile) {
     { title: "Events Calendar", href: "/dashboard/calendar", icon: Calendar },
     { title: "People & Network", href: "/dashboard/network", icon: Network },
     ...(role === "learner"
-      ? [
-          { title: "My Sessions", href: "/dashboard/sessions", icon: Calendar },
-        ]
+      ? [{ title: "My Sessions", href: "/dashboard/sessions", icon: Calendar }]
       : [
           {
             title: role === "tutor" ? "Tutoring Sessions" : "Sessions",
@@ -146,12 +144,24 @@ function getNavItems(role: UserRole, profile: Profile) {
 
   // 1. Users & Access
   if (hasAnyRole(role, EXECUTIVE_ROLES) || hasAnyRole(role, ADMIN_ROLES)) {
-    usersItems.push({ title: "User Management", href: "/dashboard/admin/users", icon: Users });
+    usersItems.push({
+      title: "User Management",
+      href: "/dashboard/admin/users",
+      icon: Users,
+    });
   }
   if (role === "super_admin") {
     usersItems.push(
-      { title: "Org Structure", href: "/dashboard/admin/org-structure", icon: Network },
-      { title: "Message Audit", href: "/dashboard/admin/messages", icon: MessageSquare }
+      {
+        title: "Org Structure",
+        href: "/dashboard/admin/org-structure",
+        icon: Network,
+      },
+      {
+        title: "Message Audit",
+        href: "/dashboard/admin/messages",
+        icon: MessageSquare,
+      },
     );
   }
 
@@ -160,53 +170,114 @@ function getNavItems(role: UserRole, profile: Profile) {
     academicItems.push(
       { title: "My Timesheet", href: "/dashboard/timesheet", icon: Timer },
       { title: "Availability", href: "/dashboard/availability", icon: Clock },
-      { title: "Peer Reviews", href: "/dashboard/tutors/reviews", icon: ShieldCheck }
+      {
+        title: "Peer Reviews",
+        href: "/dashboard/tutors/reviews",
+        icon: ShieldCheck,
+      },
     );
   }
   if (hasAnyRole(role, EXECUTIVE_ROLES) || hasAnyRole(role, ADMIN_ROLES)) {
     academicItems.push(
-      { title: "Mastery Verifications", href: "/dashboard/admin/verifications", icon: ShieldCheck },
-      { title: "Tutor Analytics", href: "/dashboard/admin/tutor-stats", icon: BarChart }
+      {
+        title: "Mastery Verifications",
+        href: "/dashboard/admin/verifications",
+        icon: ShieldCheck,
+      },
+      {
+        title: "Tutor Analytics",
+        href: "/dashboard/admin/tutor-stats",
+        icon: BarChart,
+      },
     );
   }
 
   // 3. Financial & Operations
   if (hasAnyRole(role, FINANCE_VIEW_ROLES)) {
     financeItems.push(
-      { title: "Finance Dashboard", href: "/dashboard/finance", icon: FileText },
-      { title: "Cash Register", href: "/dashboard/finance/register", icon: Receipt }
+      {
+        title: "Finance Dashboard",
+        href: "/dashboard/finance",
+        icon: FileText,
+      },
+      {
+        title: "Cash Register",
+        href: "/dashboard/finance/register",
+        icon: Receipt,
+      },
     );
-    if (hasAnyRole(role, AUDIT_ROLES) || hasAnyRole(role, FINANCE_REVIEW_ROLES)) {
-      financeItems.push({ title: "Reports Hub", href: "/dashboard/admin/reports", icon: FileText });
+    if (
+      hasAnyRole(role, AUDIT_ROLES) ||
+      hasAnyRole(role, FINANCE_REVIEW_ROLES)
+    ) {
+      financeItems.push({
+        title: "Reports Hub",
+        href: "/dashboard/admin/reports",
+        icon: FileText,
+      });
     }
   }
   if (hasAnyRole(role, EXECUTIVE_ROLES) || hasAnyRole(role, ADMIN_ROLES)) {
-    financeItems.push(
-      { title: "Payroll & Timesheets", href: "/dashboard/admin/timesheets", icon: Clock }
-    );
+    financeItems.push({
+      title: "Payroll & Timesheets",
+      href: "/dashboard/admin/timesheets",
+      icon: Clock,
+    });
   }
-  if (hasAnyRole(role, COMMITTEE_LEADERSHIP) || hasAnyRole(role, EXECUTIVE_ROLES) || hasAnyRole(role, ADMIN_ROLES)) {
+  if (
+    hasAnyRole(role, COMMITTEE_LEADERSHIP) ||
+    hasAnyRole(role, EXECUTIVE_ROLES) ||
+    hasAnyRole(role, ADMIN_ROLES)
+  ) {
     financeItems.push(
       { title: "QR Scanner", href: "/dashboard/admin/scanner", icon: Camera },
-      { title: "Data Export", href: "/dashboard/admin/export", icon: FileSpreadsheet }
+      {
+        title: "Data Export",
+        href: "/dashboard/admin/export",
+        icon: FileSpreadsheet,
+      },
     );
   }
 
   // 4. System Settings
   if (hasAnyRole(role, EXECUTIVE_ROLES) || hasAnyRole(role, ADMIN_ROLES)) {
-    systemItems.push({ title: "Admin Dashboard", href: "/dashboard/admin", icon: LayoutDashboard });
+    systemItems.push({
+      title: "Admin Dashboard",
+      href: "/dashboard/admin",
+      icon: LayoutDashboard,
+    });
   }
   if (hasAnyRole(role, TEAMWORK_ROLES)) {
-    systemItems.push({ title: "Team Workspace", href: "/dashboard/team", icon: Users });
+    systemItems.push({
+      title: "Team Workspace",
+      href: "/dashboard/team",
+      icon: Users,
+    });
   }
   if (hasAnyRole(role, ADMIN_ROLES)) {
     systemItems.push(
-      { title: "System Logs", href: "/dashboard/admin/logs", icon: ShieldAlert },
-      { title: "Integrations", href: "/dashboard/admin/integrations", icon: Settings },
-      { title: "System Health", href: "/dashboard/admin/health", icon: Activity }
+      {
+        title: "System Logs",
+        href: "/dashboard/admin/logs",
+        icon: ShieldAlert,
+      },
+      {
+        title: "Integrations",
+        href: "/dashboard/admin/integrations",
+        icon: Settings,
+      },
+      {
+        title: "System Health",
+        href: "/dashboard/admin/health",
+        icon: Activity,
+      },
     );
     if (role === "super_admin") {
-      systemItems.push({ title: "User Feedback", href: "/dashboard/admin/feedback", icon: Bug });
+      systemItems.push({
+        title: "User Feedback",
+        href: "/dashboard/admin/feedback",
+        icon: Bug,
+      });
     }
   }
 
@@ -215,10 +286,20 @@ function getNavItems(role: UserRole, profile: Profile) {
     items: { title: string; href: string; icon: LucideIcon }[];
   }[] = [];
 
-  if (usersItems.length > 0) managementGroups.push({ label: "Users & Access", items: usersItems });
-  if (academicItems.length > 0) managementGroups.push({ label: "Academic & Tutoring", items: academicItems });
-  if (financeItems.length > 0) managementGroups.push({ label: "Financial & Operations", items: financeItems });
-  if (systemItems.length > 0) managementGroups.push({ label: "System Settings", items: systemItems });
+  if (usersItems.length > 0)
+    managementGroups.push({ label: "Users & Access", items: usersItems });
+  if (academicItems.length > 0)
+    managementGroups.push({
+      label: "Academic & Tutoring",
+      items: academicItems,
+    });
+  if (financeItems.length > 0)
+    managementGroups.push({
+      label: "Financial & Operations",
+      items: financeItems,
+    });
+  if (systemItems.length > 0)
+    managementGroups.push({ label: "System Settings", items: systemItems });
 
   const learnerGroups = [
     { label: "Core", items: coreItems },
@@ -246,7 +327,14 @@ export function AppSidebar({
   // Sync workspace switcher with the shared dashboard mode hook so sidebar
   // and the dashboard cards always stay in sync.
   const { viewMode, setViewMode, canSwitch } = useDashboardMode(role);
-  const workspace = canSwitch && viewMode === "learner" ? "learner" : (hasManagement ? (viewMode === "tutor" ? "management" : "learner") : "learner");
+  const workspace =
+    canSwitch && viewMode === "learner"
+      ? "learner"
+      : hasManagement
+        ? viewMode === "tutor"
+          ? "management"
+          : "learner"
+        : "learner";
   const setWorkspace = (ws: "learner" | "management") => {
     if (canSwitch) setViewMode(ws === "management" ? "tutor" : "learner");
   };
@@ -271,7 +359,10 @@ export function AppSidebar({
   useEffect(() => {
     try {
       const stored = localStorage.getItem("scholarme_favorites");
-      if (stored) setFavorites(JSON.parse(stored));
+      if (stored) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setFavorites(JSON.parse(stored));
+      }
     } catch (e) {
       console.warn("Failed to parse favorites from localStorage", e);
       toast.error("Hmm, we couldn't load your pinned favorites right now.");
@@ -286,7 +377,9 @@ export function AppSidebar({
       newFavs = newFavs.filter((f) => f !== href);
     } else {
       if (newFavs.length >= 5) {
-        toast.error("Whoa there! You can only pin up to 5 favorites at a time. Unpin one to make room.");
+        toast.error(
+          "Whoa there! You can only pin up to 5 favorites at a time. Unpin one to make room.",
+        );
         return;
       }
       newFavs.push(href);
@@ -328,18 +421,23 @@ export function AppSidebar({
       visits = visits.slice(0, 3); // Keep only top 3
 
       localStorage.setItem("scholarme_recent_visits", JSON.stringify(visits));
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRecentVisits(visits);
     } catch (e) {
       console.error("Failed to parse recent visits", e);
       toast.error(e instanceof Error ? e.message : "An error occurred");
     }
-  }, [pathname, navGroups]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   // Load initial visits
   useEffect(() => {
     try {
       const stored = localStorage.getItem("scholarme_recent_visits");
-      if (stored) setRecentVisits(JSON.parse(stored));
+      if (stored) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setRecentVisits(JSON.parse(stored));
+      }
     } catch (e) {
       console.warn("Failed to parse recent visits from localStorage", e);
       toast.error("Hmm, we couldn't load your recent visits.");

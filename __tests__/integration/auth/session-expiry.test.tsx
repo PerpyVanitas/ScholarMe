@@ -13,18 +13,18 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("Session Expiry & Inactivity (Phase 3)", () => {
-  let mockSupabase: any;
-  let mockRouter: any;
+  let mockSupabase: ReturnType<typeof vi.fn> | Record<string, unknown>;
+  let mockRouter: Record<string, unknown>;
 
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     localStorage.clear();
-    
+
     mockSupabase = {
       auth: {
         signOut: vi.fn().mockResolvedValue({}),
-      }
+      },
     };
     (createClient as any).mockReturnValue(mockSupabase);
 
@@ -40,8 +40,12 @@ describe("Session Expiry & Inactivity (Phase 3)", () => {
   });
 
   it("should detect idle session drop and redirect to login", async () => {
-    render(<IdleTimeoutProvider><div>Test Content</div></IdleTimeoutProvider>);
-    
+    render(
+      <IdleTimeoutProvider>
+        <div>Test Content</div>
+      </IdleTimeoutProvider>,
+    );
+
     // Fast-forward past the 10-minute timeout
     await act(async () => {
       vi.advanceTimersByTime(11 * 60 * 1000);
