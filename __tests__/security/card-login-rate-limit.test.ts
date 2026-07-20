@@ -19,10 +19,26 @@ vi.mock("@supabase/supabase-js", () => ({
     from: vi.fn().mockReturnThis(),
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
-    single: vi.fn().mockResolvedValue({ data: { pin: "1234", user_id: "user-123" }, error: null }),
+    single: vi
+      .fn()
+      .mockResolvedValue({
+        data: { pin: "1234", user_id: "user-123" },
+        error: null,
+      }),
     auth: {
       admin: {
-        getUserById: vi.fn().mockResolvedValue({ data: { user: { email: "test@example.com" } }, error: null }),
+        getUserById: vi
+          .fn()
+          .mockResolvedValue({
+            data: { user: { email: "test@example.com" } },
+            error: null,
+          }),
+        generateLink: vi
+          .fn()
+          .mockResolvedValue({
+            data: { properties: { hashed_token: "mock-token" } },
+            error: null,
+          }),
       },
     },
   })),
@@ -41,7 +57,7 @@ describe("Card Login Rate Limiting (P1-1)", () => {
 
     const response = await POST(request);
     expect(response.status).toBe(429);
-    
+
     const data = await response.json();
     expect(data.error.code).toBe("SYSTEM-001");
   });
