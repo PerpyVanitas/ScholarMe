@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
-// @ts-ignore
-import { middleware } from "@/middleware";
+// @ts-expect-error -- proxy export is not typed as middleware, aliased for test clarity
+import { proxy as middleware } from "@/proxy";
 import { NextRequest } from "next/server";
 
 describe("CSRF / Origin Validation", () => {
-  it("P1-12: State-mutating POST without correct Origin/Referer header is rejected", () => {
+  it("P1-12: State-mutating POST without correct Origin/Referer header is rejected", async () => {
     const req = new NextRequest("http://localhost/api/account/password", {
       method: "POST",
       headers: {
@@ -14,13 +14,13 @@ describe("CSRF / Origin Validation", () => {
       },
     });
 
-    const res = middleware(req);
+    const res = await middleware(req);
     expect(res.status).toBe(403);
     expect(res.statusText).toContain("Forbidden");
   });
 
-  it("Accepts POST with matching Origin", () => {
-    // @ts-ignore: Strict unknown type check
+  it("Accepts POST with matching Origin", async () => {
+    // @ts-expect-error: Strict unknown type check
     process.env.NODE_ENV = "development";
     const req = new NextRequest("http://localhost/api/account/password", {
       method: "POST",
@@ -30,7 +30,7 @@ describe("CSRF / Origin Validation", () => {
       },
     });
 
-    const res = middleware(req);
+    const res = await middleware(req);
     expect(res.status).not.toBe(403);
   });
 });

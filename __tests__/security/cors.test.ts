@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
-// @ts-ignore
-import { middleware } from "@/middleware";
+// @ts-expect-error -- proxy export is not typed as middleware, aliased for test clarity
+import { proxy as middleware } from "@/proxy";
 import { NextRequest } from "next/server";
 
 describe("CORS Enforcement", () => {
-  it("P1-13: OPTIONS from evil-site.com denied on any route", () => {
+  it("P1-13: OPTIONS from evil-site.com denied on any route", async () => {
     const req = new NextRequest("http://localhost/api/auth/login", {
       method: "OPTIONS",
       headers: {
@@ -13,13 +13,13 @@ describe("CORS Enforcement", () => {
       },
     });
 
-    const res = middleware(req);
+    const res = await middleware(req);
     // Our middleware blocks unapproved origins outright with 403
     expect(res.status).toBe(403);
   });
 
-  it("Allows OPTIONS from same origin", () => {
-    // @ts-ignore: Strict unknown type check
+  it("Allows OPTIONS from same origin", async () => {
+    // @ts-expect-error: Strict unknown type check
     process.env.NODE_ENV = "development";
     const req = new NextRequest("http://localhost/api/auth/login", {
       method: "OPTIONS",
@@ -29,7 +29,7 @@ describe("CORS Enforcement", () => {
       },
     });
 
-    const res = middleware(req);
+    const res = await middleware(req);
     expect(res.status).toBe(204);
   });
 });
