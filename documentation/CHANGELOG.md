@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - **P9-1 OpenAPI Scaffold**: Added `docs/openapi.ts` to generate `openapi.json` for API documentation.
 - **P8-2 Structured Logger**: Added `lib/logger.ts` for standardized `pino` JSON logging.
 - **P8-5 Incident Response**: Added `INCIDENT_RESPONSE.md` for production on-call procedures.
@@ -15,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **P6 Resilience Tests**: Expanded `__tests__/integration/infrastructure/resilience.test.ts` to cover module-level connection accumulation, cron job locks, unhandled promise rejections, and DB pool exhaustion fallbacks.
 
 ### Fixed
+
 - **R-1 & R-2 Error Leakage**: Repaired `/api/health` and all backend routes to strip raw `error.message` strings from 500 responses to clients, migrating them to `Sentry`/`pino` logs instead.
 - **P6-1 Memory Leak Test**: Resolved false positive in resilience test that flagged stateless service-role clients.
 
@@ -416,9 +418,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Verified successful production build using \
   pm run build\ and confirmed no type errors remain.
 
- 
- 
-
 ### 2026-07-20
 
 - **Phase 13 (Reporting & Exporting):**
@@ -440,5 +439,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **P14-8 (Notification Fan-out Load):**
   - **Analysis Document:** Created docs/scale/notification-fanout-analysis.md covering Web Push VAPID fan-out math at 200 officers (400 subscriptions), Supabase Realtime concurrent channel mapping at 500 CCU, Supabase plan upgrade requirements (Pro is at the limit; Team needed), and prioritized remediation list.
-  - **k6 Load Test Script:** Created 	ests/load/notification-fanout.js with two concurrent scenarios — Scenario A ramps WebSocket connections to 500 CCU (spike to 750), Scenario B stress-tests push fan-out throughput at 5 triggers/sec. Enforces p95 WS latency < 2s, push delivery < 5s, <1% WS failure.
+  - **k6 Load Test Script:** Created ests/load/notification-fanout.js with two concurrent scenarios ï¿½ Scenario A ramps WebSocket connections to 500 CCU (spike to 750), Scenario B stress-tests push fan-out throughput at 5 triggers/sec. Enforces p95 WS latency < 2s, push delivery < 5s, <1% WS failure.
   - **Critical Bug Fixed:** Replaced sequential for-await email loops in /api/admin/cron/reminders/route.ts with Promise.allSettled() for both RSVP reminder and overdue notice fan-outs. Prevents silent Vercel 60s timeout failure at >250 officer recipients.
+
+## [2026-07-20]
+
+### Fixed
+
+- Restored missing `middleware.ts` and integrated Supabase session refresh logic with CORS, CSRF, and CSP security headers.
+- Fixed incomplete Vitest mock for `generateLink` in `__tests__/security/card-login-rate-limit.test.ts`.
+- All security unit and integration tests are now passing.
