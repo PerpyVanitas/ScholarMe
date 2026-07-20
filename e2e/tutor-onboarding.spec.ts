@@ -94,10 +94,10 @@ test.describe("P5-1: Tutor Onboarding Critical Path", () => {
     await page.locator("input#firstName").fill("E2E", { force: true });
     await page.locator("input#lastName").fill("Tutor", { force: true });
 
-    // Academic Year (it's an input)
-    await page
-      .locator("input#academicYearJoined")
-      .fill("2024-2025", { force: true });
+    // Academic Year (it's a select now)
+    await page.selectOption("select#academicYearJoined", "2024-2025", {
+      force: true,
+    });
 
     // Membership Number
     await page
