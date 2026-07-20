@@ -1,7 +1,8 @@
+﻿import { handleApiError } from "@/lib/utils/api-error";
 /**
- * GET  /api/admin/org-structure — fetch current term + all assignments
- * POST /api/admin/org-structure — create a new org term (super_admin only)
- * PATCH /api/admin/org-structure — save assignments for current term (super_admin only)
+ * GET  /api/admin/org-structure â€” fetch current term + all assignments
+ * POST /api/admin/org-structure â€” create a new org term (super_admin only)
+ * PATCH /api/admin/org-structure â€” save assignments for current term (super_admin only)
  */
 import { createClient } from "@/lib/supabase/create-client";
 import { createClient as createBareAdminClient } from "@supabase/supabase-js";
@@ -36,7 +37,7 @@ async function requireSuperAdmin(
   return user;
 }
 
-// GET — fetch current term and all assignments joined with profile data
+// GET â€” fetch current term and all assignments joined with profile data
 export async function GET() {
   try {
     const adminClient = getAdminSupabase();
@@ -100,15 +101,11 @@ export async function GET() {
       members: members || [],
     });
   } catch (err) {
-    console.error("GET org-structure error:", err);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(err);
   }
 }
 
-// POST — create a new term
+// POST â€” create a new term
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -150,7 +147,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return handleApiError(error);
     }
 
     await adminClient.from("analytics_logs").insert({
@@ -163,15 +160,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ term: newTerm }, { status: 201 });
   } catch (err) {
-    console.error("POST org-structure error:", err);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(err);
   }
 }
 
-// PATCH — save or update assignments for the current term
+// PATCH â€” save or update assignments for the current term
 export async function PATCH(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -267,7 +260,7 @@ export async function PATCH(request: NextRequest) {
 
       // Upsert the assignment
       if (prev) {
-        // Assignment exists — update it
+        // Assignment exists â€” update it
         const { data: updated, error: updateErr } = await adminClient
           .from("org_assignments")
           .update({ user_id, updated_at: new Date().toISOString() })
@@ -324,11 +317,7 @@ export async function PATCH(request: NextRequest) {
       errors: errors.length > 0 ? errors : undefined,
     });
   } catch (err) {
-    console.error("PATCH org-structure error:", err);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(err);
   }
 }
 
@@ -375,7 +364,7 @@ async function applyRoleFromPosition(
     : (currentProfile?.roles as any)?.name;
 
   if (currentRole === "super_admin" || currentRole === "administrator") {
-    // Don't overwrite system roles — store assignment only, don't change role_id
+    // Don't overwrite system roles â€” store assignment only, don't change role_id
     return;
   }
 
@@ -426,3 +415,4 @@ async function revertToTutorIfUnassigned(
     .update({ role_id: tutorRole.id, role_expires_at: null })
     .eq("id", user_id);
 }
+

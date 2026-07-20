@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 /**
  * POST /api/quizzes/generate
  * Generate quiz questions (multiple_choice / true_false) for a given topic using Gemini.
@@ -85,14 +86,7 @@ Respond with ONLY the JSON array. Do not include markdown formatting like \`\`\`
       const match = responseText.match(/\[[\s\S]*\]|\{[\s\S]*\}/);
       items = match ? JSON.parse(match[0]) : JSON.parse(responseText);
     } catch {
-      console.error(
-        "[quizzes/generate] Failed to parse Gemini response:",
-        responseText,
-      );
-      return NextResponse.json(
-        { error: "Failed to parse AI response into JSON" },
-        { status: 500 },
-      );
+      return handleApiError(responseText);
     }
 
     return NextResponse.json({ success: true, data: items });

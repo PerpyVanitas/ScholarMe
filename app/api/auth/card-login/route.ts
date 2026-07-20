@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 /** POST /api/auth/card-login -- authenticate via Card ID + PIN (uses admin client to bypass RLS). */
 import { createClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
@@ -6,7 +7,7 @@ import { normalizeRole } from "@/lib/utils/roles";
 import bcrypt from "bcryptjs";
 import { rateLimit } from "@/lib/rate-limit";
 
-const cardLoginRateLimiter = rateLimit({ interval: 15 * 60 * 1000, limit: 5 });
+const cardLoginRateLimiter = rateLimit({ interval: 10 * 60 * 1000, limit: 10 });
 export async function POST(request: Request) {
   try {
     const { cardId, pin } = await request.json();
@@ -137,14 +138,7 @@ export async function POST(request: Request) {
       });
 
     if (verifyError || !verifyData?.user) {
-      console.error("[auth] Token verification failed:", verifyError);
-      return NextResponse.json(
-        createErrorResponse(
-          "SYSTEM_001_INTERNAL_ERROR",
-          "Failed to complete authentication",
-        ),
-        { status: 500 },
-      );
+      return handleApiError(verifyError);
     }
 
     const profile = card.profiles as { roles?: unknown } | null | undefined;
@@ -158,13 +152,6 @@ export async function POST(request: Request) {
       }),
     );
   } catch (err) {
-    console.error("DEBUG: Exception thrown in card-login route", err);
-    return NextResponse.json(
-      createErrorResponse(
-        "SYSTEM_001_UNKNOWN_ERROR",
-        "An unexpected error occurred",
-      ),
-      { status: 500 },
-    );
+    return handleApiError(err);
   }
 }

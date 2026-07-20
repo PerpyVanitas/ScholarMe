@@ -69,6 +69,11 @@ function AdminUsersContent() {
   const [roleFilter, setRoleFilter] = useState("all");
   const { role } = useUser();
 
+  // Pagination state (P14-9)
+  const [page, setPage] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const LIMIT = 20;
+
   // Create state
   const [createOpen, setCreateOpen] = useState(false);
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
@@ -133,7 +138,6 @@ function AdminUsersContent() {
     if (roleFilter !== "all") {
       query = query.eq("roles.name", roleFilter);
     }
-
     const offset = (page - 1) * LIMIT;
     const { data, count, error } = await query.range(offset, offset + LIMIT - 1);
 
@@ -141,12 +145,13 @@ function AdminUsersContent() {
       console.error(error);
     }
 
-    setProfiles(data || []);
+    const profilesData = (data as unknown as Profile[]) || [];
+    setProfiles(profilesData);
     setTotalUsers(count || 0);
 
     const userId = searchParams.get("userId");
-    if (userId && data) {
-      const p = data.find((u) => u.id === userId);
+    if (userId && profilesData.length > 0) {
+      const p = profilesData.find((u) => u.id === userId);
       if (p) {
         setLogsUser(p);
         setLogsOpen(true);
@@ -364,6 +369,32 @@ function AdminUsersContent() {
         handleQuickRoleEdit={handleQuickRoleEdit}
         role={role}
       />
+
+      {totalUsers > LIMIT && (
+        <div className="flex items-center justify-between mt-4">
+          <p className="text-sm text-muted-foreground">
+            Showing {((page - 1) * LIMIT) + 1} to {Math.min(page * LIMIT, totalUsers)} of {totalUsers} users
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page * LIMIT >= totalUsers}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Extracted Modular Dialogs */}
       <UserCreateDialog

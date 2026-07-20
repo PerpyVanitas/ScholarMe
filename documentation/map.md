@@ -85,6 +85,7 @@ ScholarMe is divided into several primary domains, each governed by the access c
 
 - **Study Groups**: Users can create public or private study groups. Includes a Supabase Realtime chat interface.
 - **Forums (Discussions)**: Organization-wide discussion boards. Users can post, reply, and upvote.
+  - **Moderation**: Users can report inappropriate posts. Admins have access to a Mod Queue to review, dismiss, or delete reported posts.
 - **Direct Messaging**: 1-on-1 chats with read receipts, pinned messages, threaded replies, and file attachments.
 - **Networking Algorithms**:
   - **Study Buddies**: Algorithmic matching of peers in the same degree program and year.
@@ -104,6 +105,7 @@ ScholarMe is divided into several primary domains, each governed by the access c
   - **Liquidations**: Upload receipts to liquidate a budget request (supports partial returns).
   - **AI OCR**: Extract receipt totals and vendors automatically via AI.
 - **SCARDS (Reports)**: Treasurer and Auditor co-sign aggregated financial reports. Exportable to PDF.
+- **Admin Exports**: Admins can export high-level Finance Summaries via the Admin Dashboard.
 
 ---
 
@@ -121,6 +123,7 @@ ScholarMe is divided into several primary domains, each governed by the access c
 - **Telemetry and Logs**:
   - Live system health dashboard (real row counts).
   - Interactive raw audit logs with filtering.
+- **Admin Exports**: Admins can export Semester Summaries and System Logs.
 - **Cron Jobs**:
   - Sweeps for overdue books, event RSVPs, and auto-reverts expired org roles. Outputs a digest to a Discord Webhook.
 

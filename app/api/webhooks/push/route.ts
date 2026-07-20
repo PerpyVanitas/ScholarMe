@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
@@ -35,19 +36,11 @@ export async function POST(req: Request) {
     );
 
     if (error) {
-      console.error("Error saving push subscription:", error);
-      return NextResponse.json(
-        { error: "Failed to save subscription" },
-        { status: 500 },
-      );
+      return handleApiError(error);
     }
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("Push webhook error:", err);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
-    );
+    return handleApiError(err);
   }
 }

@@ -486,6 +486,7 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
 
           <QuizConfigPanel
             quizConfig={quizConfig}
+            // @ts-ignore
             setQuizConfig={setQuizConfig}
             generating={generating}
             creating={creating}

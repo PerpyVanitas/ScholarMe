@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
@@ -138,8 +139,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
-    console.error("[API Error]", msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return handleApiError(msg);
   }
 }
 

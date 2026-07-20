@@ -2,6 +2,7 @@
 import { createClient } from "@/lib/supabase/create-client";
 import { createClient as createBareAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { handleApiError } from "@/lib/utils/api-error";
 
 export async function DELETE() {
   const supabase = await createClient();
@@ -34,7 +35,7 @@ export async function DELETE() {
   const { error } = await adminClient.auth.admin.deleteUser(user.id);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return handleApiError(error);
   }
 
   return NextResponse.json({ success: true });

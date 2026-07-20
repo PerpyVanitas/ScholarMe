@@ -1,3 +1,4 @@
+﻿import { handleApiError } from "@/lib/utils/api-error";
 import { createClient } from "@/lib/supabase/create-client";
 import { createClient as createBareAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
@@ -57,7 +58,7 @@ export async function GET(request: Request) {
     .order("created_at", { ascending: false });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return handleApiError(error);
   }
 
   return NextResponse.json({ designations: data }, { status: 200 });
@@ -105,7 +106,7 @@ export async function POST(request: Request) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return handleApiError(error);
   }
 
   // Log action
@@ -173,7 +174,7 @@ export async function PATCH(request: Request) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return handleApiError(error);
   }
 
   // Log action
@@ -217,7 +218,7 @@ export async function DELETE(request: Request) {
     .eq("id", designation_id);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return handleApiError(error);
   }
 
   // Log action
@@ -235,3 +236,4 @@ export async function DELETE(request: Request) {
 
   return NextResponse.json({ success: true }, { status: 200 });
 }
+

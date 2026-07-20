@@ -1,6 +1,7 @@
 /** PUT /api/sessions/[id]/status -- update session status (confirm, complete, cancel). */
 import { createClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
+import { handleApiError } from "@/lib/utils/api-error";
 
 export async function PUT(
   request: Request,
@@ -33,7 +34,7 @@ export async function PUT(
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const updateData: unknown = {};
+  const updateData: any = {};
   if (status) updateData.status = status;
   if (meeting_link !== undefined) updateData.meeting_link = meeting_link;
   if (start_time) updateData.start_time = start_time;
@@ -49,7 +50,7 @@ export async function PUT(
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return handleApiError(error);
   }
 
   // Automate XP when completed

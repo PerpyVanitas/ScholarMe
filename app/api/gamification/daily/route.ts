@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,7 +20,6 @@ export async function POST(_req: Request) {
     return NextResponse.json(result);
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Unknown error";
-    console.error("[gamification/daily] Error:", msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return handleApiError(msg);
   }
 }

@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -34,10 +35,6 @@ export async function GET() {
       data || { id: null, name: null, start_date: null, end_date: null },
     );
   } catch (error: unknown) {
-    console.error("[API Error]", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) },
-      { status: 500 },
-    );
+    return handleApiError(error);
   }
 }

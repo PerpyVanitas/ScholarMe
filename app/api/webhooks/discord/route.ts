@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/create-client";
 
@@ -77,10 +78,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
-    console.error("Discord Webhook Error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) },
-      { status: 500 },
-    );
+    return handleApiError(error);
   }
 }

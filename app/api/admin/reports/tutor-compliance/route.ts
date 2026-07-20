@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { GOVERNANCE_ROLES, hasAnyRole } from "@/lib/utils/roles";
@@ -94,10 +95,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(complianceData);
   } catch (error) {
-    console.error("Tutor compliance error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error);
   }
 }

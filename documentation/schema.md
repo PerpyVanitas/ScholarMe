@@ -193,7 +193,7 @@ Digital and Physical asset management for the Peer Learning Center.
 
 ## 🤝 Social and Directory
 
-Manages user connections and directory visibility.
+Manages user connections, directory visibility, and community forums.
 
 ### `friends`
 
@@ -201,6 +201,23 @@ Manages user connections and directory visibility.
 - **`user_id1`** _(uuid, FK)_ — The initiator.
 - **`user_id2`** _(uuid, FK)_ — The receiver.
 - **`status`** _(text)_ — `pending`, `accepted`, `declined`, `blocked`. (A status of `blocked` means `user_id1` blocked `user_id2`).
+
+### `forum_posts`
+
+- **`id`** _(uuid, PK)_
+- **`author_id`** _(uuid, FK)_
+- **`title`** _(text)_
+- **`content`** _(text)_
+- **`upvotes`** _(integer)_
+- **`created_at`** _(timestamptz)_
+
+### `forum_reports`
+
+- **`id`** _(uuid, PK)_
+- **`post_id`** _(uuid, FK)_
+- **`reporter_id`** _(uuid, FK)_
+- **`reason`** _(text)_
+- **`status`** _(text)_ — `pending`, `reviewed`, `dismissed`.
 
 ---
 

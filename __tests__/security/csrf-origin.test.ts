@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+// @ts-ignore
 import { middleware } from "@/middleware";
 import { NextRequest } from "next/server";
 

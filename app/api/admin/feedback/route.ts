@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { createSuccessResponse, createErrorResponse } from "@/lib/api-errors";
@@ -45,23 +46,12 @@ export async function GET(request: NextRequest) {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Fetch feedback error:", error);
-      return NextResponse.json(
-        createErrorResponse("DB_001_NOT_FOUND", "Failed to fetch feedback"),
-        { status: 500 },
-      );
+      return handleApiError(error);
     }
 
     return NextResponse.json(createSuccessResponse(feedback), { status: 200 });
   } catch (error) {
-    console.error("Feedback API error:", error);
-    return NextResponse.json(
-      createErrorResponse(
-        "SYSTEM_001_UNKNOWN_ERROR",
-        "An unexpected error occurred",
-      ),
-      { status: 500 },
-    );
+    return handleApiError(error);
   }
 }
 
@@ -117,24 +107,13 @@ export async function PATCH(request: NextRequest) {
       .eq("id", feedback_id);
 
     if (error) {
-      console.error("Update feedback error:", error);
-      return NextResponse.json(
-        createErrorResponse("DB_001_NOT_FOUND", "Failed to update feedback"),
-        { status: 500 },
-      );
+      return handleApiError(error);
     }
 
     return NextResponse.json(createSuccessResponse({ success: true }), {
       status: 200,
     });
   } catch (error) {
-    console.error("Feedback PATCH error:", error);
-    return NextResponse.json(
-      createErrorResponse(
-        "SYSTEM_001_UNKNOWN_ERROR",
-        "An unexpected error occurred",
-      ),
-      { status: 500 },
-    );
+    return handleApiError(error);
   }
 }

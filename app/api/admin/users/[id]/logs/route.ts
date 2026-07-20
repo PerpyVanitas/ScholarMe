@@ -2,6 +2,7 @@
 import { createClient } from "@/lib/supabase/create-client";
 import { createClient as createBareAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { handleApiError } from "@/lib/utils/api-error";
 
 export async function GET(
   _request: Request,
@@ -45,7 +46,7 @@ export async function GET(
     .limit(100);
 
   if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return handleApiError(error);
 
   return NextResponse.json({ logs: logs || [] });
 }

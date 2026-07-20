@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -37,19 +38,11 @@ export async function POST(req: Request) {
       .single();
 
     if (error) {
-      console.error(error);
-      return NextResponse.json(
-        { error: "Failed to flag question" },
-        { status: 500 },
-      );
+      return handleApiError(error);
     }
 
     return NextResponse.json({ data });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
-    );
+    return handleApiError(error);
   }
 }

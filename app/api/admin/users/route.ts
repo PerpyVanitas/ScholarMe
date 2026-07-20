@@ -1,3 +1,4 @@
+﻿import { handleApiError } from "@/lib/utils/api-error";
 // POST /api/admin/users -- create user
 // PATCH /api/admin/users -- edit user details
 // DELETE /api/admin/users -- delete user
@@ -132,7 +133,7 @@ export async function PATCH(request: Request) {
       email,
     });
     if (error)
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return handleApiError(error);
     profileUpdates.email = email;
   }
 
@@ -154,7 +155,7 @@ export async function PATCH(request: Request) {
       password,
     });
     if (error)
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return handleApiError(error);
   }
 
   // Update role
@@ -278,7 +279,8 @@ export async function DELETE(request: Request) {
   const { error } = await adminClient.auth.admin.deleteUser(user_id);
 
   if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return handleApiError(error);
 
   return NextResponse.json({ success: true });
 }
+

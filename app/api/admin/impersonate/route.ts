@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { GOVERNANCE_ROLES, getRoleName, hasAnyRole } from "@/lib/utils/roles";
@@ -56,10 +57,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ link: data.properties.action_link });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unexpected error";
-    console.error("Error generating impersonation link:", message);
-    return NextResponse.json(
-      { error: message || "Failed to generate link" },
-      { status: 500 },
-    );
+    return handleApiError(message);
   }
 }

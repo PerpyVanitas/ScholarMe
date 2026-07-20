@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 import { createClient, createAdminClient } from "@/lib/supabase/create-client";
 import { NextRequest, NextResponse } from "next/server";
 import { createSuccessResponse, createErrorResponse } from "@/lib/api-errors";
@@ -135,13 +136,6 @@ export async function POST(request: NextRequest) {
       { status: 200 },
     );
   } catch (err) {
-    console.error("bulk-import error:", err);
-    return NextResponse.json(
-      createErrorResponse(
-        "SYSTEM_001_UNKNOWN_ERROR",
-        "An unexpected error occurred",
-      ),
-      { status: 500 },
-    );
+    return handleApiError(err);
   }
 }

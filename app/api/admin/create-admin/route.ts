@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 /** POST /api/admin/create-admin — creates a new administrator account. Only callable by super_admin. */
 import { createClient, createAdminClient } from "@/lib/supabase/create-client";
 import { NextRequest, NextResponse } from "next/server";
@@ -135,13 +136,6 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
   } catch (err) {
-    console.error("create-admin error:", err);
-    return NextResponse.json(
-      createErrorResponse(
-        "SYSTEM_001_UNKNOWN_ERROR",
-        "An unexpected error occurred",
-      ),
-      { status: 500 },
-    );
+    return handleApiError(err);
   }
 }

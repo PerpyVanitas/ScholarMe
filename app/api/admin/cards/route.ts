@@ -1,3 +1,4 @@
+﻿import { handleApiError } from "@/lib/utils/api-error";
 /** POST/PUT /api/admin/cards -- admin-only: toggle is_card_issued. */
 import { createClient } from "@/lib/supabase/create-client";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
@@ -56,8 +57,9 @@ export async function POST(request: Request) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return handleApiError(error);
   }
 
   return NextResponse.json(data);
 }
+

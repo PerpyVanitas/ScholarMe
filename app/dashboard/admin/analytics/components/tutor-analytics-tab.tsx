@@ -12,7 +12,7 @@ import { Calendar } from "lucide-react";
 
 interface TutorAnalyticsTabProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  stats: unknown;
+  stats: any;
   noSemester: boolean;
 }
 
@@ -106,12 +106,12 @@ export function TutorAnalyticsTab({
             {stats.compliance
               .sort(
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (a: unknown, b: unknown) =>
+                (a: any, b: any) =>
                   // @ts-ignore: Strict unknown type check
                   b.progress_percentage - a.progress_percentage,
               )
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              .map((tutor: unknown) => (
+              .map((tutor: any) => (
                 // @ts-ignore: Strict unknown type check
                 <div key={tutor.tutor_id} className="flex flex-col gap-2">
                   <div className="flex justify-between items-end">

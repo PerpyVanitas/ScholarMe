@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { XP_AWARDS } from "@/lib/constants";
@@ -35,8 +36,7 @@ export async function POST(req: Request) {
       .single();
 
     if (error) {
-      console.error("Database error while inserting xp_log:", error);
-      return NextResponse.json({ error: "Database error" }, { status: 500 });
+      return handleApiError(error);
     }
 
     // Since trigger_update_profile_level updates the profile automatically,
@@ -62,10 +62,6 @@ export async function POST(req: Request) {
 
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("Error earning XP:", message);
-    return NextResponse.json(
-      { error: message || "Failed to earn XP" },
-      { status: 500 }
-    );
+    return handleApiError(message);
   }
 }

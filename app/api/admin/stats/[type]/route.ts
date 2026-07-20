@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 import { createAdminClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
 import { GOVERNANCE_ROLES, hasAnyRole } from "@/lib/utils/roles";
@@ -147,10 +148,6 @@ export async function GET(
 
     return NextResponse.json({ error: "Invalid type" }, { status: 400 });
   } catch (err) {
-    console.error("[admin-stats]", err);
-    return NextResponse.json(
-      { error: "Failed to fetch data" },
-      { status: 500 },
-    );
+    return handleApiError(err);
   }
 }

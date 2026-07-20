@@ -72,7 +72,7 @@ export function TutorReviewDialog({
                 <SelectValue placeholder="Select a tutor" />
               </SelectTrigger>
               <SelectContent>
-                {tutors.map((t) => (
+                {tutors.map((t: any) => (
                   // @ts-ignore: Strict unknown type check
                   <SelectItem key={t.id} value={t.id}>
                     // @ts-ignore: Strict unknown type check

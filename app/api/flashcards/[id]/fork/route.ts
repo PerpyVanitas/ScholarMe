@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -48,7 +49,7 @@ export async function POST(
     // 3. Clone items
     if (originalSet.study_set_items && originalSet.study_set_items.length > 0) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const itemsToInsert = originalSet.study_set_items.map((item: unknown) => ({
+      const itemsToInsert = originalSet.study_set_items.map((item: any) => ({
         study_set_id: newSet.id,
         question: item.question,
         answer: item.answer,
@@ -66,10 +67,6 @@ export async function POST(
 
     return NextResponse.json({ success: true, data: newSet });
   } catch (error) {
-    console.error("Failed to fork study set:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
-    );
+    return handleApiError(error);
   }
 }

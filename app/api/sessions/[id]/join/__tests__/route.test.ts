@@ -33,7 +33,8 @@ describe("Join Session Logic", () => {
   });
 
   it("should prevent joining if session is not a group session (max_participants <= 1)", async () => {
-    mockSupabase.from.mockImplementation((table: string) => {
+    // @ts-ignore
+    (mockSupabase.from as any).mockImplementation((table: string) => {
       if (table === "sessions") {
         return {
           select: vi.fn().mockReturnThis(),
@@ -60,6 +61,7 @@ describe("Join Session Logic", () => {
   });
 
   it("should prevent joining if session is full", async () => {
+    // @ts-ignore
     mockSupabase.from.mockImplementation((table: string) => {
       if (table === "sessions") {
         return {
@@ -91,6 +93,7 @@ describe("Join Session Logic", () => {
   });
 
   it("should allow joining if session has capacity", async () => {
+    // @ts-ignore
     mockSupabase.from.mockImplementation((table: string) => {
       if (table === "sessions") {
         return {

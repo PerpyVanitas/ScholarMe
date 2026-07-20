@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { STUDY_SET_DETAIL_SELECT } from "@/features/quizzes/api/study-sets-db";
+import { handleApiError } from "@/lib/utils/api-error";
 
 export async function GET(
   request: NextRequest,
@@ -20,7 +21,7 @@ export async function GET(
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 404 });
+      return handleApiError(error, 404);
     }
 
     // Check access: owner or public
@@ -30,11 +31,7 @@ export async function GET(
 
     return NextResponse.json({ data });
   } catch (error) {
-    console.error("[API Error]", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error);
   }
 }
 
@@ -60,15 +57,11 @@ export async function DELETE(
       .eq("user_id", user.id);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return handleApiError(error);
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[API Error]", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error);
   }
 }

@@ -289,6 +289,8 @@ Legend: `✅ Full` · `👁 View Only` · `✏️ Own Only` · `🔒 No Access` 
 |---------|:-----------:|:-------------:|:---------:|:--------------:|:-------------------:|:--------------:|:-----:|:-------:|
 | View forums / posts | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Create / reply to forum posts | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Report a forum post | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| View / Manage Forum Reports (Mod Queue) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 🔒 | 🔒 |
 | Delete any forum post | ✅ | ✅ | ✅ | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 |
 | Delete own post | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Create / join study groups | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |

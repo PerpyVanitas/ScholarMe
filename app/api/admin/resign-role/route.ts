@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 /** POST /api/admin/resign-role — lets an administrator voluntarily resign their admin role, reverting to tutor. */
 import { createClient } from "@/lib/supabase/create-client";
 import { createClient as createBareAdminClient } from "@supabase/supabase-js";
@@ -87,10 +88,6 @@ export async function POST() {
       message: "You have successfully resigned your administrator role.",
     });
   } catch (err) {
-    console.error("resign-role error:", err);
-    return NextResponse.json(
-      { error: "An unexpected error occurred" },
-      { status: 500 },
-    );
+    return handleApiError(err);
   }
 }

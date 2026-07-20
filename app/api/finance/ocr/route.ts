@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 
@@ -69,10 +70,6 @@ Respond strictly with a JSON object in this format:
       totalAmount: parsed.totalAmount || 0,
     });
   } catch (error: unknown) {
-    console.error("[OCR API] Error extracting receipt data:", error);
-    return NextResponse.json(
-      { error: "Failed to parse receipt" },
-      { status: 500 },
-    );
+    return handleApiError(error);
   }
 }

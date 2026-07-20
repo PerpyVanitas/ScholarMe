@@ -1,3 +1,4 @@
+﻿import { handleApiError } from "@/lib/utils/api-error";
 /** POST /api/sessions -- book a new tutoring session (learner_id = current user). */
 import { createClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
@@ -159,7 +160,7 @@ export async function POST(request: Request) {
     .select();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return handleApiError(error);
   }
 
   // Insert into session_participants for all created sessions
@@ -183,3 +184,4 @@ export async function POST(request: Request) {
     status: 201,
   });
 }
+

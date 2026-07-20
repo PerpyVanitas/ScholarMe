@@ -80,7 +80,7 @@ export function TutorReviewsClient({
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          {reviews.map((review: unknown) => (
+          {reviews.map((review: any) => (
             // @ts-ignore: Strict unknown type check
             <Card key={review.id}>
               <CardHeader className="pb-2">

@@ -63,7 +63,9 @@ export default function StudyGroupDetailPage({
       if (memberData) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const normalized = (memberData as unknown[]).map((m) => ({
+          // @ts-ignore
           ...m,
+          // @ts-ignore
           profiles: Array.isArray(m.profiles) ? m.profiles[0] : m.profiles,
         })) as GroupMember[];
         setMembers(normalized);

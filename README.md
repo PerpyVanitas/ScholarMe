@@ -290,23 +290,21 @@ Row Level Security (RLS) is enabled across all tables containing user data. Poli
    pnpm install
    ```
 
-3. **Configure environment variables**:
-   Copy `.env.example` to `.env.local` and fill in your values:
+3. **Environment Setup**:
+
+   ScholarMe strictly validates environment variables on startup. Create a `.env.local` file in the root directory:
 
    ```bash
    cp .env.example .env.local
    ```
-
-   Required variables:
-
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=
-   SUPABASE_SERVICE_ROLE_KEY=
-   NEXT_PUBLIC_APP_URL=http://localhost:3000
-   GOOGLE_GENERATIVE_AI_API_KEY=
-   BLOB_READ_WRITE_TOKEN=
-   ```
+   
+   **Required Variables:**
+   - `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL.
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anon key.
+   - `SUPABASE_SERVICE_ROLE_KEY`: Required for admin bypass/server actions.
+   - `NEXT_PUBLIC_APP_URL`: The root URL of your app (e.g., `http://localhost:3000`).
+   
+   *Missing any required variables will cause a loud crash at boot (`P6-4` resilience guarantee).*
 
 4. **Apply database migrations**:
 
@@ -366,6 +364,7 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) runs on every push to `
 | `secret-scan`         | Scans commits for leaked secrets using TruffleHog             |
 | `web-build`           | Installs dependencies and runs `next build`                   |
 | `web-test`            | Runs the Vitest test suite                                    |
+| `performance-audit`   | Runs Lighthouse CI and checks bundle sizes                    |
 | `accessibility-audit` | Runs `axe-core` against the live development server           |
 | `deploy-web`          | Deploys to Vercel production using `amondnet/vercel-action`   |
 | `deploy-db`           | Runs `supabase db push --include-all` to apply new migrations |

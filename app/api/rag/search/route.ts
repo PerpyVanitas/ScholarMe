@@ -1,3 +1,4 @@
+﻿import { handleApiError } from "@/lib/utils/api-error";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { GoogleGenAI } from "@google/genai";
@@ -111,6 +112,7 @@ export async function POST(req: Request) {
   } catch (err: unknown) {
     console.error("Search error:", err);
     // @ts-ignore: Strict unknown type check
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return handleApiError(error);
   }
 }
+

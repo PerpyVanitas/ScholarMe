@@ -1,6 +1,7 @@
 /** POST /api/repositories/[id]/resources -- add a study-material link to a repository. */
 import { createClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
+import { handleApiError } from "@/lib/utils/api-error";
 
 /** Add a resource to a specific repository */
 export async function POST(
@@ -36,7 +37,7 @@ export async function POST(
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return handleApiError(error);
   }
 
   return NextResponse.json(data, { status: 201 });

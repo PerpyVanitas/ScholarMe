@@ -1,3 +1,4 @@
+﻿import { handleApiError } from "@/lib/utils/api-error";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/create-client";
 import { GOVERNANCE_ROLES, hasAnyRole } from "@/lib/utils/roles";
@@ -62,6 +63,7 @@ export async function GET(req: NextRequest) {
   const { data, error } = await query.order("clock_in", { ascending: false });
 
   if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return handleApiError(error);
   return NextResponse.json(data);
 }
+

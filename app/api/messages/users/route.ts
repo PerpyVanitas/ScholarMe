@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { handleApiError } from "@/lib/utils/api-error";
 
 type UserProfileRow = {
   id: string;
@@ -58,10 +59,7 @@ export async function GET(req: Request) {
         .single();
 
       if (error) {
-        return NextResponse.json(
-          { success: false, error: error.message },
-          { status: 500 },
-        );
+        return handleApiError(error);
       }
 
       if (!profile) {
@@ -100,10 +98,7 @@ export async function GET(req: Request) {
       .limit(20);
 
     if (error) {
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 500 },
-      );
+      return handleApiError(error);
     }
 
     const formatted = (profiles || []).map((profile: UserProfileRow) =>
@@ -112,11 +107,6 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ success: true, data: formatted });
   } catch (error: unknown) {
-    console.error("[messages/users] Error:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json(
-      { success: false, error: message },
-      { status: 500 },
-    );
+    return handleApiError(error);
   }
 }

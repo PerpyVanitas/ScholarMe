@@ -18,6 +18,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ArrowLeft, Loader2, MessageSquare, Pin } from "lucide-react";
 import { toast } from "sonner";
 import { createForumReply } from "@/features/forums/api/actions";
+import { ReportDialog } from "../components/report-dialog";
 
 export default function ForumPostPage({
   params,
@@ -30,6 +31,7 @@ export default function ForumPostPage({
   const [replyText, setReplyText] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const supabase = createClient();
 
   async function loadPost() {
@@ -90,31 +92,45 @@ export default function ForumPostPage({
 
   return (
     <div className="flex flex-col gap-6 max-w-3xl mx-auto w-full p-4 sm:p-6">
-      <Button variant="ghost" className="w-fit" asChild>
-        <Link href="/dashboard/forums">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Forums
-        </Link>
-      </Button>
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" className="w-fit" asChild>
+          <Link href="/dashboard/forums">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Forums
+          </Link>
+        </Button>
+      </div>
 
       <Card className={post.is_pinned ? "border-primary/30 bg-primary/5" : ""}>
         <CardHeader>
-          <CardTitle className="text-2xl flex items-center gap-2">
-            {post.is_pinned && (
-              <Pin className="h-5 w-5 text-primary fill-primary" />
-            )}
-            {post.title}
-          </CardTitle>
-          <CardDescription className="flex flex-wrap items-center gap-2">
-            <Badge variant="secondary">{post.category}</Badge>
-            <span>Posted by {post.profiles?.full_name || "Unknown"}</span>
-            <span>•</span>
-            <span>
-              {formatDistanceToNow(new Date(post.created_at), {
-                addSuffix: true,
-              })}
-            </span>
-          </CardDescription>
+          <div className="flex justify-between items-start gap-4">
+            <div>
+              <CardTitle className="text-2xl flex items-center gap-2">
+                {post.is_pinned && (
+                  <Pin className="h-5 w-5 text-primary fill-primary" />
+                )}
+                {post.title}
+              </CardTitle>
+              <CardDescription className="flex flex-wrap items-center gap-2 mt-1.5">
+                <Badge variant="secondary">{post.category}</Badge>
+                <span>Posted by {post.profiles?.full_name || "Unknown"}</span>
+                <span>•</span>
+                <span>
+                  {formatDistanceToNow(new Date(post.created_at), {
+                    addSuffix: true,
+                  })}
+                </span>
+              </CardDescription>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-destructive"
+              onClick={() => setReportOpen(true)}
+            >
+              Report
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <p className="whitespace-pre-wrap text-sm leading-relaxed">
@@ -136,16 +152,18 @@ export default function ForumPostPage({
           replies.map((reply) => (
             <Card key={reply.id}>
               <CardContent className="pt-4 space-y-2">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">
-                    {reply.profiles?.full_name || "Unknown"}
-                  </span>
-                  <span>•</span>
-                  <span>
-                    {formatDistanceToNow(new Date(reply.created_at), {
-                      addSuffix: true,
-                    })}
-                  </span>
+                <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-foreground">
+                      {reply.profiles?.full_name || "Unknown"}
+                    </span>
+                    <span>•</span>
+                    <span>
+                      {formatDistanceToNow(new Date(reply.created_at), {
+                        addSuffix: true,
+                      })}
+                    </span>
+                  </div>
                 </div>
                 <p className="text-sm whitespace-pre-wrap">{reply.content}</p>
               </CardContent>
@@ -174,6 +192,12 @@ export default function ForumPostPage({
           </Button>
         </CardContent>
       </Card>
+
+      <ReportDialog
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        postId={postId}
+      />
     </div>
   );
 }

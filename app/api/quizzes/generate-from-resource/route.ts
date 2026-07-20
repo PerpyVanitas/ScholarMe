@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 /**
  * POST /api/quizzes/generate-from-resource
  * Analyse an uploaded resource file with Gemini and produce quiz questions + flashcards.
@@ -183,14 +184,7 @@ export async function POST(req: Request) {
       const match = responseText.match(/\[[\s\S]*\]|\{[\s\S]*\}/);
       items = match ? JSON.parse(match[0]) : JSON.parse(responseText);
     } catch {
-      console.error(
-        "[quizzes/generate-from-resource] Failed to parse Gemini response:",
-        responseText,
-      );
-      return NextResponse.json(
-        { error: "Failed to parse AI response into JSON" },
-        { status: 500 },
-      );
+      return handleApiError(responseText);
     }
 
     return NextResponse.json({ success: true, data: items });

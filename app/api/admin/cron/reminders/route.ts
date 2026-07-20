@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/create-client";
 import { sendEmail } from "@/lib/email";
@@ -101,6 +102,10 @@ export async function POST(req: Request) {
       console.error("Error fetching upcoming events:", eventsError);
       errors.push(eventsError);
     } else if (upcomingEvents) {
+      // Collect all reminder tasks across all events, then fire in parallel
+      // to avoid sequential-await timeouts on Vercel (60s limit). (P14-8 fix)
+      const reminderTasks: Promise<void>[] = [];
+
       for (const event of upcomingEvents) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const goingRsvps = (event.event_rsvps || []).filter((r: unknown) => {
@@ -127,19 +132,24 @@ export async function POST(req: Request) {
             </div>
           `;
 
-          const res = await sendEmail({
-            to: profile.email,
-            subject: `Reminder: ${event.title} is coming up!`,
-            html: emailHtml,
-          });
-
-          if (res.success) {
-            remindersSent++;
-          } else {
-            console.error(`Failed to send event reminder to ${profile.email}`);
-          }
+          reminderTasks.push(
+            sendEmail({
+              to: profile.email,
+              subject: `Reminder: ${event.title} is coming up!`,
+              html: emailHtml,
+            }).then((res) => {
+              if (res.success) {
+                remindersSent++;
+              } else {
+                console.error(`Failed to send event reminder to ${profile.email}`);
+              }
+            }),
+          );
         }
       }
+
+      // Fire all reminder emails in parallel; individual failures are isolated
+      await Promise.allSettled(reminderTasks);
     }
 
     // 2. Overdue Book Reminders
@@ -166,9 +176,8 @@ export async function POST(req: Request) {
       errors.push(checkoutsError);
     } else if (overdueCheckouts && overdueCheckouts.length > 0) {
       // Update statuses to overdue
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       // @ts-ignore: Strict unknown type check
-      const overdueIds = overdueCheckouts.map((c: unknown) => c.id);
+      const overdueIds = overdueCheckouts.map((c: unknown) => (c as { id: string }).id);
 
       const { error: updateError } = await supabase
         .from("resource_checkouts")
@@ -179,47 +188,54 @@ export async function POST(req: Request) {
         console.error("Error updating overdue statuses:", updateError);
         errors.push(updateError);
       } else {
-        // Send emails
-        for (const checkout of overdueCheckouts) {
-          const profile = Array.isArray(checkout.profiles)
-            ? checkout.profiles[0]
-            : checkout.profiles;
-          const resource = Array.isArray(checkout.physical_resources)
-            ? checkout.physical_resources[0]
-            : checkout.physical_resources;
-          const resourceTitle = resource?.title || "Library Resource";
-          const dueDate = new Date(checkout.due_date).toLocaleDateString();
+        // Fire all overdue notice emails in parallel (P14-8 fix)
+        const overdueTasks = overdueCheckouts
+          .filter((checkout) => {
+            const profile = Array.isArray(checkout.profiles)
+              ? checkout.profiles[0]
+              : checkout.profiles;
+            return !!(profile as { email?: string })?.email;
+          })
+          .map((checkout) => {
+            const profile = Array.isArray(checkout.profiles)
+              ? checkout.profiles[0]
+              : checkout.profiles;
+            const resource = Array.isArray(checkout.physical_resources)
+              ? checkout.physical_resources[0]
+              : checkout.physical_resources;
+            const resourceTitle = (resource as { title?: string })?.title || "Library Resource";
+            const dueDate = new Date(checkout.due_date as string).toLocaleDateString();
 
-          const emailHtml = `
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px;">
-              <h2 style="color: #ef4444;">Overdue Resource Notice</h2>
-              <p>Hi ${profile?.full_name || "Student"},</p>
-              <p>Our records show that the following resource you checked out is now overdue:</p>
-              <div style="background-color: #f8fafc; padding: 12px; border-left: 4px solid #ef4444; margin: 16px 0;">
-                <strong>${resourceTitle}</strong><br/>
-                Due Date: ${dueDate}
+            const emailHtml = `
+              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px;">
+                <h2 style="color: #ef4444;">Overdue Resource Notice</h2>
+                <p>Hi ${(profile as { full_name?: string })?.full_name || "Student"},</p>
+                <p>Our records show that the following resource you checked out is now overdue:</p>
+                <div style="background-color: #f8fafc; padding: 12px; border-left: 4px solid #ef4444; margin: 16px 0;">
+                  <strong>${resourceTitle}</strong><br/>
+                  Due Date: ${dueDate}
+                </div>
+                <p>Please return this item to the tutoring center as soon as possible to avoid any penalties.</p>
+                <p>Thank you,<br>The ScholarMe Team</p>
               </div>
-              <p>Please return this item to the tutoring center as soon as possible to avoid any penalties.</p>
-              <p>Thank you,<br/>The ScholarMe Team</p>
-            </div>
-          `;
+            `;
 
-          if (profile?.email) {
-            const res = await sendEmail({
-              to: profile.email,
+            return sendEmail({
+              to: (profile as { email: string }).email,
               subject: `Overdue Notice: ${resourceTitle}`,
               html: emailHtml,
+            }).then((res) => {
+              if (res.success) {
+                overdueNoticesSent++;
+              } else {
+                console.error(
+                  `Failed to send overdue notice to ${(profile as { email: string }).email}`,
+                );
+              }
             });
+          });
 
-            if (res.success) {
-              overdueNoticesSent++;
-            } else {
-              console.error(
-                `Failed to send overdue notice to ${profile.email}`,
-              );
-            }
-          }
-        }
+        await Promise.allSettled(overdueTasks);
       }
     }
 
@@ -274,10 +290,6 @@ export async function POST(req: Request) {
       errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error: unknown) {
-    console.error("Reminders Cron Error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) },
-      { status: 500 },
-    );
+    return handleApiError(error);
   }
 }

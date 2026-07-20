@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 import { NextResponse } from "next/server";
 import { sendEmail } from "@/lib/email";
 import { createClient } from "@/lib/supabase/server";
@@ -77,10 +78,6 @@ export async function POST(req: Request) {
       message: "Email queued for delivery",
     });
   } catch (err) {
-    console.error("Email webhook error:", err);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
-    );
+    return handleApiError(err);
   }
 }

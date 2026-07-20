@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -87,15 +88,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ success: true, data });
   } catch (error: unknown) {
-    console.error("Advanced analytics unexpected error:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : (String(error) ?? "Unknown server error"),
-      },
-      { status: 500 },
-    );
+    return handleApiError(error);
   }
 }

@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
@@ -50,15 +51,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, reverted: false });
   } catch (error: unknown) {
-    console.error("Error reverting role:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : String(error) || "Failed to revert role",
-      },
-      { status: 500 },
-    );
+    return handleApiError(error);
   }
 }

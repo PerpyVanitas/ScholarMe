@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 // PUT /api/account/password -- change own password
 import { createClient as createServerClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
@@ -91,10 +92,6 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({ success: true, message: "Password updated successfully." });
   } catch (err) {
-    console.error("[v0] Password change error:", err);
-    return NextResponse.json(
-      { error: "An unexpected error occurred. Please try again." },
-      { status: 500 }
-    );
+    return handleApiError(err);
   }
 }

@@ -1,3 +1,4 @@
+﻿import { handleApiError } from "@/lib/utils/api-error";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/create-client";
 import { ensureTutorRow } from "@/features/tutors/api/db";
@@ -48,7 +49,7 @@ export async function GET() {
     .order("clock_in", { ascending: false });
 
   if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return handleApiError(error);
   return NextResponse.json(data);
 }
 
@@ -126,7 +127,7 @@ export async function POST(req: Request) {
       .single();
 
     if (error)
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return handleApiError(error);
 
     // Race condition check: ensure we didn't just insert a duplicate open entry
     const { data: openEntries } = await supabase
@@ -166,9 +167,10 @@ export async function POST(req: Request) {
       .single();
 
     if (error)
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return handleApiError(error);
     return NextResponse.json(data);
   }
 
   return NextResponse.json({ error: "Invalid action" }, { status: 400 });
 }
+

@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { calculateSM2, type SM2Rating } from "@/lib/utils/sm2";
@@ -35,11 +36,7 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     if (fetchError) {
-      console.error(fetchError);
-      return NextResponse.json(
-        { error: "Failed to fetch previous attempt" },
-        { status: 500 },
-      );
+      return handleApiError(fetchError);
     }
 
     // Calculate new SM-2 values
@@ -79,19 +76,11 @@ export async function POST(req: Request) {
       .single();
 
     if (error) {
-      console.error(error);
-      return NextResponse.json(
-        { error: "Failed to save attempt" },
-        { status: 500 },
-      );
+      return handleApiError(error);
     }
 
     return NextResponse.json({ data });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
-    );
+    return handleApiError(error);
   }
 }

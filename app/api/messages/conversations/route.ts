@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createSimpleAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
@@ -191,10 +192,6 @@ export async function POST(req: Request) {
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("[messages/conversations] Error:", message);
-    return NextResponse.json(
-      { success: false, error: message },
-      { status: 500 },
-    );
+    return handleApiError(message);
   }
 }

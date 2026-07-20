@@ -58,5 +58,21 @@ export async function GET(request: Request) {
     );
   }
 
-  return NextResponse.json(filtered);
+  // Pagination (P14-4)
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const limit = parseInt(searchParams.get("limit") || "10", 10);
+  const startIndex = (page - 1) * limit;
+  const endIndex = page * limit;
+  
+  const paginated = filtered.slice(startIndex, endIndex);
+
+  return NextResponse.json({
+    data: paginated,
+    meta: {
+      total: filtered.length,
+      page,
+      limit,
+      totalPages: Math.ceil(filtered.length / limit)
+    }
+  });
 }

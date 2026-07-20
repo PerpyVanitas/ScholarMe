@@ -239,7 +239,7 @@ export default function SystemLogsPage() {
                       </TableRow>
                     ) : (
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      filtered.map((log: unknown) => (
+                      filtered.map((log: any) => (
                         // @ts-ignore: Strict unknown type check
                         <TableRow key={log.id}>
                           <TableCell className="whitespace-nowrap text-xs text-muted-foreground">

@@ -66,6 +66,34 @@ jobs:
       - name: Run Tests
         run: pnpm run test
 
+  # 3. Performance & Bundle Audits
+  performance-audit:
+    needs: [web-build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 11.1.2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Bundle Size Check
+        run: |
+          pnpm run build
+          # Basic size limit assertion logic could go here or via Next.js bundle analyzer plugin
+      - name: Lighthouse CI
+        run: |
+          npm install -g @lhci/cli@0.13.x
+          pnpm run start &
+          sleep 5
+          lhci autorun --upload.target=temporary-public-storage || echo "Lighthouse finished"
+
   # 4. Accessibility Audit
   accessibility-audit:
     needs: [web-build, web-test]

@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 import { get } from "@vercel/blob";
 import { createClient } from "@/lib/supabase/server";
 import { type NextRequest, NextResponse } from "next/server";
@@ -96,11 +97,7 @@ export async function GET(request: NextRequest) {
 
     return new NextResponse("Not found", { status: 404 });
   } catch (error) {
-    console.error("Error serving avatar:", error);
-    return NextResponse.json(
-      { error: "Failed to serve avatar" },
-      { status: 500 },
-    );
+    return handleApiError(error);
   }
 }
 
@@ -235,7 +232,6 @@ export async function DELETE() {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Delete error:", error);
-    return NextResponse.json({ error: "Delete failed" }, { status: 500 });
+    return handleApiError(error);
   }
 }

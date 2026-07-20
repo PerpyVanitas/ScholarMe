@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { createSuccessResponse, createErrorResponse } from "@/lib/api-errors";
@@ -42,25 +43,11 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error("Feedback insert error:", error);
-      return NextResponse.json(
-        createErrorResponse(
-          "SYSTEM_001_INTERNAL_ERROR",
-          "Failed to submit feedback",
-        ),
-        { status: 500 },
-      );
+      return handleApiError(error);
     }
 
     return NextResponse.json(createSuccessResponse(feedback), { status: 201 });
   } catch (error) {
-    console.error("Feedback API error:", error);
-    return NextResponse.json(
-      createErrorResponse(
-        "SYSTEM_001_UNKNOWN_ERROR",
-        "An unexpected error occurred",
-      ),
-      { status: 500 },
-    );
+    return handleApiError(error);
   }
 }

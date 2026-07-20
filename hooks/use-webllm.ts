@@ -29,7 +29,7 @@ export function useWebLLM({
   useEffect(() => {
     const checkCache = async () => {
       try {
-        if (!navigator.gpu) return; // Only check cache if GPU is available
+        if (!(navigator as any).gpu) return; // Only check cache if GPU is available
         const isCached = await hasModelInCache(model);
         if (isCached) {
           initializeEngine();
@@ -47,7 +47,7 @@ export function useWebLLM({
     setIsLoading(true);
 
     // 1. Device Capability Check
-    if (!navigator.gpu) {
+    if (!(navigator as any).gpu) {
       console.warn("WebGPU not supported on this device/browser. Falling back to server-side AI.");
       setProvider("server");
       

@@ -47,6 +47,7 @@ export function WebLLMChat({
     },
   ]);
   const [input, setInput] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -68,12 +69,12 @@ export function WebLLMChat({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!input.trim() || !isReady || !engine || isLoading) return;
+    if (!input.trim() || !isReady || !engine || isGenerating) return;
 
     const userMessage = input.trim();
     setInput("");
 
-    setIsLoading(true);
+    setIsGenerating(true);
     let extraContext = "";
 
     try {
@@ -137,7 +138,7 @@ export function WebLLMChat({
         },
       ]);
     } finally {
-      setIsLoading(false);
+      setIsGenerating(false);
     }
   }
 

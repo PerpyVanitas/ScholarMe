@@ -1,3 +1,4 @@
+﻿import { handleApiError } from "@/lib/utils/api-error";
 /** GET/POST /api/repositories -- list or create resource repositories. */
 import { createClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
@@ -11,7 +12,7 @@ export async function GET() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return handleApiError(error);
   }
 
   return NextResponse.json(repos);
@@ -43,8 +44,9 @@ export async function POST(request: Request) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return handleApiError(error);
   }
 
   return NextResponse.json(data, { status: 201 });
 }
+

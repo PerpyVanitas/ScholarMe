@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/utils/api-error";
 /**
  * POST /api/resources/extract-topics
  * Analyse an uploaded resource file with Gemini and extract a table of contents / topic list.
@@ -143,14 +144,7 @@ export async function POST(req: Request) {
       if (cleanText.endsWith("```")) cleanText = cleanText.slice(0, -3);
       topicsData = JSON.parse(cleanText.trim());
     } catch {
-      console.error(
-        "[resources/extract-topics] Failed to parse Gemini response:",
-        responseText,
-      );
-      return NextResponse.json(
-        { error: "Failed to parse AI response into JSON" },
-        { status: 500 },
-      );
+      return handleApiError(responseText);
     }
 
     return NextResponse.json({
