@@ -2,12 +2,18 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 
+export type QuizConfigItem = {
+  enabled: boolean;
+  count: number;
+  choices?: number;
+};
+
+export type QuizConfigMap = Record<string, QuizConfigItem>;
+
 interface QuizConfigPanelProps {
-  quizConfig: Record<
-    string,
-    { enabled: boolean; count: number; choices?: number }
-  >;
-  setQuizConfig: React.Dispatch<React.SetStateAction<unknown>>;
+  quizConfig: QuizConfigMap;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setQuizConfig: React.Dispatch<React.SetStateAction<any>>;
   generating: boolean;
   creating: boolean;
 }
@@ -43,12 +49,10 @@ export function QuizConfigPanel({
                 id={"quiz_" + key}
                 checked={config.enabled}
                 onCheckedChange={(checked) =>
-                  setQuizConfig((prev: unknown) => ({
-                    // @ts-ignore: Strict unknown type check
+                  setQuizConfig((prev: QuizConfigMap) => ({
                     ...prev,
                     [key]: {
-                      // @ts-ignore: Strict unknown type check
-                      ...prev[key],
+                      ...(prev[key] || {}),
                       enabled: checked,
                     },
                   }))
@@ -71,12 +75,10 @@ export function QuizConfigPanel({
                 className="w-16 h-8 text-xs font-medium text-center"
                 value={config.count}
                 onChange={(e) =>
-                  setQuizConfig((prev: unknown) => ({
-                    // @ts-ignore: Strict unknown type check
+                  setQuizConfig((prev: QuizConfigMap) => ({
                     ...prev,
                     [key]: {
-                      // @ts-ignore: Strict unknown type check
-                      ...prev[key],
+                      ...(prev[key] || {}),
                       count: Math.max(1, parseInt(e.target.value) || 1),
                     },
                   }))
