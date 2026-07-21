@@ -2,19 +2,29 @@ import { handleApiError } from "@/lib/utils/api-error";
 // PUT /api/account/password -- change own password
 import { createClient as createServerClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
+import { AUTH_VALIDATORS } from "@/features/auth/utils/validators";
 
 // Simple in-memory rate limiting (resets per server restart)
-const passwordChangeAttempts = new Map<string, { count: number; resetTime: number }>();
+const passwordChangeAttempts = new Map<
+  string,
+  { count: number; resetTime: number }
+>();
 const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour in milliseconds
 const MAX_ATTEMPTS = 5; // Max 5 attempts per hour
 
-function checkRateLimit(userId: string): { allowed: boolean; message?: string } {
+function checkRateLimit(userId: string): {
+  allowed: boolean;
+  message?: string;
+} {
   const now = Date.now();
   const record = passwordChangeAttempts.get(userId);
 
   if (!record || now > record.resetTime) {
     // Reset or create new record
-    passwordChangeAttempts.set(userId, { count: 0, resetTime: now + RATE_LIMIT_WINDOW });
+    passwordChangeAttempts.set(userId, {
+      count: 0,
+      resetTime: now + RATE_LIMIT_WINDOW,
+    });
     return { allowed: true };
   }
 
@@ -33,12 +43,14 @@ function checkRateLimit(userId: string): { allowed: boolean; message?: string } 
 export async function PUT(request: Request) {
   try {
     const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json(
         { error: "You must be logged in to change your password." },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -54,15 +66,13 @@ export async function PUT(request: Request) {
     if (!currentPassword || !newPassword) {
       return NextResponse.json(
         { error: "Current password and new password are required." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    if (newPassword.length < 8) {
-      return NextResponse.json(
-        { error: "New password must be at least 8 characters long." },
-        { status: 400 }
-      );
+    const passErr = AUTH_VALIDATORS.password(newPassword);
+    if (passErr) {
+      return NextResponse.json({ error: passErr }, { status: 400 });
     }
 
     // Verify current password by attempting to sign in
@@ -74,7 +84,7 @@ export async function PUT(request: Request) {
     if (signInError) {
       return NextResponse.json(
         { error: "Current password is incorrect." },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -86,11 +96,14 @@ export async function PUT(request: Request) {
     if (updateError) {
       return NextResponse.json(
         { error: updateError.message || "Failed to update password." },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
-    return NextResponse.json({ success: true, message: "Password updated successfully." });
+    return NextResponse.json({
+      success: true,
+      message: "Password updated successfully.",
+    });
   } catch (err) {
     return handleApiError(err);
   }

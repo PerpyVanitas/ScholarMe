@@ -8,14 +8,13 @@ const mockUpdateUser = vi.fn().mockResolvedValue({ error: null });
 vi.mock("@/lib/supabase/create-client", () => ({
   createClient: vi.fn().mockResolvedValue({
     auth: {
-      getUser: vi
-        .fn()
-        .mockResolvedValue({
-          data: {
-            user: { id: "rate-limit-user-123", email: "test@example.com" },
-          },
-        }),
-      signInWithPassword: (...args: unknown[]) => mockSignInWithPassword(...args),
+      getUser: vi.fn().mockResolvedValue({
+        data: {
+          user: { id: "rate-limit-user-123", email: "test@example.com" },
+        },
+      }),
+      signInWithPassword: (...args: unknown[]) =>
+        mockSignInWithPassword(...args),
       updateUser: (...args: unknown[]) => mockUpdateUser(...args),
     },
   }),
@@ -24,8 +23,8 @@ vi.mock("@/lib/supabase/create-client", () => ({
 describe("Password Reset Rate Limit", () => {
   it("P1-25: Repeated password reset requests are throttled", async () => {
     const payload = {
-      currentPassword: "oldpassword123",
-      newPassword: "newpassword123",
+      currentPassword: "OldPassword123!",
+      newPassword: "NewPassword123!",
     };
 
     // The route allows 5 requests per hour. We make 5 valid requests.

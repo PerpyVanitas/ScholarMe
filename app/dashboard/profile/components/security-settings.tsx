@@ -4,7 +4,16 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Key, Eye, EyeOff, AlertTriangle, Loader2, Trash2, ShieldOff } from "lucide-react";
+import { AUTH_VALIDATORS } from "@/features/auth/utils/validators";
+import {
+  Key,
+  Eye,
+  EyeOff,
+  AlertTriangle,
+  Loader2,
+  Trash2,
+  ShieldOff,
+} from "lucide-react";
 import {
   Card,
   CardContent,
@@ -64,8 +73,7 @@ export function SecuritySettings() {
       // Force refresh to pick up new role
       setTimeout(() => router.push("/dashboard"), 1500);
     } catch (e: unknown) {
-      // @ts-ignore: Strict unknown type check
-      toast.error(e.message || "Failed to resign role");
+      toast.error((e as Error).message || "Failed to resign role");
     } finally {
       setResigning(false);
     }
@@ -94,8 +102,9 @@ export function SecuritySettings() {
       toast.error("Please fill in all password fields");
       return;
     }
-    if (newPassword.length < 8) {
-      toast.error("New password must be at least 8 characters");
+    const passErr = AUTH_VALIDATORS.password(newPassword);
+    if (passErr) {
+      toast.error(passErr);
       return;
     }
     if (newPassword !== confirmPassword) {
