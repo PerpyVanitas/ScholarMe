@@ -22,6 +22,11 @@ import {
 } from "@/components/ui/select";
 import { Loader2, Star } from "lucide-react";
 
+interface TutorOption {
+  id: string;
+  profiles?: { full_name: string } | null;
+}
+
 export function TutorReviewDialog({
   open,
   onOpenChange,
@@ -30,32 +35,32 @@ export function TutorReviewDialog({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  tutors: unknown[];
+  tutors: TutorOption[];
   onSubmit: (data: unknown) => Promise<void>;
 }) {
-  const [loading, setLoading] = useState(false);
   const [rating, setRating] = useState(5);
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    formState: { isSubmitting },
+  } = useForm();
 
-  const { register, handleSubmit, reset, setValue } = useForm();
-
-  const handleFormSubmit = async (data: unknown) => {
-    // @ts-ignore: Strict unknown type check
-    if (!data.tutor_id) return;
-    setLoading(true);
-    // @ts-ignore: Strict unknown type check
+  const handleFormSubmit = async (data: Record<string, unknown>) => {
     await onSubmit({ ...data, rating });
-    setLoading(false);
     reset();
-    setRating(5);
+    onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Write Peer Review</DialogTitle>
+          <DialogTitle>Evaluate Junior Tutor</DialogTitle>
           <DialogDescription>
-            Submit a performance evaluation for a junior tutor.
+            Submit a peer review and feedback for a tutor under your
+            supervision.
           </DialogDescription>
         </DialogHeader>
         <form
@@ -69,11 +74,9 @@ export function TutorReviewDialog({
                 <SelectValue placeholder="Select a tutor" />
               </SelectTrigger>
               <SelectContent>
-                {tutors.map((t: { id: string; profiles?: { full_name: string } }) => (
-                  // @ts-ignore: Strict unknown type check
+                {(tutors as TutorOption[]).map((t) => (
                   <SelectItem key={t.id} value={t.id}>
-                    // @ts-ignore: Strict unknown type check
-                    {t.profiles?.full_name}
+                    {t.profiles?.full_name || "Unknown Tutor"}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -120,8 +123,10 @@ export function TutorReviewDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Submit Review
             </Button>
           </DialogFooter>

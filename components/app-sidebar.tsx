@@ -11,7 +11,6 @@ import {
   AUDIT_ROLES,
   FINANCE_REVIEW_ROLES,
   FINANCE_VIEW_ROLES,
-  GOVERNANCE_ROLES,
   ROLE_LABELS,
   TEAMWORK_ROLES,
   TUTOR_ROLES,
@@ -19,7 +18,6 @@ import {
   COMMITTEE_LEADERSHIP,
   ADMIN_ROLES,
   hasAnyRole,
-  isEsasScholar,
 } from "@/lib/utils/roles";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -55,7 +53,6 @@ import {
   Users,
   Calendar,
   BookOpen,
-  FolderOpen,
   Bell,
   Settings,
   LogOut,
@@ -63,7 +60,6 @@ import {
   Clock,
   Timer,
   Vote,
-  Lightbulb,
   MessageSquare,
   LayoutDashboard,
   Trophy,
@@ -73,7 +69,6 @@ import {
   Bug,
   BarChart,
   Camera,
-  UserCog,
   Bot,
   History,
   Pin,
@@ -88,7 +83,6 @@ import {
 } from "lucide-react";
 import { signOut } from "@/app/auth/actions";
 import { HonorSocietyLogo } from "@/components/honsoc-logo";
-import { A11ySettings } from "@/components/a11y-settings";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { TosLink, PrivacyLink } from "@/components/legal-modals";
@@ -326,7 +320,10 @@ function getNavItems(role: UserRole, profile: Profile) {
   }
 
   if (adminCategories.length > 0) {
-    managementGroups.push({ label: "Management Tools", items: adminCategories });
+    managementGroups.push({
+      label: "Management Tools",
+      items: adminCategories,
+    });
   }
 
   const learnerGroups: typeof managementGroups = [
@@ -350,8 +347,10 @@ export function AppSidebar({
   notificationCount,
 }: AppSidebarProps) {
   const pathname = usePathname();
-  const { learnerGroups, managementGroups, hasManagement, hasTutorTools } =
-    useMemo(() => getNavItems(role, profile), [role, profile]);
+  const { learnerGroups, managementGroups, hasManagement } = useMemo(
+    () => getNavItems(role, profile),
+    [role, profile],
+  );
   // Sync workspace switcher with the shared dashboard mode hook so sidebar
   // and the dashboard cards always stay in sync.
   const { viewMode, setViewMode, canSwitch } = useDashboardMode(role);
@@ -596,15 +595,25 @@ export function AppSidebar({
                   <SidebarMenu>
                     {favorites.map((favHref) => {
                       // find the item from all possible groups to get the icon and title
-                      let favItem: { title: string; href: string; icon: LucideIcon } | null = null;
+                      let favItem: {
+                        title: string;
+                        href: string;
+                        icon: LucideIcon;
+                      } | null = null;
                       for (const g of learnerGroups.concat(managementGroups)) {
                         for (const i of g.items) {
                           if (i.href === favHref) {
-                            favItem = i;
+                            favItem = {
+                              title: i.title,
+                              href: i.href,
+                              icon: i.icon,
+                            };
                             break;
                           }
                           if (i.subItems) {
-                            const sub = i.subItems.find((s) => s.href === favHref);
+                            const sub = i.subItems.find(
+                              (s) => s.href === favHref,
+                            );
                             if (sub) {
                               favItem = { ...sub, icon: sub.icon || i.icon };
                               break;
@@ -668,9 +677,17 @@ export function AppSidebar({
                     <SidebarMenu>
                       {group.items.map((item) => {
                         if (item.subItems) {
-                          const isSubActive = item.subItems.some(sub => pathname === sub.href || pathname.startsWith(sub.href + "/"));
+                          const isSubActive = item.subItems.some(
+                            (sub) =>
+                              pathname === sub.href ||
+                              pathname.startsWith(sub.href + "/"),
+                          );
                           return (
-                            <Collapsible key={item.title} defaultOpen={isSubActive} className="group/submenu">
+                            <Collapsible
+                              key={item.title}
+                              defaultOpen={isSubActive}
+                              className="group/submenu"
+                            >
                               <SidebarMenuItem>
                                 <CollapsibleTrigger asChild>
                                   <SidebarMenuButton tooltip={item.title}>
@@ -681,14 +698,19 @@ export function AppSidebar({
                                 </CollapsibleTrigger>
                                 <CollapsibleContent>
                                   <SidebarMenuSub>
-                                    {item.subItems.map(subItem => (
+                                    {item.subItems.map((subItem) => (
                                       <SidebarMenuSubItem key={subItem.title}>
-                                        <SidebarMenuSubButton asChild isActive={pathname === subItem.href}>
+                                        <SidebarMenuSubButton
+                                          asChild
+                                          isActive={pathname === subItem.href}
+                                        >
                                           <Link href={subItem.href}>
                                             <span>{subItem.title}</span>
                                           </Link>
                                           <button
-                                            onClick={(e) => toggleFavorite(e, subItem.href)}
+                                            onClick={(e) =>
+                                              toggleFavorite(e, subItem.href)
+                                            }
                                             className="ml-auto opacity-0 group-hover/menu-sub-item:opacity-100 p-0.5 hover:bg-muted rounded"
                                             title={
                                               favorites.includes(subItem.href)
@@ -696,7 +718,9 @@ export function AppSidebar({
                                                 : "Pin to Favorites"
                                             }
                                           >
-                                            {favorites.includes(subItem.href) ? (
+                                            {favorites.includes(
+                                              subItem.href,
+                                            ) ? (
                                               <PinOff className="h-3 w-3 text-primary" />
                                             ) : (
                                               <Pin className="h-3 w-3 text-muted-foreground hover:text-foreground" />

@@ -10,9 +10,22 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Calendar } from "lucide-react";
 
+export interface TutorComplianceItem {
+  tutor_id: string;
+  full_name: string;
+  is_compliant: boolean;
+  total_minutes: number;
+  sessions_count: number;
+  progress_percentage: number;
+}
+
+export interface AnalyticsStats {
+  compliance: TutorComplianceItem[];
+}
+
 interface TutorAnalyticsTabProps {
-  stats: { compliance: Array<{ is_compliant: boolean; total_minutes: number; tutor_name: string; tutor_id: string; requirement_hours: number }> } | null;
-  noSemester: boolean;
+  stats: AnalyticsStats | null;
+  noSemester?: boolean;
 }
 
 export function TutorAnalyticsTab({
@@ -21,16 +34,16 @@ export function TutorAnalyticsTab({
 }: TutorAnalyticsTabProps) {
   if (!stats) return null;
 
-  // @ts-ignore: Strict unknown type check
-  const compliantCount = stats.compliance.filter(
-    (c) => c.is_compliant,
-  ).length;
-  // @ts-ignore: Strict unknown type check
-  const totalTutors = stats.compliance.length;
-  // @ts-ignore: Strict unknown type check
-  const totalMinutes = stats.compliance.reduce(
-    (acc: number, c) => acc + c.total_minutes,
+  const compliance = stats.compliance || [];
+  const compliantCount = compliance.filter((c) => c.is_compliant).length;
+  const totalTutors = compliance.length;
+  const totalMinutes = compliance.reduce(
+    (acc: number, c) => acc + (c.total_minutes || 0),
     0,
+  );
+
+  const sortedCompliance = [...compliance].sort(
+    (a, b) => (b.progress_percentage || 0) - (a.progress_percentage || 0),
   );
 
   return (
@@ -78,8 +91,7 @@ export function TutorAnalyticsTab({
             </p>
             <p className="text-4xl font-black mt-2 text-destructive">
               {
-                // @ts-ignore: Strict unknown type check
-                stats.compliance.filter((c: unknown) => c.progress_percentage < 50)
+                compliance.filter((c) => (c.progress_percentage || 0) < 50)
                   .length
               }
             </p>
@@ -96,52 +108,34 @@ export function TutorAnalyticsTab({
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-6">
-            // @ts-ignore: Strict unknown type check
-            {stats.compliance
-              .sort(
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (a: any, b: any) =>
-                  // @ts-ignore: Strict unknown type check
-                  b.progress_percentage - a.progress_percentage,
-              )
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              .map((tutor: any) => (
-                // @ts-ignore: Strict unknown type check
-                <div key={tutor.tutor_id} className="flex flex-col gap-2">
-                  <div className="flex justify-between items-end">
-                    <div>
-                      // @ts-ignore: Strict unknown type check
-                      <span className="font-bold">{tutor.full_name}</span>
-                      <span className="text-xs text-muted-foreground ml-2">
-                        // @ts-ignore: Strict unknown type check
-                        {tutor.sessions_count} sessions
-                      </span>
-                    </div>
-                    <div className="text-sm font-medium">
-                      // @ts-ignore: Strict unknown type check
-                      {(tutor.total_minutes / 60).toFixed(1)} / 90 hrs (
-                      // @ts-ignore: Strict unknown type check
-                      {tutor.progress_percentage}%)
-                    </div>
+            {sortedCompliance.map((tutor) => (
+              <div key={tutor.tutor_id} className="flex flex-col gap-2">
+                <div className="flex justify-between items-end">
+                  <div>
+                    <span className="font-bold">{tutor.full_name}</span>
+                    <span className="text-xs text-muted-foreground ml-2">
+                      {tutor.sessions_count || 0} sessions
+                    </span>
                   </div>
-                  <Progress
-                    // @ts-ignore: Strict unknown type check
-                    value={tutor.progress_percentage}
-                    className="h-2"
-                    indicatorColor={
-                      // @ts-ignore: Strict unknown type check
-                      tutor.progress_percentage >= 100
-                        ? "bg-success"
-                        // @ts-ignore: Strict unknown type check
-                        : tutor.progress_percentage > 50
-                          ? "bg-warning"
-                          : "bg-destructive"
-                    }
-                  />
+                  <div className="text-sm font-medium">
+                    {((tutor.total_minutes || 0) / 60).toFixed(1)} / 90 hrs (
+                    {tutor.progress_percentage || 0}%)
+                  </div>
                 </div>
-              ))}
-            // @ts-ignore: Strict unknown type check
-            {stats.compliance.length === 0 && (
+                <Progress
+                  value={tutor.progress_percentage || 0}
+                  className="h-2"
+                  indicatorColor={
+                    (tutor.progress_percentage || 0) >= 100
+                      ? "bg-success"
+                      : (tutor.progress_percentage || 0) > 50
+                        ? "bg-warning"
+                        : "bg-destructive"
+                  }
+                />
+              </div>
+            ))}
+            {compliance.length === 0 && (
               <p className="text-center text-muted-foreground">
                 No active tutors found this semester.
               </p>

@@ -23,26 +23,21 @@ import {
   Calendar,
   Star,
   CheckCircle2,
-  XCircle,
   Clock,
   Loader2,
-  PenTool,
-  CalendarPlus,
-  Sparkles,
-  Video,
-  RefreshCw,
   UserPlus,
 } from "lucide-react";
 import { toast } from "sonner";
-import { SESSION_STATUS_COLORS } from "@/lib/constants";
 import { DEMO_USERS, getDemoUserFromCookie } from "@/scripts/demo";
 import type { Session, UserRole } from "@/lib/types";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SkeletonList } from "@/components/ui/skeleton-card";
 import { SessionSummaryModal } from "./components/session-summary-modal";
 import { SessionList } from "./components/session-list";
-import { getMyWaitlists, getTutorWaitlist } from "@/features/tutors/api/waitlist-actions";
+import {
+  getMyWaitlists,
+  getTutorWaitlist,
+} from "@/features/tutors/api/waitlist-actions";
 
 export default function SessionsPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -84,7 +79,6 @@ export default function SessionsPage() {
 
       setRole(userRole);
 
-      let query;
       if (userRole === "tutor") {
         // For tutor, find their tutor record first
         const { data: tutor } = await supabase
@@ -96,13 +90,26 @@ export default function SessionsPage() {
         const tutorId =
           tutor?.id || (userRole === "tutor" ? DEMO_USERS.tutor.tutorId : "");
         setCurrentTutorId(tutorId);
-        query = supabase
+        const { data: tutorSessions } = await supabase
           .from("sessions")
           .select(
             "*, specializations(*), session_ratings(*), original_tutor:tutors!tutor_id(profiles(*))",
           )
           .or(`tutor_id.eq.${tutorId},transfer_to_tutor_id.eq.${tutorId}`)
           .order("scheduled_date", { ascending: false });
+
+        setSessions(tutorSessions || []);
+
+        if (tutorId) {
+          const tw = await getTutorWaitlist(tutorId);
+          setWaitlists(tw);
+        } else {
+          const mw = await getMyWaitlists();
+          setWaitlists(mw);
+        }
+
+        setLoading(false);
+        return;
       } else {
         const sessionSelect =
           "*, tutors(*, profiles(*)), specializations(*, profiles(*)), session_ratings(*), session_participants(count)";
@@ -151,22 +158,13 @@ export default function SessionsPage() {
         });
 
         setOpenGroupSessions(filteredOpen);
+
+        const mw = await getMyWaitlists();
+        setWaitlists(mw);
+
         setLoading(false);
         return;
       }
-
-      setSessions(data || []);
-      
-      // Load waitlists
-      if (userRole === "tutor" && tutorId) {
-        const tw = await getTutorWaitlist(tutorId);
-        setWaitlists(tw);
-      } else {
-        const mw = await getMyWaitlists();
-        setWaitlists(mw);
-      }
-      
-      setLoading(false);
     }
     load();
   }, []);
@@ -174,23 +172,25 @@ export default function SessionsPage() {
   async function updateStatus(
     sessionId: string,
     status: string,
-    extraData?: unknown,
+    extraData?: Record<string, unknown>,
   ) {
     const session = sessions.find((s) => s.id === sessionId);
 
     const res = await fetch(`/api/sessions/${sessionId}/status`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      // @ts-ignore: Strict unknown type check
-      body: JSON.stringify({ status, ...extraData }),
+      body: JSON.stringify({ status, ...(extraData || {}) }),
     });
 
     if (res.ok) {
       setSessions((prev) =>
         prev.map((s) =>
           s.id === sessionId
-            // @ts-ignore: Strict unknown type check
-            ? { ...s, status: status as Session["status"], ...extraData }
+            ? {
+                ...s,
+                status: status as Session["status"],
+                ...(extraData || {}),
+              }
             : s,
         ),
       );
@@ -464,7 +464,8 @@ export default function SessionsPage() {
                       <div className="flex items-center gap-3 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3.5 w-3.5" />
-                          Requested Date: {new Date(w.requested_date).toLocaleDateString()}
+                          Requested Date:{" "}
+                          {new Date(w.requested_date).toLocaleDateString()}
                         </span>
                         <Badge variant="secondary">{w.status}</Badge>
                       </div>

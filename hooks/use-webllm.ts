@@ -1,30 +1,46 @@
 import { useState, useEffect } from "react";
-import { CreateWebWorkerMLCEngine, InitProgressReport, hasModelInCache, MLCEngineInterface } from "@mlc-ai/web-llm";
+import {
+  CreateWebWorkerMLCEngine,
+  InitProgressReport,
+  hasModelInCache,
+  MLCEngineInterface,
+} from "@mlc-ai/web-llm";
 
 export type AIProvider = "webgpu" | "server" | "none";
+
+export type WebLLMEngineType =
+  | MLCEngineInterface
+  | {
+      chat: {
+        completions: {
+          create: (request: unknown) => Promise<unknown>;
+        };
+      };
+    };
 
 interface UseWebLLMOptions {
   model?: string;
   workerUrl?: URL;
 }
 
-/**
- * A custom hook that abstracts WebLLM initialization.
- * It checks if navigator.gpu is supported. If not, it returns a mocked engine
- * that forwards requests to the server-side API fallback.
- */
 export function useWebLLM({
   model = "Llama-3.2-1B-Instruct-q4f16_1-MLC",
-  workerUrl
+  workerUrl,
 }: UseWebLLMOptions = {}) {
-  const [engine, setEngine] = useState<MLCEngineInterface | Record<string, unknown> | null>(null);
+  const [engine, setEngine] = useState<WebLLMEngineType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [initProgress, setInitProgress] = useState<InitProgressReport | null>(null);
+  const [initProgress, setInitProgress] = useState<InitProgressReport | null>(
+    null,
+  );
   const [isReady, setIsReady] = useState(false);
   const [provider, setProvider] = useState<AIProvider>("none");
 
   // Determine which worker URL to use (defaulting to the one in lib/workers)
-  const workerToUse = workerUrl || (typeof window !== "undefined" ? new URL("../lib/workers/webllm.worker.ts", import.meta.url) : undefined);
+  const workerToUse =
+    workerUrl ||
+    (typeof window !== "undefined"
+      ? new URL("../lib/workers/webllm.worker.ts", import.meta.url)
+      : undefined);
 
   useEffect(() => {
     const checkCache = async () => {
@@ -48,9 +64,11 @@ export function useWebLLM({
 
     // 1. Device Capability Check
     if (!(navigator as Navigator & { gpu?: unknown }).gpu) {
-      console.warn("WebGPU not supported on this device/browser. Falling back to server-side AI.");
+      console.warn(
+        "WebGPU not supported on this device/browser. Falling back to server-side AI.",
+      );
       setProvider("server");
-      
+
       // Create a mock engine interface that maps to our server route
       const mockEngine = {
         chat: {
@@ -59,21 +77,25 @@ export function useWebLLM({
               const response = await fetch("/api/ai/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ messages: request.messages })
+                body: JSON.stringify({ messages: request.messages }),
               });
-              
+
               if (!response.ok) {
                 throw new Error("Server-side AI request failed");
               }
-              
+
               return await response.json();
-            }
-          }
-        }
+            },
+          },
+        },
       };
-      
+
       setEngine(mockEngine);
-      setInitProgress({ progress: 1, text: "Ready (Server Fallback)", timeElapsed: 0 });
+      setInitProgress({
+        progress: 1,
+        text: "Ready (Server Fallback)",
+        timeElapsed: 0,
+      });
       setIsReady(true);
       setIsLoading(false);
       return mockEngine;
@@ -83,7 +105,7 @@ export function useWebLLM({
     try {
       setProvider("webgpu");
       if (!workerToUse) throw new Error("Worker URL not provided");
-      
+
       const newEngine = await CreateWebWorkerMLCEngine(
         new Worker(workerToUse, { type: "module" }),
         model,
@@ -91,14 +113,17 @@ export function useWebLLM({
           initProgressCallback: (progress) => {
             setInitProgress(progress);
           },
-        }
+        },
       );
       setEngine(newEngine);
       setIsReady(true);
       return newEngine;
     } catch (error) {
-      console.error("Failed to initialize WebLLM engine, falling back to server:", error);
-      
+      console.error(
+        "Failed to initialize WebLLM engine, falling back to server:",
+        error,
+      );
+
       // Fallback on initialization error
       setProvider("server");
       const mockEngine = {
@@ -108,13 +133,14 @@ export function useWebLLM({
               const response = await fetch("/api/ai/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ messages: request.messages })
+                body: JSON.stringify({ messages: request.messages }),
               });
-              if (!response.ok) throw new Error("Server-side AI request failed");
+              if (!response.ok)
+                throw new Error("Server-side AI request failed");
               return await response.json();
-            }
-          }
-        }
+            },
+          },
+        },
       };
       setEngine(mockEngine);
       setIsReady(true);
@@ -130,6 +156,6 @@ export function useWebLLM({
     isReady,
     initProgress,
     provider,
-    initializeEngine
+    initializeEngine,
   };
 }

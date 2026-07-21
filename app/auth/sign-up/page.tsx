@@ -15,13 +15,13 @@ import {
   Users,
   Eye,
   EyeOff,
-  CheckCircle2,
-  MailCheck,
   ArrowLeft,
   ArrowRight,
 } from "lucide-react";
 import { TosLink, PrivacyLink } from "@/components/legal-modals";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
+import { SignUpBrandingPanel } from "@/features/auth/components/sign-up-branding-panel";
+import { SignUpSuccessScreen } from "@/features/auth/components/sign-up-success-screen";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -42,13 +42,6 @@ function mapAuthError(msg: string): string {
 }
 
 import { AUTH_VALIDATORS as VALIDATORS } from "@/features/auth/utils/validators";
-
-const FEATURES = [
-  "Connect with verified expert tutors",
-  "Book and manage sessions with ease",
-  "Access shared learning resources",
-  "Track your progress over time",
-];
 
 const STEP_LABELS = ["Account", "Profile", "Review"];
 
@@ -102,9 +95,11 @@ export default function SignUpPage() {
     errs.first_name = VALIDATORS.first_name?.(formData.first_name) ?? "";
     errs.last_name = VALIDATORS.last_name?.(formData.last_name) ?? "";
     errs.phone_number = VALIDATORS.phone_number?.(formData.phone_number) ?? "";
-    errs.date_of_birth = VALIDATORS.date_of_birth?.(formData.date_of_birth) ?? "";
+    errs.date_of_birth =
+      VALIDATORS.date_of_birth?.(formData.date_of_birth) ?? "";
     if (selectedRole === "learner") {
-      errs.degree_program = VALIDATORS.degree_program?.(formData.degree_program) ?? "";
+      errs.degree_program =
+        VALIDATORS.degree_program?.(formData.degree_program) ?? "";
     }
     setFieldErrors((prev) => ({ ...prev, ...errs }));
     return Object.values(errs).every((e) => !e);
@@ -204,7 +199,9 @@ export default function SignUpPage() {
     return score;
   })();
 
-  const strengthLabel = ["", "Weak", "Fair", "Good", "Strong"][passwordStrength];
+  const strengthLabel = ["", "Weak", "Fair", "Good", "Strong"][
+    passwordStrength
+  ];
   const strengthColor = [
     "",
     "bg-orange-500",
@@ -222,46 +219,7 @@ export default function SignUpPage() {
 
   return (
     <div className="flex min-h-screen">
-      {/* Left branded panel — hidden on small screens */}
-      <div className="hidden lg:flex lg:w-[42%] xl:w-[38%] flex-col justify-between bg-sidebar p-10 text-sidebar-foreground">
-        <Link href="/" className="flex items-center gap-2.5 w-fit">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-accent">
-            <GraduationCap className="h-5 w-5 text-sidebar-accent-foreground" />
-          </div>
-          <span className="text-xl font-bold tracking-tight">ScholarMe</span>
-        </Link>
-
-        <div className="flex flex-col gap-8">
-          <div className="flex flex-col gap-3">
-            <p className="text-sm font-semibold uppercase tracking-widest text-sidebar-foreground/55">
-              Join thousands of learners
-            </p>
-            <h2 className="text-4xl font-bold leading-tight text-balance">
-              Start your learning journey today
-            </h2>
-            <p className="text-base leading-relaxed text-sidebar-foreground/70">
-              ScholarMe connects students with expert tutors for personalized,
-              flexible learning — on your schedule.
-            </p>
-          </div>
-
-          <ul className="flex flex-col gap-3">
-            {FEATURES.map((f) => (
-              <li
-                key={f}
-                className="flex items-center gap-3 text-sm text-sidebar-foreground/80"
-              >
-                <CheckCircle2 className="h-4 w-4 shrink-0 text-accent" />
-                {f}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <p className="text-xs text-sidebar-foreground/35">
-          &copy; {new Date().getFullYear()} ScholarMe. All rights reserved.
-        </p>
-      </div>
+      <SignUpBrandingPanel />
 
       {/* Right form panel */}
       <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto bg-background px-6 py-10">
@@ -277,26 +235,7 @@ export default function SignUpPage() {
 
         <div className="w-full max-w-md">
           {showEmailSent ? (
-            <div className="flex flex-col items-center justify-center space-y-6 text-center py-10">
-              <div className="bg-primary/10 p-4 rounded-full">
-                <MailCheck className="h-12 w-12 text-primary" />
-              </div>
-              <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                Check your email
-              </h1>
-              <p className="text-base text-muted-foreground">
-                We&apos;ve sent a verification link to{" "}
-                <span className="font-medium text-foreground">
-                  {formData.email}
-                </span>
-                . Please click the link to activate your account.
-              </p>
-              <div className="pt-4 flex flex-col gap-3 w-full">
-                <Button variant="outline" className="w-full" asChild>
-                  <Link href="/auth/login">Return to sign in</Link>
-                </Button>
-              </div>
-            </div>
+            <SignUpSuccessScreen email={formData.email} />
           ) : (
             <>
               <div className="mb-6">
@@ -383,7 +322,8 @@ export default function SignUpPage() {
                     {/* Email */}
                     <div className="flex flex-col gap-1.5">
                       <Label htmlFor="email">
-                        Email Address <span className="text-destructive">*</span>
+                        Email Address{" "}
+                        <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="email"
@@ -423,7 +363,10 @@ export default function SignUpPage() {
                           autoComplete="new-password"
                           value={formData.password}
                           onChange={(e) =>
-                            setFormData({ ...formData, password: e.target.value })
+                            setFormData({
+                              ...formData,
+                              password: e.target.value,
+                            })
                           }
                           onBlur={(e) =>
                             validateField("password", e.target.value)
@@ -507,7 +450,8 @@ export default function SignUpPage() {
                           onChange={(e) => {
                             const val = e.target.value;
                             setFormData({ ...formData, confirmPassword: val });
-                            const match = val === formData.password || val === "";
+                            const match =
+                              val === formData.password || val === "";
                             setPasswordMatch(match);
                             if (!match)
                               setFieldErrors((prev) => ({
@@ -804,11 +748,15 @@ export default function SignUpPage() {
                       <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                         <div>
                           <p className="text-muted-foreground text-xs">Role</p>
-                          <p className="font-medium capitalize">{selectedRole}</p>
+                          <p className="font-medium capitalize">
+                            {selectedRole}
+                          </p>
                         </div>
                         <div>
                           <p className="text-muted-foreground text-xs">Email</p>
-                          <p className="font-medium truncate">{formData.email}</p>
+                          <p className="font-medium truncate">
+                            {formData.email}
+                          </p>
                         </div>
                         <div>
                           <p className="text-muted-foreground text-xs">Name</p>

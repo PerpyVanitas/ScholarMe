@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **System Audit & Remediation**: Conducted a platform-wide audit covering broken features, orphaned code, poor implementations, and God objects:
+  - **Broken Features Fixed**: Resolved runtime undefined variable crashes in `app/dashboard/sessions/page.tsx`, fixed broken module export in `features/gamification/index.ts`, fixed pinned favorites navigation type mismatch in `components/app-sidebar.tsx`, removed inner-JSX string comments in `features/tutors/components/tutor-review-dialog.tsx`, and fixed `MLCEngineInterface` engine call typing in `features/tutors/components/webllm-chat.tsx`.
+  - **Dead Code Cleanup**: Deleted 10 orphaned files including `features/admin/actions/admin-actions.ts`, `components/skeletons.tsx`, and 8 unimported Radix UI primitives (`accordion`, `context-menu`, `drawer`, etc.).
+  - **Push Service Consolidation**: Merged duplicate push services into `lib/push-service.ts` with direct Supabase user subscription lookups.
+  - **Structured Logger Integration**: Integrated `lib/logger.ts` (Pino) into central `handleApiError` utility.
+  - **API Error Hardening**: Hardened `app/api/admin/users/route.ts` with `try-catch` blocks and normalized error handlers.
+  - **God Object Modularization**: Extracted `SignUpBrandingPanel` and `SignUpSuccessScreen` out of `app/auth/sign-up/page.tsx`.
+
+### Added (Previous)
+
 - **Orphaned Features Wired**: Discovered and fully wired up several partially implemented features that lacked UI interfaces:
   - **Tutor Substitution (Transfer)**: Fixed a broken database/API schema mismatch (`substitute_tutor_id` vs `transfer_to_tutor_id`) and wired the "Accept Transfer" and "Decline Transfer" UI for receiving tutors so they can now take ownership of transferred sessions.
   - **Tutor Pause**: Tutors can now temporarily pause their accounts from the Profile Settings tab using the newly wired `toggleTutorPause` action.

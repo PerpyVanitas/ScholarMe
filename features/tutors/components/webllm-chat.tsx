@@ -9,13 +9,12 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
   CardFooter,
 } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bot, User, Send, Download, Loader2, CheckCheck } from "lucide-react";
+import { User, Send, Download, Loader2, CheckCheck } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 
@@ -51,15 +50,13 @@ export function WebLLMChat({
   const [isGenerating, setIsGenerating] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const {
-    engine,
-    isLoading,
-    isReady,
-    initProgress,
-    initializeEngine
-  } = useWebLLM({
-    workerUrl: new URL("../../../lib/workers/webllm.worker.ts", import.meta.url)
-  });
+  const { engine, isLoading, isReady, initProgress, initializeEngine } =
+    useWebLLM({
+      workerUrl: new URL(
+        "../../../lib/workers/webllm.worker.ts",
+        import.meta.url,
+      ),
+    });
 
   useEffect(() => {
     // Scroll to bottom on new message
@@ -105,13 +102,35 @@ export function WebLLMChat({
     ];
 
     const now = new Date().toISOString();
-    setMessages((prev) => [...prev, { role: "user", content: userMessage, created_at: now }]);
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", content: userMessage, created_at: now },
+    ]);
 
     try {
       // Add a placeholder for the assistant's response
-      setMessages((prev) => [...prev, { role: "assistant", content: "", created_at: new Date().toISOString() }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "",
+          created_at: new Date().toISOString(),
+        },
+      ]);
 
-      const chunks = await engine.chat.completions.create({
+      const chunks = await (
+        engine as unknown as {
+          chat: {
+            completions: {
+              create: (
+                req: unknown,
+              ) => Promise<
+                AsyncIterable<{ choices: { delta?: { content?: string } }[] }>
+              >;
+            };
+          };
+        }
+      ).chat.completions.create({
         messages: updatedMessages,
         temperature: 0.7,
         stream: true,
@@ -236,11 +255,18 @@ export function WebLLMChat({
                       <ReactMarkdown>{msg.content}</ReactMarkdown>
                     </div>
                     {msg.created_at && (
-                      <div className={`flex items-center gap-1 mt-1 text-[9px] ${msg.role === "user" ? "text-primary-foreground/70 justify-end" : "text-muted-foreground justify-end"}`}>
+                      <div
+                        className={`flex items-center gap-1 mt-1 text-[9px] ${msg.role === "user" ? "text-primary-foreground/70 justify-end" : "text-muted-foreground justify-end"}`}
+                      >
                         <span>
-                          {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          {new Date(msg.created_at).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </span>
-                        {msg.role === "user" && <CheckCheck className="h-3 w-3 ml-0.5" />}
+                        {msg.role === "user" && (
+                          <CheckCheck className="h-3 w-3 ml-0.5" />
+                        )}
                       </div>
                     )}
                   </div>

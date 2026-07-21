@@ -36,13 +36,12 @@ describe("SignUp Page UI", () => {
   });
 
   it("should prevent double-click signup by disabling the button", async () => {
-    let resolveSignUp: (value: unknown) => void;
+    let resolveSignUp!: (value: unknown) => void;
     const signUpPromise = new Promise((resolve) => {
       resolveSignUp = resolve;
     });
 
-    // @ts-expect-error: mock implementation
-    vi.spyOn(authActions, "signUp").mockReturnValue(signUpPromise);
+    vi.spyOn(authActions, "signUp").mockReturnValue(signUpPromise as never);
 
     render(<SignUpPage />);
 
@@ -111,7 +110,6 @@ describe("SignUp Page UI", () => {
   });
 
   it("should show appropriate error toast when login/signup fails", async () => {
-    // @ts-expect-error: mock implementation
     vi.spyOn(authActions, "signUp").mockResolvedValue({
       error: "Invalid email",
     });
