@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { createClient, createAdminClient } from "@/lib/supabase/create-client";
 import { redirect } from "next/navigation";
 import { birthdateFields, resolveRoleId } from "@/features/profiles/api/db";
@@ -48,8 +49,7 @@ export async function signUp(formData: FormData) {
 
     if (existingPhone) {
       return {
-        error:
-          "Registration failed or account already exists.",
+        error: "Registration failed or account already exists.",
       };
     }
   }
@@ -76,7 +76,10 @@ export async function signUp(formData: FormData) {
     },
   });
   if (createError) {
-    if (createError.message.toLowerCase().includes("already registered") || createError.status === 422) {
+    if (
+      createError.message.toLowerCase().includes("already registered") ||
+      createError.status === 422
+    ) {
       return { error: "Registration failed or account already exists." };
     }
     return { error: createError.message };
@@ -153,4 +156,39 @@ export async function signOut() {
 
   // Always redirect to home, even if there was an error
   redirect("/");
+}
+
+export async function signInWithOAuthAction(provider: "google" | "azure") {
+  const supabase = await createClient();
+  const reqHeaders = await headers();
+  const origin = reqHeaders.get("origin") || reqHeaders.get("referer") || "";
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: origin
+        ? `${new URL(origin).origin}/auth/callback`
+        : undefined,
+    },
+  });
+
+  if (error) {
+    if (
+      error.message?.toLowerCase().includes("not enabled") ||
+      error.status === 400
+    ) {
+      return {
+        error: `${
+          provider === "google" ? "Google" : "Microsoft"
+        } sign-in is not enabled in your Supabase project. Please enable it in your Supabase Dashboard under Authentication -> Providers.`,
+      };
+    }
+    return { error: error.message };
+  }
+
+  if (data?.url) {
+    redirect(data.url);
+  }
+
+  return { error: "Failed to initialize OAuth authorization flow." };
 }

@@ -1,8 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { POST } from "../route";
 import { createClient as createServerClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
 
 // Mock environment variables
 process.env.NEXT_PUBLIC_SUPABASE_URL = "http://localhost";
@@ -62,10 +60,15 @@ describe("RAG Search Security Filters", () => {
 
   it("should return empty chunks if user has no accessible resources", async () => {
     vi.mocked(createServerClient).mockResolvedValue({
+      auth: {
+        getUser: vi
+          .fn()
+          .mockResolvedValue({ data: { user: { id: "user-1" } }, error: null }),
+      },
       from: vi.fn().mockReturnValue({
-        select: vi.fn().mockResolvedValue({ data: [] }), // No resources accessible
+        select: vi.fn().mockResolvedValue({ data: [] }),
       }),
-    });
+    } as never);
 
     const mockRequest = new Request("http://localhost/api/rag/search", {
       method: "POST",
@@ -80,12 +83,17 @@ describe("RAG Search Security Filters", () => {
 
   it("should only fetch embeddings for resources the user has access to", async () => {
     vi.mocked(createServerClient).mockResolvedValue({
+      auth: {
+        getUser: vi
+          .fn()
+          .mockResolvedValue({ data: { user: { id: "user-1" } }, error: null }),
+      },
       from: vi.fn().mockReturnValue({
         select: vi
           .fn()
           .mockResolvedValue({ data: [{ id: "res-1" }, { id: "res-2" }] }),
       }),
-    });
+    } as never);
 
     const mockRequest = new Request("http://localhost/api/rag/search", {
       method: "POST",
@@ -95,8 +103,6 @@ describe("RAG Search Security Filters", () => {
     const response = await POST(mockRequest);
     const result = await response.json();
 
-    // The logic sorts by cosine similarity > 0.5. Since query is [0.9, 0.1],
-    // "AI result" [0.9, 0.1] will have similarity 1.0 > 0.5.
     expect(result.chunks).toContain("AI result");
   });
 });

@@ -1,29 +1,29 @@
-﻿import { handleApiError } from "@/lib/utils/api-error";
+import { handleApiError } from "@/lib/utils/api-error";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { GoogleGenAI } from "@google/genai";
-
-// Use require for pdf-parse to avoid TypeScript default export issues with its ESM build
+import { createClient as createServerClient } from "@/lib/supabase/server";
+import { z } from "zod";
 
 const pdfParse = require("pdf-parse");
 
-// We have to use the service role key to insert embeddings securely or just standard NEXT_PUBLIC if RLS allows.
-// resource_embeddings has no RLS right now since it's just a raw table created via script.
+const IngestSchema = z.object({
+  resourceId: z.string().min(1),
+  url: z.string().url(),
+  profileId: z.string().optional(),
+});
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const aiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
-const supabase = createClient(supabaseUrl, supabaseKey);
-
 function chunkText(text: string, maxTokens: number = 500): string[] {
-  // A simple chunker based on paragraphs and words
   const paragraphs = text.split(/\n\s*\n/);
   const chunks: string[] = [];
   let currentChunk = "";
 
   for (const p of paragraphs) {
     if (currentChunk.length + p.length > maxTokens * 4) {
-      // rough character estimate
       chunks.push(currentChunk.trim());
       currentChunk = p;
     } else {
@@ -38,6 +38,16 @@ function chunkText(text: string, maxTokens: number = 500): string[] {
 
 export async function POST(req: Request) {
   try {
+    const userClient = await createServerClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await userClient.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     if (!aiKey) {
       return NextResponse.json(
         { error: "No AI key configured" },
@@ -45,14 +55,21 @@ export async function POST(req: Request) {
       );
     }
 
-    const { resourceId, url, profileId } = await req.json();
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    if (!resourceId || !url || !profileId) {
+    const body = await req.json();
+    const parseResult = IngestSchema.safeParse(body);
+    if (!parseResult.success) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        {
+          error: "Invalid ingest parameters",
+          details: parseResult.error.format(),
+        },
         { status: 400 },
       );
     }
+
+    const { resourceId, url } = parseResult.data;
 
     // 1. Fetch file content
     const response = await fetch(url);
@@ -73,7 +90,6 @@ export async function POST(req: Request) {
     ) {
       text = buffer.toString("utf-8");
     } else {
-      // Unsupported type for now, just silently return success so we don't break the frontend
       return NextResponse.json({
         status: "skipped",
         message: "Unsupported file type for embedding",
@@ -94,13 +110,12 @@ export async function POST(req: Request) {
       contents: chunks,
     });
 
-    // Check if the response contains multiple embeddings (one for each chunk)
     const embeddings = batchRes.embeddings || [];
 
     // 5. Save to database
     const rows = chunks.map((chunk, i) => ({
       resource_id: resourceId,
-      profile_id: profileId,
+      profile_id: user.id,
       content: chunk,
       embedding: embeddings[i]?.values || [],
     }));
@@ -115,8 +130,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, chunks: chunks.length });
   } catch (err: unknown) {
     console.error("Ingestion error:", err);
-    // @ts-ignore: Strict unknown type check
-    return handleApiError(error);
+    return handleApiError(err);
   }
 }
-

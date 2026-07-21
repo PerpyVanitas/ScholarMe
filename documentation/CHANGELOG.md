@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **System Level Audit Remediation & Security Hardening**:
+  - **API Route Security & Auth**: Hardened public/unauthenticated endpoints (`app/api/rag/search`, `app/api/rag/ingest`, `app/api/finance/ocr`, `app/api/quizzes/[id]/export`, `app/api/flashcards/shared`) by enforcing user authentication checks via `getUser()`.
+  - **OAuth Provider Error Safeguards**: Added user-friendly toast notifications in `components/auth/oauth-buttons.tsx` and server-side fallback handling in `app/auth/actions.ts` when social login (Google / Azure Microsoft) is disabled in Supabase project settings.
+  - **Bloat Cleanup**: Removed leftover `any-errors.json` artifact (882 lines) from workspace root directory.
+  - **Testing & Verification**: 100% test suite pass rate (206/206 tests across 46 test files passing) and clean Next.js production build execution.
+
 - **System Audit & Remediation**: Conducted a platform-wide audit covering broken features, orphaned code, poor implementations, and God objects:
   - **Broken Features Fixed**: Resolved runtime undefined variable crashes in `app/dashboard/sessions/page.tsx`, fixed broken module export in `features/gamification/index.ts`, fixed pinned favorites navigation type mismatch in `components/app-sidebar.tsx`, removed inner-JSX string comments in `features/tutors/components/tutor-review-dialog.tsx`, and fixed `MLCEngineInterface` engine call typing in `features/tutors/components/webllm-chat.tsx`.
   - **Dead Code Cleanup**: Deleted 10 orphaned files including `features/admin/actions/admin-actions.ts`, `components/skeletons.tsx`, and 8 unimported Radix UI primitives (`accordion`, `context-menu`, `drawer`, etc.).

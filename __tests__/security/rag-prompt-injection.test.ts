@@ -19,6 +19,11 @@ vi.mock("@supabase/supabase-js", () => ({
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn().mockResolvedValue({
+    auth: {
+      getUser: vi
+        .fn()
+        .mockResolvedValue({ data: { user: { id: "user-123" } }, error: null }),
+    },
     from: vi.fn().mockReturnThis(),
     select: vi.fn().mockResolvedValue({ data: [] }),
   }),

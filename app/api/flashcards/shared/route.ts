@@ -1,4 +1,4 @@
-﻿import { handleApiError } from "@/lib/utils/api-error";
+import { handleApiError } from "@/lib/utils/api-error";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { STUDY_SET_LIST_SELECT } from "@/features/quizzes/api/study-sets-db";
@@ -6,6 +6,15 @@ import { STUDY_SET_LIST_SELECT } from "@/features/quizzes/api/study-sets-db";
 export async function GET() {
   try {
     const supabase = await createClient();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const { data, error } = await supabase
       .from("study_sets")
@@ -22,4 +31,3 @@ export async function GET() {
     return handleApiError(error);
   }
 }
-

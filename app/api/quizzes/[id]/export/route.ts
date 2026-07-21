@@ -9,6 +9,15 @@ export async function GET(
   const { id } = await params;
   const supabase = await createClient();
 
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return new NextResponse("Unauthorized", { status: 401 });
+  }
+
   const { data: studySet, error } = await supabase
     .from("study_sets")
     .select(STUDY_SET_DETAIL_SELECT)
@@ -23,10 +32,13 @@ export async function GET(
   let csvContent = "";
   if (studySet.study_set_items && studySet.study_set_items.length > 0) {
     csvContent = studySet.study_set_items
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map((item: any) => {
-        const question = item.question.replace(/\n/g, " ").replace(/\t/g, " ");
-        const answer = item.answer.replace(/\n/g, " ").replace(/\t/g, " ");
+      .map((item: { question?: string; answer?: string }) => {
+        const question = (item.question || "")
+          .replace(/\n/g, " ")
+          .replace(/\t/g, " ");
+        const answer = (item.answer || "")
+          .replace(/\n/g, " ")
+          .replace(/\t/g, " ");
         return `${question}\t${answer}`;
       })
       .join("\n");

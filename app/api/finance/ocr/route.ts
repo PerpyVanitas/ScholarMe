@@ -1,12 +1,23 @@
 import { handleApiError } from "@/lib/utils/api-error";
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 
 const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 export async function POST(req: NextRequest) {
   try {
+    const supabase = await createServerClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     if (!ai) {
       return NextResponse.json(
         { error: "AI not configured. Missing API key." },
