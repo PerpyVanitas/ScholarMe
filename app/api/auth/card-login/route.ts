@@ -6,17 +6,18 @@ import { createErrorResponse, createSuccessResponse } from "@/lib/api-errors";
 import { normalizeRole } from "@/lib/utils/roles";
 import bcrypt from "bcryptjs";
 import { rateLimit } from "@/lib/rate-limit";
+import { verifyCardSignature } from "@/lib/security/card-token";
 
 const cardLoginRateLimiter = rateLimit({ interval: 10 * 60 * 1000, limit: 10 });
 export async function POST(request: Request) {
   try {
-    const { cardId, pin } = await request.json();
+    const { cardId, pin, sig } = await request.json();
 
-    if (!cardId || !pin) {
+    if (!cardId || (!pin && !sig)) {
       return NextResponse.json(
         createErrorResponse("VALID_001_GENERAL", {
           cardId: !cardId ? "Card ID is required" : "",
-          pin: !pin ? "PIN is required" : "",
+          pin: !pin && !sig ? "PIN or Signature is required" : "",
         }),
         { status: 400 },
       );
@@ -61,18 +62,26 @@ export async function POST(request: Request) {
       );
     }
 
-    // Compare PIN using bcrypt
-    const isPinValid =
-      card.pin.startsWith("$2a$") || card.pin.startsWith("$2b$")
-        ? await bcrypt.compare(pin, card.pin)
-        : card.pin === pin; // Fallback for old plaintext PINs during migration
+    // Verify HMAC signature (Option 2) or raw PIN (legacy fallback)
+    let isAuthValid = false;
+    if (sig) {
+      isAuthValid = verifyCardSignature(cardId, card.pin, sig);
+    } else if (pin) {
+      isAuthValid =
+        card.pin.startsWith("$2a$") || card.pin.startsWith("$2b$")
+          ? await bcrypt.compare(pin, card.pin)
+          : card.pin === pin;
+    }
 
-    if (!isPinValid) {
+    if (!isAuthValid) {
       // Log failed attempt (rate limiting already applied above)
-      console.warn(`[auth] Failed PIN attempt for card ${cardId}`);
+      console.warn(`[auth] Failed card login attempt for card ${cardId}`);
 
       return NextResponse.json(
-        createErrorResponse("AUTH_001_INVALID_PIN", "Incorrect PIN"),
+        createErrorResponse(
+          "AUTH_001_INVALID_PIN",
+          "Invalid card signature or PIN",
+        ),
         { status: 401 },
       );
     }

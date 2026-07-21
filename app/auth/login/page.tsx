@@ -4,14 +4,23 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GraduationCap, Mail, CreditCard, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { mapSupabaseErrorToCode, formatErrorForDisplay } from "@/lib/api-errors";
+import {
+  mapSupabaseErrorToCode,
+  formatErrorForDisplay,
+} from "@/lib/api-errors";
 import { ErrorAlert } from "@/components/ui/error-alert";
 import { LoginInactivityCheck } from "@/features/auth/components/login-inactivity-check";
 import { CardScanner } from "@/features/auth/components/card-scanner";
@@ -49,7 +58,7 @@ export default function LoginPage() {
     window.location.href = "/dashboard";
   }
 
-  async function handleCardLogin(cardId: string, pin: string) {
+  async function handleCardLogin(cardId: string, pin?: string, sig?: string) {
     setCardLoading(true);
     setCardError("");
 
@@ -57,17 +66,18 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/card-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cardId, pin }),
+        body: JSON.stringify(sig ? { cardId, sig } : { cardId, pin }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        const msg = res.status === 429
-          ? "Too many attempts. Please wait a moment before trying again."
-          : res.status >= 500
-          ? "A server error occurred. Please try again later."
-          : "Invalid credentials. Please check your Card ID and PIN.";
+        const msg =
+          res.status === 429
+            ? "Too many attempts. Please wait a moment before trying again."
+            : res.status >= 500
+              ? "A server error occurred. Please try again later."
+              : "Invalid credentials. Please check your Card ID and PIN.";
         setCardError(msg);
         toast.error(msg);
       } else {
@@ -90,11 +100,16 @@ export default function LoginPage() {
       </Suspense>
       <div className="flex w-full max-w-md flex-col gap-6">
         <div className="flex flex-col items-center gap-2 text-center">
-          <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
+          <Link
+            href="/"
+            className="flex items-center gap-2 transition-opacity hover:opacity-80"
+          >
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
               <GraduationCap className="h-6 w-6 text-primary-foreground" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">ScholarMe</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              ScholarMe
+            </h1>
           </Link>
           <p className="text-sm text-muted-foreground text-balance">
             Sign in to your tutoring account
@@ -152,7 +167,11 @@ export default function LoginPage() {
                     />
                   </div>
                   <ErrorAlert error={emailError} />
-                  <Button type="submit" className="w-full" disabled={emailLoading}>
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={emailLoading}
+                  >
                     {emailLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -162,16 +181,16 @@ export default function LoginPage() {
                       "Sign In"
                     )}
                   </Button>
-                  
+
                   <OAuthButtons />
                 </form>
               </TabsContent>
 
               <TabsContent value="card" className="mt-4">
-                <CardScanner 
-                  onScanSuccess={handleCardLogin} 
-                  isProcessing={cardLoading} 
-                  error={cardError} 
+                <CardScanner
+                  onScanSuccess={handleCardLogin}
+                  isProcessing={cardLoading}
+                  error={cardError}
                 />
               </TabsContent>
             </Tabs>

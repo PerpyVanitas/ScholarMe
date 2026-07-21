@@ -21,6 +21,8 @@ import { HonorSocietyLogo } from "@/components/honsoc-logo";
 import { toast } from "sonner";
 import { RotateCw, CreditCard, Download, Loader2 } from "lucide-react";
 
+import { generateCardSignature } from "@/lib/security/card-token";
+
 export interface QrIdCardProps {
   profile: Profile;
   role: string;
@@ -133,10 +135,13 @@ export function QrIdCard({
         .toUpperCase()
     : "N/A";
 
-  // Generate the QR payload
+  // Generate the HMAC-signed QR payload (Option 2: signature instead of raw PIN)
   const qrPayload =
     cardPin && profile.unique_id_number
-      ? JSON.stringify({ cardId: profile.unique_id_number, pin: cardPin })
+      ? JSON.stringify({
+          cardId: profile.unique_id_number,
+          sig: generateCardSignature(profile.unique_id_number, cardPin),
+        })
       : "PENDING";
 
   const handleDownload = async (e: React.MouseEvent) => {

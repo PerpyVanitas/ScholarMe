@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { ErrorAlert } from "@/components/ui/error-alert";
 
 interface CardScannerProps {
-  onScanSuccess: (cardId: string, pin: string) => void;
+  onScanSuccess: (cardId: string, pin?: string, sig?: string) => void;
   isProcessing: boolean;
   error?: string;
 }
@@ -62,10 +62,10 @@ export function CardScanner({
             }
             setScannerActive(false);
 
-            // Expecting JSON: { "cardId": "...", "pin": "..." }
+            // Expecting JSON: { "cardId": "...", "sig": "..." } or legacy { "cardId": "...", "pin": "..." }
             const data = JSON.parse(decodedText);
-            if (data.cardId && data.pin) {
-              onScanSuccess(data.cardId, data.pin);
+            if (data.cardId && (data.sig || data.pin)) {
+              onScanSuccess(data.cardId, data.pin, data.sig);
             } else {
               throw new Error("Invalid QR code format");
             }
