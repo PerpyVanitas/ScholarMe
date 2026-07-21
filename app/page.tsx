@@ -317,7 +317,7 @@ export default function HomePage() {
             >
               <Link
                 href={isLoggedIn ? "/dashboard" : "/auth/sign-up"}
-                className="group inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-2xl font-extrabold text-base shadow-xl hover:shadow-2xl hover:shadow-primary/20 transition-all duration-300 hover:-translate-y-0.5"
+                className="group inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-2xl font-extrabold text-base shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
               >
                 {isLoggedIn ? "Go to Dashboard" : "Start Learning Free"}
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
@@ -630,7 +630,7 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href={isLoggedIn ? "/dashboard" : "/auth/sign-up"}
-                className="group inline-flex items-center justify-center gap-2 px-10 py-4 bg-primary text-primary-foreground rounded-2xl font-extrabold text-base shadow-xl hover:shadow-2xl hover:shadow-primary/30 transition-all duration-300 hover:-translate-y-0.5"
+                className="group inline-flex items-center justify-center gap-2 px-10 py-4 bg-primary text-primary-foreground rounded-2xl font-extrabold text-base shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
               >
                 {isLoggedIn ? "Go to Dashboard" : "Get Started — It's Free"}
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />

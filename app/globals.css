@@ -14,8 +14,8 @@
   --popover: #ffffff;
   --popover-foreground: #1e1d1a;
 
-  /* Primary: Deep Golden Bronze for high legibility on light background */
-  --primary: #8f680f;
+  /* Primary: Deep Golden Bronze for high legibility on light background (WCAG AAA compliant) */
+  --primary: #755208;
   --primary-foreground: #ffffff;
 
   /* Secondary: Soft light warm gold/cream */
