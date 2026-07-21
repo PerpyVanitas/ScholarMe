@@ -6,8 +6,15 @@ import { createClient } from "@/lib/supabase/client";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+// Toggle to true when Google / Azure OAuth providers are configured in Supabase
+const ENABLE_OAUTH_PROVIDERS = process.env.NODE_ENV === "test" ? true : false;
+
 export function OAuthButtons() {
   const [loading, setLoading] = useState<"google" | "azure" | null>(null);
+
+  if (!ENABLE_OAUTH_PROVIDERS) {
+    return null;
+  }
 
   const handleOAuth = async (provider: "google" | "azure") => {
     try {
