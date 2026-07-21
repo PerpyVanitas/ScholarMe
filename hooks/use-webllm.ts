@@ -70,14 +70,15 @@ export function useWebLLM({
       setProvider("server");
 
       // Create a mock engine interface that maps to our server route
-      const mockEngine = {
+      const mockEngine: WebLLMEngineType = {
         chat: {
           completions: {
-            create: async (request: { messages: unknown[] }) => {
+            create: async (request: unknown) => {
+              const reqObj = request as { messages?: unknown[] };
               const response = await fetch("/api/ai/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ messages: request.messages }),
+                body: JSON.stringify({ messages: reqObj?.messages || [] }),
               });
 
               if (!response.ok) {
@@ -126,14 +127,15 @@ export function useWebLLM({
 
       // Fallback on initialization error
       setProvider("server");
-      const mockEngine = {
+      const mockEngine: WebLLMEngineType = {
         chat: {
           completions: {
-            create: async (request: { messages: unknown[] }) => {
+            create: async (request: unknown) => {
+              const reqObj = request as { messages?: unknown[] };
               const response = await fetch("/api/ai/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ messages: request.messages }),
+                body: JSON.stringify({ messages: reqObj?.messages || [] }),
               });
               if (!response.ok)
                 throw new Error("Server-side AI request failed");
