@@ -9,7 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **System Level Audit Remediation & Security Hardening**:
+- **HMAC-SHA256 Encrypted QR ID Card Authentication (Option 2)**:
+  - **No Plaintext PIN Exposure**: Printed and digital ID cards now generate an HMAC-SHA256 signature payload (`{ cardId, sig }`) calculated from the user's card ID, PIN, and server secret key (`lib/security/card-token.ts`), completely removing plaintext PINs from QR codes.
+  - **Scanner & API Handler**: Updated `features/auth/components/card-scanner.tsx` and `app/api/auth/card-login/route.ts` to accept HMAC signatures (or legacy PIN payloads for backward compatibility) and verify them using timing-safe comparisons (`crypto.timingSafeEqual`).
+- **Supabase Password Complexity Alignment**:
+  - Enforced strict password complexity rules across sign-up, sign-in, profile password updates, and API handlers (`AUTH_VALIDATORS.password`) matching Supabase Email auth settings (minimum 8 characters, lowercase, uppercase, digits, and symbols).
   - **API Route Security & Auth**: Hardened public/unauthenticated endpoints (`app/api/rag/search`, `app/api/rag/ingest`, `app/api/finance/ocr`, `app/api/quizzes/[id]/export`, `app/api/flashcards/shared`) by enforcing user authentication checks via `getUser()`.
   - **OAuth Provider Error Safeguards**: Added user-friendly toast notifications in `components/auth/oauth-buttons.tsx` and server-side fallback handling in `app/auth/actions.ts` when social login (Google / Azure Microsoft) is disabled in Supabase project settings.
   - **Bloat Cleanup**: Removed leftover `any-errors.json` artifact (882 lines) from workspace root directory.
