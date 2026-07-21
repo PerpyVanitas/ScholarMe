@@ -165,15 +165,15 @@ export function CreateFlashcardsSheet({
 Respond ONLY with a valid JSON array of objects, where each object has a "question" string and an "answer" string.
 No other text, markdown blocks, or explanations. Just the JSON array.`;
 
-      const reply = await engine.chat.completions.create({
+      const reply = (await (engine as any).chat.completions.create({
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: `Topic: ${aiPrompt}` },
         ],
         response_format: { type: "json_object" },
-      });
+      })) as { choices: { message: { content?: string } }[] };
 
-      const rawContent = reply.choices[0]?.message.content || "[]";
+      const rawContent = reply.choices[0]?.message?.content || "[]";
       let parsedData = [];
       try {
         parsedData = JSON.parse(rawContent);
@@ -232,14 +232,14 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
       setLocalAIProgressValue(100);
       const systemPrompt = `You are a helpful assistant. Analyze the provided flashcards and output exactly 3 comma-separated tags (e.g. "Biology, Anatomy, Cells"). Do not output anything else.`;
 
-      const reply = await engine.chat.completions.create({
+      const reply = (await (engine as any).chat.completions.create({
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: `Flashcards: ${formData.content}` },
         ],
-      });
+      })) as { choices: { message: { content?: string } }[] };
 
-      const generatedTags = reply.choices[0]?.message.content?.trim() || "";
+      const generatedTags = reply.choices[0]?.message?.content?.trim() || "";
       if (generatedTags) {
         setFormData((prev) => ({
           ...prev,

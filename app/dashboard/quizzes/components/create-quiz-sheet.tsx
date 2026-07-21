@@ -189,15 +189,15 @@ Each object must have:
 "item_type": string (one of the question types)
 No other text, markdown blocks, or explanations. Just the JSON array.`;
 
-      const reply = await engine.chat.completions.create({
+      const reply = (await (engine as any).chat.completions.create({
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: `Topic: ${aiPrompt}` },
         ],
         response_format: { type: "json_object" },
-      });
+      })) as { choices: { message: { content?: string } }[] };
 
-      const rawContent = reply.choices[0]?.message.content || "[]";
+      const rawContent = reply.choices[0]?.message?.content || "[]";
       let parsedData = [];
       try {
         parsedData = JSON.parse(rawContent);
@@ -486,7 +486,6 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
 
           <QuizConfigPanel
             quizConfig={quizConfig}
-            // @ts-ignore
             setQuizConfig={setQuizConfig}
             generating={generating}
             creating={creating}

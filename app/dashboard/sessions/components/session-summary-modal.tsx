@@ -64,15 +64,15 @@ export function SessionSummaryModal({
 
       setProgressText("Generating summary...");
 
-      const reply = await engine.chat.completions.create({
+      const reply = (await (engine as any).chat.completions.create({
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
-      });
+      })) as { choices: { message: { content?: string } }[] };
 
       setSummary(
-        reply.choices[0]?.message.content || "Failed to generate summary.",
+        reply.choices[0]?.message?.content || "Failed to generate summary.",
       );
       toast.success("Summary generated!");
     } catch (error) {

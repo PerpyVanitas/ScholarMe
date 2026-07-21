@@ -66,15 +66,15 @@ export function SyllabusParserModal({
 Output ONLY a valid JSON array of objects. Each object must have these exact keys: "title" (string), "date" (string in YYYY-MM-DD format), "type" (string, usually "deadline" or "study"), "location" (string), "description" (string).
 No markdown blocks, no other text. Just the JSON array.`;
 
-      const reply = await engine.chat.completions.create({
+      const reply = (await (engine as any).chat.completions.create({
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: `Syllabus Text:\n${syllabusText}` },
         ],
         response_format: { type: "json_object" },
-      });
+      })) as { choices: { message: { content?: string } }[] };
 
-      const rawContent = reply.choices[0]?.message.content || "[]";
+      const rawContent = reply.choices[0]?.message?.content || "[]";
 
       let parsedData = [];
       try {
