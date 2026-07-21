@@ -51,6 +51,13 @@ export const AUTH_VALIDATORS = {
   password: (v: string) => {
     if (!v) return "Password is required.";
     if (v.length < 8) return "Password must be at least 8 characters.";
+    if (!/[a-z]/.test(v))
+      return "Password must contain at least one lowercase letter.";
+    if (!/[A-Z]/.test(v))
+      return "Password must contain at least one uppercase letter.";
+    if (!/\d/.test(v)) return "Password must contain at least one number.";
+    if (!/[^a-zA-Z0-9]/.test(v))
+      return "Password must contain at least one symbol (e.g. !@#$%^&*).";
     return "";
   },
   degree_program: (v: string) => {
