@@ -10,6 +10,25 @@ import {
 export const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 export const ACCEPTED_MIME_TYPES = [
+  ".pdf",
+  ".doc",
+  ".docx",
+  ".xls",
+  ".xlsx",
+  ".ppt",
+  ".pptx",
+  ".txt",
+  ".csv",
+  ".rtf",
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".gif",
+  ".webp",
+  ".svg",
+  ".mp4",
+  ".webm",
+  ".mov",
   "application/pdf",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -105,7 +124,6 @@ export interface ResourceRow {
   is_public: boolean | null;
   uploaded_by: string;
   created_at: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   profiles?: unknown;
 }
 
@@ -116,6 +134,5 @@ export interface RepoRow {
   description: string | null;
   access_role: string;
   created_at: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   profiles?: unknown;
 }

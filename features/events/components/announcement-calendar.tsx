@@ -106,7 +106,6 @@ export function AnnouncementCalendar({
     try {
       await updateEventRsvp(eventId, status);
       toast.success(`RSVP updated to ${status}`);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: unknown) {
       // @ts-ignore: Strict unknown type check
       toast.error("Failed to RSVP: " + e.message);
@@ -131,7 +130,6 @@ export function AnnouncementCalendar({
       });
       toast.success("Event created!");
       setOpenCreate(false);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: unknown) {
       // @ts-ignore: Strict unknown type check
       toast.error(e.message);
@@ -144,7 +142,6 @@ export function AnnouncementCalendar({
     try {
       await deleteEvent(id);
       toast.success("Event deleted");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: unknown) {
       // @ts-ignore: Strict unknown type check
       toast.error("Failed to delete event: " + e.message);
@@ -294,7 +291,6 @@ END:VCALENDAR`;
 
           <Select
             value={filterType}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             // @ts-ignore: Strict unknown type check
             onValueChange={(val: unknown) => setFilterType(val)}
           >

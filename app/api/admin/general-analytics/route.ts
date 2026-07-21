@@ -83,7 +83,6 @@ export async function GET(request: Request) {
     let dailyActiveUsers = 0;
     if (dauLogs && dauLogs.length > 0) {
       const distinctUsers = new Set(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         // @ts-ignore: Strict unknown type check
         dauLogs.map((log: unknown) => log.user_id).filter(Boolean),
       );

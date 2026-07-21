@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { hasTestDb, getTestClient, randomSuffix } from "./test-db";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient, User } from "@supabase/supabase-js";
 import { resolveRoleId } from "@/features/profiles/api/db";
 
 describe.skipIf(!hasTestDb)("P1-8: Role Downgrade Race Condition", () => {
-  let adminClient: any;
+  let adminClient: SupabaseClient;
   let manager: any;
   let managerClient: any;
   let budgetId: string;

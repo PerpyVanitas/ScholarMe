@@ -51,8 +51,8 @@ export async function proxy(request: NextRequest) {
   // WebLLM requires 'unsafe-eval' and 'strict-dynamic' can be useful
   // In development, Next.js requires 'unsafe-inline' for fast refresh and hydration
   const scriptSrc = isDevelopment
-    ? `'self' 'unsafe-inline' 'unsafe-eval'`
-    : `'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval'`;
+    ? `'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'`
+    : `'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval' 'wasm-unsafe-eval'`;
 
   const cspHeader = `
     default-src 'self';

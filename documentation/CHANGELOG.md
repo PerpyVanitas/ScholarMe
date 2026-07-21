@@ -9,8 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Orphaned Features Wired**: Discovered and fully wired up several partially implemented features that lacked UI interfaces:
+  - **Tutor Substitution (Transfer)**: Fixed a broken database/API schema mismatch (`substitute_tutor_id` vs `transfer_to_tutor_id`) and wired the "Accept Transfer" and "Decline Transfer" UI for receiving tutors so they can now take ownership of transferred sessions.
+  - **Tutor Pause**: Tutors can now temporarily pause their accounts from the Profile Settings tab using the newly wired `toggleTutorPause` action.
+  - **Library Checkouts**: Built `ActiveCheckoutsModal` and connected `returnResource` so admins can now view active checkouts and process returns.
+  - **Finance Petty Cash**: Wired `approvePettyCash` action to new "Approve/Reject" buttons in the Finance Dashboard for users with `finance_review` access.
+  - **Waitlist Tracking**: Added a new `Waitlists` tab to the Sessions page for Learners (to view joined waitlists) and Tutors (to view waitlisted learners) using `getMyWaitlists` and `getTutorWaitlist`.
+  - **Legal Modals**: Deployed the orphaned `LegalModals` component globally by hooking up the `TosLink` and `PrivacyLink` to the Sidebar Footer.
 - **P9-1 OpenAPI Scaffold**: Added `docs/openapi.ts` to generate `openapi.json` for API documentation.
 - **P8-2 Structured Logger**: Added `lib/logger.ts` for standardized `pino` JSON logging.
+
+### Removed
+
+- **Dead Code Sweep**: Removed 11 deeply orphaned components across `/landing`, `/gamification`, `/messaging`, `/onboarding`, and `/tutors` that were detected as unused by `knip`, cleaning up tech debt.
 - **P8-5 Incident Response**: Added `INCIDENT_RESPONSE.md` for production on-call procedures.
 - **P8-4 Monitoring**: Added `docs/monitoring.md` for uptime checking procedures.
 - **P6 Resilience Tests**: Expanded `__tests__/integration/infrastructure/resilience.test.ts` to cover module-level connection accumulation, cron job locks, unhandled promise rejections, and DB pool exhaustion fallbacks.

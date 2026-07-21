@@ -17,7 +17,7 @@ export function useWebLLM({
   model = "Llama-3.2-1B-Instruct-q4f16_1-MLC",
   workerUrl
 }: UseWebLLMOptions = {}) {
-  const [engine, setEngine] = useState<any>(null);
+  const [engine, setEngine] = useState<MLCEngineInterface | Record<string, unknown> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [initProgress, setInitProgress] = useState<InitProgressReport | null>(null);
   const [isReady, setIsReady] = useState(false);
@@ -29,7 +29,7 @@ export function useWebLLM({
   useEffect(() => {
     const checkCache = async () => {
       try {
-        if (!(navigator as any).gpu) return; // Only check cache if GPU is available
+        if (!(navigator as Navigator & { gpu?: unknown }).gpu) return; // Only check cache if GPU is available
         const isCached = await hasModelInCache(model);
         if (isCached) {
           initializeEngine();
@@ -47,7 +47,7 @@ export function useWebLLM({
     setIsLoading(true);
 
     // 1. Device Capability Check
-    if (!(navigator as any).gpu) {
+    if (!(navigator as Navigator & { gpu?: unknown }).gpu) {
       console.warn("WebGPU not supported on this device/browser. Falling back to server-side AI.");
       setProvider("server");
       
@@ -55,7 +55,7 @@ export function useWebLLM({
       const mockEngine = {
         chat: {
           completions: {
-            create: async (request: any) => {
+            create: async (request: { messages: unknown[] }) => {
               const response = await fetch("/api/ai/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -104,7 +104,7 @@ export function useWebLLM({
       const mockEngine = {
         chat: {
           completions: {
-            create: async (request: any) => {
+            create: async (request: { messages: unknown[] }) => {
               const response = await fetch("/api/ai/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

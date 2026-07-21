@@ -4,9 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
 interface FlashcardItemsEditorProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   structuredItems: Record<string, unknown>[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setStructuredItems: (items: Record<string, unknown>[]) => void;
 }
 

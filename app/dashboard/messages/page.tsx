@@ -46,7 +46,6 @@ export default async function MessagesPage({
   const conversationIds = (participants || []).map((p) => p.conversation_id);
 
   // Fetch full details only for conversations the user belongs to
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let conversations: unknown[] = [];
   if (conversationIds.length > 0) {
     const { data, error } = await supabase
@@ -83,7 +82,6 @@ export default async function MessagesPage({
     // Sort messages to get the latest one
     // @ts-ignore: Strict unknown type check
     const sortedMessages = conv.messages?.sort(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (a: unknown, b: unknown) =>
         // @ts-ignore: Strict unknown type check
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),

@@ -112,11 +112,8 @@ export default function AvailabilityPage() {
     if (error) {
       toast.error("Failed to add slot");
     } else if (data) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setSlots((prev: unknown) =>
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        // @ts-ignore: Strict unknown type check
-        [...prev, data].sort((a: unknown, b: unknown) => a.day_of_week - b.day_of_week),
+      setSlots((prev: TutorAvailability[]) =>
+        [...prev, data as TutorAvailability].sort((a: TutorAvailability, b: TutorAvailability) => a.day_of_week - b.day_of_week),
       );
       toast.success("Availability slot added");
     }
@@ -130,9 +127,7 @@ export default function AvailabilityPage() {
       .eq("id", id);
 
     if (!error) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      // @ts-ignore: Strict unknown type check
-      setSlots((prev: unknown) => prev.filter((s: unknown) => s.id !== id));
+      setSlots((prev: TutorAvailability[]) => prev.filter((s: TutorAvailability) => s.id !== id));
       toast.success("Slot removed");
     }
   }
@@ -188,11 +183,9 @@ export default function AvailabilityPage() {
     if (error) {
       toast.error("Failed to copy schedule");
     } else if (data) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setSlots((prev: unknown) =>
         // @ts-ignore: Strict unknown type check
         [...prev, ...data].sort(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           // @ts-ignore: Strict unknown type check
           (a: unknown, b: unknown) => a.day_of_week - b.day_of_week,
         ),
@@ -246,7 +239,6 @@ export default function AvailabilityPage() {
   const groupedSlots = DAYS_OF_WEEK.map((day, idx) => ({
     day,
     idx,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     // @ts-ignore: Strict unknown type check
     slots: slots.filter((s: unknown) => s.day_of_week === idx),
   }));

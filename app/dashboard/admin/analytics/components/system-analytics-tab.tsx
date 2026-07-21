@@ -20,7 +20,6 @@ import {
 } from "recharts";
 
 interface SystemAnalyticsTabProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   stats: unknown;
 }
 

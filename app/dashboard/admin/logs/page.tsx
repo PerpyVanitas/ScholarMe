@@ -28,7 +28,6 @@ import { toast } from "sonner";
 const DEFAULT_LIMIT = 100;
 
 export default function SystemLogsPage() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [logs, setLogs] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);

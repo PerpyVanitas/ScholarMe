@@ -116,7 +116,7 @@ describe("Phase 4E: Quizzes & Flashcards", () => {
   });
 
   it("P4-63: Quiz resumption state", () => {
-    const getQuizState = (savedState: any) => {
+    const getQuizState = (savedState: { timestamp: number; currentIndex: number; answers: Record<string, string> } | null) => {
       if (!savedState || Date.now() - savedState.timestamp > 86400000) {
         return { currentIndex: 0, answers: {} };
       }

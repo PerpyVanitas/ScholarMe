@@ -62,7 +62,6 @@ function getInitials(name?: string) {
     .slice(0, 2);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ClockedInRow({ item }: { item: unknown }) {
   // @ts-ignore: Strict unknown type check
   const clockInTime = new Date(item.clock_in).toLocaleTimeString("en-US", {

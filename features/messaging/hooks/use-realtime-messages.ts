@@ -160,7 +160,6 @@ export function useRealtimeMessages(
       }
 
       // Optimistic UI Update
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const optimisticMessage: unknown = {
         id: `opt-${Date.now()}`,
         conversation_id: conversationId,

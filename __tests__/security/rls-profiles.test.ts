@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { hasTestDb, getTestClient, randomSuffix } from "./test-db";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient, User } from "@supabase/supabase-js";
 
 describe.skipIf(!hasTestDb)("P1-6: RLS Profiles Protection", () => {
-  let adminClient: any;
-  let userA: any;
-  let userB: any;
-  let clientA: any;
+  let adminClient: SupabaseClient;
+  let userA: User;
+  let userB: User;
+  let clientA: SupabaseClient;
 
   beforeAll(async () => {
     if (!hasTestDb) return;

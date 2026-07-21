@@ -91,6 +91,7 @@ import { HonorSocietyLogo } from "@/components/honsoc-logo";
 import { A11ySettings } from "@/components/a11y-settings";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
+import { TosLink, PrivacyLink } from "@/components/legal-modals";
 
 interface AppSidebarProps {
   profile: Profile;
@@ -516,8 +517,7 @@ export function AppSidebar({
                       className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary cursor-pointer text-primary-foreground"
                       onClick={(e) => {
                         e.stopPropagation();
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        handleLogoClick(e as any);
+                        handleLogoClick(e);
                       }}
                     >
                       <HonorSocietyLogo variant="auto" className="h-6 w-6" />
@@ -596,7 +596,7 @@ export function AppSidebar({
                   <SidebarMenu>
                     {favorites.map((favHref) => {
                       // find the item from all possible groups to get the icon and title
-                      let favItem: any = null;
+                      let favItem: { title: string; href: string; icon: LucideIcon } | null = null;
                       for (const g of learnerGroups.concat(managementGroups)) {
                         for (const i of g.items) {
                           if (i.href === favHref) {
@@ -849,6 +849,11 @@ export function AppSidebar({
             </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
+        <div className="flex justify-center items-center gap-4 mt-4 px-2 py-1 text-[10px] text-muted-foreground/60">
+          <TosLink className="hover:text-foreground transition-colors" />
+          <span>&middot;</span>
+          <PrivacyLink className="hover:text-foreground transition-colors" />
+        </div>
       </SidebarFooter>
     </Sidebar>
   );

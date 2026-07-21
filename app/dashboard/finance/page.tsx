@@ -160,6 +160,7 @@ export default async function FinanceDashboard() {
         <TabsContent value="petty_cash" className="space-y-6">
           <PettyCashTab
             canSubmit={canSubmit}
+            canReview={canReview}
             pettyCash={pettyCash as PettyCash[] | null}
             vendors={vendors}
           />

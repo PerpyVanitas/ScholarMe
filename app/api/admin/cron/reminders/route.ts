@@ -54,7 +54,6 @@ export async function POST(req: Request) {
       if (tutorRole) {
         for (const profile of expiredRoles) {
           const roleName = Array.isArray(profile.roles)
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             // @ts-ignore: Strict unknown type check
             ? (profile.roles as unknown[])[0]?.name
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -107,7 +106,6 @@ export async function POST(req: Request) {
       const reminderTasks: Promise<void>[] = [];
 
       for (const event of upcomingEvents) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const goingRsvps = (event.event_rsvps || []).filter((r: unknown) => {
           // @ts-ignore: Strict unknown type check
           const p = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;

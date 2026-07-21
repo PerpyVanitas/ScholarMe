@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { useInactivityTimeout } from "@/hooks/use-inactivity-timeout";
 import {
   SidebarProvider,
@@ -12,7 +14,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { FeedbackButton } from "@/components/feedback-button";
 import { A11ySettings } from "@/components/a11y-settings";
 import { UserProvider, useUser } from "@/lib/user-context";
-import { Loader2 } from "lucide-react";
+import { Loader2, MessageCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BreadcrumbNav } from "@/components/breadcrumb-nav";
 import { ThemeApplicator } from "@/components/theme-applicator";
@@ -26,6 +28,7 @@ import { MobileFab } from "@/components/mobile-fab";
 import { PageTutorialButton } from "@/components/page-tutorial-button";
 import { AnalyticsPageTracker } from "@/components/analytics-page-tracker";
 import { ChatHeadsContainer } from "@/features/messaging/components/chat-heads-container";
+import { SupportChatWidget } from "@/components/support-chat-widget";
 
 import {
   Dialog,
@@ -115,6 +118,12 @@ function DashboardLayoutContent({
             <CommandMenu />
           </div>
           <div className="ml-auto flex items-center gap-2">
+            <Button variant="ghost" size="icon" asChild className="md:hidden">
+              <Link href="/dashboard/network/messages">
+                <MessageCircle className="h-5 w-5 text-muted-foreground" />
+                <span className="sr-only">Messages</span>
+              </Link>
+            </Button>
             <div
               id="tour-streak-indicator"
               data-tour-step="2"
@@ -155,6 +164,7 @@ function DashboardLayoutContent({
         <AnalyticsPageTracker />
         <MobileBottomNav />
         <MobileFab />
+        <SupportChatWidget />
       </SidebarInset>
 
       {/* Session Timeout Warning Modal */}

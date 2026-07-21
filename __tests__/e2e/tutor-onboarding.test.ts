@@ -1,9 +1,10 @@
+import { SupabaseClient, User } from "@supabase/supabase-js";
 import { describe, it, expect, beforeAll } from "vitest";
 import { hasTestDb, getTestClient, randomSuffix } from "../security/test-db";
 import { resolveRoleId } from "@/features/profiles/api/db";
 
 describe.skipIf(!hasTestDb)("P5-1: Tutor Onboarding Critical Path", () => {
-  let adminClient: any;
+  let adminClient: SupabaseClient;
   let tutor: any;
   let suffix: string;
 

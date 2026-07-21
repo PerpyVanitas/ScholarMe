@@ -19,7 +19,6 @@ export async function POST(req: Request) {
 
     const discordMessage = {
       content: "System Notification",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       embeds: [] as unknown[],
     };
 

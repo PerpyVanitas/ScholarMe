@@ -42,6 +42,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { SkeletonList } from "@/components/ui/skeleton-card";
 import { SessionSummaryModal } from "./components/session-summary-modal";
 import { SessionList } from "./components/session-list";
+import { getMyWaitlists, getTutorWaitlist } from "@/features/tutors/api/waitlist-actions";
 
 export default function SessionsPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -54,6 +55,8 @@ export default function SessionsPage() {
   const [ratingFeedback, setRatingFeedback] = useState("");
   const [ratingLoading, setRatingLoading] = useState(false);
   const [summarySession, setSummarySession] = useState<Session | null>(null);
+  const [waitlists, setWaitlists] = useState<any[]>([]);
+  const [currentTutorId, setCurrentTutorId] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -92,6 +95,7 @@ export default function SessionsPage() {
 
         const tutorId =
           tutor?.id || (userRole === "tutor" ? DEMO_USERS.tutor.tutorId : "");
+        setCurrentTutorId(tutorId);
         query = supabase
           .from("sessions")
           .select(
@@ -151,8 +155,17 @@ export default function SessionsPage() {
         return;
       }
 
-      const { data } = await query;
       setSessions(data || []);
+      
+      // Load waitlists
+      if (userRole === "tutor" && tutorId) {
+        const tw = await getTutorWaitlist(tutorId);
+        setWaitlists(tw);
+      } else {
+        const mw = await getMyWaitlists();
+        setWaitlists(mw);
+      }
+      
       setLoading(false);
     }
     load();
@@ -161,7 +174,6 @@ export default function SessionsPage() {
   async function updateStatus(
     sessionId: string,
     status: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     extraData?: unknown,
   ) {
     const session = sessions.find((s) => s.id === sessionId);
@@ -333,6 +345,10 @@ export default function SessionsPage() {
               Open Groups ({openGroupSessions.length})
             </TabsTrigger>
           )}
+          <TabsTrigger value="waitlists" className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Waitlists ({waitlists.length})
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="upcoming" className="mt-4">
@@ -344,6 +360,7 @@ export default function SessionsPage() {
             onUpdateStatus={updateStatus}
             onRate={setRatingSession}
             onSummary={setSummarySession}
+            currentTutorId={currentTutorId || undefined}
           />
         </TabsContent>
 
@@ -359,6 +376,7 @@ export default function SessionsPage() {
             onUpdateStatus={updateStatus}
             onRate={setRatingSession}
             onSummary={setSummarySession}
+            currentTutorId={currentTutorId || undefined}
           />
         </TabsContent>
 
@@ -424,6 +442,39 @@ export default function SessionsPage() {
             )}
           </TabsContent>
         )}
+
+        <TabsContent value="waitlists" className="mt-4">
+          {waitlists.length === 0 ? (
+            <EmptyState
+              icon={Clock}
+              title="No Waitlists"
+              description="You are not on any waitlists."
+            />
+          ) : (
+            <div className="flex flex-col gap-3">
+              {waitlists.map((w) => (
+                <Card key={w.id} className="border-border/60">
+                  <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col gap-1">
+                      <span className="font-medium">
+                        {role === "tutor"
+                          ? `Waitlist: ${w.learner?.full_name}`
+                          : `Waitlist: ${w.tutor?.profiles?.full_name || "Tutor"}`}
+                      </span>
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3.5 w-3.5" />
+                          Requested Date: {new Date(w.requested_date).toLocaleDateString()}
+                        </span>
+                        <Badge variant="secondary">{w.status}</Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
       </Tabs>
 
       <Dialog

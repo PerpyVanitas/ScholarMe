@@ -11,8 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { Calendar } from "lucide-react";
 
 interface TutorAnalyticsTabProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  stats: any;
+  stats: { compliance: Array<{ is_compliant: boolean; total_minutes: number; tutor_name: string; tutor_id: string; requirement_hours: number }> } | null;
   noSemester: boolean;
 }
 
@@ -24,17 +23,13 @@ export function TutorAnalyticsTab({
 
   // @ts-ignore: Strict unknown type check
   const compliantCount = stats.compliance.filter(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    // @ts-ignore: Strict unknown type check
-    (c: unknown) => c.is_compliant,
+    (c) => c.is_compliant,
   ).length;
   // @ts-ignore: Strict unknown type check
   const totalTutors = stats.compliance.length;
   // @ts-ignore: Strict unknown type check
   const totalMinutes = stats.compliance.reduce(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    // @ts-ignore: Strict unknown type check
-    (acc: number, c: unknown) => acc + c.total_minutes,
+    (acc: number, c) => acc + c.total_minutes,
     0,
   );
 
@@ -83,7 +78,6 @@ export function TutorAnalyticsTab({
             </p>
             <p className="text-4xl font-black mt-2 text-destructive">
               {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 // @ts-ignore: Strict unknown type check
                 stats.compliance.filter((c: unknown) => c.progress_percentage < 50)
                   .length

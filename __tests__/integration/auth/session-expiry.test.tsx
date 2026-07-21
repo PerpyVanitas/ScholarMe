@@ -26,12 +26,12 @@ describe("Session Expiry & Inactivity (Phase 3)", () => {
         signOut: vi.fn().mockResolvedValue({}),
       },
     };
-    (createClient as any).mockReturnValue(mockSupabase);
+    vi.mocked(createClient).mockReturnValue(mockSupabase);
 
     mockRouter = {
       push: vi.fn(),
     };
-    (useRouter as any).mockReturnValue(mockRouter);
+    (useRouter as never).mockReturnValue(mockRouter);
   });
 
   afterEach(() => {

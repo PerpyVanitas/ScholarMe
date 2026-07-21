@@ -67,7 +67,6 @@ export async function GET(request: NextRequest) {
             },
           });
         }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: unknown) {
         // If it's a BlobNotFoundError or token error, we just fall through to Supabase fallback
         if (

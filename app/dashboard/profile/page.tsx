@@ -713,6 +713,8 @@ export default function ProfilePage() {
                   hourlyRate={hourlyRate}
                   yearsExperience={yearsExperience}
                   specializations={specializations}
+                  isPaused={isPaused}
+                  setIsPaused={setIsPaused}
                   setTutorSettingsOpen={setTutorSettingsOpen}
                   setMasteryVerificationOpen={setMasteryVerificationOpen}
                 />

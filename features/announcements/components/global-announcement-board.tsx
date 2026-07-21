@@ -43,7 +43,6 @@ export function GlobalAnnouncementBoard() {
     try {
       const data = await getAnnouncements();
       setAnnouncements(data);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: unknown) {
       console.error(e);
       toast.error(e instanceof Error ? e.message : "An error occurred");

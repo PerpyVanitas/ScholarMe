@@ -63,6 +63,7 @@ export default function StudyGroupsPage() {
       .eq("user_id", user.id);
 
     if (error) {
+      console.error("Failed to load study groups error:", error);
       toast.error("Failed to load study groups");
     } else {
        
@@ -148,12 +149,12 @@ export default function StudyGroupsPage() {
             <Card key={group.id} className="flex flex-col">
               <CardHeader>
                 <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">{group.name}</CardTitle>
+                  <CardTitle className="text-lg break-words overflow-hidden break-all">{group.name}</CardTitle>
                   <Badge variant={group.is_public ? "secondary" : "outline"}>
                     {group.is_public ? "Public" : "Private"}
                   </Badge>
                 </div>
-                <CardDescription className="line-clamp-2">
+                <CardDescription className="line-clamp-2 break-words break-all">
                   {group.description || "No description provided."}
                 </CardDescription>
               </CardHeader>

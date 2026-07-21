@@ -65,7 +65,7 @@ export function ResourcePreviewDialog({
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-9 text-zinc-300 hover:bg-zinc-900 hover:text-white"
+                  className="h-9 text-zinc-300 hover:bg-zinc-900 hover:text-white bg-zinc-900/50"
                   asChild
                 >
                   <a
@@ -76,7 +76,7 @@ export function ResourcePreviewDialog({
                     className="flex items-center gap-2"
                   >
                     <Download className="h-4 w-4 text-amber-500" />
-                    <span className="hidden sm:inline">Download</span>
+                    <span className="text-xs sm:text-sm font-medium">Download</span>
                   </a>
                 </Button>
               )}
@@ -152,14 +152,24 @@ function PreviewContent({ resource }: { resource: ResourceRow }) {
     );
   }
 
-  // PDF
   if (resource.file_type === "pdf" || ext === ".pdf") {
     return (
-      <object
-        data={`${url}#toolbar=1&navpanes=0&view=Fit`}
-        type="application/pdf"
-        className="w-full h-full min-h-[75vh] md:min-h-[85vh] max-w-5xl mx-auto border border-zinc-800 rounded-lg bg-zinc-950 shadow-2xl"
-      >
+      <div className="relative w-full h-full min-h-[75vh] md:min-h-[85vh] max-w-5xl mx-auto flex flex-col">
+        {/* Mobile notice for PDF */}
+        <div className="md:hidden w-full bg-zinc-900/80 border border-zinc-800 rounded-t-lg p-3 text-center flex flex-col items-center justify-center">
+          <p className="text-xs text-zinc-400 mb-2">PDF might not display correctly on mobile.</p>
+          <Button asChild size="sm" className="bg-amber-500 hover:bg-amber-600 text-black h-8 w-full max-w-[200px]">
+            <a href={`${url}?download=`} download target="_blank" rel="noopener noreferrer">
+              <Download className="w-4 h-4 mr-2" />
+              Download PDF
+            </a>
+          </Button>
+        </div>
+        <object
+          data={`${url}#toolbar=1&navpanes=0&view=Fit`}
+          type="application/pdf"
+          className="w-full flex-1 border border-zinc-800 md:rounded-lg rounded-b-lg bg-zinc-950 shadow-2xl"
+        >
         <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-zinc-900/50 rounded-lg border border-zinc-800">
           <FileText className="h-12 w-12 text-zinc-500 mb-4" />
           <h3 className="text-lg font-medium text-zinc-200 mb-2">Unable to display PDF preview</h3>
@@ -173,7 +183,8 @@ function PreviewContent({ resource }: { resource: ResourceRow }) {
             </a>
           </Button>
         </div>
-      </object>
+        </object>
+      </div>
     );
   }
 

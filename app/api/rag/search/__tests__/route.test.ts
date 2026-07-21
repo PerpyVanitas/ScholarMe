@@ -61,7 +61,7 @@ describe("RAG Search Security Filters", () => {
   });
 
   it("should return empty chunks if user has no accessible resources", async () => {
-    (createServerClient as any).mockResolvedValue({
+    vi.mocked(createServerClient).mockResolvedValue({
       from: vi.fn().mockReturnValue({
         select: vi.fn().mockResolvedValue({ data: [] }), // No resources accessible
       }),
@@ -79,7 +79,7 @@ describe("RAG Search Security Filters", () => {
   });
 
   it("should only fetch embeddings for resources the user has access to", async () => {
-    (createServerClient as any).mockResolvedValue({
+    vi.mocked(createServerClient).mockResolvedValue({
       from: vi.fn().mockReturnValue({
         select: vi
           .fn()

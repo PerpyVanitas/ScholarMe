@@ -26,7 +26,6 @@ export default async function AlumniNetworkPage() {
     .eq("name", "Alumni")
     .single();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let alumni: unknown[] = [];
   if (alumniRole) {
     const { data } = await supabase

@@ -3,8 +3,8 @@ import { CalendarDays } from "lucide-react";
 import { addMonths, endOfMonth, startOfMonth, subMonths } from "date-fns";
 import { AnnouncementCalendar } from "@/features/events/components/announcement-calendar";
 import { EmptyState } from "@/components/ui/empty-state";
-import { toast } from "sonner";
 import { getEvents } from "@/features/events/api/actions";
+import { CalendarActions } from "@/app/dashboard/calendar/components/calendar-actions";
 
 interface EventsViewProps {
   title: string;
@@ -23,20 +23,22 @@ export async function EventsView({
   const monthStart = subMonths(startOfMonth(now), 1);
   const monthEnd = addMonths(endOfMonth(now), 1);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let initialEvents: unknown[] = [];
   try {
     initialEvents = await getEvents(monthStart, monthEnd);
   } catch (error) {
     console.error("Error fetching events:", error);
-    toast.error(error instanceof Error ? error.message : "An error occurred");
+    // Server component cannot toast, we log instead.
   }
 
   return (
     <div className="flex flex-col gap-6 p-6 max-w-6xl mx-auto w-full">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
-        <p className="text-muted-foreground">{description}</p>
+      <div className="flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+          <p className="text-muted-foreground">{description}</p>
+        </div>
+        <CalendarActions />
       </div>
 
       {initialEvents.length === 0 && (

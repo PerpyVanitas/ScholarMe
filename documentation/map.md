@@ -30,6 +30,7 @@ ScholarMe is divided into several primary domains, each governed by the access c
   - Complete profile details (Full Name, Avatar).
   - Enter academic details (`degree_program`, `year_level`).
   - **Lockout**: Users cannot bypass onboarding. The dashboard routes continuously redirect back to setup if `profile_completed` is false.
+- **Legal**: Users can view the Terms of Service and Privacy Policy globally via the Sidebar footer links.
 
 ---
 
@@ -60,8 +61,10 @@ ScholarMe is divided into several primary domains, each governed by the access c
 - **Waitlists and Open Groups**:
   - Learners can browse "Open Groups" and join them.
   - If a group is full, learners can join a Waitlist. Auto-promotion occurs upon cancellation.
+  - **My Waitlists**: Learners and tutors can view their active waitlists in the Waitlists tab.
 - **Session Management (Tutor)**:
-  - **Substitute**: A tutor can send a transfer request to another tutor if they cannot make a confirmed session.
+  - **Pause Account**: Tutors can temporarily hide themselves from search and stop accepting new sessions via their profile.
+  - **Substitute**: A tutor can send a transfer request to another tutor if they cannot make a confirmed session. The receiving tutor can view the request in their dashboard and choose to accept (taking ownership) or decline it.
   - **Reschedule**: Propose a new time to the learner instead of forcing a change.
 - **Peer Reviews**: Lead Tutors and Committee Heads can write 1-5 star evaluations for junior tutors. Regular tutors can only read their own reviews.
 
@@ -77,6 +80,7 @@ ScholarMe is divided into several primary domains, each governed by the access c
   - **Catalog**: Inventory of actual books.
   - **Barcode Scanner**: Scan ISBNs via webcam using `html5-qrcode` to find or add books.
   - **Checkout Flow**: Admins check out books to learners, setting a due date.
+  - **Active Checkouts**: Admins can view all active checkouts and process returns via the Active Checkouts modal.
 - **Interactive Campus Map**: Visual modal to guide users to physical resources and the tutoring center.
 
 ---
@@ -101,7 +105,7 @@ ScholarMe is divided into several primary domains, each governed by the access c
 
 - **Workflows**:
   - **Budget Requests**: Save as draft, submit, multi-step approval.
-  - **Petty Cash**: Track small expenditures.
+  - **Petty Cash**: Track small expenditures. `finance_review` roles can approve or reject pending requests.
   - **Liquidations**: Upload receipts to liquidate a budget request (supports partial returns).
   - **AI OCR**: Extract receipt totals and vendors automatically via AI.
 - **SCARDS (Reports)**: Treasurer and Auditor co-sign aggregated financial reports. Exportable to PDF.

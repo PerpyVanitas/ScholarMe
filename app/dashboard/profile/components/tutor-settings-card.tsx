@@ -7,14 +7,20 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Award, Edit2, ShieldCheck } from "lucide-react";
+import { Award, Edit2, ShieldCheck, PauseCircle, PlayCircle, Loader2 } from "lucide-react";
 import type { Specialization } from "@/lib/types";
+import { Switch } from "@/components/ui/switch";
+import { useState, useTransition } from "react";
+import { toggleTutorPause } from "../actions";
+import { toast } from "sonner";
 
 interface TutorSettingsCardProps {
   tutorBio: string;
   hourlyRate: number | null;
   yearsExperience: number | null;
   specializations: Specialization[];
+  isPaused: boolean;
+  setIsPaused: (v: boolean) => void;
   setTutorSettingsOpen: (v: boolean) => void;
   setMasteryVerificationOpen: (v: boolean) => void;
 }
@@ -24,9 +30,26 @@ export function TutorSettingsCard({
   hourlyRate,
   yearsExperience,
   specializations,
+  isPaused,
+  setIsPaused,
   setTutorSettingsOpen,
   setMasteryVerificationOpen,
 }: TutorSettingsCardProps) {
+  const [isPending, startTransition] = useTransition();
+
+  function handleTogglePause(checked: boolean) {
+    setIsPaused(checked);
+    startTransition(async () => {
+      const res = await toggleTutorPause(checked);
+      if (res.success) {
+        toast.success(checked ? "Account paused" : "Account reactivated");
+      } else {
+        toast.error("Failed to update status");
+        setIsPaused(!checked);
+      }
+    });
+  }
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
@@ -50,6 +73,22 @@ export function TutorSettingsCard({
         </Button>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/30">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium">Pause Account</label>
+              {isPending && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Temporarily hide your profile from search results and stop accepting new sessions.
+            </p>
+          </div>
+          <Switch
+            checked={isPaused}
+            onCheckedChange={handleTogglePause}
+            disabled={isPending}
+          />
+        </div>
         <div className="space-y-2">
           <p className="text-sm font-medium">Bio</p>
           <p className="text-sm text-muted-foreground">

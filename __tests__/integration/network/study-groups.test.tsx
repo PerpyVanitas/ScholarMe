@@ -83,7 +83,7 @@ vi.mock("next/navigation", () => ({
 describe("Study Groups (Network/Groups)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (useUser as any).mockReturnValue({
+    vi.mocked(useUser).mockReturnValue({
       profile: { id: "user123", full_name: "Test User" },
       loading: false,
     });

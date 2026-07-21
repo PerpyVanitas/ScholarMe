@@ -19,7 +19,6 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 
 export function SmartTutorRecommendations() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [recommendations, setRecommendations] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(true);
 

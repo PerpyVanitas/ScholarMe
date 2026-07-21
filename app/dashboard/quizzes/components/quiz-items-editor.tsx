@@ -8,10 +8,8 @@ import { Trash2 } from "lucide-react";
 import { ImageOcclusionEditor } from "@/features/quizzes/components/image-occlusion-editor";
 
 interface QuizItemsEditorProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   structuredItems: Record<string, unknown>[];
   setStructuredItems: React.Dispatch<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     React.SetStateAction<Record<string, unknown>[]>
   >;
   formData: { type: string };

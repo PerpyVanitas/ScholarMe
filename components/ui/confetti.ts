@@ -8,7 +8,6 @@ export function triggerConfetti() {
   const randomInRange = (min: number, max: number) =>
     Math.random() * (max - min) + min;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const interval: unknown = setInterval(function () {
     const timeLeft = animationEnd - Date.now();
 

@@ -45,13 +45,14 @@ export function SessionList({
   onUpdateStatus,
   onRate,
   onSummary,
+  currentTutorId,
 }: {
   sessions: Session[];
   role: UserRole;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onUpdateStatus: (id: string, status: string, extraData?: unknown) => void;
+  onUpdateStatus: (id: string, status: string, additionalData?: any) => void;
   onRate: (session: Session) => void;
   onSummary: (session: Session) => void;
+  currentTutorId?: string;
 }) {
   const [confirmingSession, setConfirmingSession] = useState<Session | null>(
     null,
@@ -65,7 +66,6 @@ export function SessionList({
   const [newEnd, setNewEnd] = useState("");
 
   const [transferSession, setTransferSession] = useState<Session | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [availableTutors, setAvailableTutors] = useState<unknown[]>([]);
   const [selectedTutorId, setSelectedTutorId] = useState("");
   const [transferLoading, setTransferLoading] = useState(false);
@@ -147,10 +147,18 @@ export function SessionList({
           `${session.scheduled_date}T${session.start_time || "00:00:00"}`,
         );
 
+        const isTransferReceiver = role === "tutor" && session.transfer_to_tutor_id === currentTutorId;
+
         return (
           <Card key={session.id} className="border-border/60">
             <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex flex-col gap-1">
+              {/* Transfer Request Banner */}
+              {isTransferReceiver && (
+                <div className="absolute top-0 right-0 rounded-bl-lg rounded-tr-lg bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
+                  Transfer Request
+                </div>
+              )}
+              <div className="flex flex-col gap-1 relative">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-foreground">
                     {role === "tutor"
@@ -349,7 +357,35 @@ export function SessionList({
                     </Button>
                   </>
                 )}
-                {role === "tutor" && session.status === "confirmed" && (
+                {isTransferReceiver && (
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        onUpdateStatus(session.id, session.status, {
+                          tutor_id: currentTutorId,
+                          transfer_to_tutor_id: null,
+                        });
+                        toast.success("Transfer accepted");
+                      }}
+                    >
+                      Accept Transfer
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        onUpdateStatus(session.id, session.status, {
+                          transfer_to_tutor_id: null,
+                        });
+                        toast.success("Transfer declined");
+                      }}
+                    >
+                      Decline
+                    </Button>
+                  </div>
+                )}
+                {!isTransferReceiver && role === "tutor" && session.status === "confirmed" && (
                   <>
                     <Button
                       size="sm"
@@ -374,7 +410,7 @@ export function SessionList({
                     </Button>
                   </>
                 )}
-                {session.status === "confirmed" && session.meeting_link && (
+                {!isTransferReceiver && session.status === "confirmed" && session.meeting_link && (
                   <Button size="sm" variant="default" asChild>
                     <a
                       href={session.meeting_link}
@@ -386,7 +422,7 @@ export function SessionList({
                     </a>
                   </Button>
                 )}
-                {session.status === "confirmed" && role === "tutor" && (
+                {!isTransferReceiver && session.status === "confirmed" && role === "tutor" && (
                   <div className="flex gap-2">
                     <Button
                       size="sm"
@@ -411,7 +447,7 @@ export function SessionList({
                     </Button>
                   </div>
                 )}
-                {session.status === "confirmed" && (
+                {!isTransferReceiver && session.status === "confirmed" && (
                   <>
                     <Button size="sm" asChild>
                       <Link

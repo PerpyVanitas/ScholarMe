@@ -47,8 +47,8 @@ describe("Layout Redirects (Authentication)", () => {
       })),
     };
 
-    (createClient as any).mockResolvedValue(mockSupabase);
-    (cookies as any).mockResolvedValue({ get: vi.fn() });
+    vi.mocked(createClient).mockResolvedValue(mockSupabase);
+    (cookies as never).mockResolvedValue({ get: vi.fn() });
   });
 
   it("should redirect to /auth/login if unauthenticated", async () => {

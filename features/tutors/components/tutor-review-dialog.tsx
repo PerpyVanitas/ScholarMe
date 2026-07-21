@@ -30,9 +30,7 @@ export function TutorReviewDialog({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   tutors: unknown[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSubmit: (data: unknown) => Promise<void>;
 }) {
   const [loading, setLoading] = useState(false);
@@ -40,7 +38,6 @@ export function TutorReviewDialog({
 
   const { register, handleSubmit, reset, setValue } = useForm();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleFormSubmit = async (data: unknown) => {
     // @ts-ignore: Strict unknown type check
     if (!data.tutor_id) return;
@@ -72,7 +69,7 @@ export function TutorReviewDialog({
                 <SelectValue placeholder="Select a tutor" />
               </SelectTrigger>
               <SelectContent>
-                {tutors.map((t: any) => (
+                {tutors.map((t: { id: string; profiles?: { full_name: string } }) => (
                   // @ts-ignore: Strict unknown type check
                   <SelectItem key={t.id} value={t.id}>
                     // @ts-ignore: Strict unknown type check

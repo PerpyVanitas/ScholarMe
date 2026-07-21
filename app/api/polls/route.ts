@@ -128,7 +128,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     const isAdmin = Array.isArray(profile?.roles)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ? profile.roles.some((role: unknown) =>
           // @ts-ignore: Strict unknown type check
           ["administrator", "super_admin"].includes(role.name),

@@ -19,7 +19,7 @@ describe("Auth Providers (OAuth & Magic Links)", () => {
         verifyOtp: vi.fn(),
       },
     };
-    (createClient as any).mockReturnValue(mockSupabase);
+    vi.mocked(createClient).mockReturnValue(mockSupabase);
   });
 
   describe("OAuth Providers", () => {

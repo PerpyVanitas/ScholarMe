@@ -88,7 +88,7 @@ export default function ForumsPage() {
                 <CardHeader className="py-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-1">
-                      <CardTitle className="text-xl flex items-center gap-2">
+                      <CardTitle className="text-xl flex items-center gap-2 break-words overflow-hidden break-all">
                         {post.is_pinned && (
                           <Pin className="h-4 w-4 text-primary fill-primary" />
                         )}
@@ -113,7 +113,7 @@ export default function ForumsPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="py-2 pb-4">
-                  <p className="text-sm text-muted-foreground line-clamp-2">
+                  <p className="text-sm text-muted-foreground line-clamp-2 break-words break-all">
                     {post.content}
                   </p>
                 </CardContent>

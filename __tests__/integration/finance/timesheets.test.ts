@@ -155,7 +155,7 @@ describe("Integration: Timesheets", () => {
               return {
                 maybeSingle: timesheetMaybeSingleMock,
                 then: (cb: unknown) => raceCheckIsMock().then(cb),
-              } as any;
+              } as never;
             }
             return vi.fn().mockReturnThis();
           }),

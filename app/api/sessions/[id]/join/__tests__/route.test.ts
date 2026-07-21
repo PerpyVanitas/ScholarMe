@@ -29,12 +29,12 @@ describe("Join Session Logic", () => {
       from: vi.fn(),
     };
 
-    (createClient as any).mockResolvedValue(mockSupabase);
+    (createClient as never).mockResolvedValue(mockSupabase);
   });
 
   it("should prevent joining if session is not a group session (max_participants <= 1)", async () => {
     // @ts-ignore
-    (mockSupabase.from as any).mockImplementation((table: string) => {
+    (mockSupabase.from as never).mockImplementation((table: string) => {
       if (table === "sessions") {
         return {
           select: vi.fn().mockReturnThis(),

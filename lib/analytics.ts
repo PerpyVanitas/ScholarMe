@@ -20,14 +20,13 @@ function sendToApi(payload: {
   }).catch(() => {});
 
   const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (posthogKey && (window as any).posthog) {
+  const posthog = (window as Window & { posthog?: { capture: (name: string, props?: Record<string, unknown>) => void } }).posthog;
+  
+  if (posthogKey && posthog) {
     if (payload.page) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).posthog.capture("$pageview", { page: payload.page });
+      posthog.capture("$pageview", { page: payload.page });
     } else if (payload.event) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).posthog.capture(payload.event, payload.properties);
+      posthog.capture(payload.event, payload.properties as Record<string, unknown>);
     }
   }
 }

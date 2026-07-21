@@ -25,7 +25,7 @@ vi.mock("@/lib/utils/roles", () => ({
 }));
 
 describe("P1-7: Admin Route Protection", () => {
-  let mockSupabase: any;
+  let mockSupabase: { auth: { getUser: ReturnType<typeof vi.fn> }, from: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -41,8 +41,8 @@ describe("P1-7: Admin Route Protection", () => {
         }),
       })),
     };
-    (createClient as any).mockResolvedValue(mockSupabase);
-    (headers as any).mockResolvedValue({ get: vi.fn().mockReturnValue("/dashboard/admin") });
+    vi.mocked(createClient).mockResolvedValue(mockSupabase as never);
+    vi.mocked(headers).mockResolvedValue({ get: vi.fn().mockReturnValue("/dashboard/admin") } as never);
   });
 
   it("redirects unauthenticated users to /auth/login", async () => {
@@ -52,16 +52,16 @@ describe("P1-7: Admin Route Protection", () => {
   });
 
   it("redirects non-admin users to /dashboard/home", async () => {
-    (getRoleName as any).mockReturnValue("learner");
-    (canAccessAdminRoute as any).mockReturnValue(false);
+    vi.mocked(getRoleName).mockReturnValue("learner");
+    vi.mocked(canAccessAdminRoute).mockReturnValue(false);
 
     await expect(AdminLayout({ children: "Test" })).rejects.toThrowError("NEXT_REDIRECT:/dashboard/home");
     expect(redirect).toHaveBeenCalledWith("/dashboard/home");
   });
 
   it("allows access for authorized admin roles", async () => {
-    (getRoleName as any).mockReturnValue("administrator");
-    (canAccessAdminRoute as any).mockReturnValue(true);
+    vi.mocked(getRoleName).mockReturnValue("administrator");
+    vi.mocked(canAccessAdminRoute).mockReturnValue(true);
 
     const result = await AdminLayout({ children: "Test" });
     expect(redirect).not.toHaveBeenCalled();

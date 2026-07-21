@@ -1,0 +1,882 @@
+[
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\e2e\\finance-lifecycle.test.ts",
+    "line": 6,
+    "col": 20
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\e2e\\finance-lifecycle.test.ts",
+    "line": 7,
+    "col": 18
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\e2e\\finance-lifecycle.test.ts",
+    "line": 8,
+    "col": 16
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\e2e\\finance-lifecycle.test.ts",
+    "line": 9,
+    "col": 18
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\e2e\\tutor-onboarding.test.ts",
+    "line": 6,
+    "col": 20
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\e2e\\tutor-onboarding.test.ts",
+    "line": 7,
+    "col": 14
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\integration\\auth\\auth-flows.test.tsx",
+    "line": 49,
+    "col": 22
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\integration\\auth\\auth-flows.test.tsx",
+    "line": 109,
+    "col": 30
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\integration\\auth\\auth-providers.test.tsx",
+    "line": 22,
+    "col": 22
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\integration\\auth\\layout-redirects.test.tsx",
+    "line": 50,
+    "col": 22
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\integration\\auth\\layout-redirects.test.tsx",
+    "line": 51,
+    "col": 17
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\integration\\auth\\session-expiry.test.tsx",
+    "line": 29,
+    "col": 22
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\integration\\auth\\session-expiry.test.tsx",
+    "line": 34,
+    "col": 19
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\integration\\finance\\timesheets.test.ts",
+    "line": 158,
+    "col": 20
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\integration\\infrastructure\\scale.test.ts",
+    "line": 15,
+    "col": 28
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\integration\\network\\study-groups.test.tsx",
+    "line": 86,
+    "col": 17
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\admin-route-protection.test.ts",
+    "line": 28,
+    "col": 21
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\admin-route-protection.test.ts",
+    "line": 44,
+    "col": 22
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\admin-route-protection.test.ts",
+    "line": 45,
+    "col": 17
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\admin-route-protection.test.ts",
+    "line": 55,
+    "col": 21
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\admin-route-protection.test.ts",
+    "line": 56,
+    "col": 29
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\admin-route-protection.test.ts",
+    "line": 63,
+    "col": 21
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\admin-route-protection.test.ts",
+    "line": 64,
+    "col": 29
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\bola-idor.test.ts",
+    "line": 6,
+    "col": 20
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\bola-idor.test.ts",
+    "line": 7,
+    "col": 14
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\bola-idor.test.ts",
+    "line": 8,
+    "col": 14
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\bola-idor.test.ts",
+    "line": 9,
+    "col": 16
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\bola-idor.test.ts",
+    "line": 10,
+    "col": 16
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\exec-sql-access.test.ts",
+    "line": 6,
+    "col": 20
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\exec-sql-access.test.ts",
+    "line": 7,
+    "col": 19
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\exec-sql-access.test.ts",
+    "line": 8,
+    "col": 19
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\rls-profiles.test.ts",
+    "line": 6,
+    "col": 20
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\rls-profiles.test.ts",
+    "line": 7,
+    "col": 14
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\rls-profiles.test.ts",
+    "line": 8,
+    "col": 14
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\rls-profiles.test.ts",
+    "line": 9,
+    "col": 16
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\role-downgrade-race.test.ts",
+    "line": 7,
+    "col": 20
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\role-downgrade-race.test.ts",
+    "line": 8,
+    "col": 16
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\role-downgrade-race.test.ts",
+    "line": 9,
+    "col": 22
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\storage-rls.test.ts",
+    "line": 6,
+    "col": 20
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\__tests__\\security\\storage-rls.test.ts",
+    "line": 7,
+    "col": 19
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\api\\admin\\cron\\reminders\\route.ts",
+    "line": 57,
+    "col": 13
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\api\\admin\\cron\\reminders\\route.ts",
+    "line": 110,
+    "col": 9
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\api\\admin\\general-analytics\\route.ts",
+    "line": 86,
+    "col": 9
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\api\\admin\\org-structure\\route.ts",
+    "line": 235,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\api\\admin\\timesheets\\route.ts",
+    "line": 7,
+    "col": 1
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\api\\avatar\\route.ts",
+    "line": 70,
+    "col": 7
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\api\\cron\\sessions\\route.ts",
+    "line": 82,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\api\\flashcards\\create\\route.ts",
+    "line": 57,
+    "col": 7
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\api\\polls\\route.ts",
+    "line": 131,
+    "col": 7
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\api\\quizzes\\create\\route.ts",
+    "line": 57,
+    "col": 7
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\api\\rag\\search\\__tests__\\route.test.ts",
+    "line": 64,
+    "col": 28
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\api\\rag\\search\\__tests__\\route.test.ts",
+    "line": 82,
+    "col": 28
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\api\\sessions\\[id]\\join\\__tests__\\route.test.ts",
+    "line": 32,
+    "col": 22
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\api\\sessions\\[id]\\join\\__tests__\\route.test.ts",
+    "line": 37,
+    "col": 27
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\api\\tutors\\route.ts",
+    "line": 30,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\api\\webhooks\\discord\\route.ts",
+    "line": 22,
+    "col": 7
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\api\\webhooks\\email\\route.ts",
+    "line": 37,
+    "col": 28
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\analytics\\components\\system-analytics-tab.tsx",
+    "line": 23,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\analytics\\components\\tutor-analytics-tab.tsx",
+    "line": 27,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\analytics\\components\\tutor-analytics-tab.tsx",
+    "line": 35,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\analytics\\components\\tutor-analytics-tab.tsx",
+    "line": 86,
+    "col": 17
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\export\\page.tsx",
+    "line": 121,
+    "col": 7
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\forums\\page.tsx",
+    "line": 18,
+    "col": 42
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\governance\\page.tsx",
+    "line": 46,
+    "col": 35
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\health\\page.tsx",
+    "line": 39,
+    "col": 7
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\health\\page.tsx",
+    "line": 61,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\logs\\page.tsx",
+    "line": 31,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\logs\\page.tsx:72:5",
+    "line": 122,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\messages\\page.tsx",
+    "line": 62,
+    "col": 7
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\messages\\page.tsx",
+    "line": 100,
+    "col": 11
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\org-structure\\layout.tsx",
+    "line": 23,
+    "col": 7
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\org-structure\\page.tsx",
+    "line": 192,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\org-structure\\page.tsx:202:5",
+    "line": 274,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\org-structure\\page.tsx:202:5",
+    "line": 310,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\page.tsx",
+    "line": 81,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\scanner\\page.tsx",
+    "line": 68,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\support\\[id]\\page.tsx",
+    "line": 24,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\support\\[id]\\page.tsx:68:3",
+    "line": 155,
+    "col": 103
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\support\\page.tsx",
+    "line": 31,
+    "col": 11
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\timesheets\\page.tsx",
+    "line": 78,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\users\\components\\bulk-id-exporter.tsx",
+    "line": 21,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\users\\components\\create-admin-card.tsx",
+    "line": 51,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\users\\components\\user-designations-dialog.tsx",
+    "line": 40,
+    "col": 1
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\users\\components\\user-designations-dialog.tsx:70:3",
+    "line": 144,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\users\\components\\user-designations-dialog.tsx:70:3",
+    "line": 164,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\users\\components\\user-edit-dialog.tsx",
+    "line": 35,
+    "col": 1
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\users\\components\\user-logs-dialog.tsx",
+    "line": 35,
+    "col": 1
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\users\\components\\user-profile-dialog.tsx",
+    "line": 38,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\users\\components\\user-profile-dialog.tsx",
+    "line": 143,
+    "col": 27
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\users\\components\\users-data-table.tsx",
+    "line": 63,
+    "col": 1
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\users\\memberships\\page.tsx",
+    "line": 47,
+    "col": 44
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\users\\page.tsx",
+    "line": 55,
+    "col": 1
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\users\\page.tsx:117:5",
+    "line": 209,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\users\\page.tsx:117:5",
+    "line": 257,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\admin\\verifications\\page.tsx:51:3",
+    "line": 113,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\availability\\page.tsx",
+    "line": 115,
+    "col": 7
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\availability\\page.tsx",
+    "line": 117,
+    "col": 9
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\availability\\page.tsx",
+    "line": 133,
+    "col": 7
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\availability\\page.tsx",
+    "line": 191,
+    "col": 7
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\availability\\page.tsx",
+    "line": 195,
+    "col": 11
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\availability\\page.tsx",
+    "line": 249,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\flashcards\\components\\flashcard-items-editor.tsx",
+    "line": 7,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\flashcards\\components\\flashcard-items-editor.tsx",
+    "line": 9,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\messages\\page.tsx",
+    "line": 49,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\messages\\page.tsx",
+    "line": 86,
+    "col": 7
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\network\\alumni\\page.tsx",
+    "line": 29,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\network\\study-buddies\\page.tsx",
+    "line": 29,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\network\\tutors\\reviews\\client.tsx",
+    "line": 83,
+    "col": 33
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\network\\users\\[id]\\components\\profile-view.tsx",
+    "line": 31,
+    "col": 12
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\profile\\components\\designation-card.tsx",
+    "line": 30,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\profile\\components\\security-settings.tsx",
+    "line": 66,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\quizzes\\components\\quiz-config-panel.tsx",
+    "line": 10,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\quizzes\\components\\quiz-config-panel.tsx",
+    "line": 47,
+    "col": 19
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\quizzes\\components\\quiz-config-panel.tsx",
+    "line": 76,
+    "col": 19
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\quizzes\\components\\quiz-items-editor.tsx",
+    "line": 11,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\quizzes\\components\\quiz-items-editor.tsx",
+    "line": 14,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\resources\\page.tsx",
+    "line": 84,
+    "col": 62
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\resources\\types.ts",
+    "line": 108,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\resources\\types.ts",
+    "line": 119,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\sessions\\[id]\\whiteboard\\page.tsx",
+    "line": 27,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\sessions\\components\\session-form.tsx",
+    "line": 55,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\sessions\\components\\session-list.tsx",
+    "line": 51,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\sessions\\components\\session-list.tsx",
+    "line": 68,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\sessions\\page.tsx",
+    "line": 164,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\team\\page.tsx",
+    "line": 91,
+    "col": 7
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\team\\page.tsx",
+    "line": 174,
+    "col": 17
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\team\\page.tsx",
+    "line": 193,
+    "col": 23
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\app\\dashboard\\voting\\components\\poll-results-dialog.tsx",
+    "line": 2,
+    "col": 1
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\components\\app-sidebar.tsx",
+    "line": 599,
+    "col": 36
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\components\\ui\\confetti.ts",
+    "line": 11,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\docs\\openapi.ts",
+    "line": 62,
+    "col": 64
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\docs\\openapi.ts",
+    "line": 75,
+    "col": 86
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\docs\\openapi.ts",
+    "line": 87,
+    "col": 87
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\docs\\openapi.ts",
+    "line": 99,
+    "col": 89
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\admin\\components\\admin-stat-modal.tsx",
+    "line": 65,
+    "col": 1
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\announcements\\components\\global-announcement-board.tsx",
+    "line": 46,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\announcements\\components\\global-announcement-board.tsx:56:5",
+    "line": 64,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\announcements\\components\\global-announcement-board.tsx:56:5",
+    "line": 83,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\auth\\__tests__\\actions.test.ts",
+    "line": 51,
+    "col": 22
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\auth\\__tests__\\actions.test.ts",
+    "line": 57,
+    "col": 24
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\auth\\__tests__\\actions.test.ts",
+    "line": 66,
+    "col": 31
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\auth\\__tests__\\actions.test.ts",
+    "line": 75,
+    "col": 24
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\auth\\__tests__\\actions.test.ts",
+    "line": 84,
+    "col": 31
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\auth\\__tests__\\actions.test.ts",
+    "line": 92,
+    "col": 24
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\auth\\__tests__\\actions.test.ts",
+    "line": 111,
+    "col": 31
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\auth\\__tests__\\actions.test.ts",
+    "line": 120,
+    "col": 24
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\auth\\__tests__\\actions.test.ts",
+    "line": 125,
+    "col": 24
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\auth\\__tests__\\actions.test.ts",
+    "line": 157,
+    "col": 31
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\events\\components\\announcement-calendar.tsx",
+    "line": 109,
+    "col": 7
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\events\\components\\announcement-calendar.tsx",
+    "line": 134,
+    "col": 7
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\events\\components\\announcement-calendar.tsx",
+    "line": 147,
+    "col": 7
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\events\\components\\announcement-calendar.tsx",
+    "line": 297,
+    "col": 13
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\events\\components\\events-view.tsx",
+    "line": 26,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\library\\components\\library-catalog.tsx",
+    "line": 92,
+    "col": 5
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\messaging\\__tests__\\messaging.test.tsx",
+    "line": 68,
+    "col": 17
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\messaging\\__tests__\\messaging.test.tsx",
+    "line": 76,
+    "col": 18
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\messaging\\__tests__\\messaging.test.tsx",
+    "line": 129,
+    "col": 44
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\messaging\\components\\global-chat.tsx",
+    "line": 80,
+    "col": 48
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\messaging\\components\\mini-chat-window.tsx",
+    "line": 62,
+    "col": 33
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\messaging\\hooks\\use-realtime-messages.ts",
+    "line": 163,
+    "col": 7
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\onboarding\\__tests__\\onboarding.test.ts",
+    "line": 5,
+    "col": 36
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\onboarding\\components\\onboarding-tour.tsx",
+    "line": 23,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\onboarding\\components\\onboarding-tour.tsx:27:5",
+    "line": 49,
+    "col": 59
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\onboarding\\components\\onboarding-tour.tsx:27:5",
+    "line": 50,
+    "col": 61
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\quizzes\\__tests__\\quizzes.test.ts",
+    "line": 119,
+    "col": 39
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\sessions\\components\\smart-tutor-recommendations.tsx",
+    "line": 22,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\tutors\\components\\tutor-review-dialog.tsx",
+    "line": 33,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\tutors\\components\\tutor-review-dialog.tsx",
+    "line": 35,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\tutors\\components\\tutor-review-dialog.tsx",
+    "line": 43,
+    "col": 3
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\features\\tutors\\components\\tutor-review-dialog.tsx",
+    "line": 75,
+    "col": 33
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\hooks\\use-webllm.ts",
+    "line": 20,
+    "col": 40
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\hooks\\use-webllm.ts",
+    "line": 32,
+    "col": 28
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\hooks\\use-webllm.ts",
+    "line": 50,
+    "col": 24
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\hooks\\use-webllm.ts",
+    "line": 58,
+    "col": 37
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\hooks\\use-webllm.ts",
+    "line": 107,
+    "col": 37
+  },
+  {
+    "file": "C:\\Users\\VAN WOODROE\\Documents\\ScholarMe\\lib\\gamification\\daily-decay.ts",
+    "line": 1,
+    "col": 1
+  }
+]

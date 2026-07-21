@@ -27,6 +27,8 @@ import { toast } from "sonner";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import { CampusMapModal } from "./campus-map-modal";
 import { CheckoutModal } from "./checkout-modal";
+import { ActiveCheckoutsModal } from "./active-checkouts-modal";
+import { FileText } from "lucide-react";
 
 interface LibraryCatalogProps {
   initialResources: PhysicalResource[];
@@ -67,6 +69,8 @@ export function LibraryCatalog({ initialResources }: LibraryCatalogProps) {
   const [selectedResource, setSelectedResource] =
     useState<PhysicalResource | null>(null);
 
+  const [activeCheckoutsOpen, setActiveCheckoutsOpen] = useState(false);
+
   const filteredResources = resources.filter(
     (r) =>
       r.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -89,7 +93,6 @@ export function LibraryCatalog({ initialResources }: LibraryCatalogProps) {
       toast.success("Resource added successfully.");
       setOpenCreate(false);
       // Ideally we would re-fetch or optimistically update, but revalidatePath will refresh the page.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: unknown) {
       // @ts-ignore: Strict unknown type check
       toast.error(e.message);
@@ -144,6 +147,10 @@ export function LibraryCatalog({ initialResources }: LibraryCatalogProps) {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
+          <Button variant="outline" onClick={() => setActiveCheckoutsOpen(true)}>
+            <FileText className="w-4 h-4 mr-2" />
+            Active Checkouts
+          </Button>
           {isAdmin && (
             <Dialog open={openCreate} onOpenChange={setOpenCreate}>
               <DialogTrigger asChild>
@@ -297,6 +304,11 @@ export function LibraryCatalog({ initialResources }: LibraryCatalogProps) {
         open={checkoutOpen}
         onOpenChange={setCheckoutOpen}
         resource={selectedResource}
+      />
+      
+      <ActiveCheckoutsModal
+        open={activeCheckoutsOpen}
+        onOpenChange={setActiveCheckoutsOpen}
       />
     </div>
   );

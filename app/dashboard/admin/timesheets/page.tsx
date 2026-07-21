@@ -75,7 +75,6 @@ export default function AdminTimesheetsPage() {
     data: periods,
     mutate: mutatePeriods,
     isLoading: periodsLoading,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } = useSWR<unknown[]>("/api/timesheets/periods", fetcher);
   const {
     data: entries,

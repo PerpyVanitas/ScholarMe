@@ -105,7 +105,7 @@ export default function ForumPostPage({
         <CardHeader>
           <div className="flex justify-between items-start gap-4">
             <div>
-              <CardTitle className="text-2xl flex items-center gap-2">
+              <CardTitle className="text-2xl flex items-center gap-2 break-words overflow-hidden break-all">
                 {post.is_pinned && (
                   <Pin className="h-5 w-5 text-primary fill-primary" />
                 )}
@@ -133,7 +133,7 @@ export default function ForumPostPage({
           </div>
         </CardHeader>
         <CardContent>
-          <p className="whitespace-pre-wrap text-sm leading-relaxed">
+          <p className="whitespace-pre-wrap text-sm leading-relaxed break-words break-all">
             {post.content}
           </p>
         </CardContent>

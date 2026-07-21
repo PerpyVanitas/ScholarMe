@@ -17,17 +17,19 @@ import { PettyCash } from "../types";
 import {
   createPettyCash,
   submitPettyCashForReview,
+  approvePettyCash,
 } from "@/features/finance/actions/finance-actions";
 
 import { FinanceVendor } from "@/lib/types";
 
 interface Props {
   canSubmit: boolean;
+  canReview?: boolean;
   pettyCash: PettyCash[] | null;
   vendors?: FinanceVendor[];
 }
 
-export function PettyCashTab({ canSubmit, pettyCash, vendors }: Props) {
+export function PettyCashTab({ canSubmit, canReview, pettyCash, vendors }: Props) {
   return (
     <div className="space-y-6">
       {canSubmit && (
@@ -174,6 +176,39 @@ export function PettyCashTab({ canSubmit, pettyCash, vendors }: Props) {
                         loadingText="Submitting..."
                       >
                         Submit for Review
+                      </SubmitButton>
+                    </form>
+                  </div>
+                )}
+                {req.status === "pending" && canReview && (
+                  <div className="mt-2 flex gap-2 justify-end">
+                    <form
+                      action={async () => {
+                        "use server";
+                        await approvePettyCash(req.id, "approved");
+                      }}
+                    >
+                      <SubmitButton
+                        size="sm"
+                        variant="default"
+                        loadingText="Approving..."
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        Approve
+                      </SubmitButton>
+                    </form>
+                    <form
+                      action={async () => {
+                        "use server";
+                        await approvePettyCash(req.id, "rejected");
+                      }}
+                    >
+                      <SubmitButton
+                        size="sm"
+                        variant="destructive"
+                        loadingText="Rejecting..."
+                      >
+                        Reject
                       </SubmitButton>
                     </form>
                   </div>

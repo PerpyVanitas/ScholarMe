@@ -1,12 +1,13 @@
+import { SupabaseClient, User } from "@supabase/supabase-js";
 import { describe, it, expect, beforeAll } from "vitest";
 import { hasTestDb, getTestClient, randomSuffix } from "../security/test-db";
 import { resolveRoleId } from "@/features/profiles/api/db";
 
 describe.skipIf(!hasTestDb)("P5-2: E2E Finance Lifecycle", () => {
-  let adminClient: any;
-  let requester: any;
-  let manager: any;
-  let president: any;
+  let adminClient: SupabaseClient;
+  let requester: User;
+  let manager: User;
+  let president: User;
 
   beforeAll(async () => {
     if (!hasTestDb) return;

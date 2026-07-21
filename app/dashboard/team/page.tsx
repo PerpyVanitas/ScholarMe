@@ -88,7 +88,6 @@ export default async function TeamDashboard() {
   const taskCounts = columns.reduce(
     (acc, col) => ({
       ...acc,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       // @ts-ignore: Strict unknown type check
       [col]: tasks?.filter((t: unknown) => t.status === col).length ?? 0,
     }),
@@ -171,7 +170,6 @@ export default async function TeamDashboard() {
             {columns.map((col) => {
               const cfg = STATUS_CONFIG[col];
               const colTasks =
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 // @ts-ignore: Strict unknown type check
                 tasks?.filter((t: unknown) => t.status === col) ?? [];
               return (
@@ -190,7 +188,6 @@ export default async function TeamDashboard() {
                         No tasks
                       </div>
                     ) : (
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       colTasks.map((t: unknown) => {
                         const isOverdue =
                           // @ts-ignore: Strict unknown type check

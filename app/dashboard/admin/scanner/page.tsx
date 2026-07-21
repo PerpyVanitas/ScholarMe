@@ -65,7 +65,6 @@ export default function AdminScannerPage() {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function onScanFailure(error: unknown) {
     // We can ignore failures as they happen frequently during scanning
   }

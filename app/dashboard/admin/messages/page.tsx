@@ -59,7 +59,6 @@ export default async function AdminMessagesAuditPage({ searchParams }: Props) {
       .eq("profile_id", userId);
 
     const conversationIds =
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       // @ts-ignore: Strict unknown type check
       participantData?.map((p: unknown) => p.conversation_id) || [];
 
@@ -97,7 +96,6 @@ export default async function AdminMessagesAuditPage({ searchParams }: Props) {
       formattedConversations = (conversations || []).map((conv) => {
         // Sort messages to get the latest one
         const sortedMessages = conv.messages?.sort(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (a: unknown, b: unknown) =>
             // @ts-ignore: Strict unknown type check
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),

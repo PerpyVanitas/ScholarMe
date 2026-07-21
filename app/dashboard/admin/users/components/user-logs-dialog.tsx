@@ -32,7 +32,6 @@ interface LogEntry {
   created_at: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const actionIcons: Record<string, unknown> = {
   user_created: UserPlus,
   user_edited: Settings,

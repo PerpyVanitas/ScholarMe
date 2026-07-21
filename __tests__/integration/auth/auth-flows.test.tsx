@@ -46,7 +46,7 @@ describe("Integration: Auth Flows", () => {
     // We must mock process.env for this test
     vi.stubEnv("NEXT_PUBLIC_DEMO_MODE", "false");
     
-    (createClient as any).mockResolvedValue(mockSupabase);
+    vi.mocked(createClient).mockResolvedValue(mockSupabase);
   });
 
   it("P3-7: Unauthenticated /dashboard/* redirects to /auth/login", async () => {
@@ -106,7 +106,7 @@ describe("Integration: Auth Flows", () => {
     const req = new Request("http://localhost/auth/confirm?token_hash=expired123&type=magiclink");
     
     try {
-      await route.GET(req as any);
+      await route.GET(req as never);
     } catch (e) {
       // route.GET throws redirect
     }

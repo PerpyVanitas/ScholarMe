@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { hasTestDb, getTestClient, randomSuffix } from "./test-db";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient, User } from "@supabase/supabase-js";
 
 describe.skipIf(!hasTestDb)("P1-20: exec_sql RPC access restriction", () => {
-  let adminClient: any;
-  let anonClient: any;
-  let authClient: any;
+  let adminClient: SupabaseClient;
+  let anonClient: SupabaseClient;
+  let authClient: SupabaseClient;
 
   beforeAll(async () => {
     if (!hasTestDb) return;

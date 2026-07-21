@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function processDailyDecay(supabase: unknown, userId: string) {
   // Fetch the most recent login only (index 0 = most recent in descending order)
   // @ts-ignore: Strict unknown type check

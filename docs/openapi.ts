@@ -59,7 +59,7 @@ registry.registerPath({
   responses: {
     200: {
       description: "Object with health status",
-      content: { "application/json": { schema: HealthSchema as any } },
+      content: { "application/json": { schema: HealthSchema as never } },
     },
     503: { description: "Service unavailable" },
   },
@@ -72,7 +72,7 @@ registry.registerPath({
   responses: {
     200: {
       description: "Array of users",
-      content: { "application/json": { schema: { type: "array", items: UserSchema as any } } },
+      content: { "application/json": { schema: { type: "array", items: UserSchema as never } } },
     }
   }
 });
@@ -84,7 +84,7 @@ registry.registerPath({
   responses: {
     200: {
       description: "Array of tutors",
-      content: { "application/json": { schema: { type: "array", items: TutorSchema as any } } },
+      content: { "application/json": { schema: { type: "array", items: TutorSchema as never } } },
     }
   }
 });
@@ -96,7 +96,7 @@ registry.registerPath({
   responses: {
     200: {
       description: "Array of sessions",
-      content: { "application/json": { schema: { type: "array", items: SessionSchema as any } } },
+      content: { "application/json": { schema: { type: "array", items: SessionSchema as never } } },
     }
   }
 });
