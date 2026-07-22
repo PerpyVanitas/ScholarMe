@@ -459,4 +459,4 @@ ScholarMe is architected to handle high-concurrency peak usage (such as midterms
 
 ---
 
-_ScholarMe Platform — Engineered for Honor Societies._
+_ScholarMe Platform — Engineered for CIT University Honor Society._
