@@ -12,6 +12,7 @@ export default [
     "scratch/**",
     "scripts/**",
     "tests/**",
+    "public/**",
   ]),
   ...nextVitals,
   ...nextTypescript,
