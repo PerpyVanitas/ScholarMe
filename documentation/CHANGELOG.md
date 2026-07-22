@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **RLS Vulnerability**: Added database migration (`20260722000000_resource_embeddings_rls.sql`) to enable Row Level Security (RLS) on the `resource_embeddings` table and defined strict user-scoped policies, fixing a critical Supabase security warning.
+
+### Changed
+
+- **Documentation Overhaul**: Completely overhauled [README.md](file:///c:/Users/VAN%20WOODROE/Documents/ScholarMe/README.md) into an exhaustive, production-grade technical manual covering all core platform features, dual-mode HMAC-SHA256 authentication, two-layer RBAC architecture, status layers, Domain-Driven Design (DDD) directory layouts, PostgreSQL database triggers and schema specifications, local setup steps, CI/CD pipeline, and high-concurrency scale considerations.
+
 ### Added
 
 - **HMAC-SHA256 Encrypted QR ID Card Authentication (Option 2)**:
