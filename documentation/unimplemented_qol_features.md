@@ -90,6 +90,8 @@ Last audited: 2026-07-07 (Phase 29 complete)
 
 - [x] 12-hour clock-out alert
 
+- [x] 2-hour facility presence verification & auto clock-out
+
 - [x] Mastery verification claims
 
 - [x] Tutor memos on sessions

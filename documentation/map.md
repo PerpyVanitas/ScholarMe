@@ -10,15 +10,15 @@
 
 ScholarMe is divided into several primary domains, each governed by the access controls defined in the [RBAC Reference](./rbac.md).
 
-| Domain | Scope | Primary Users |
-|--------|-------|---------------|
-| **Auth & Onboarding** | Account creation, mandatory profile setup | All users |
-| **Study Tools** | Local AI quizzes, spaced repetition flashcards | Learners, Tutors |
-| **Tutoring & Sessions** | Peer Learning Center booking engine | Learners, Tutors, Admins |
-| **Library & Resources** | Digital file sharing and CFMR physical inventory | All users |
-| **Community** | Forums, DMs, Study Groups | Honor Society Members |
-| **Finance** | Executive budget tracking and liquidations | Executives, Admins |
-| **IT Administration** | Role management, logs, system integrations | Super Admin, Administrators |
+| Domain                  | Scope                                            | Primary Users               |
+| ----------------------- | ------------------------------------------------ | --------------------------- |
+| **Auth & Onboarding**   | Account creation, mandatory profile setup        | All users                   |
+| **Study Tools**         | Local AI quizzes, spaced repetition flashcards   | Learners, Tutors            |
+| **Tutoring & Sessions** | Peer Learning Center booking engine              | Learners, Tutors, Admins    |
+| **Library & Resources** | Digital file sharing and CFMR physical inventory | All users                   |
+| **Community**           | Forums, DMs, Study Groups                        | Honor Society Members       |
+| **Finance**             | Executive budget tracking and liquidations       | Executives, Admins          |
+| **IT Administration**   | Role management, logs, system integrations       | Super Admin, Administrators |
 
 ---
 
@@ -51,7 +51,7 @@ ScholarMe is divided into several primary domains, each governed by the access c
 
 ## 📅 Tutoring and Sessions
 
-- **Find a Tutor**: Learners browse the active roster of tutors. 
+- **Find a Tutor**: Learners browse the active roster of tutors.
   - `super_admin`, `administrator`, and `learner` accounts are excluded from search results.
   - All Honor Society members must have a Tutor Account and can act as both learners (receiving tutoring) and tutors (providing tutoring).
 - **Booking Flow**:
@@ -63,6 +63,7 @@ ScholarMe is divided into several primary domains, each governed by the access c
   - If a group is full, learners can join a Waitlist. Auto-promotion occurs upon cancellation.
   - **My Waitlists**: Learners and tutors can view their active waitlists in the Waitlists tab.
 - **Session Management (Tutor)**:
+  - **2-Hour Facility Presence Verification**: Tutors clocked in at the PLC are automatically prompted to confirm their presence at 1h 50m with a 10-minute countdown dialog. If unconfirmed after 2 hours, the system and cron job automatically clock out the shift at `last_confirmed_at` or `clock_in + 2h`.
   - **Pause Account**: Tutors can temporarily hide themselves from search and stop accepting new sessions via their profile.
   - **Substitute**: A tutor can send a transfer request to another tutor if they cannot make a confirmed session. The receiving tutor can view the request in their dashboard and choose to accept (taking ownership) or decline it.
   - **Reschedule**: Propose a new time to the learner instead of forcing a change.
@@ -115,7 +116,7 @@ ScholarMe is divided into several primary domains, each governed by the access c
 
 ## 🛡️ Admin and IT Operations
 
-- **System Roles (`super_admin` / `administrator`)**: 
+- **System Roles (`super_admin` / `administrator`)**:
   - The `super_admin` can assign new administrators, delete users, impersonate accounts, and act as both a learner and tutor for diagnostic reasons.
   - Officers (Main Committee Heads and above) can manually append service hours to ESAS Scholars.
 - **Org Structure Page**:

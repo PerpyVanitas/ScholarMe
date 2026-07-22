@@ -1,4 +1,4 @@
-﻿import { handleApiError } from "@/lib/utils/api-error";
+import { handleApiError } from "@/lib/utils/api-error";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/create-client";
 import { ensureTutorRow } from "@/features/tutors/api/db";
@@ -42,14 +42,36 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("timesheets")
-    .select("id, tutor_id, user_id, clock_in, clock_out")
+    .select("id, tutor_id, user_id, clock_in, clock_out, last_confirmed_at")
     .eq("user_id", user.id)
     .gte("clock_in", config.start_date)
     .lte("clock_in", config.end_date)
     .order("clock_in", { ascending: false });
 
-  if (error)
-    return handleApiError(error);
+  if (error) return handleApiError(error);
+
+  // Check if any open timesheet exceeds the 2-hour limit without presence confirmation
+  if (Array.isArray(data)) {
+    const nowMs = Date.now();
+    const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
+    for (const entry of data) {
+      if (!entry.clock_out) {
+        const lastConfirmed = entry.last_confirmed_at || entry.clock_in;
+        const lastConfirmedMs = new Date(lastConfirmed).getTime();
+        if (nowMs - lastConfirmedMs >= TWO_HOURS_MS) {
+          const autoClockOutTime = new Date(
+            lastConfirmedMs + TWO_HOURS_MS,
+          ).toISOString();
+          await supabase
+            .from("timesheets")
+            .update({ clock_out: autoClockOutTime })
+            .eq("id", entry.id);
+          entry.clock_out = autoClockOutTime;
+        }
+      }
+    }
+  }
+
   return NextResponse.json(data);
 }
 
@@ -85,6 +107,29 @@ export async function POST(req: Request) {
   const startTime = new Date(config.start_date).getTime();
   const endTime = new Date(config.end_date).getTime();
 
+  if (action === "confirm_presence") {
+    const { data: open } = await supabase
+      .from("timesheets")
+      .select("id, clock_in, last_confirmed_at")
+      .eq("user_id", user.id)
+      .is("clock_out", null)
+      .maybeSingle();
+
+    if (!open) {
+      return NextResponse.json({ error: "Not clocked in" }, { status: 400 });
+    }
+
+    const { data, error } = await supabase
+      .from("timesheets")
+      .update({ last_confirmed_at: now.toISOString() })
+      .eq("id", open.id)
+      .select("id, tutor_id, user_id, clock_in, clock_out, last_confirmed_at")
+      .single();
+
+    if (error) return handleApiError(error);
+    return NextResponse.json(data);
+  }
+
   if (action === "clock_in") {
     // Verify current time is within boundaries
     if (nowTime < startTime || nowTime > endTime) {
@@ -100,16 +145,30 @@ export async function POST(req: Request) {
     // Check for an open entry (no clock_out)
     const { data: open } = await supabase
       .from("timesheets")
-      .select("id")
+      .select("id, clock_in, last_confirmed_at")
       .eq("user_id", user.id)
       .is("clock_out", null)
       .maybeSingle();
 
-    if (open)
-      return NextResponse.json(
-        { error: "Already clocked in" },
-        { status: 400 },
-      );
+    if (open) {
+      const lastConfirmed = open.last_confirmed_at || open.clock_in;
+      const lastConfirmedMs = new Date(lastConfirmed).getTime();
+      const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
+      if (nowTime - lastConfirmedMs >= TWO_HOURS_MS) {
+        // Auto-close stale entry
+        await supabase
+          .from("timesheets")
+          .update({
+            clock_out: new Date(lastConfirmedMs + TWO_HOURS_MS).toISOString(),
+          })
+          .eq("id", open.id);
+      } else {
+        return NextResponse.json(
+          { error: "Already clocked in" },
+          { status: 400 },
+        );
+      }
+    }
 
     const { data, error } = await supabase
       .from("timesheets")
@@ -117,17 +176,17 @@ export async function POST(req: Request) {
         tutor_id: tutor.id,
         user_id: user.id,
         clock_in: now.toISOString(),
+        last_confirmed_at: now.toISOString(),
         lat,
         lng,
         location_verified,
       })
       .select(
-        "id, tutor_id, user_id, clock_in, clock_out, lat, lng, location_verified",
+        "id, tutor_id, user_id, clock_in, clock_out, last_confirmed_at, lat, lng, location_verified",
       )
       .single();
 
-    if (error)
-      return handleApiError(error);
+    if (error) return handleApiError(error);
 
     // Race condition check: ensure we didn't just insert a duplicate open entry
     const { data: openEntries } = await supabase
@@ -163,14 +222,12 @@ export async function POST(req: Request) {
       .from("timesheets")
       .update({ clock_out: now.toISOString() })
       .eq("id", open.id)
-      .select("id, tutor_id, user_id, clock_in, clock_out")
+      .select("id, tutor_id, user_id, clock_in, clock_out, last_confirmed_at")
       .single();
 
-    if (error)
-      return handleApiError(error);
+    if (error) return handleApiError(error);
     return NextResponse.json(data);
   }
 
   return NextResponse.json({ error: "Invalid action" }, { status: 400 });
 }
-

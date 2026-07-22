@@ -154,22 +154,30 @@ export default function TimesheetPage() {
   const isPeriodActive =
     hasConfig && nowTime >= startTime && nowTime <= endTime;
 
-  async function handleClock(action: "clock_in" | "clock_out") {
+  async function handleClock(
+    action: "clock_in" | "clock_out" | "confirm_presence",
+  ) {
     setClockLoading(true);
     let locationData = {};
-    
+
     if (action === "clock_in" && "geolocation" in navigator) {
       try {
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
-        });
+        const position = await new Promise<GeolocationPosition>(
+          (resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              timeout: 5000,
+            });
+          },
+        );
         locationData = {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
-          location_verified: true
+          location_verified: true,
         };
       } catch (err) {
-        toast.warning("Location access denied or unavailable. Clocking in as unverified.");
+        toast.warning(
+          "Location access denied or unavailable. Clocking in as unverified.",
+        );
         locationData = { location_verified: false };
       }
     }
@@ -185,7 +193,13 @@ export default function TimesheetPage() {
         toast.error(data.error);
         return;
       }
-      toast.success(action === "clock_in" ? "Clocked in!" : "Clocked out!");
+      if (action === "confirm_presence") {
+        toast.success(
+          "Facility presence confirmed! Your 2-hour session timer has been renewed.",
+        );
+      } else {
+        toast.success(action === "clock_in" ? "Clocked in!" : "Clocked out!");
+      }
       mutate();
     } finally {
       setClockLoading(false);
@@ -362,6 +376,75 @@ export default function TimesheetPage() {
             </span>
           </div>
         )}
+
+      {/* Presence Verification Dialog (Triggers at 110+ minutes of unconfirmed activity) */}
+      <Dialog
+        open={
+          isClockedIn &&
+          !!openEntry &&
+          calcMinutes(
+            openEntry.last_confirmed_at || openEntry.clock_in,
+            null,
+            now,
+          ) >= 110
+        }
+        onOpenChange={() => {}}
+      >
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+              <AlertCircle className="h-5 w-5" />
+              Facility Presence Verification
+            </DialogTitle>
+            <DialogDescription className="pt-2 text-sm leading-relaxed">
+              You have been clocked in for over 1 hour and 50 minutes. To avoid
+              being automatically clocked out after 2 hours, please confirm that
+              you are still working at the facility.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="my-4 flex flex-col items-center justify-center rounded-lg border border-amber-500/20 bg-amber-500/10 p-4 text-center">
+            <span className="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+              Auto Clock-Out Countdown
+            </span>
+            <span className="mt-1 font-mono text-3xl font-bold text-foreground">
+              {Math.max(
+                0,
+                Math.floor(
+                  (120 -
+                    calcMinutes(
+                      openEntry?.last_confirmed_at ||
+                        openEntry?.clock_in ||
+                        new Date().toISOString(),
+                      null,
+                      now,
+                    )) *
+                    60,
+                ),
+              )}
+              s remaining
+            </span>
+          </div>
+
+          <DialogFooter className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => handleClock("clock_out")}
+              disabled={clockLoading}
+            >
+              Clock Out Now
+            </Button>
+            <Button
+              onClick={() => handleClock("confirm_presence")}
+              disabled={clockLoading}
+              className="gap-2 bg-green-600 hover:bg-green-700 text-white"
+            >
+              {clockLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+              Yes, I&apos;m Still Here
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Clock In/Out Card */}
       <Card className="border-border/60">

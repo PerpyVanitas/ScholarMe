@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **2-Hour Facility Presence Verification & Auto Clock-Out**:
+  - **Database Migration**: Added `20260722140000_timesheets_2hr_auto_clockout.sql` adding `last_confirmed_at` column to `public.timesheets`.
+  - **API & Cron Handlers**: Updated `/api/timesheets` with `confirm_presence` action support and automatic 2-hour shift termination at `last_confirmed_at || clock_in + 2h`. Updated `/api/cron/timesheets` to sweep and close unconfirmed shifts older than 2 hours.
+  - **Interactive Presence Dialog**: Added an in-app verification dialog on the Timesheet page (`app/dashboard/timesheet/page.tsx`) triggering at 1h 50m of shift duration with a 10-minute countdown timer asking tutors if they are still at the facility.
 - **HMAC-SHA256 Encrypted QR ID Card Authentication (Option 2)**:
   - **No Plaintext PIN Exposure**: Printed and digital ID cards now generate an HMAC-SHA256 signature payload (`{ cardId, sig }`) calculated from the user's card ID, PIN, and server secret key (`lib/security/card-token.ts`), completely removing plaintext PINs from QR codes.
   - **Scanner & API Handler**: Updated `features/auth/components/card-scanner.tsx` and `app/api/auth/card-login/route.ts` to accept HMAC signatures (or legacy PIN payloads for backward compatibility) and verify them using timing-safe comparisons (`crypto.timingSafeEqual`).

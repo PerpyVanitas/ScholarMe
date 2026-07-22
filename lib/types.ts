@@ -206,6 +206,7 @@ export interface Timesheet {
   user_id: string;
   clock_in: string;
   clock_out: string | null;
+  last_confirmed_at?: string | null;
   notes: string | null;
   created_at: string;
   tutors?: Tutor & { profiles?: Profile };

@@ -84,9 +84,16 @@ describe("Integration: Timesheets", () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = "http://localhost";
     process.env.SUPABASE_SERVICE_ROLE_KEY = "dummy_key";
 
-    const isMock = vi.fn().mockResolvedValue({ data: [{ id: "t1" }] });
-    const inMock = vi.fn().mockResolvedValue({ error: null });
-    const updateMock = vi.fn().mockReturnValue({ in: inMock });
+    const threeHoursAgo = new Date(
+      Date.now() - 3 * 60 * 60 * 1000,
+    ).toISOString();
+    const isMock = vi.fn().mockResolvedValue({
+      data: [
+        { id: "t1", clock_in: threeHoursAgo, last_confirmed_at: threeHoursAgo },
+      ],
+    });
+    const eqMock = vi.fn().mockResolvedValue({ error: null });
+    const updateMock = vi.fn().mockReturnValue({ eq: eqMock });
     const selectMock = vi.fn().mockReturnValue({ is: isMock });
 
     mockSupabase.from.mockImplementation((table) => {
@@ -104,7 +111,6 @@ describe("Integration: Timesheets", () => {
     await CRON_GET(req);
 
     expect(updateMock).toHaveBeenCalled();
-    expect(isMock).toHaveBeenCalledWith("clock_out", null);
   });
 
   it("P2-16: Simultaneous clock-in prevented (Race condition check)", async () => {

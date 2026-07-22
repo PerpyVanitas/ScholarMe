@@ -108,16 +108,18 @@ Represents a booked tutoring block.
 - **`max_participants`** _(integer, default 1)_
 - **`is_office_hours`** _(boolean, default false)_
 
-### `attendance_logs`
+### `attendance_logs` / `timesheets`
 
 Tracks tutor presence in the PLC.
 
 - **`id`** _(uuid, PK)_
 - **`tutor_id`** _(uuid, FK)_
+- **`user_id`** _(uuid, FK)_
 - **`clock_in`** _(timestamptz)_
 - **`clock_out`** _(timestamptz, nullable)_
+- **`last_confirmed_at`** _(timestamptz, default now())_ — Timestamp of last 2-hour facility presence confirmation. Open shifts without confirmation auto-clock out at 2 hours.
 
-> **Note on Service Hours:** ESAS tutors do not have to get a booked session in order to gain credits for their 90 hours. They accumulate credits simply by being clocked in (present) in the PLC via `attendance_logs`.
+> **Note on Service Hours:** ESAS tutors do not have to get a booked session in order to gain credits for their 90 hours. They accumulate credits simply by being clocked in (present) in the PLC via `attendance_logs`. Tutors must confirm presence every 2 hours to maintain an active shift.
 
 ---
 

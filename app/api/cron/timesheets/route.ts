@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     // Find all timesheets that do not have a clock_out
     const { data: openTimesheets, error } = await supabase
       .from("timesheets")
-      .select("id, clock_in")
+      .select("id, clock_in, last_confirmed_at")
       .is("clock_out", null);
 
     if (error) {
@@ -41,22 +41,34 @@ export async function GET(request: Request) {
       });
     }
 
-    const timesheetIds = openTimesheets.map((t) => t.id);
+    const nowMs = Date.now();
+    const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
+    const closedIds: string[] = [];
 
-    // Update clock_out to current server time (assumed closing time when cron runs)
-    const { error: updateError } = await supabase
-      .from("timesheets")
-      .update({ clock_out: new Date().toISOString() })
-      .in("id", timesheetIds);
+    for (const ts of openTimesheets) {
+      const lastConfirmed = ts.last_confirmed_at || ts.clock_in;
+      const lastConfirmedMs = new Date(lastConfirmed).getTime();
 
-    if (updateError) {
-      throw updateError;
+      // If inactive for 2 hours or more without confirmation, auto clock out at 2-hour mark
+      if (nowMs - lastConfirmedMs >= TWO_HOURS_MS) {
+        const autoClockOutTime = new Date(
+          lastConfirmedMs + TWO_HOURS_MS,
+        ).toISOString();
+        const { error: updateError } = await supabase
+          .from("timesheets")
+          .update({ clock_out: autoClockOutTime })
+          .eq("id", ts.id);
+
+        if (!updateError) {
+          closedIds.push(ts.id);
+        }
+      }
     }
 
     return NextResponse.json({
       success: true,
-      updatedCount: timesheetIds.length,
-      timesheetIds,
+      updatedCount: closedIds.length,
+      closedIds,
     });
   } catch (error: unknown) {
     console.error(
