@@ -10,7 +10,7 @@ import { Loader2, BookOpen, Undo2 } from "lucide-react";
 import { format } from "date-fns";
 
 export function ActiveCheckoutsModal({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
-  const [checkouts, setCheckouts] = useState<any[]>([]);
+  const [checkouts, setCheckouts] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
   const [returningId, setReturningId] = useState<string | null>(null);
 
