@@ -134,8 +134,7 @@ export function TutorDashboard({
   const [clockLoading, setClockLoading] = useState(false);
   const [clockCheckDone, setClockCheckDone] = useState(!tutor);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const savedWidgets = (profile as any)?.dashboard_layout?.widgets;
+  const savedWidgets = ((profile as unknown as Record<string, unknown>)?.dashboard_layout as { widgets?: string[] } | undefined)?.widgets;
   const initialLayout = useMemo(() => {
     if (Array.isArray(savedWidgets)) {
       return [...new Set([...savedWidgets, ...DEFAULT_LAYOUT])].filter((id) =>
@@ -226,8 +225,7 @@ export function TutorDashboard({
     try {
       const supabase = createClient();
       const baseLayout =
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ((profile as any)?.dashboard_layout as Record<string, unknown>) || {};
+        ((profile as unknown as Record<string, unknown>)?.dashboard_layout as Record<string, unknown>) || {};
       const updatedLayout = { ...baseLayout, widgets: layout };
       const { error } = await supabase
         .from("profiles")

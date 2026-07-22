@@ -48,13 +48,12 @@ describe("Auth Actions", () => {
       })),
     };
 
-    (createClient as any).mockResolvedValue(mockSupabase);
+    (createClient as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockSupabase);
   });
 
   describe("loginWithEmail", () => {
     it("should return success when credentials are correct", async () => {
-      // @ts-ignore: Strict unknown type check
-      (mockSupabase as any).auth.signInWithPassword.mockResolvedValue({ data: { user: { id: "1" } }, error: null });
+      mockSupabase.auth.signInWithPassword.mockResolvedValue({ data: { user: { id: "1" } }, error: null });
 
       const formData = new FormData();
       formData.append("email", "test@example.com");
@@ -62,8 +61,7 @@ describe("Auth Actions", () => {
 
       const result = await loginWithEmail(formData);
 
-      // @ts-ignore: Strict unknown type check
-      expect((mockSupabase as any).auth.signInWithPassword).toHaveBeenCalledWith({
+      expect(mockSupabase.auth.signInWithPassword).toHaveBeenCalledWith({
         email: "test@example.com",
         password: "password123",
       });
@@ -71,8 +69,7 @@ describe("Auth Actions", () => {
     });
 
     it("should lowercase the email automatically (P3-3)", async () => {
-      // @ts-ignore
-      (mockSupabase as any).auth.signInWithPassword.mockResolvedValue({ data: { user: { id: "1" } }, error: null });
+      mockSupabase.auth.signInWithPassword.mockResolvedValue({ data: { user: { id: "1" } }, error: null });
 
       const formData = new FormData();
       formData.append("email", "USER@eXaMpLe.com");
@@ -80,16 +77,14 @@ describe("Auth Actions", () => {
 
       await loginWithEmail(formData);
 
-      // @ts-ignore
-      expect((mockSupabase as any).auth.signInWithPassword).toHaveBeenCalledWith({
+      expect(mockSupabase.auth.signInWithPassword).toHaveBeenCalledWith({
         email: "user@example.com",
         password: "password123",
       });
     });
 
     it("should return error when credentials are wrong", async () => {
-      // @ts-ignore: Strict unknown type check
-      (mockSupabase as any).auth.signInWithPassword.mockResolvedValue({
+      mockSupabase.auth.signInWithPassword.mockResolvedValue({
         error: { message: "Invalid credentials" },
       });
 
@@ -107,8 +102,7 @@ describe("Auth Actions", () => {
     it("should sign out and redirect to home", async () => {
       await signOut();
 
-      // @ts-ignore: Strict unknown type check
-      expect((mockSupabase as any).auth.signOut).toHaveBeenCalled();
+      expect(mockSupabase.auth.signOut).toHaveBeenCalled();
       expect(redirect).toHaveBeenCalledWith("/");
     });
 
@@ -116,13 +110,11 @@ describe("Auth Actions", () => {
       const mockUpdate = vi.fn().mockReturnThis();
       const mockEq = vi.fn().mockReturnThis();
 
-      // @ts-ignore: Strict unknown type check
-      (mockSupabase as any).auth.getUser.mockResolvedValue({
+      mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: { id: "user-123" } },
       });
 
-      // @ts-ignore: Strict unknown type check
-      (mockSupabase as any).from = vi.fn().mockImplementation((table) => {
+      (mockSupabase.from as unknown as ReturnType<typeof vi.fn>).mockImplementation((table: string) => {
         if (table === "timesheets") {
           return {
             select: vi.fn().mockReturnThis(),
@@ -153,8 +145,7 @@ describe("Auth Actions", () => {
         clock_out: expect.any(String),
       });
       expect(mockEq).toHaveBeenCalledWith("id", "ts-1");
-      // @ts-ignore: Strict unknown type check
-      expect((mockSupabase as any).auth.signOut).toHaveBeenCalled();
+      expect(mockSupabase.auth.signOut).toHaveBeenCalled();
       expect(redirect).toHaveBeenCalledWith("/");
     });
   });

@@ -66,7 +66,7 @@ export function SyllabusParserModal({
 Output ONLY a valid JSON array of objects. Each object must have these exact keys: "title" (string), "date" (string in YYYY-MM-DD format), "type" (string, usually "deadline" or "study"), "location" (string), "description" (string).
 No markdown blocks, no other text. Just the JSON array.`;
 
-      const reply = (await (engine as any).chat.completions.create({
+      const reply = (await (engine as unknown as { chat: { completions: { create: (opts: Record<string, unknown>) => Promise<unknown> } } }).chat.completions.create({
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: `Syllabus Text:\n${syllabusText}` },

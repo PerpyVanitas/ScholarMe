@@ -65,15 +65,15 @@ describe("Phase 4B: Messaging", () => {
     
     try {
       await sendMessage();
-    } catch (e: any) {
-      toastMock.error(e.message);
+    } catch (e) {
+      toastMock.error((e as Error).message);
     }
     
     expect(toastMock.error).toHaveBeenCalledWith("RLS Policy Violation");
   });
 
   it("P4-17: Offline message queueing", () => {
-    const queue: any[] = [];
+    const queue: string[] = [];
     let isOnline = false;
     
     const sendMessage = (msg: string) => {
@@ -126,7 +126,7 @@ describe("Phase 4B: Messaging", () => {
     const message = { id: "m1", is_read: false };
     
     // Simulate realtime payload
-    const handleRealtimeUpdate = (payload: any) => {
+    const handleRealtimeUpdate = (payload: { new: { id: string; is_read: boolean } }) => {
       if (payload.new.id === message.id) {
         message.is_read = payload.new.is_read;
       }

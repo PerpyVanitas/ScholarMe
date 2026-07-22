@@ -151,7 +151,7 @@ export default function AdminSupportChat({
             return (
               <div key={msg.id || i} className={`flex flex-col max-w-[70%] ${isMe ? 'self-end' : 'self-start'}`}>
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                {!isMe && <span className="text-xs text-muted-foreground mb-1 ml-1">{(msg.profiles as any)?.full_name || "User"}</span>}
+                {!isMe && <span className="text-xs text-muted-foreground mb-1 ml-1">{((msg.profiles as unknown as Record<string, unknown>)?.full_name as string) || "User"}</span>}
                 <div className={`px-4 py-2 rounded-2xl text-sm ${isMe ? 'bg-primary text-primary-foreground rounded-br-none' : 'bg-background border shadow-sm rounded-bl-none'}`}>
                   {msg.content}
                 </div>

@@ -40,8 +40,7 @@ export default function SystemLogsPage() {
   const fetchLogs = useCallback(
     async (currentLimit: number) => {
       const supabase = createClient();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let query = (supabase as any)
+      let query = supabase
         .from("analytics_logs")
         .select("*, profiles:user_id(full_name, email)")
         .order("created_at", { ascending: false })
@@ -83,8 +82,7 @@ export default function SystemLogsPage() {
   async function loadAll() {
     setLoadingMore(true);
     const supabase = createClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let query = (supabase as any)
+    let query = supabase
       .from("analytics_logs")
       .select("*, profiles:user_id(full_name, email)")
       .order("created_at", { ascending: false });
@@ -238,7 +236,7 @@ export default function SystemLogsPage() {
                       </TableRow>
                     ) : (
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      filtered.map((log: any) => (
+                      filtered.map((log: Record<string, unknown>) => (
                         // @ts-ignore: Strict unknown type check
                         <TableRow key={log.id}>
                           <TableCell className="whitespace-nowrap text-xs text-muted-foreground">

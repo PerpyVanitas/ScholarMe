@@ -42,8 +42,7 @@ export default async function AdminMessagesAuditPage({ searchParams }: Props) {
   const rawRole = profile?.roles;
   const roleName = Array.isArray(rawRole)
     ? rawRole[0]?.name
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    : (rawRole as any)?.name;
+    : ((rawRole as Record<string, unknown> | null)?.name as string | undefined);
 
   if (roleName !== "super_admin") {
     redirect("/dashboard/home");

@@ -35,7 +35,7 @@ export default async function MessagesPage({
     .single();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const isAdmin = (profile as any)?.roles?.name === "administrator";
+  const isAdmin = ((profile as unknown as Record<string, unknown>)?.roles as Record<string, unknown> | undefined)?.name === "administrator";
 
   // First, get list of conversation IDs the user is a participant in
   const { data: participants } = await supabase

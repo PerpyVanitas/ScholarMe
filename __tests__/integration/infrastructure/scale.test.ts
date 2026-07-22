@@ -12,7 +12,7 @@ describe("Phases 10-14: Scale, Privacy, Features", () => {
   
   it("P12-1: PII stripped from logs", () => {
     const logOutput = { email: "test@example.com", name: "John", data: "sensitive" };
-    const stripPII = (log: any) => {
+    const stripPII = (log: Record<string, unknown>) => {
       const sanitized = { ...log };
       if (sanitized.email) sanitized.email = "[REDACTED]";
       return sanitized;

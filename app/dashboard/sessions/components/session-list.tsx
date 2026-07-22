@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { useState } from "react";
@@ -49,7 +48,7 @@ export function SessionList({
 }: {
   sessions: Session[];
   role: UserRole;
-  onUpdateStatus: (id: string, status: string, additionalData?: any) => void;
+  onUpdateStatus: (id: string, status: string, additionalData?: Record<string, unknown>) => void;
   onRate: (session: Session) => void;
   onSummary: (session: Session) => void;
   currentTutorId?: string;

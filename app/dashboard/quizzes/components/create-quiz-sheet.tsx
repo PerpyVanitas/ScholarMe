@@ -189,7 +189,7 @@ Each object must have:
 "item_type": string (one of the question types)
 No other text, markdown blocks, or explanations. Just the JSON array.`;
 
-      const reply = (await (engine as any).chat.completions.create({
+      const reply = (await (engine as unknown as { chat: { completions: { create: (opts: Record<string, unknown>) => Promise<unknown> } } }).chat.completions.create({
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: `Topic: ${aiPrompt}` },
@@ -211,8 +211,7 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
       }
 
       const newContent = parsedData
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .map((item: any) => `Q: ${item.question}\nA: ${item.answer}`)
+        .map((item: { question?: string; answer?: string }) => `Q: ${item.question}\nA: ${item.answer}`)
         .join("\n\n");
 
       setFormData((prev) => ({

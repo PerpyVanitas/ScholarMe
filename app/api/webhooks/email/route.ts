@@ -31,10 +31,10 @@ export async function POST(req: Request) {
       .eq("id", user.id)
       .single();
 
-    const roleName = Array.isArray(profile?.roles)
-      // @ts-ignore: Strict unknown type check
-      ? (profile?.roles as unknown[])[0]?.name
-      : (profile?.roles as any)?.name;
+    const roleObj = Array.isArray(profile?.roles)
+      ? profile.roles[0]
+      : profile?.roles;
+    const roleName = (roleObj as Record<string, unknown> | null)?.name as string | undefined;
 
     // Only allow admins or officers
     const allowedRoles = [

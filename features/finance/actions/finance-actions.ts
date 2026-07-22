@@ -216,8 +216,7 @@ export async function updateBudgetRequestStatus(
 
   if (error) throw new Error(error.message);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const profileData = existing.profiles as any;
+  const profileData = existing.profiles as unknown as Record<string, unknown> | Array<Record<string, unknown>> | null;
   const userEmail = profileData
     ? Array.isArray(profileData)
       ? profileData[0]?.email

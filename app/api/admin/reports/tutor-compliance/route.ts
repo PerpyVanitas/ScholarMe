@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
         existing.sessions_count += 1;
       } else {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const profile = (ts.tutors as any)?.profiles;
+        const profile = ((ts.tutors as unknown as Record<string, unknown>)?.profiles as Record<string, unknown> | undefined);
         tutorMap.set(tid, {
           tutor_id: tid,
           full_name: profile?.full_name ?? "Unknown",

@@ -14,7 +14,7 @@ export default [
   ...nextTypescript,
   {
     rules: {
-      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/no-require-imports": "off",
       "import/no-anonymous-default-export": "off",
       "react-hooks/immutability": "warn",

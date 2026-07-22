@@ -40,7 +40,7 @@ export function ActiveCheckoutsModal({ open, onOpenChange }: { open: boolean, on
       toast.success("Resource returned successfully!");
       await load();
       // Optionally trigger an event to refresh catalog counts, though revalidatePath will handle the server state
-    } catch (e: any) {
+    } catch (e) {
       toast.error(e.message || "Failed to return resource");
     } finally {
       setReturningId(null);

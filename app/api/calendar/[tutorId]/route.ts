@@ -53,12 +53,8 @@ export async function GET(
   icsContent += "CALSCALE:GREGORIAN\r\n";
   icsContent += "METHOD:PUBLISH\r\n";
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const tutorProfile = Array.isArray((tutor as any).profiles)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ? (tutor as any).profiles[0]
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    : (tutor as any).profiles;
+  const rawProfiles = (tutor as unknown as Record<string, unknown>)?.profiles;
+  const tutorProfile = (Array.isArray(rawProfiles) ? rawProfiles[0] : rawProfiles) as Record<string, string> | undefined;
   const tutorName = tutorProfile?.first_name
     ? `${tutorProfile.first_name} ${tutorProfile.last_name || ""}`.trim()
     : "Tutor";
@@ -74,7 +70,7 @@ export async function GET(
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  sessions.forEach((session: any) => {
+  sessions.forEach((session: Record<string, unknown>) => {
     icsContent += "BEGIN:VEVENT\r\n";
     icsContent += `UID:session-${session.id}@scholarme.app\r\n`;
     icsContent += `DTSTAMP:${getStamp()}\r\n`;

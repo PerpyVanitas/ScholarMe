@@ -133,7 +133,7 @@ export function ChatSidebar({
                               {Array.isArray(u.roles)
                                 ? u.roles[0]?.name
                                 : // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                  (u.roles as any)?.name || "user"}
+                                  ((u.roles as Record<string, unknown> | null)?.name as string) || "user"}
                             </Badge>
                           </div>
                           <p className="text-xs text-muted-foreground truncate">

@@ -5,8 +5,8 @@ import { resolveRoleId } from "@/features/profiles/api/db";
 
 describe.skipIf(!hasTestDb)("P1-8: Role Downgrade Race Condition", () => {
   let adminClient: SupabaseClient;
-  let manager: any;
-  let managerClient: any;
+  let manager: Record<string, unknown> | null = null;
+  let managerClient: Record<string, unknown> | null = null;
   let budgetId: string;
 
   beforeAll(async () => {

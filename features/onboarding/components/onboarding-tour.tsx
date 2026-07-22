@@ -45,8 +45,8 @@ export function OnboardingTour() {
             popover: {
               title: el.getAttribute("data-tour-title") || "Info",
               description: el.getAttribute("data-tour-description") || "",
-              side: (el.getAttribute("data-tour-side") as any) || "bottom",
-              align: (el.getAttribute("data-tour-align") as any) || "start",
+              side: (el.getAttribute("data-tour-side") as "top" | "bottom" | "left" | "right") || "bottom",
+              align: (el.getAttribute("data-tour-align") as "start" | "center" | "end") || "start",
             },
           }));
       } else {

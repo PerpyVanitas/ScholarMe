@@ -5,7 +5,7 @@ import { resolveRoleId } from "@/features/profiles/api/db";
 
 describe.skipIf(!hasTestDb)("P5-1: Tutor Onboarding Critical Path", () => {
   let adminClient: SupabaseClient;
-  let tutor: any;
+  let tutor: Record<string, unknown> | null = null;
   let suffix: string;
 
   beforeAll(async () => {

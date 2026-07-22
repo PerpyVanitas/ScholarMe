@@ -21,8 +21,7 @@ export default async function TutorReviewsPage() {
     .eq("id", user.id)
     .single();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const roleName = getRoleName(profile as any);
+  const roleName = getRoleName(profile as unknown as Parameters<typeof getRoleName>[0]);
   const isAdmin = hasAnyRole(roleName, ADMIN_ROLES);
 
   // Auto-provision tutor row for super_admin so they can diagnose the page

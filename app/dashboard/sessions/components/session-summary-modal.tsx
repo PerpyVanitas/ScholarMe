@@ -64,7 +64,7 @@ export function SessionSummaryModal({
 
       setProgressText("Generating summary...");
 
-      const reply = (await (engine as any).chat.completions.create({
+      const reply = (await (engine as unknown as { chat: { completions: { create: (opts: Record<string, unknown>) => Promise<unknown> } } }).chat.completions.create({
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },

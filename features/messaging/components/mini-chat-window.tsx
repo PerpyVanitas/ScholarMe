@@ -59,7 +59,7 @@ export function MiniChatWindow({
         .single();
 
       if (data) {
-        setConversation(data as any);
+        setConversation(data as unknown as Conversation);
       }
       setLoading(false);
     };

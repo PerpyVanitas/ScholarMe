@@ -43,7 +43,7 @@ export default async function GovernancePage() {
                 </TableCell>
               </TableRow>
             )}
-            {documents?.map((doc: any) => (
+            {documents?.map((doc: Record<string, unknown>) => (
               <TableRow key={doc.id}>
                 <TableCell className="font-medium flex items-center gap-2">
                   <FileText className="h-4 w-4 text-muted-foreground" />

@@ -44,7 +44,7 @@ export default async function MembershipsPage() {
                 </TableCell>
               </TableRow>
             )}
-            {memberships?.map((membership: any) => (
+            {memberships?.map((membership: Record<string, unknown>) => (
               <TableRow key={membership.id}>
                 <TableCell className="font-medium">{membership.user?.full_name}</TableCell>
                 <TableCell>{membership.user?.email}</TableCell>

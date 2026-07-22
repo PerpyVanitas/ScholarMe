@@ -50,7 +50,7 @@ export default function SessionsPage() {
   const [ratingFeedback, setRatingFeedback] = useState("");
   const [ratingLoading, setRatingLoading] = useState(false);
   const [summarySession, setSummarySession] = useState<Session | null>(null);
-  const [waitlists, setWaitlists] = useState<any[]>([]);
+  const [waitlists, setWaitlists] = useState<Record<string, unknown>[]>([]);
   const [currentTutorId, setCurrentTutorId] = useState<string | null>(null);
 
   useEffect(() => {

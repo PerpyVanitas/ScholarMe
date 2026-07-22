@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 
 describe("Onboarding & Profile Completion (Phase 3)", () => {
   it("P3-2: Flags missing required profile fields (degree_program, year_level, membership_number)", () => {
-    const validateProfile = (data: any, isTutor: boolean) => {
+    const validateProfile = (data: Record<string, unknown>, isTutor: boolean) => {
       const errors: Record<string, string> = {};
       
       if (!data.degree_program?.trim()) {

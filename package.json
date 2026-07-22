@@ -12,6 +12,7 @@
     "test:watch": "vitest",
     "test:security": "vitest run __tests__/security",
     "test:ci": "vitest run && bash scripts/check-no-getsession.sh",
+    "openapi": "npx tsx docs/openapi.ts",
     "prepare": "husky"
   },
   "lint-staged": {

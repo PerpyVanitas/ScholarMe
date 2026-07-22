@@ -54,10 +54,8 @@ export async function POST(req: Request) {
       if (tutorRole) {
         for (const profile of expiredRoles) {
           const roleName = Array.isArray(profile.roles)
-            // @ts-ignore: Strict unknown type check
-            ? (profile.roles as unknown[])[0]?.name
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            : (profile.roles as any)?.name;
+            ? (profile.roles[0] as Record<string, unknown> | undefined)?.name
+            : (profile.roles as Record<string, unknown> | null)?.name;
 
           // Only revert org roles — never touch system roles
           if (ORG_ROLES.includes(roleName)) {

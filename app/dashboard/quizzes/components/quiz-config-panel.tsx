@@ -12,8 +12,7 @@ export type QuizConfigMap = Record<string, QuizConfigItem>;
 
 interface QuizConfigPanelProps {
   quizConfig: QuizConfigMap;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setQuizConfig: React.Dispatch<React.SetStateAction<any>>;
+  setQuizConfig: React.Dispatch<React.SetStateAction<QuizConfigMap>>;
   generating: boolean;
   creating: boolean;
 }

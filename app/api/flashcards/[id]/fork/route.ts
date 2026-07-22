@@ -48,8 +48,7 @@ export async function POST(
 
     // 3. Clone items
     if (originalSet.study_set_items && originalSet.study_set_items.length > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const itemsToInsert = originalSet.study_set_items.map((item: any) => ({
+      const itemsToInsert = originalSet.study_set_items.map((item: Record<string, unknown>) => ({
         study_set_id: newSet.id,
         question: item.question,
         answer: item.answer,

@@ -67,10 +67,8 @@ export default async function TeamDashboard() {
     .eq("id", user.id)
     .single();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const roleName = getRoleName(profile as any);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (!hasAnyRole(roleName as any, TEAMWORK_ROLES)) {
+  const roleName = getRoleName(profile as unknown as Parameters<typeof getRoleName>[0]);
+  if (!hasAnyRole(roleName, TEAMWORK_ROLES)) {
     redirect("/dashboard");
   }
 

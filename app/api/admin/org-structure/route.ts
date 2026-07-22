@@ -1,4 +1,4 @@
-﻿import { handleApiError } from "@/lib/utils/api-error";
+import { handleApiError } from "@/lib/utils/api-error";
 /**
  * GET  /api/admin/org-structure â€” fetch current term + all assignments
  * POST /api/admin/org-structure â€” create a new org term (super_admin only)
@@ -219,8 +219,7 @@ export async function PATCH(request: NextRequest) {
         .single();
       const memberRole = Array.isArray(memberProfile?.roles)
         ? memberProfile.roles[0]?.name
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        : (memberProfile?.roles as any)?.name;
+        : ((memberProfile?.roles as Record<string, unknown> | null)?.name as string | undefined);
       if (memberRole === "learner") {
         return NextResponse.json(
           {
@@ -359,8 +358,7 @@ async function applyRoleFromPosition(
 
   const currentRole = Array.isArray(currentProfile?.roles)
     ? currentProfile.roles[0]?.name
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    : (currentProfile?.roles as any)?.name;
+    : ((currentProfile?.roles as Record<string, unknown> | null)?.name as string | undefined);
 
   if (currentRole === "super_admin" || currentRole === "administrator") {
     // Don't overwrite system roles â€” store assignment only, don't change role_id
@@ -404,8 +402,7 @@ async function revertToTutorIfUnassigned(
 
   const currentRole = Array.isArray(currentProfile?.roles)
     ? currentProfile.roles[0]?.name
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    : (currentProfile?.roles as any)?.name;
+    : ((currentProfile?.roles as Record<string, unknown> | null)?.name as string | undefined);
 
   if (currentRole === "super_admin" || currentRole === "administrator") return;
 

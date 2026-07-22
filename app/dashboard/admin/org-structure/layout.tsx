@@ -20,10 +20,8 @@ export default async function OrgStructureLayout({
     .single();
 
   const roleName = Array.isArray(profile?.roles)
-      // @ts-ignore: Strict unknown type check
-    ? (profile.roles as unknown[])[0]?.name
-    : // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (profile?.roles as any)?.name;
+    ? profile.roles[0]?.name
+    : ((profile?.roles as Record<string, unknown> | null)?.name as string | undefined);
 
   if (roleName !== "super_admin") {
     redirect("/dashboard/admin");

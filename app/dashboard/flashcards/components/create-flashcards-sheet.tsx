@@ -165,7 +165,7 @@ export function CreateFlashcardsSheet({
 Respond ONLY with a valid JSON array of objects, where each object has a "question" string and an "answer" string.
 No other text, markdown blocks, or explanations. Just the JSON array.`;
 
-      const reply = (await (engine as any).chat.completions.create({
+      const reply = (await (engine as unknown as { chat: { completions: { create: (opts: Record<string, unknown>) => Promise<unknown> } } }).chat.completions.create({
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: `Topic: ${aiPrompt}` },
@@ -188,8 +188,7 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
       }
 
       const newContent = parsedData
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .map((item: any) => `Q: ${item.question}\nA: ${item.answer}`)
+        .map((item: { question?: string; answer?: string }) => `Q: ${item.question}\nA: ${item.answer}`)
         .join("\n\n");
 
       setFormData((prev) => ({
@@ -232,7 +231,7 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
       setLocalAIProgressValue(100);
       const systemPrompt = `You are a helpful assistant. Analyze the provided flashcards and output exactly 3 comma-separated tags (e.g. "Biology, Anatomy, Cells"). Do not output anything else.`;
 
-      const reply = (await (engine as any).chat.completions.create({
+      const reply = (await (engine as unknown as { chat: { completions: { create: (opts: Record<string, unknown>) => Promise<unknown> } } }).chat.completions.create({
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: `Flashcards: ${formData.content}` },

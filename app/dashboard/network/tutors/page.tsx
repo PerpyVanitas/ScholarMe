@@ -185,7 +185,7 @@ export default function TutorsPage() {
                           </Badge>
                         )}
                         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                        {(tutor.profiles as any)?.roles?.name === "officer" && (
+                        {((tutor.profiles as unknown as Record<string, unknown>)?.roles as Record<string, unknown> | undefined)?.name === "officer" && (
                           <Badge
                             variant="default"
                             className="text-[10px] h-4 px-1.5 py-0 bg-blue-500 hover:bg-blue-600 text-white border-transparent"

@@ -52,8 +52,7 @@ export async function POST(req: Request) {
 
     const roleName = Array.isArray(profile?.roles)
       ? profile.roles[0]?.name
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      : (profile?.roles as any)?.name;
+      : ((profile?.roles as Record<string, unknown> | null)?.name as string | undefined);
     const isAuthorized = hasAnyRole(roleName as string, GOVERNANCE_ROLES);
 
     if (!profile || !isAuthorized) {

@@ -28,7 +28,7 @@ export function ProfileView({
   profile,
   currentUserId,
 }: {
-  profile: any;
+  profile: Record<string, unknown>;
   currentUserId: string;
 }) {
   const router = useRouter();

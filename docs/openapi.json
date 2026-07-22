@@ -2,8 +2,8 @@
   "openapi": "3.0.0",
   "info": {
     "version": "1.0.0",
-    "title": "ScholarMe API",
-    "description": "Internal and external APIs for ScholarMe"
+    "title": "ScholarMe API Specification",
+    "description": "Authoritative OpenAPI 3.0 specification for ScholarMe core API route groups."
   },
   "servers": [
     {
@@ -20,20 +20,23 @@
         "description": "Check system health and database connectivity",
         "responses": {
           "200": {
-            "description": "Object with health status",
+            "description": "Health status details",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "status": {
-                      "type": "string"
+                      "type": "string",
+                      "example": "ok"
                     },
                     "timestamp": {
-                      "type": "string"
+                      "type": "string",
+                      "example": "2026-07-22T12:00:00.000Z"
                     },
                     "build": {
-                      "type": "string"
+                      "type": "string",
+                      "example": "1.0.0"
                     }
                   }
                 }
@@ -46,45 +49,91 @@
         }
       }
     },
-    "/api/users": {
-      "get": {
-        "description": "Get all users (Admin only)",
-        "responses": {
-          "200": {
-            "description": "Array of users",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "role": {
-                        "type": "string"
-                      },
-                      "email": {
-                        "type": "string",
-                        "format": "email"
-                      }
-                    }
+    "/api/auth/card-login": {
+      "post": {
+        "description": "Authenticate user via HMAC-SHA256 encrypted QR ID card scan",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "cardId": {
+                    "type": "string",
+                    "example": "CARD-12345"
+                  },
+                  "sig": {
+                    "type": "string",
+                    "example": "a3f5..."
+                  },
+                  "pin": {
+                    "type": "string",
+                    "example": "1234"
                   }
                 }
               }
             }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Card login successful and session established"
+          },
+          "400": {
+            "description": "Invalid payload or signature format"
+          },
+          "401": {
+            "description": "Invalid HMAC signature or PIN verification failed"
+          },
+          "429": {
+            "description": "Rate limit exceeded (too many card login attempts)"
+          }
+        }
+      }
+    },
+    "/api/auth/register-card": {
+      "post": {
+        "description": "Register or link an HMAC-signed QR ID card to a user profile (Admin/Officer only)",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "cardId": {
+                    "type": "string",
+                    "example": "CARD-12345"
+                  },
+                  "pin": {
+                    "type": "string",
+                    "minLength": 4,
+                    "maxLength": 4
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Card successfully linked to profile"
+          },
+          "403": {
+            "description": "Forbidden: Officer or Admin privileges required"
           }
         }
       }
     },
     "/api/tutors": {
       "get": {
-        "description": "Get all tutors",
+        "description": "List all active available tutors with profile metadata",
         "responses": {
           "200": {
-            "description": "Array of tutors",
+            "description": "Array of available tutors",
             "content": {
               "application/json": {
                 "schema": {
@@ -101,10 +150,18 @@
                         "format": "uuid"
                       },
                       "rating": {
-                        "type": "number"
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 5
                       },
                       "total_ratings": {
                         "type": "integer"
+                      },
+                      "is_available": {
+                        "type": "boolean"
+                      },
+                      "hourly_rate": {
+                        "type": "number"
                       }
                     }
                   }
@@ -115,12 +172,56 @@
         }
       }
     },
-    "/api/sessions": {
+    "/api/tutors/{id}": {
       "get": {
-        "description": "Get sessions for the current user",
+        "description": "Retrieve detailed profile, ratings, and availability for a specific tutor",
         "responses": {
           "200": {
-            "description": "Array of sessions",
+            "description": "Tutor details object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "user_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "rating": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 5
+                    },
+                    "total_ratings": {
+                      "type": "integer"
+                    },
+                    "is_available": {
+                      "type": "boolean"
+                    },
+                    "hourly_rate": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Tutor not found"
+          }
+        }
+      }
+    },
+    "/api/sessions": {
+      "get": {
+        "description": "Get all tutoring sessions for the authenticated user",
+        "responses": {
+          "200": {
+            "description": "List of user sessions",
             "content": {
               "application/json": {
                 "schema": {
@@ -140,12 +241,235 @@
                         "type": "string",
                         "format": "uuid"
                       },
-                      "status": {
+                      "subject": {
                         "type": "string"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "pending",
+                          "confirmed",
+                          "completed",
+                          "cancelled",
+                          "no_show"
+                        ]
                       },
                       "scheduled_date": {
                         "type": "string",
                         "format": "date"
+                      },
+                      "start_time": {
+                        "type": "string"
+                      },
+                      "end_time": {
+                        "type": "string"
+                      },
+                      "meeting_link": {
+                        "type": "string",
+                        "format": "uri"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "description": "Book a new tutoring session",
+        "responses": {
+          "201": {
+            "description": "Session booked successfully"
+          },
+          "400": {
+            "description": "Time slot unavailable or validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/sessions/{id}/status": {
+      "put": {
+        "description": "Update tutoring session status (confirm, complete, cancel, no_show)",
+        "responses": {
+          "200": {
+            "description": "Status updated successfully"
+          },
+          "400": {
+            "description": "Invalid status transition"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/api/sessions/{id}/join": {
+      "post": {
+        "description": "Generate video meeting tokens and track learner/tutor attendance",
+        "responses": {
+          "200": {
+            "description": "Meeting room details and tokens"
+          },
+          "403": {
+            "description": "Not a participant in this session"
+          }
+        }
+      }
+    },
+    "/api/finance/budget-requests": {
+      "get": {
+        "description": "Retrieve organizational budget requests (Finance review roles)",
+        "responses": {
+          "200": {
+            "description": "Array of budget requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "amount": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "purpose": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "pending",
+                          "finance_approved",
+                          "president_approved",
+                          "rejected",
+                          "disbursed"
+                        ]
+                      },
+                      "submitted_by": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      },
+      "post": {
+        "description": "Submit a new organizational budget request",
+        "responses": {
+          "201": {
+            "description": "Budget request submitted"
+          },
+          "400": {
+            "description": "Blocked due to outstanding late liquidations or invalid amount"
+          }
+        }
+      }
+    },
+    "/api/finance/petty-cash": {
+      "get": {
+        "description": "Retrieve petty cash disbursements and log history",
+        "responses": {
+          "200": {
+            "description": "Array of petty cash entries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "amount": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "purpose": {
+                        "type": "string"
+                      },
+                      "custodian_id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "receipt_url": {
+                        "type": "string",
+                        "format": "uri"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/finance/liquidations": {
+      "get": {
+        "description": "Retrieve liquidation reports and receipt attachments",
+        "responses": {
+          "200": {
+            "description": "Array of liquidations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "budget_request_id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "total_spent": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "receipt_urls": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "pending",
+                          "approved",
+                          "rejected"
+                        ]
+                      },
+                      "is_late": {
+                        "type": "boolean"
                       }
                     }
                   }

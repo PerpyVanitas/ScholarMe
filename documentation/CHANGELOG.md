@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Strict ESLint `any`-Type Enforcement**:
+  - Replaced all explicit `any` usages across the codebase with strict types or `unknown` + runtime type guards (reducing count to 0).
+  - Changed `@typescript-eslint/no-explicit-any` from `"warn"` to `"error"` in `eslint.config.mjs`.
+  - Added an explicit `pnpm run lint` step in `.github/workflows/ci.yml`.
+- **Study Groups Unit Test Suite**:
+  - Created `features/study-groups/__tests__/study-groups.test.ts` with 4 passing unit tests covering capacity limits, waitlist auto-promotion, waitlist cap enforcement, and host auto-reassignment.
+- **OpenAPI 3.0 Auto-Generator & Expanded Spec**:
+  - Updated `docs/openapi.ts` to register schemas and paths for `/api/auth/*`, `/api/finance/*`, `/api/sessions/*`, and `/api/tutors/*`.
+  - Added `"openapi"` script in `package.json` to generate `docs/openapi.json`.
+
 ### Fixed
 
 - **RLS Vulnerability**: Added database migration (`20260722000000_resource_embeddings_rls.sql`) to enable Row Level Security (RLS) on the `resource_embeddings` table and defined strict user-scoped policies, fixing a critical Supabase security warning.
