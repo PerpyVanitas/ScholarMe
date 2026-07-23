@@ -107,7 +107,7 @@ export function AnnouncementCalendar({
       await updateEventRsvp(eventId, status);
       toast.success(`RSVP updated to ${status}`);
     } catch (e: unknown) {
-      // @ts-ignore: Strict unknown type check
+      // @ts-expect-error: Strict unknown type check
       toast.error("Failed to RSVP: " + e.message);
     }
   };
@@ -131,7 +131,7 @@ export function AnnouncementCalendar({
       toast.success("Event created!");
       setOpenCreate(false);
     } catch (e: unknown) {
-      // @ts-ignore: Strict unknown type check
+      // @ts-expect-error: Strict unknown type check
       toast.error(e.message);
     } finally {
       setSubmitting(false);
@@ -143,7 +143,7 @@ export function AnnouncementCalendar({
       await deleteEvent(id);
       toast.success("Event deleted");
     } catch (e: unknown) {
-      // @ts-ignore: Strict unknown type check
+      // @ts-expect-error: Strict unknown type check
       toast.error("Failed to delete event: " + e.message);
     }
   };
@@ -291,7 +291,7 @@ END:VCALENDAR`;
 
           <Select
             value={filterType}
-            // @ts-ignore: Strict unknown type check
+            // @ts-expect-error: Strict unknown type check
             onValueChange={(val: unknown) => setFilterType(val)}
           >
             <SelectTrigger className="w-[160px]">

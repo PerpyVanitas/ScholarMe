@@ -38,7 +38,7 @@ export function UsersDirectory({
           // Filter out the current user
           setUsers(
             results.data.filter(
-              // @ts-ignore: Strict unknown type check
+              // @ts-expect-error: Strict unknown type check
               (u: unknown) => u.id !== currentUserId,
             ) as Profile[],
           );

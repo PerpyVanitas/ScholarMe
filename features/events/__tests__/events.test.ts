@@ -152,7 +152,7 @@ describe("Phase 4D: Study Groups & Calendar", () => {
 
   it("P4-53: Waitlist promotion failure recovery", () => {
     const waitlist = ["user1"];
-    let nextAttendee = null;
+    const nextAttendee = null;
     
     const promote = () => {
       const candidate = waitlist[0];

@@ -130,7 +130,7 @@ export function OnboardingTour() {
           <AlertDialogAction
             onClick={() => {
               localStorage.setItem("hasSeenOnboardingTour", "true");
-              // @ts-ignore: Strict unknown type check
+              // @ts-expect-error: Strict unknown type check
               tourInstance?.destroy();
               setShowSkipConfirm(false);
             }}

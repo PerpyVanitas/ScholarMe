@@ -12,7 +12,7 @@ export function triggerConfetti() {
     const timeLeft = animationEnd - Date.now();
 
     if (timeLeft <= 0) {
-      // @ts-ignore: Strict unknown type check
+      // @ts-expect-error: Strict unknown type check
       return clearInterval(interval);
     }
 

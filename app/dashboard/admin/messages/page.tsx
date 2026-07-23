@@ -58,7 +58,7 @@ export default async function AdminMessagesAuditPage({ searchParams }: Props) {
       .eq("profile_id", userId);
 
     const conversationIds =
-      // @ts-ignore: Strict unknown type check
+      // @ts-expect-error: Strict unknown type check
       participantData?.map((p: unknown) => p.conversation_id) || [];
 
     if (conversationIds.length > 0) {
@@ -96,7 +96,7 @@ export default async function AdminMessagesAuditPage({ searchParams }: Props) {
         // Sort messages to get the latest one
         const sortedMessages = conv.messages?.sort(
           (a: unknown, b: unknown) =>
-            // @ts-ignore: Strict unknown type check
+            // @ts-expect-error: Strict unknown type check
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
         );
 

@@ -40,7 +40,7 @@ interface UserDesignationsDialogProps {
 function getUserRoleName(roles: unknown): string {
   if (Array.isArray(roles) && roles.length > 0) return roles[0].name;
   if (roles && typeof roles === "object" && !Array.isArray(roles))
-    // @ts-ignore: Strict unknown type check
+    // @ts-expect-error: Strict unknown type check
     return roles.name;
   return "learner";
 }
@@ -142,7 +142,7 @@ export function UserDesignationsDialog({
       setDesigIsCurrent(true);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: unknown) {
-      // @ts-ignore: Strict unknown type check
+      // @ts-expect-error: Strict unknown type check
       toast.error(e.message || "Failed to save designation");
     } finally {
       setSavingDesignation(false);
@@ -162,7 +162,7 @@ export function UserDesignationsDialog({
       toast.success("Designation removed");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: unknown) {
-      // @ts-ignore: Strict unknown type check
+      // @ts-expect-error: Strict unknown type check
       toast.error(e.message || "Failed to remove designation");
     }
   }

@@ -102,15 +102,15 @@ export default async function MessagesPage({
   // Format the conversations data to pass to the Client Component
   const formattedConversations = conversations.map((conv) => {
     // Sort messages to get the latest one
-    // @ts-ignore: Strict unknown type check
+    // @ts-expect-error: Strict unknown type check
     const sortedMessages = conv.messages?.sort(
       (a: unknown, b: unknown) =>
-        // @ts-ignore: Strict unknown type check
+        // @ts-expect-error: Strict unknown type check
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );
 
     return {
-      // @ts-ignore: Strict unknown type check
+      // @ts-expect-error: Strict unknown type check
       ...conv,
       messages: sortedMessages,
     };

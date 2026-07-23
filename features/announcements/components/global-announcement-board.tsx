@@ -62,7 +62,7 @@ export function GlobalAnnouncementBoard() {
       fetchAnnouncements();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: unknown) {
-      // @ts-ignore: Strict unknown type check
+      // @ts-expect-error: Strict unknown type check
       toast.error(e.message);
     }
   };
@@ -81,7 +81,7 @@ export function GlobalAnnouncementBoard() {
       fetchAnnouncements();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: unknown) {
-      // @ts-ignore: Strict unknown type check
+      // @ts-expect-error: Strict unknown type check
       toast.error(e.message);
     } finally {
       setSubmitting(false);

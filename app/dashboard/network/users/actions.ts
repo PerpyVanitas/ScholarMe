@@ -42,9 +42,9 @@ export async function searchUsers(query: string) {
   // Filter out private profiles in memory (unless they are tutors or we change the policy later)
   const filteredData = data.filter((profile: unknown) => {
     // Tutors are always visible (assuming role 'tutor')
-    // @ts-ignore: Strict unknown type check
+    // @ts-expect-error: Strict unknown type check
     const isTutor = profile.roles?.name === "tutor";
-    // @ts-ignore: Strict unknown type check
+    // @ts-expect-error: Strict unknown type check
     return !profile.is_private || isTutor;
   });
 
@@ -64,7 +64,7 @@ export async function searchUsers(query: string) {
   }
 
   const nonBlockedData = filteredData.filter(
-    // @ts-ignore: Strict unknown type check
+    // @ts-expect-error: Strict unknown type check
     (profile: unknown) => !blockedUserIds.has(profile.id),
   );
 

@@ -655,7 +655,7 @@ export function SessionList({
                     Select a tutor...
                   </option>
                   {availableTutors.map((t) => (
-                    // @ts-ignore: Strict unknown type check
+                    // @ts-expect-error: Strict unknown type check
                     <option key={t.id} value={t.id}>
                       // @ts-ignore: Strict unknown type check
                       {t.profiles?.full_name}

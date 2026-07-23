@@ -7,7 +7,7 @@ describe("Phase 4E: Quizzes & Flashcards", () => {
       let easeFactor = prevEaseFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
       easeFactor = Math.max(1.3, easeFactor);
       
-      let repetitions = quality < 3 ? 0 : prevRepetitions + 1;
+      const repetitions = quality < 3 ? 0 : prevRepetitions + 1;
       let interval = 1;
       
       if (repetitions === 1) interval = 1;

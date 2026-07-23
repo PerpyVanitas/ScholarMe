@@ -183,9 +183,9 @@ export default function AvailabilityPage() {
       toast.error("Failed to copy schedule");
     } else if (data) {
       setSlots((prev: unknown) =>
-        // @ts-ignore: Strict unknown type check
+        // @ts-expect-error: Strict unknown type check
         [...prev, ...data].sort(
-          // @ts-ignore: Strict unknown type check
+          // @ts-expect-error: Strict unknown type check
           (a: unknown, b: unknown) => a.day_of_week - b.day_of_week,
         ),
       );
@@ -238,7 +238,7 @@ export default function AvailabilityPage() {
   const groupedSlots = DAYS_OF_WEEK.map((day, idx) => ({
     day,
     idx,
-    // @ts-ignore: Strict unknown type check
+    // @ts-expect-error: Strict unknown type check
     slots: slots.filter((s: unknown) => s.day_of_week === idx),
   }));
 
@@ -442,7 +442,7 @@ export default function AvailabilityPage() {
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       {daySlots.map((slot: unknown) => (
                         <Badge
-                          // @ts-ignore: Strict unknown type check
+                          // @ts-expect-error: Strict unknown type check
                           key={slot.id}
                           variant="secondary"
                           className="flex items-center gap-1.5 text-xs pr-1"
@@ -452,7 +452,7 @@ export default function AvailabilityPage() {
                           // @ts-ignore: Strict unknown type check
                           {slot.end_time.slice(0, 5)}
                           <button
-                            // @ts-ignore: Strict unknown type check
+                            // @ts-expect-error: Strict unknown type check
                             onClick={() => removeSlot(slot.id)}
                             className="ml-1 rounded-full p-0.5 hover:bg-destructive/20 hover:text-destructive"
                             aria-label="Remove slot"

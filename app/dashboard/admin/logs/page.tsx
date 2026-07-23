@@ -103,34 +103,34 @@ export default function SystemLogsPage() {
   const filtered = search
     ? logs.filter(
         (log) =>
-          // @ts-ignore: Strict unknown type check
+          // @ts-expect-error: Strict unknown type check
           log.action?.toLowerCase().includes(search.toLowerCase()) ||
-          // @ts-ignore: Strict unknown type check
+          // @ts-expect-error: Strict unknown type check
           log.profiles?.full_name
             ?.toLowerCase()
             .includes(search.toLowerCase()) ||
-          // @ts-ignore: Strict unknown type check
+          // @ts-expect-error: Strict unknown type check
           log.profiles?.email?.toLowerCase().includes(search.toLowerCase()) ||
-          // @ts-ignore: Strict unknown type check
+          // @ts-expect-error: Strict unknown type check
           log.entity_type?.toLowerCase().includes(search.toLowerCase()),
       )
     : logs;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const formattedForExport = filtered.map((log: unknown) => ({
-    // @ts-ignore: Strict unknown type check
+    // @ts-expect-error: Strict unknown type check
     Time: format(new Date(log.created_at), "yyyy-MM-dd HH:mm:ss"),
-    // @ts-ignore: Strict unknown type check
+    // @ts-expect-error: Strict unknown type check
     User: log.profiles?.full_name || "System",
-    // @ts-ignore: Strict unknown type check
+    // @ts-expect-error: Strict unknown type check
     Email: log.profiles?.email || "N/A",
-    // @ts-ignore: Strict unknown type check
+    // @ts-expect-error: Strict unknown type check
     Action: log.action,
-    // @ts-ignore: Strict unknown type check
+    // @ts-expect-error: Strict unknown type check
     "Entity Type": log.entity_type || "",
-    // @ts-ignore: Strict unknown type check
+    // @ts-expect-error: Strict unknown type check
     "Entity ID": log.entity_id || "",
-    // @ts-ignore: Strict unknown type check
+    // @ts-expect-error: Strict unknown type check
     Metadata: log.metadata ? JSON.stringify(log.metadata) : "",
   }));
 
@@ -237,11 +237,11 @@ export default function SystemLogsPage() {
                     ) : (
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       filtered.map((log: Record<string, unknown>) => (
-                        // @ts-ignore: Strict unknown type check
+                        // @ts-expect-error: Strict unknown type check
                         <TableRow key={log.id}>
                           <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
                             {format(
-                              // @ts-ignore: Strict unknown type check
+                              // @ts-expect-error: Strict unknown type check
                               new Date(log.created_at),
                               "MMM d, yyyy HH:mm:ss",
                             )}
@@ -281,7 +281,7 @@ export default function SystemLogsPage() {
                           <TableCell className="text-xs font-mono text-muted-foreground">
                             // @ts-ignore: Strict unknown type check
                             {log.entity_id
-                              // @ts-ignore: Strict unknown type check
+                              // @ts-expect-error: Strict unknown type check
                               ? `${log.entity_id.substring(0, 8)}...`
                               : "-"}
                           </TableCell>

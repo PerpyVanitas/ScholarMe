@@ -46,7 +46,7 @@ export function FlashcardItemsEditor({
                   Front (Question)
                 </Label>
                 <Textarea
-                  // @ts-ignore: Strict unknown type check
+                  // @ts-expect-error: Strict unknown type check
                   value={item.question || item.front || ""}
                   onChange={(e) => {
                     const newItems = [...structuredItems];
@@ -66,7 +66,7 @@ export function FlashcardItemsEditor({
                   Back (Answer)
                 </Label>
                 <Input
-                  // @ts-ignore: Strict unknown type check
+                  // @ts-expect-error: Strict unknown type check
                   value={item.answer || item.back || ""}
                   onChange={(e) => {
                     const newItems = [...structuredItems];

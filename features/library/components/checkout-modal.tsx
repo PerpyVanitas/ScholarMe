@@ -46,7 +46,7 @@ export function CheckoutModal({
       setLearnerId("");
      
     } catch (e: unknown) {
-      // @ts-ignore: Strict unknown type check
+      // @ts-expect-error: Strict unknown type check
       toast.error(e.message || "Hmm, we couldn't check that out right now. Please try again.");
     } finally {
       setLoading(false);

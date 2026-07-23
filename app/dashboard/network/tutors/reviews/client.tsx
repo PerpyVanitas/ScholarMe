@@ -17,13 +17,13 @@ import { Badge } from "@/components/ui/badge";
 import { TutorReviewDialog } from "@/features/tutors/components/tutor-review-dialog";
 
 export function TutorReviewsClient({
-  // @ts-ignore: Strict unknown type check
+  // @ts-expect-error: Strict unknown type check
   currentTutor,
-  // @ts-ignore: Strict unknown type check
+  // @ts-expect-error: Strict unknown type check
   isLead,
-  // @ts-ignore: Strict unknown type check
+  // @ts-expect-error: Strict unknown type check
   reviews: initialReviews,
-  // @ts-ignore: Strict unknown type check
+  // @ts-expect-error: Strict unknown type check
   availableTutors,
  
 }: unknown) {
@@ -37,11 +37,11 @@ export function TutorReviewsClient({
       .from("tutor_reviews")
       .insert({
         reviewer_id: currentTutor.id,
-        // @ts-ignore: Strict unknown type check
+        // @ts-expect-error: Strict unknown type check
         tutor_id: data.tutor_id,
-        // @ts-ignore: Strict unknown type check
+        // @ts-expect-error: Strict unknown type check
         rating: data.rating,
-        // @ts-ignore: Strict unknown type check
+        // @ts-expect-error: Strict unknown type check
         feedback: data.feedback,
       })
       .select("*, tutor:tutors(*, profiles(*))")
@@ -80,15 +80,15 @@ export function TutorReviewsClient({
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {reviews.map((review: Record<string, unknown>) => (
-            // @ts-ignore: Strict unknown type check
+            // @ts-expect-error: Strict unknown type check
             <Card key={review.id}>
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center justify-between text-base">
                   <span>
                     {isLead
-                      // @ts-ignore: Strict unknown type check
+                      // @ts-expect-error: Strict unknown type check
                       ? review.tutor?.profiles?.full_name
-                      // @ts-ignore: Strict unknown type check
+                      // @ts-expect-error: Strict unknown type check
                       : review.reviewer?.profiles?.full_name}
                   </span>
                   <Badge variant="secondary" className="font-mono">

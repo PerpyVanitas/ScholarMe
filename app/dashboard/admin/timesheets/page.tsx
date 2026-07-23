@@ -263,7 +263,7 @@ export default function AdminTimesheetsPage() {
                   </thead>
                   <tbody>
                     {periods.map((p) => (
-                      // @ts-ignore: Strict unknown type check
+                      // @ts-expect-error: Strict unknown type check
                       <tr key={p.id} className="border-b border-border/30">
                         <td className="py-3 pr-4 font-medium text-foreground">
                           // @ts-ignore: Strict unknown type check

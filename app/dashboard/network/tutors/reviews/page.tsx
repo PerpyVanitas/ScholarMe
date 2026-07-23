@@ -48,7 +48,7 @@ export default async function TutorReviewsPage() {
 
    
   const currentTutor = (profile.tutors as unknown[])[0];
-  // @ts-ignore: Strict unknown type check
+  // @ts-expect-error: Strict unknown type check
   const isLead = currentTutor.is_lead_tutor || isAdmin || false;
 
   // Fetch reviews based on role
@@ -59,7 +59,7 @@ export default async function TutorReviewsPage() {
     const { data: myReviews } = await supabase
       .from("tutor_reviews")
       .select("*, tutor:tutors(*, profiles(*))")
-      // @ts-ignore: Strict unknown type check
+      // @ts-expect-error: Strict unknown type check
       .eq("reviewer_id", currentTutor.id)
       .order("created_at", { ascending: false });
     if (myReviews) reviews = myReviews;
@@ -68,7 +68,7 @@ export default async function TutorReviewsPage() {
     const { data: myReviews } = await supabase
       .from("tutor_reviews")
       .select("*, reviewer:tutors(*, profiles(*))")
-      // @ts-ignore: Strict unknown type check
+      // @ts-expect-error: Strict unknown type check
       .eq("tutor_id", currentTutor.id)
       .order("created_at", { ascending: false });
     if (myReviews) reviews = myReviews;
@@ -81,7 +81,7 @@ export default async function TutorReviewsPage() {
     const { data: tutors } = await supabase
       .from("tutors")
       .select("*, profiles(*)")
-      // @ts-ignore: Strict unknown type check
+      // @ts-expect-error: Strict unknown type check
       .neq("id", currentTutor.id)
       .eq("is_available", true);
     if (tutors) availableTutors = tutors;
@@ -101,7 +101,7 @@ export default async function TutorReviewsPage() {
       </div>
 
       <TutorReviewsClient
-        // @ts-ignore: Strict unknown type check
+        // @ts-expect-error: Strict unknown type check
         currentTutor={currentTutor}
         isLead={isLead}
         reviews={reviews}

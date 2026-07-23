@@ -121,7 +121,7 @@ export default function CustomExportPage() {
       const dataRows = data.map((row: unknown) =>
         selectedColumns
           .map((col) => {
-            // @ts-ignore: Strict unknown type check
+            // @ts-expect-error: Strict unknown type check
             let val = row[col];
             if (val === null || val === undefined) val = "";
             if (typeof val === "string") val = `"${val.replace(/"/g, '""')}"`;

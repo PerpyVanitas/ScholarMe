@@ -94,7 +94,7 @@ export function LibraryCatalog({ initialResources }: LibraryCatalogProps) {
       setOpenCreate(false);
       // Ideally we would re-fetch or optimistically update, but revalidatePath will refresh the page.
     } catch (e: unknown) {
-      // @ts-ignore: Strict unknown type check
+      // @ts-expect-error: Strict unknown type check
       toast.error(e.message);
     } finally {
       setSubmitting(false);

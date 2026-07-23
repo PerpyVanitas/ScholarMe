@@ -68,9 +68,9 @@ export default function StudyGroupsPage() {
     } else {
        
       const formatted = (data as unknown[]).map((g) => ({
-        // @ts-ignore: Strict unknown type check
+        // @ts-expect-error: Strict unknown type check
         ...g,
-        // @ts-ignore: Strict unknown type check
+        // @ts-expect-error: Strict unknown type check
         member_count: g.study_group_members?.[0]?.count || 0,
       }));
       setGroups(formatted);

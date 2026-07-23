@@ -174,7 +174,7 @@ export function useRealtimeMessages(
         updated_at: new Date().toISOString(),
       };
 
-      // @ts-ignore: Strict unknown type check
+      // @ts-expect-error: Strict unknown type check
       setMessages((prev) => [...prev, optimisticMessage]);
 
       const { error } = await supabase.from("messages").insert({
@@ -191,7 +191,7 @@ export function useRealtimeMessages(
       if (error) {
         console.error("Error sending message:", error);
         setMessages((prev) =>
-          // @ts-ignore: Strict unknown type check
+          // @ts-expect-error: Strict unknown type check
           prev.filter((m) => m.id !== optimisticMessage.id),
         );
         toast.error("Failed to send message");

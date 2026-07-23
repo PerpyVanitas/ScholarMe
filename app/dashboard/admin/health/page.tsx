@@ -58,7 +58,7 @@ export default function SystemHealthPage() {
         toast.error(`Cron error: ${data.error}`);
       }
     } catch (e: unknown) {
-      // @ts-ignore: Strict unknown type check
+      // @ts-expect-error: Strict unknown type check
       toast.error(`Failed to trigger cron: ${e.message}`);
     }
   };
