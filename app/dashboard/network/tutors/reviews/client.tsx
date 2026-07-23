@@ -27,7 +27,14 @@ export function TutorReviewsClient({
 }: {
   currentTutor: { id: string };
   isLead: boolean;
-  reviews: unknown[];
+  reviews: Array<{
+    id: string;
+    tutor?: { profiles?: { full_name?: string } };
+    reviewer?: { profiles?: { full_name?: string } };
+    rating: number;
+    created_at: string;
+    feedback: string;
+  }>;
   availableTutors: unknown[];
 }) {
   const [reviews, setReviews] = useState(initialReviews);

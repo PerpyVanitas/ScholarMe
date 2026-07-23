@@ -20,7 +20,7 @@ export async function POST(req: Request) {
       study_set_item_id: z.string(),
       // Inferring SM2Rating as a number based on its usage in calculateSM2 and comparison with `undefined`.
       // Common SM2 ratings are integers between 0 and 5.
-      rating: z.number(), 
+      rating: z.number().int().min(0).max(5), 
     });
 
     const parseResult = FlashcardAttemptBodySchema.safeParse(await req.json());
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
     const prevEaseFactor = previousAttempt?.ease_factor || 2.5;
 
     const { interval, easeFactor, repetitions } = calculateSM2(
-      rating,
+      rating as SM2Rating,
       prevRepetitions,
       prevInterval,
       prevEaseFactor,
