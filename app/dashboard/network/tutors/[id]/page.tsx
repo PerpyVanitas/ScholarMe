@@ -285,12 +285,12 @@ export default function TutorDetailPage({
                         variant="secondary"
                         className="text-xs"
                       >
-                        // @ts-ignore
+                        {/* @ts-expect-error: required */}
                         {s.specializations.name}
-                        // @ts-ignore
+                        {/* @ts-expect-error: required */}
                         {s.mastery_level && s.mastery_level !== "standard" && (
                           <span className="ml-1 text-[10px] uppercase text-primary border border-primary/20 bg-primary/10 px-1 rounded">
-                            // @ts-ignore
+                            {/* @ts-expect-error: required */}
                             {s.mastery_level}
                           </span>
                         )}

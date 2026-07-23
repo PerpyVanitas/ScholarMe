@@ -93,18 +93,18 @@ export function TutorReviewsClient({
                   </span>
                   <Badge variant="secondary" className="font-mono">
                     <Star className="mr-1 h-3 w-3 fill-primary text-primary" />
-                    // @ts-ignore: Strict unknown type check
+                    {/* @ts-expect-error: Strict unknown type check */}
                     {review.rating}/5
                   </Badge>
                 </CardTitle>
                 <CardDescription>
-                  // @ts-ignore: Strict unknown type check
+                  {/* @ts-expect-error: Strict unknown type check */}
                   {format(new Date(review.created_at), "PPP")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-foreground/90 whitespace-pre-wrap">
-                  // @ts-ignore: Strict unknown type check
+                  {/* @ts-expect-error: Strict unknown type check */}
                   {review.feedback}
                 </p>
               </CardContent>

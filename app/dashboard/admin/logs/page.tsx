@@ -247,15 +247,15 @@ export default function SystemLogsPage() {
                             )}
                           </TableCell>
                           <TableCell>
-                            // @ts-ignore: Strict unknown type check
+                            {/* @ts-expect-error: Strict unknown type check */}
                             {log.profiles ? (
                               <div className="flex flex-col">
                                 <span className="text-sm font-medium">
-                                  // @ts-ignore: Strict unknown type check
+                                  {/* @ts-expect-error: Strict unknown type check */}
                                   {log.profiles.full_name}
                                 </span>
                                 <span className="text-xs text-muted-foreground">
-                                  // @ts-ignore: Strict unknown type check
+                                  {/* @ts-expect-error: Strict unknown type check */}
                                   {log.profiles.email}
                                 </span>
                               </div>
@@ -270,26 +270,26 @@ export default function SystemLogsPage() {
                               variant="outline"
                               className="font-mono text-xs font-normal"
                             >
-                              // @ts-ignore: Strict unknown type check
+                              {/* @ts-expect-error: Strict unknown type check */}
                               {log.action}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-xs">
-                            // @ts-ignore: Strict unknown type check
+                            {/* @ts-expect-error: Strict unknown type check */}
                             {log.entity_type || "-"}
                           </TableCell>
                           <TableCell className="text-xs font-mono text-muted-foreground">
-                            // @ts-ignore: Strict unknown type check
+                            {/* @ts-expect-error: Strict unknown type check */}
                             {log.entity_id
                               // @ts-expect-error: Strict unknown type check
                               ? `${log.entity_id.substring(0, 8)}...`
                               : "-"}
                           </TableCell>
                           <TableCell className="text-xs">
-                            // @ts-ignore: Strict unknown type check
+                            {/* @ts-expect-error: Strict unknown type check */}
                             {log.metadata ? (
                               <pre className="max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">
-                                // @ts-ignore: Strict unknown type check
+                                {/* @ts-expect-error: Strict unknown type check */}
                                 {JSON.stringify(log.metadata)}
                               </pre>
                             ) : (

@@ -266,15 +266,15 @@ export default function AdminTimesheetsPage() {
                       // @ts-expect-error: Strict unknown type check
                       <tr key={p.id} className="border-b border-border/30">
                         <td className="py-3 pr-4 font-medium text-foreground">
-                          // @ts-ignore: Strict unknown type check
+                          {/* @ts-expect-error: Strict unknown type check */}
                           {p.name}
                         </td>
                         <td className="py-3 pr-4 text-muted-foreground text-xs font-mono">
-                          // @ts-ignore: Strict unknown type check
+                          {/* @ts-expect-error: Strict unknown type check */}
                           {fmtDate(p.start_date)} – {fmtDate(p.end_date)}
                         </td>
                         <td className="py-3 pr-4">
-                          // @ts-ignore: Strict unknown type check
+                          {/* @ts-expect-error: Strict unknown type check */}
                           {p.is_active ? (
                             <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">
                               Active

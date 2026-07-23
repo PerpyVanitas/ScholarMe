@@ -447,9 +447,9 @@ export default function AvailabilityPage() {
                           variant="secondary"
                           className="flex items-center gap-1.5 text-xs pr-1"
                         >
-                          // @ts-ignore: Strict unknown type check
+                          {/* @ts-expect-error: Strict unknown type check */}
                           {slot.start_time.slice(0, 5)} -{" "}
-                          // @ts-ignore: Strict unknown type check
+                          {/* @ts-expect-error: Strict unknown type check */}
                           {slot.end_time.slice(0, 5)}
                           <button
                             // @ts-expect-error: Strict unknown type check
