@@ -35,7 +35,7 @@ export function TutorReviewsClient({
     created_at: string;
     feedback: string;
   }>;
-  availableTutors: unknown[];
+  availableTutors: Array<{ id: string; profiles?: { full_name: string } | null; }>;
 }) {
   const [reviews, setReviews] = useState(initialReviews);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
