@@ -105,9 +105,49 @@ export async function POST(req: Request) {
 
     let answer = "";
     if (matchedDocs.length > 0) {
-      answer = `### 📚 AI Synthesis — Institutional Wiki Guidance\n\nBased on CIT-U Honor Society governance standards and official SOP documents:\n\n${matchedDocs
-        .map((d, index) => `**[${index + 1}] ${d.title}** (${d.category || "General Policy"})\n> ${d.content}`)
-        .join("\n\n")}\n\n*Need further clarification? Click "Ask Kuya Nicolai" below to consult our AI study buddy on these policies.*`;
+      const apiKey = process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY;
+      if (apiKey) {
+        const context = matchedDocs.map((d) => `Title: ${d.title}\nCategory: ${d.category}\nContent: ${d.content}`).join("\n\n");
+        const endpoint = process.env.GROQ_API_KEY ? "https://api.groq.com/openai/v1/chat/completions" : "https://api.openai.com/v1/chat/completions";
+        const model = process.env.GROQ_API_KEY ? "llama3-8b-8192" : "gpt-3.5-turbo";
+
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
+
+          const aiRes = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+            },
+            signal: controller.signal,
+            body: JSON.stringify({
+              model,
+              messages: [
+                { role: "system", content: "You are the ScholarMe Wiki Assistant. Given the following official institutional policies and SOPs, answer the user's query clearly, concisely, and beautifully using Markdown tables or lists where appropriate. Never invent information outside the context." },
+                { role: "user", content: `Context:\n${context}\n\nQuery: ${cleanQuery}` }
+              ],
+              temperature: 0.3
+            })
+          });
+          clearTimeout(timeoutId);
+
+          if (aiRes.ok) {
+            const data = await aiRes.json();
+            answer = data.choices?.[0]?.message?.content || "";
+          }
+        } catch (error) {
+          console.error("LLM timeout or error in wiki synthesis:", error);
+        }
+      }
+
+      if (!answer) {
+        // Fallback to static concatenation if LLM fails or no API key is present
+        answer = `### 📚 Institutional Wiki Guidance (Fallback)\n\nBased on CIT-U Honor Society governance standards and official SOP documents:\n\n${matchedDocs
+          .map((d, index) => `**[${index + 1}] ${d.title}** (${d.category || "General Policy"})\n> ${d.content}`)
+          .join("\n\n")}\n\n*Need further clarification? Consult Kuya Nicolai.*`;
+      }
     } else {
       answer = "No matching institutional policy or SOP document was found for your search term. Try searching for terms like 'PLC', 'Honor Code', 'Tutor SOP', or 'Handoff'.";
     }

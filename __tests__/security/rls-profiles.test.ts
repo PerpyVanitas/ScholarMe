@@ -20,7 +20,7 @@ describe.skipIf(!hasTestDb)("P1-6: RLS Profiles Protection", () => {
       password: "password123",
       email_confirm: true,
     });
-    userA = dataA.user as User;
+    userA = dataA.user!;
     await adminClient
       .from("profiles")
       .insert({ id: userA.id, full_name: "User A", email: userA.email });
@@ -31,7 +31,7 @@ describe.skipIf(!hasTestDb)("P1-6: RLS Profiles Protection", () => {
       password: "password123",
       email_confirm: true,
     });
-    userB = dataB.user as User;
+    userB = dataB.user!;
     await adminClient
       .from("profiles")
       .insert({ id: userB.id, full_name: "User B", email: userB.email });
@@ -80,6 +80,6 @@ describe.skipIf(!hasTestDb)("P1-6: RLS Profiles Protection", () => {
       .select("*")
       .eq("id", userB.id)
       .single();
-    expect(verifyB!.email).toBe(`userB_rls_${suffixB}@test.com`); // Unchanged
+    expect(verifyB!.email).toBe(userB.email); // Unchanged
   });
 });

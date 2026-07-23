@@ -22,7 +22,7 @@ describe.skipIf(!hasTestDb)("P1-8: Role Downgrade Race Condition", () => {
       password: "password123",
       email_confirm: true,
     });
-    manager = mData.user;
+    manager = mData.user!;
     const managerRoleId = await resolveRoleId(adminClient, "committee_head");
 
     await adminClient.from("profiles").insert({
@@ -37,7 +37,7 @@ describe.skipIf(!hasTestDb)("P1-8: Role Downgrade Race Condition", () => {
       process.env.TEST_SUPABASE_ANON_KEY!,
     );
     await managerClient.auth.signInWithPassword({
-      email: manager.email,
+      email: manager.email!,
       password: "password123",
     });
 
@@ -61,15 +61,15 @@ describe.skipIf(!hasTestDb)("P1-8: Role Downgrade Race Condition", () => {
     await adminClient
       .from("profiles")
       .update({ role_id: learnerRoleId })
-      .eq("id", manager.id);
+      .eq("id", manager!.id);
 
     // 2. Manager tries to approve the budget via RPC or direct update
     // Depending on how approvals are handled (usually RPC to enforce state machine)
-    const { error: approveError } = await managerClient
+    const { error: approveError } = await managerClient!
       .from("budgets")
       .update({
         status: "manager_approved",
-        approved_by: manager.id,
+        approved_by: manager!.id,
       })
       .eq("id", budgetId);
 

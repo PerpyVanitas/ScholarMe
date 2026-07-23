@@ -83,6 +83,15 @@ export function WebLLMChat({
     }
   }, [messages, isGenerating]);
 
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -138,11 +147,20 @@ export function WebLLMChat({
     ]);
 
     let attachmentTextContent = "";
-    if (currentAttachment && !currentAttachment.type.startsWith("image/")) {
-      try {
-        attachmentTextContent = await currentAttachment.text();
-      } catch {
-        attachmentTextContent = `File: ${currentAttachment.name}`;
+    let base64ImageContent = "";
+    if (currentAttachment) {
+      if (currentAttachment.type.startsWith("image/")) {
+        try {
+          base64ImageContent = await fileToBase64(currentAttachment);
+        } catch {
+          console.error("Failed to read image as base64");
+        }
+      } else {
+        try {
+          attachmentTextContent = await currentAttachment.text();
+        } catch {
+          attachmentTextContent = `File: ${currentAttachment.name}`;
+        }
       }
     }
 
@@ -161,7 +179,12 @@ export function WebLLMChat({
         const reqBody = {
           messages: messages.concat([{ role: "user", content: userText }]),
           attachments: currentAttachment
-            ? [{ name: currentAttachment.name, type: currentAttachment.type, content: attachmentTextContent }]
+            ? [{ 
+                name: currentAttachment.name, 
+                type: currentAttachment.type, 
+                content: attachmentTextContent,
+                base64: base64ImageContent || undefined
+              }]
             : undefined,
         };
 

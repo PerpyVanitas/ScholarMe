@@ -1,5 +1,4 @@
 import { describe, it, expect } from "vitest";
-// @ts-expect-error -- proxy export is not typed as middleware, aliased for test clarity
 import { proxy as middleware } from "@/proxy";
 import { NextRequest } from "next/server";
 

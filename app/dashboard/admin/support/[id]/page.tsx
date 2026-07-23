@@ -34,6 +34,25 @@ export default function AdminSupportChat({
   const supabase = createClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  };
+
+  const fetchMessages = async () => {
+    const { data } = await supabase
+      .from("support_messages")
+      .select("*, profiles(full_name)")
+      .eq("ticket_id", id)
+      .order("created_at", { ascending: true });
+    
+    if (data) {
+      setMessages(data as unknown as SupportMessage[]);
+      scrollToBottom();
+    }
+  };
+
   useEffect(() => {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser();
@@ -70,25 +89,6 @@ export default function AdminSupportChat({
       supabase.removeChannel(channel);
     };
   }, [id, supabase]);
-
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
-  };
-
-  async function fetchMessages() {
-    const { data } = await supabase
-      .from("support_messages")
-      .select("*, profiles(full_name)")
-      .eq("ticket_id", id)
-      .order("created_at", { ascending: true });
-    
-    if (data) {
-      setMessages(data as unknown as SupportMessage[]);
-      scrollToBottom();
-    }
-  }
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();

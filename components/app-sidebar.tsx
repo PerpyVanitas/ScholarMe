@@ -98,7 +98,8 @@ export interface SidebarNavItem {
   title: string;
   href?: string;
   icon: LucideIcon;
-  subItems?: { title: string; href: string; icon?: LucideIcon }[];
+  id?: string;
+  subItems?: { title: string; href: string; icon?: LucideIcon; id?: string }[];
 }
 
 export interface SidebarNavGroup {
@@ -119,7 +120,7 @@ function getNavItems(role: UserRole, profile: Profile) {
     { title: "Study Sets", href: "/dashboard/study-sets", icon: Layers },
     { title: "AI Tutor", href: "/dashboard/ai-tutor", icon: Bot },
     { title: "Library & Resources", href: "/dashboard/resources", icon: BookOpen },
-    { title: "Institutional Wiki", href: "/dashboard/wiki", icon: FileText },
+    { title: "Institutional Wiki", href: "/dashboard/wiki", icon: FileText, id: "tour-nav-wiki" },
   ];
 
   // 3. Grow
@@ -132,7 +133,7 @@ function getNavItems(role: UserRole, profile: Profile) {
   // 4. Connect
   const connectItems = [
     { title: "People & Network", href: "/dashboard/network", icon: Network },
-    { title: "Mentorship Matching", href: "/dashboard/network/mentorship", icon: Users },
+    { title: "Mentorship Matching", href: "/dashboard/network/mentorship", icon: Users, id: "tour-nav-mentorship" },
     { title: "Community Hub", href: "/dashboard/forums", icon: MessageSquare },
     { title: "My Messages", href: "/dashboard/messages", icon: MessageSquare },
     { title: "Voting", href: "/dashboard/voting", icon: Vote },
@@ -741,6 +742,7 @@ export function AppSidebar({
                               asChild
                               isActive={pathname === item.href}
                               tooltip={item.title}
+                              id={item.id}
                             >
                               <Link href={item.href!}>
                                 <item.icon className="h-4 w-4" />

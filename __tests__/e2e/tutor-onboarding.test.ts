@@ -5,7 +5,7 @@ import { resolveRoleId } from "@/features/profiles/api/db";
 
 describe.skipIf(!hasTestDb)("P5-1: Tutor Onboarding Critical Path", () => {
   let adminClient: SupabaseClient;
-  let tutor: Record<string, unknown> | null = null;
+  let tutor: User | null = null;
   let suffix: string;
 
   beforeAll(async () => {
@@ -22,7 +22,7 @@ describe.skipIf(!hasTestDb)("P5-1: Tutor Onboarding Critical Path", () => {
       email_confirm: true 
     });
     expect(signupErr).toBeNull();
-    tutor = tData.user;
+    tutor = tData.user as User;
 
     // 2. Profile Setup (Initial Row Creation - simulated onboarding Step 1)
     const roleId = await resolveRoleId(adminClient, "tutor");
@@ -50,6 +50,6 @@ describe.skipIf(!hasTestDb)("P5-1: Tutor Onboarding Critical Path", () => {
 
     // 4. Verify Dashboard Access Readiness (check the flag)
     const { data: finalProfile } = await adminClient.from("profiles").select("profile_completed").eq("id", tutor.id).single();
-    expect(finalProfile.profile_completed).toBe(true);
+    expect(finalProfile!.profile_completed).toBe(true);
   });
 });

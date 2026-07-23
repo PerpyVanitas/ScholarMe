@@ -31,13 +31,28 @@ export async function POST(req: Request) {
 
     // Build enriched query incorporating attachments if provided
     let enrichedQuery = lastUserMsg;
+    let hasVision = false;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const visionContent: any[] = [];
+
     if (attachments && Array.isArray(attachments) && attachments.length > 0) {
-      const fileSummaries = attachments
-        .map((a: { name: string; type: string; content?: string }) => 
-          `[Attached File: ${a.name} (${a.type})]${a.content ? `\nContent Preview:\n${a.content.slice(0, 1000)}` : ""}`
-        )
-        .join("\n\n");
-      enrichedQuery = `${lastUserMsg}\n\n${fileSummaries}`;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const imgAttachment = attachments.find((a: any) => a.base64);
+      if (imgAttachment) {
+        hasVision = true;
+        visionContent.push({ type: "text", text: lastUserMsg });
+        visionContent.push({
+          type: "image_url",
+          image_url: { url: imgAttachment.base64 }
+        });
+      } else {
+        const fileSummaries = attachments
+          .map((a: { name: string; type: string; content?: string }) => 
+            `[Attached File: ${a.name} (${a.type})]${a.content ? `\nContent Preview:\n${a.content.slice(0, 1000)}` : ""}`
+          )
+          .join("\n\n");
+        enrichedQuery = `${lastUserMsg}\n\n${fileSummaries}`;
+      }
     }
 
     if (!apiKey) {
@@ -65,9 +80,9 @@ export async function POST(req: Request) {
     }
 
     // Call external LLM provider (Groq or OpenAI compatible endpoint)
-    const formattedMessages = messages.map((m, idx) => {
+    const formattedMessages = messages.map((m: { role: string, content: string }, idx: number) => {
       if (idx === messages.length - 1 && m.role === "user") {
-        return { role: "user", content: enrichedQuery };
+        return { role: "user", content: hasVision ? visionContent : enrichedQuery };
       }
       return { role: m.role, content: m.content };
     });
@@ -76,6 +91,11 @@ export async function POST(req: Request) {
       ? "https://api.groq.com/openai/v1/chat/completions"
       : "https://api.openai.com/v1/chat/completions";
 
+    let model = process.env.GROQ_API_KEY ? "llama3-8b-8192" : "gpt-3.5-turbo";
+    if (hasVision) {
+      model = process.env.GROQ_API_KEY ? "llama-3.2-11b-vision-preview" : "gpt-4o-mini";
+    }
+
     const response = await fetch(endpoint, {
       method: "POST",
       headers: {
@@ -83,7 +103,7 @@ export async function POST(req: Request) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: process.env.GROQ_API_KEY ? "llama3-8b-8192" : "gpt-3.5-turbo",
+        model,
         messages: formattedMessages,
         temperature: 0.7,
         max_tokens: 1024,

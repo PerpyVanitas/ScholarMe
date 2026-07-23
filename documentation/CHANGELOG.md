@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Weekly Activity Digest Banner (`4.10`)**: Narrative summary banner on dashboard home highlighting weekly sessions completed and XP earned.
   - **Milestone Moments Celebration (`4.11`)**: Auto-triggered confetti celebrations for key milestones (100 hours, officer terms, first endorsement) with single-trigger database persistence.
   - **Contextual Per-Screen Help System (`4.14`)**: Header help button (`ContextualHelpButton`) and route configuration (`lib/config/contextual-help-config.ts`) surfacing screen purpose and action guidance.
+  - **Contextual Feature Resurfacing (`4.13`)**: Built a targeted tip engine on top of `OnboardingTour` to deliver dismissible, single-step "did you know" nudges (e.g., Mentorship Matching, Institutional Wiki) driven by account age and route state, without adding heavy backend notification systems.
   - **Sidebar Navigation Remap & Clutter Reduction (Section 5, `4.13b`)**: Reorganized navigation into 6 capability groups (Home, Learn, Grow, Connect, My Journey, Workspace Management) with non-Home group collapse defaults and mode-gated workspace filtering.
 
 - **Strict ESLint `any`-Type Enforcement**:

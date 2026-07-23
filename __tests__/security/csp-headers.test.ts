@@ -1,12 +1,10 @@
 import { describe, it, expect } from "vitest";
-// @ts-expect-error -- proxy export is not typed as middleware, aliased for test clarity
 import { proxy as middleware } from "@/proxy";
 import { NextRequest } from "next/server";
 
 describe("CSP Headers", () => {
   it("P1-22: Response includes a strict CSP header", async () => {
-    // @ts-expect-error: Strict unknown type check
-    process.env.NODE_ENV = "development";
+    Object.defineProperty(process.env, "NODE_ENV", { value: "development", configurable: true });
     const req = new NextRequest("http://localhost/dashboard");
     const res = await middleware(req);
 

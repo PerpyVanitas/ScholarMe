@@ -5,7 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpenText, Search, FileText, ExternalLink, ShieldCheck, HelpCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { BookOpenText, Search, FileText, ShieldCheck, HelpCircle, ThumbsUp, ThumbsDown } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 
 interface Citation {
@@ -20,6 +22,7 @@ export default function InstitutionalWikiPage() {
   const [searching, setSearching] = useState(false);
   const [answer, setAnswer] = useState<string | null>(null);
   const [citations, setCitations] = useState<Citation[]>([]);
+  const [voted, setVoted] = useState<"up" | "down" | null>(null);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +32,7 @@ export default function InstitutionalWikiPage() {
       setSearching(true);
       setAnswer(null);
       setCitations([]);
+      setVoted(null);
 
       const res = await fetch("/api/wiki/search", {
         method: "POST",
@@ -90,20 +94,41 @@ export default function InstitutionalWikiPage() {
         </Button>
       </form>
 
+      {/* Loading Skeleton */}
+      {searching && (
+        <div className="space-y-4 pt-4">
+          <Skeleton className="h-[150px] w-full rounded-xl" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <Skeleton className="h-[80px] w-full rounded-md" />
+            <Skeleton className="h-[80px] w-full rounded-md" />
+          </div>
+        </div>
+      )}
+
       {/* Search Results / Answer */}
-      {answer && (
+      {!searching && answer && (
         <Card className="border-2 shadow-md">
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <FileText className="h-5 w-5 text-primary" /> Answer & Policy Citation
+            <CardTitle className="text-lg flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary" /> Answer & Policy Citation
+              </span>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" className={`h-8 w-8 ${voted === 'up' ? 'text-green-500' : ''}`} onClick={() => { setVoted("up"); toast.success("Feedback recorded!"); }}>
+                  <ThumbsUp className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className={`h-8 w-8 ${voted === 'down' ? 'text-destructive' : ''}`} onClick={() => { setVoted("down"); toast.success("Feedback recorded!"); }}>
+                  <ThumbsDown className="h-4 w-4" />
+                </Button>
+              </div>
             </CardTitle>
             <CardDescription className="text-xs">
               Role-verified document retrieval
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground bg-muted/20 p-4 rounded-lg border">
-              {answer}
+            <div className="text-sm leading-relaxed text-foreground bg-muted/20 p-4 rounded-lg border prose dark:prose-invert max-w-none">
+              <ReactMarkdown>{answer}</ReactMarkdown>
             </div>
 
             {/* Source Citations */}

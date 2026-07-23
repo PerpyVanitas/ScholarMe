@@ -13,8 +13,8 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("Session Expiry & Inactivity (Phase 3)", () => {
-  let mockSupabase: ReturnType<typeof vi.fn> | Record<string, unknown>;
-  let mockRouter: Record<string, unknown>;
+  let mockSupabase: any;
+  let mockRouter: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -31,7 +31,7 @@ describe("Session Expiry & Inactivity (Phase 3)", () => {
     mockRouter = {
       push: vi.fn(),
     };
-    (useRouter as never).mockReturnValue(mockRouter);
+    (vi.mocked(useRouter) as any).mockReturnValue(mockRouter);
   });
 
   afterEach(() => {

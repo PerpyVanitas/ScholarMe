@@ -24,11 +24,16 @@ export function TutorReviewsClient({
   reviews: initialReviews,
 
   availableTutors,
-}: unknown) {
+}: {
+  currentTutor: { id: string };
+  isLead: boolean;
+  reviews: any[];
+  availableTutors: any[];
+}) {
   const [reviews, setReviews] = useState(initialReviews);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
 
-  const handleReviewSubmit = async (data: unknown) => {
+  const handleReviewSubmit = async (data: { tutor_id: string; rating: number; feedback: string }) => {
     const supabase = createClient();
     const { data: newReview, error } = await supabase
       .from("tutor_reviews")

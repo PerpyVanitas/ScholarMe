@@ -101,19 +101,19 @@ export function CreateQuizSheet({
   }, [cooldownEnd]);
 
   useEffect(() => {
+    const loadResources = async () => {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("resources")
+        .select("id, title")
+        .order("created_at", { ascending: false });
+      if (data) setResources(data);
+    };
+
     if (open) {
       loadResources();
     }
   }, [open]);
-
-  const loadResources = async () => {
-    const supabase = createClient();
-    const { data } = await supabase
-      .from("resources")
-      .select("id, title")
-      .order("created_at", { ascending: false });
-    if (data) setResources(data);
-  };
 
   useEffect(() => {
     async function extractTopics(resourceId: string) {

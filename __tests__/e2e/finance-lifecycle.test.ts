@@ -16,15 +16,15 @@ describe.skipIf(!hasTestDb)("P5-2: E2E Finance Lifecycle", () => {
 
     // 1. Setup Users
     const { data: rData } = await adminClient.auth.admin.createUser({ email: `requester_${suffix}@test.com`, password: "password", email_confirm: true });
-    requester = rData.user;
+    requester = rData.user as User;
     await adminClient.from("profiles").insert({ id: requester.id, email: requester.email, role_id: await resolveRoleId(adminClient, "tutor") });
 
     const { data: mData } = await adminClient.auth.admin.createUser({ email: `manager_${suffix}@test.com`, password: "password", email_confirm: true });
-    manager = mData.user;
+    manager = mData.user as User;
     await adminClient.from("profiles").insert({ id: manager.id, email: manager.email, role_id: await resolveRoleId(adminClient, "committee_head") });
 
     const { data: pData } = await adminClient.auth.admin.createUser({ email: `president_${suffix}@test.com`, password: "password", email_confirm: true });
-    president = pData.user;
+    president = pData.user as User;
     await adminClient.from("profiles").insert({ id: president.id, email: president.email, role_id: await resolveRoleId(adminClient, "president") });
   });
 

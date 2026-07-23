@@ -21,7 +21,7 @@ describe.skipIf(!hasTestDb)("P1-3 to P1-5: BOLA / IDOR Protection", () => {
       password: "password123",
       email_confirm: true,
     });
-    userA = dataA.user;
+    userA = dataA.user!;
     await adminClient.from("profiles").insert({ id: userA.id, full_name: "User A", email: userA.email });
 
     // Create User B
@@ -30,16 +30,16 @@ describe.skipIf(!hasTestDb)("P1-3 to P1-5: BOLA / IDOR Protection", () => {
       password: "password123",
       email_confirm: true,
     });
-    userB = dataB.user;
+    userB = dataB.user!;
     await adminClient.from("profiles").insert({ id: userB.id, full_name: "User B", email: userB.email });
 
     // Login User A
     clientA = createClient(process.env.TEST_SUPABASE_URL!, process.env.TEST_SUPABASE_ANON_KEY!);
-    await clientA.auth.signInWithPassword({ email: userA.email, password: "password123" });
+    await clientA.auth.signInWithPassword({ email: userA.email!, password: "password123" });
 
     // Login User B
     clientB = createClient(process.env.TEST_SUPABASE_URL!, process.env.TEST_SUPABASE_ANON_KEY!);
-    await clientB.auth.signInWithPassword({ email: userB.email, password: "password123" });
+    await clientB.auth.signInWithPassword({ email: userB.email!, password: "password123" });
   });
 
   it("P1-3: User A cannot fetch/update/delete User B's timesheet", async () => {

@@ -8,7 +8,7 @@ vi.mock("@/lib/supabase/client", () => ({
 }));
 
 describe("Auth Providers (OAuth & Magic Links)", () => {
-  let mockSupabase: Record<string, unknown>;
+  let mockSupabase: any;
 
   beforeEach(() => {
     vi.clearAllMocks();

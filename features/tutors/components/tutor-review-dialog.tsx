@@ -36,7 +36,7 @@ export function TutorReviewDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   tutors: TutorOption[];
-  onSubmit: (data: unknown) => Promise<void>;
+  onSubmit: (data: { tutor_id: string; rating: number; feedback: string }) => Promise<void>;
 }) {
   const [rating, setRating] = useState(5);
   const {
@@ -47,7 +47,7 @@ export function TutorReviewDialog({
     formState: { isSubmitting },
   } = useForm();
 
-  const handleFormSubmit = async (data: Record<string, unknown>) => {
+  const handleFormSubmit = async (data: any) => {
     await onSubmit({ ...data, rating });
     reset();
     onOpenChange(false);

@@ -1,7 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+let mockSupabase: any;
+
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: () => mockSupabase
+}));
+
 describe("Integration: Gamification DB Constraints", () => {
-  let mockSupabase: unknown;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -11,10 +16,6 @@ describe("Integration: Gamification DB Constraints", () => {
       select: vi.fn().mockReturnThis(),
       single: vi.fn(),
     };
-    
-    vi.mock("@/lib/supabase/server", () => ({
-      createClient: () => mockSupabase
-    }));
   });
 
   it("P4-6: Negative XP prevented by DB CHECK", async () => {

@@ -84,9 +84,9 @@ describe("Study Groups (Network/Groups)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useUser).mockReturnValue({
-      profile: { id: "user123", full_name: "Test User" },
+      profile: { id: "user123", full_name: "Test User" } as any,
       loading: false,
-    });
+    } as any);
   });
 
   it("renders a list of available study groups", async () => {

@@ -359,7 +359,7 @@ async function applyRoleFromPosition(
 
   const currentRole = Array.isArray(currentProfile?.roles)
     ? currentProfile.roles[0]?.name
-    : ((currentProfile?.roles as Record<string, unknown> | null)?.name as
+    : ((currentProfile?.roles as unknown as Record<string, unknown> | null)?.name as
         string | undefined);
 
   if (currentRole === "super_admin" || currentRole === "administrator") {
@@ -404,7 +404,7 @@ async function revertToTutorIfUnassigned(
 
   const currentRole = Array.isArray(currentProfile?.roles)
     ? currentProfile.roles[0]?.name
-    : ((currentProfile?.roles as Record<string, unknown> | null)?.name as
+    : ((currentProfile?.roles as unknown as Record<string, unknown> | null)?.name as
         string | undefined);
 
   if (currentRole === "super_admin" || currentRole === "administrator") return;

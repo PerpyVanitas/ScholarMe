@@ -103,6 +103,62 @@ export function OnboardingTour() {
           console.error("Tour failed to start", e);
         }
       }, 1500);
+    } else {
+      // 4.13 Contextual Feature Resurfacing
+      setTimeout(() => {
+        try {
+          const seenTipsRaw = localStorage.getItem("scholarme_seen_tips");
+          const seenTips: string[] = seenTipsRaw ? JSON.parse(seenTipsRaw) : [];
+
+          // Calculate account age in days
+          const accountAgeDays = profile.created_at ? (new Date().getTime() - new Date(profile.created_at).getTime()) / (1000 * 3600 * 24) : 0;
+          
+          const tipsConfig = [
+            {
+              id: "tip_mentorship_matching",
+              condition: () => accountAgeDays > 30 && !!document.getElementById("tour-nav-mentorship"),
+              element: "#tour-nav-mentorship",
+              title: "Did you know?",
+              description: "Now that you've been here a while, you can get paired with an experienced member through Mentorship Matching!",
+            },
+            {
+              id: "tip_institutional_wiki",
+              condition: () => !!document.getElementById("tour-nav-wiki"),
+              element: "#tour-nav-wiki",
+              title: "Find SOPs Instantly",
+              description: "Looking for organization rules or guidelines? The new Institutional Wiki uses AI to answer questions directly from the rulebook.",
+            }
+          ];
+
+          const tipToRun = tipsConfig.find(t => !seenTips.includes(t.id) && t.condition());
+
+          if (tipToRun) {
+            const tipTour = driver({
+              showProgress: false,
+              animate: true,
+              steps: [
+                {
+                  element: tipToRun.element,
+                  popover: {
+                    title: tipToRun.title,
+                    description: tipToRun.description,
+                    side: "right",
+                    align: "center",
+                  }
+                }
+              ],
+              onDestroyStarted: () => {
+                const newSeen = [...seenTips, tipToRun.id];
+                localStorage.setItem("scholarme_seen_tips", JSON.stringify(newSeen));
+                tipTour.destroy();
+              }
+            });
+            tipTour.drive();
+          }
+        } catch (e) {
+          console.error("Contextual tip failed to start", e);
+        }
+      }, 2000);
     }
 
     // Listen to custom event for manual trigger

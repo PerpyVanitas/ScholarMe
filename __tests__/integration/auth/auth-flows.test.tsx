@@ -28,7 +28,7 @@ vi.mock("@/components/idle-timeout-provider", () => ({
 }));
 
 describe("Integration: Auth Flows", () => {
-  let mockSupabase: unknown;
+  let mockSupabase: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -50,7 +50,6 @@ describe("Integration: Auth Flows", () => {
   });
 
   it("P3-7: Unauthenticated /dashboard/* redirects to /auth/login", async () => {
-    // @ts-expect-error TODO: Strict unknown type check
     mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null } });
     
     const DashboardLayout = (await import("@/app/dashboard/layout")).default;
@@ -65,9 +64,7 @@ describe("Integration: Auth Flows", () => {
   });
 
   it("P3-8: Onboarding gate — direct nav before setup redirects", async () => {
-    // @ts-expect-error TODO: Strict unknown type check
     mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: "123" } } });
-    // @ts-expect-error TODO: Strict unknown type check
     mockSupabase.single.mockResolvedValue({ data: { profile_completed: false } });
     
     const DashboardLayout = (await import("@/app/dashboard/layout")).default;
@@ -81,9 +78,7 @@ describe("Integration: Auth Flows", () => {
   });
   
   it("allows access if authenticated and profile completed", async () => {
-    // @ts-expect-error TODO: Strict unknown type check
     mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: "123" } } });
-    // @ts-expect-error TODO: Strict unknown type check
     mockSupabase.single.mockResolvedValue({ data: { profile_completed: true } });
     
     const DashboardLayout = (await import("@/app/dashboard/layout")).default;
@@ -95,7 +90,6 @@ describe("Integration: Auth Flows", () => {
 
   it("P3-9: Magic link expiry behavior (invalid OTP returns friendly error)", async () => {
     // Simulate invalid OTP response from Supabase
-    // @ts-expect-error TODO: Strict unknown type check
     mockSupabase.auth.verifyOtp = vi.fn().mockResolvedValue({
       data: { user: null, session: null },
       error: { message: "Token has expired or is invalid" },
@@ -117,7 +111,6 @@ describe("Integration: Auth Flows", () => {
 
   it("P3-12: JWT expiry mid-action gracefully triggers re-auth", async () => {
     // Simulate a JWT expiration error on a supabase call
-    // @ts-expect-error TODO: Strict unknown type check
     mockSupabase.single.mockRejectedValue({
       message: "JWT expired",
       code: "PGRST301",
@@ -138,7 +131,6 @@ describe("Integration: Auth Flows", () => {
 
   it("P3-13: 48h stale session triggers 401 redirect", async () => {
     // Simulate 401 error from auth.getUser
-    // @ts-expect-error TODO: Strict unknown type check
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: null },
       error: { status: 401, message: "Auth session missing!" },
