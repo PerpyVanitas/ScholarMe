@@ -83,8 +83,9 @@ export async function GET(request: Request) {
     let dailyActiveUsers = 0;
     if (dauLogs && dauLogs.length > 0) {
       const distinctUsers = new Set(
-        // @ts-ignore: Strict unknown type check
-        dauLogs.map((log: unknown) => log.user_id).filter(Boolean),
+        (dauLogs as Array<{ user_id?: string }>)
+          .map((log) => log.user_id)
+          .filter(Boolean),
       );
       dailyActiveUsers = distinctUsers.size;
     }

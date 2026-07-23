@@ -104,12 +104,12 @@ export async function POST(req: Request) {
       const reminderTasks: Promise<void>[] = [];
 
       for (const event of upcomingEvents) {
-        const goingRsvps = (event.event_rsvps || []).filter((r: unknown) => {
-          // @ts-ignore: Strict unknown type check
-          const p = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
-          // @ts-ignore: Strict unknown type check
-          return r.status === "going" && p?.email;
-        });
+        const goingRsvps = (event.event_rsvps || []).filter(
+          (r: Record<string, unknown>) => {
+            const p = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
+            return r.status === "going" && (p as { email?: string })?.email;
+          },
+        );
 
         for (const rsvp of goingRsvps) {
           const profile = Array.isArray(rsvp.profiles)
@@ -137,7 +137,9 @@ export async function POST(req: Request) {
               if (res.success) {
                 remindersSent++;
               } else {
-                console.error(`Failed to send event reminder to ${profile.email}`);
+                console.error(
+                  `Failed to send event reminder to ${profile.email}`,
+                );
               }
             }),
           );
@@ -171,9 +173,7 @@ export async function POST(req: Request) {
       console.error("Error fetching overdue checkouts:", checkoutsError);
       errors.push(checkoutsError);
     } else if (overdueCheckouts && overdueCheckouts.length > 0) {
-      // Update statuses to overdue
-      // @ts-ignore: Strict unknown type check
-      const overdueIds = overdueCheckouts.map((c: unknown) => (c as { id: string }).id);
+      const overdueIds = overdueCheckouts.map((c: { id: string }) => c.id);
 
       const { error: updateError } = await supabase
         .from("resource_checkouts")
@@ -199,8 +199,11 @@ export async function POST(req: Request) {
             const resource = Array.isArray(checkout.physical_resources)
               ? checkout.physical_resources[0]
               : checkout.physical_resources;
-            const resourceTitle = (resource as { title?: string })?.title || "Library Resource";
-            const dueDate = new Date(checkout.due_date as string).toLocaleDateString();
+            const resourceTitle =
+              (resource as { title?: string })?.title || "Library Resource";
+            const dueDate = new Date(
+              checkout.due_date as string,
+            ).toLocaleDateString();
 
             const emailHtml = `
               <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px;">

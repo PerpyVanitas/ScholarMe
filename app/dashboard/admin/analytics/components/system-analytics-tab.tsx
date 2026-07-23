@@ -40,8 +40,11 @@ export function SystemAnalyticsTab({ stats }: SystemAnalyticsTabProps) {
           <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart
-                // @ts-ignore: Strict unknown type check
-                data={stats.supply_demand}
+                data={
+                  (stats.supply_demand as unknown as Array<
+                    Record<string, unknown>
+                  >) || []
+                }
                 margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
               >
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />

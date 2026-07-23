@@ -70,8 +70,7 @@ describe("PIN Hashing and Logging", () => {
 
     await POST(req);
 
-    const checkNoPlaintext = (spy: unknown) => {
-      // @ts-ignore: Strict unknown type check
+    const checkNoPlaintext = (spy: { mock: { calls: unknown[][] } }) => {
       spy.mock.calls.forEach((args: unknown[]) => {
         const output = args.join(" ");
         expect(output).not.toContain(rawPin);

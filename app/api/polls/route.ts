@@ -44,8 +44,11 @@ export async function GET(request: NextRequest) {
         .select("roles(name)")
         .eq("id", user.id)
         .single();
-      const roleObj = Array.isArray(profile?.roles) ? profile.roles[0] : profile?.roles;
-      const roleName = (roleObj as Record<string, unknown> | null)?.name as string | undefined;
+      const roleObj = Array.isArray(profile?.roles)
+        ? profile.roles[0]
+        : profile?.roles;
+      const roleName = (roleObj as Record<string, unknown> | null)?.name as
+        string | undefined;
       isAdmin = isAdminRole(roleName);
     }
 
@@ -126,12 +129,12 @@ export async function POST(request: NextRequest) {
       .single();
 
     const isAdmin = Array.isArray(profile?.roles)
-      ? profile.roles.some((role: unknown) =>
-          // @ts-ignore: Strict unknown type check
-          ["administrator", "super_admin"].includes(role.name),
+      ? profile.roles.some((role: { name?: string }) =>
+          ["administrator", "super_admin"].includes(role?.name || ""),
         )
       : ["administrator", "super_admin"].includes(
-          ((profile?.roles as Record<string, unknown> | null)?.name as string) || "",
+          ((profile?.roles as Record<string, unknown> | null)
+            ?.name as string) || "",
         );
 
     if (profileError || !isAdmin) {

@@ -69,11 +69,10 @@ export async function GET(request: NextRequest) {
         }
       } catch (err: unknown) {
         // If it's a BlobNotFoundError or token error, we just fall through to Supabase fallback
+        const errName = (err as { name?: string })?.name;
         if (
-          // @ts-ignore: Strict unknown type check
-          err.name !== "BlobNotFoundError" &&
-          // @ts-ignore: Strict unknown type check
-          err.name !== "BlobStoreNotFoundError"
+          errName !== "BlobNotFoundError" &&
+          errName !== "BlobStoreNotFoundError"
         ) {
           console.error("Vercel Blob get error:", err);
         }

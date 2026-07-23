@@ -1,13 +1,23 @@
-﻿import { handleApiError } from "@/lib/utils/api-error";
+import { handleApiError } from "@/lib/utils/api-error";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/create-client";
 import { GOVERNANCE_ROLES, hasAnyRole } from "@/lib/utils/roles";
 
 // Helper to fetch active timesheet collection period
-async function getActivePeriod(supabase: unknown) {
+async function getActivePeriod(supabase: Record<string, unknown>) {
   try {
-    // @ts-ignore: Strict unknown type check
-    const { data } = await supabase
+    const { data } = await (
+      supabase as unknown as {
+        from: (table: string) => {
+          select: (cols: string) => {
+            eq: (
+              col: string,
+              val: boolean,
+            ) => { maybeSingle: () => Promise<{ data: unknown }> };
+          };
+        };
+      }
+    )
       .from("timesheet_periods")
       .select("start_date, end_date")
       .eq("is_active", true)
@@ -61,8 +71,6 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await query.order("clock_in", { ascending: false });
 
-  if (error)
-    return handleApiError(error);
+  if (error) return handleApiError(error);
   return NextResponse.json(data);
 }
-

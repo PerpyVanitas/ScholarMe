@@ -10,13 +10,11 @@ describe("Migration API Route", () => {
   });
 
   afterEach(() => {
-    // @ts-ignore: Strict unknown type check
-    process.env.NODE_ENV = originalEnv;
+    (process.env as Record<string, string | undefined>).NODE_ENV = originalEnv;
   });
 
   it("P1-21: Returns 404 in production environment", async () => {
-    // @ts-ignore: Strict unknown type check
-    process.env.NODE_ENV = "production";
+    (process.env as Record<string, string | undefined>).NODE_ENV = "production";
 
     const req = new NextRequest(
       "http://localhost/api/admin/migrations/execute",

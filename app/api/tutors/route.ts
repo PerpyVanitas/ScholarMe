@@ -27,13 +27,13 @@ export async function GET(request: Request) {
   let filtered = tutors || [];
 
   // Filter out learners, admins, super_admins (only tutors and officers should appear)
-  filtered = filtered.filter((t: unknown) => {
-    // @ts-ignore: Strict unknown type check
-    const roleName = Array.isArray(t.profiles?.roles)
-      // @ts-ignore: Strict unknown type check
-      ? t.profiles.roles[0]?.name
-      // @ts-ignore: Strict unknown type check
-      : t.profiles?.roles?.name;
+  filtered = filtered.filter((t: Record<string, unknown>) => {
+    const profiles = t.profiles as {
+      roles?: { name?: string } | Array<{ name?: string }>;
+    } | null;
+    const roleName = Array.isArray(profiles?.roles)
+      ? profiles.roles[0]?.name
+      : profiles?.roles?.name;
     return roleName === "tutor" || roleName === "officer";
   });
 
@@ -62,7 +62,7 @@ export async function GET(request: Request) {
   const limit = parseInt(searchParams.get("limit") || "10", 10);
   const startIndex = (page - 1) * limit;
   const endIndex = page * limit;
-  
+
   const paginated = filtered.slice(startIndex, endIndex);
 
   return NextResponse.json({
@@ -71,7 +71,7 @@ export async function GET(request: Request) {
       total: filtered.length,
       page,
       limit,
-      totalPages: Math.ceil(filtered.length / limit)
-    }
+      totalPages: Math.ceil(filtered.length / limit),
+    },
   });
 }
