@@ -277,7 +277,6 @@ export default function TutorDetailPage({
                 </div>
                 {specs.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-1">
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     {specs.map((s: unknown) => (
                       <Badge
                         // @ts-expect-error: required

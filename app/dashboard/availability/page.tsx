@@ -439,7 +439,6 @@ export default function AvailabilityPage() {
                       {day}
                     </span>
                     <div className="flex flex-wrap gap-2">
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       {daySlots.map((slot: unknown) => (
                         <Badge
                           // @ts-expect-error: Strict unknown type check

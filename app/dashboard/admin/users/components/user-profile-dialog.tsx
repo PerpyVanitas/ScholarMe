@@ -138,7 +138,6 @@ export function UserProfileDialog({
                 Status
               </span>
               <span className="text-sm font-medium">
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 {(user as Record<string, unknown>).is_active ? "Active" : "Inactive"}
               </span>
             </div>
