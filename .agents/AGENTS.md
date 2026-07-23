@@ -23,8 +23,9 @@ Always review and update these documentation files before concluding your work a
 
 - **Auto-Fix Workflow:** Before finalizing a feature, making a commit, or finishing an iteration, you MUST proactively run `eslint . --fix` (or `pnpm run lint --fix` if available). This mimics the human developer "Auto-Fix on Save" behavior and prevents basic linting errors (like unescaped quotes or spacing) from breaking the CI pipeline.
 
-## Background Task Monitoring
+## Background Task Management & Monitoring
 
-- **Proactive Monitoring:** Whenever you launch a long-running background task (like a build, deployment, or heavy test suite), you MUST use the `schedule` tool to set a one-shot timer (e.g., 5-10 minutes) as a timeout.
+- **Pre-flight Cleanup:** Before starting a new long-running background task (like a build or test suite), you MUST use the `manage_task` tool with `Action: 'list'` to check for any currently running background tasks. If there is an existing task doing the exact same thing or an outdated version of the same job, use `manage_task` with `Action: 'kill'` to terminate it before launching the new one.
+- **Proactive Monitoring:** Whenever you launch a long-running background task, you MUST use the `schedule` tool to set a one-shot timer (e.g., 5-10 minutes) as a timeout.
 - **Handling Freezes:** If the timer expires and the system wakes you up without the task completing, use the `manage_task` tool with `Action: 'status'` to check if the task is making progress or is frozen.
 - **Intervention:** If the task appears frozen (no recent log updates for a long time) or stuck in an infinite loop, notify the user, investigate the logs, and consider using `Action: 'kill'` to terminate it if appropriate.
