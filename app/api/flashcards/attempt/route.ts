@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
 
     const postBodySchema = z.object({
       study_set_id: z.string().min(1, "Study set ID is required"),
-      answers: z.record(z.string(), z.string()).min(1, "Answers are required"),
+      answers: z.record(z.string(), z.string()).refine(val => Object.keys(val).length > 0, "Answers are required"),
       time_spent_seconds: z.number().int().nonnegative().optional(),
     });
 

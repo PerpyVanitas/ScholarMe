@@ -13,6 +13,8 @@ export default [
     "scripts/**",
     "tests/**",
     "public/**",
+    "playwright-report/**",
+    "test-results/**",
   ]),
   ...nextVitals,
   ...nextTypescript,
