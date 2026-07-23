@@ -65,11 +65,11 @@ export async function POST(request: NextRequest) {
       .insert(
         buildStudySetInsert(user.id, {
           title: title, // Already trimmed by Zod
-          description: description, // Already trimmed and coerced to null by Zod if empty/null/undefined
+          description: description ?? undefined, // Coerce null to undefined
           type,
           is_public,
-          source_type,
-          source_resource_id,
+          source_type: source_type ?? undefined,
+          source_resource_id: source_resource_id ?? undefined,
         }),
       )
       .select()

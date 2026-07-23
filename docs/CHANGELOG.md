@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Vertex AI Migration**: Migrated all Gemini calls from the deprecated library to `@google/genai` (Vertex AI).
   - **Document AI OCR**: Replaced the legacy regex OCR parser with Google Cloud Document AI (`expense-parser`) for receipt scanning, with a seamless Vertex AI fallback.
   - **Input Validation**: Added an automated schema checker (`scripts/check-api-schemas.sh`) to CI and generated Zod schemas for endpoints using Gemini.
+  - **API Schema Validations**: Fixed missing Zod validation in `/api/account/password`, `/api/admin/org-structure`, and `/api/quizzes/flag` endpoints to pass strict CI checks.
   - **Rate Limiting**: Extended sliding-window rate limiting to `/api/messages/conversations`, `/api/sessions`, and `/api/repositories/[id]/resources`.
   - **API Test Coverage**: Closed the test gap by writing Vitest API test suites for finance, timesheets, gamification, and messaging, and enforced coverage in `ci.yml`.
   - **Repo Hygiene & Documentation**: Purged `.idea/`, `coverage/`, and `eslint_any_errors.txt` from the repo, merged `documentation/` into `docs/`, added CI OpenAPI drift checking, updated README badges, and moved Supabase secrets to GitHub Actions secrets.

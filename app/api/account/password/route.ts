@@ -66,7 +66,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: rateCheck.message }, { status: 429 });
     }
 
-    const parseResult = await passwordChangeSchema.safeParseAsync(await request.json());
+    const parseResult = passwordChangeSchema.safeParse(await request.json());
 
     if (!parseResult.success) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });

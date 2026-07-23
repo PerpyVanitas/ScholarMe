@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
       term_end: z.string(),
     });
 
-    const parseResult = await PostBodySchema.safeParseAsync(await request.json());
+    const parseResult = PostBodySchema.safeParse(await request.json());
 
     if (!parseResult.success) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
@@ -204,7 +204,7 @@ export async function PATCH(request: NextRequest) {
       })),
     });
 
-    const parseResult = await PatchBodySchema.safeParseAsync(await request.json());
+    const parseResult = PatchBodySchema.safeParse(await request.json());
 
     if (!parseResult.success) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
