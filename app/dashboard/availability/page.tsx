@@ -1,4 +1,3 @@
-// @ts-nocheck
 /** Availability page -- tutors manage weekly schedule slots and bio. */
 "use client";
 

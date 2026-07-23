@@ -29,6 +29,7 @@ import { PageTutorialButton } from "@/components/page-tutorial-button";
 import { AnalyticsPageTracker } from "@/components/analytics-page-tracker";
 import { ChatHeadsContainer } from "@/features/messaging/components/chat-heads-container";
 import { SupportChatWidget } from "@/components/support-chat-widget";
+import { ContextualHelpButton } from "@/components/contextual-help-button";
 
 import {
   Dialog,
@@ -143,6 +144,7 @@ function DashboardLayoutContent({
             >
               <FeedbackButton />
             </div>
+            <ContextualHelpButton />
             <PageTutorialButton />
             <div
               data-tour-step="4"

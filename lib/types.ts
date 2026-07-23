@@ -514,3 +514,64 @@ export interface Friend {
   created_at: string;
   updated_at: string;
 }
+
+export interface PortfolioSettings {
+  user_id: string;
+  is_public: boolean;
+  share_token: string;
+  custom_bio?: string | null;
+  github_url?: string | null;
+  resume_url?: string | null;
+  featured_badges?: string[];
+  updated_at?: string;
+}
+
+export interface TutorEndorsement {
+  id: string;
+  tutor_id: string;
+  learner_id: string;
+  session_id?: string | null;
+  content: string;
+  is_public: boolean;
+  created_at: string;
+  tutors?: { profiles: Profile };
+  learners?: Profile;
+}
+
+export interface OfficerHandoffNote {
+  id: string;
+  position_key: string;
+  term_id?: string | null;
+  author_id: string;
+  content: string;
+  key_contacts?: string | null;
+  created_at: string;
+  author?: Profile;
+}
+
+export interface MentorshipPreference {
+  user_id: string;
+  role_type: "mentor" | "mentee" | "both";
+  is_active: boolean;
+  interests?: string[];
+  created_at: string;
+  profiles?: Profile;
+}
+
+export interface MilestoneEvent {
+  id: string;
+  user_id: string;
+  milestone_key: string;
+  achieved_at: string;
+}
+
+export interface InstitutionalWikiDoc {
+  id: string;
+  title: string;
+  category: "SOP" | "Governance" | "Tutor Manual" | "FAQ";
+  content: string;
+  access_role: UserRole;
+  created_at: string;
+  updated_at: string;
+}
+

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ==========================================================================
  * TUTOR DETAIL PAGE - View Profile & Book Session
@@ -374,16 +373,12 @@ export default function TutorDetailPage({
                             <SelectValue placeholder="Select a subject" />
                           </SelectTrigger>
                           <SelectContent>
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            {specs.map((s: unknown) => (
+                            {(specs as Array<{ specializations?: { id?: string; name?: string } }>).map((s) => (
                               <SelectItem
-                                // @ts-ignore
-                                key={s.specializations.id}
-                                // @ts-ignore
-                                value={s.specializations.id}
+                                key={s.specializations?.id || s.specializations?.name}
+                                value={s.specializations?.id || ""}
                               >
-                                // @ts-ignore
-                                {s.specializations.name}
+                                {s.specializations?.name}
                               </SelectItem>
                             ))}
                           </SelectContent>

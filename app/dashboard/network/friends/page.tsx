@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Metadata } from "next";
@@ -19,6 +18,28 @@ export const metadata: Metadata = {
   description: "Manage your friends and friend requests.",
 };
 
+interface FriendProfileRelation {
+  id?: string;
+  full_name?: string | null;
+  avatar_url?: string | null;
+  membership_classification?: string | null;
+}
+
+interface PendingRequestItem {
+  id: string;
+  user_id1: string;
+  user_id2: string;
+  profiles?: FriendProfileRelation | null;
+}
+
+interface FriendCardItem {
+  id?: string;
+  friend_id: string;
+  full_name?: string | null;
+  avatar_url?: string | null;
+  membership_classification?: string | null;
+}
+
 export default async function FriendsPage() {
   const supabase = await createClient();
   const {
@@ -29,7 +50,7 @@ export default async function FriendsPage() {
     redirect("/auth/login");
   }
 
-  const { data: pendingRequests } = await supabase
+  const { data: rawPending } = await supabase
     .from("friends")
     .select(
       `
@@ -41,6 +62,8 @@ export default async function FriendsPage() {
     )
     .eq("user_id2", user.id)
     .eq("status", "pending");
+
+  const pendingRequests = (rawPending || []) as unknown as PendingRequestItem[];
 
   const { data: friends1 } = await supabase
     .from("friends")
@@ -78,21 +101,23 @@ export default async function FriendsPage() {
     .eq("user_id1", user.id)
     .eq("status", "blocked");
 
-  const acceptedFriends = [
-    // @ts-ignore: Strict unknown type check
-    ...(friends1 || []).map((f: unknown) => ({ ...f.profiles, friend_id: f.id })),
-    // @ts-ignore: Strict unknown type check
-    ...(friends2 || []).map((f: unknown) => ({ ...f.profiles, friend_id: f.id })),
+  const acceptedFriends: FriendCardItem[] = [
+    ...((friends1 || []) as unknown as Array<{ id: string; profiles?: FriendProfileRelation }>).map((f) => ({
+      ...(f.profiles || {}),
+      friend_id: f.id,
+    })),
+    ...((friends2 || []) as unknown as Array<{ id: string; profiles?: FriendProfileRelation }>).map((f) => ({
+      ...(f.profiles || {}),
+      friend_id: f.id,
+    })),
   ];
 
-  const blockedUsers = (blockedFriends || []).map((f: unknown) => ({
-    // @ts-ignore: Strict unknown type check
-    ...f.profiles,
-    // @ts-ignore: Strict unknown type check
+  const blockedUsers: FriendCardItem[] = ((blockedFriends || []) as unknown as Array<{ id: string; profiles?: FriendProfileRelation }>).map((f) => ({
+    ...(f.profiles || {}),
     friend_id: f.id,
   }));
 
-  const getInitials = (name: string) => {
+  const getInitials = (name?: string | null) => {
     return (
       name
         ?.split(" ")
@@ -118,58 +143,55 @@ export default async function FriendsPage() {
     "use server";
     const requestId = formData.get("requestId") as string;
     const supabase = await createClient();
-    await supabase.from("friends").delete().eq("id", requestId);
+    await supabase
+      .from("friends")
+      .delete()
+      .eq("id", requestId);
     revalidatePath("/dashboard/friends");
   };
 
   return (
-    <div className="flex-1 p-6 lg:p-8 space-y-8 w-full max-w-4xl mx-auto min-h-[calc(100vh-3.5rem)]">
-      <div>
+    <div className="space-y-6 max-w-5xl mx-auto">
+      <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">Friends</h1>
-        <p className="text-muted-foreground mt-1">Manage your connections.</p>
+        <p className="text-muted-foreground">
+          Manage your peer connections and friend requests.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-4">
           <h2 className="text-xl font-semibold flex items-center justify-between">
-            Friend Requests
-            {pendingRequests && pendingRequests.length > 0 && (
-              <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">
-                {pendingRequests.length}
-              </span>
-            )}
+            Pending Requests
+            <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full">
+              {pendingRequests.length}
+            </span>
           </h2>
 
-          {pendingRequests && pendingRequests.length > 0 ? (
+          {pendingRequests.length > 0 ? (
             <div className="space-y-3">
-              {pendingRequests.map((req: unknown) => (
-                // @ts-ignore: Strict unknown type check
+              {pendingRequests.map((req) => (
                 <Card key={req.id}>
                   <CardContent className="p-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <Avatar>
-                        // @ts-ignore: Strict unknown type check
                         <AvatarImage src={req.profiles?.avatar_url || ""} />
                         <AvatarFallback>
-                          // @ts-ignore: Strict unknown type check
                           {getInitials(req.profiles?.full_name)}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        // @ts-ignore: Strict unknown type check
-                        <p className="font-medium">{req.profiles?.full_name}</p>
+                        <p className="font-medium">{req.profiles?.full_name || "Peer Student"}</p>
                         <p className="text-xs text-muted-foreground capitalize">
-                          // @ts-ignore: Strict unknown type check
                           {req.profiles?.membership_classification?.replace(
                             /_/g,
                             " ",
-                          )}
+                          ) || "Member"}
                         </p>
                       </div>
                     </div>
                     <div className="flex gap-2">
                       <form action={handleAccept}>
-                        // @ts-ignore: Strict unknown type check
                         <input type="hidden" name="requestId" value={req.id} />
                         <Button
                           size="icon"
@@ -180,7 +202,6 @@ export default async function FriendsPage() {
                         </Button>
                       </form>
                       <form action={handleDecline}>
-                        // @ts-ignore: Strict unknown type check
                         <input type="hidden" name="requestId" value={req.id} />
                         <Button
                           size="icon"
@@ -212,32 +233,26 @@ export default async function FriendsPage() {
 
           {acceptedFriends.length > 0 ? (
             <div className="space-y-3">
-              {acceptedFriends.map((friend: unknown) => (
-                // @ts-ignore: Strict unknown type check
-                <Card key={friend.id}>
+              {acceptedFriends.map((friend) => (
+                <Card key={friend.friend_id}>
                   <CardContent className="p-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <Avatar>
-                        // @ts-ignore: Strict unknown type check
                         <AvatarImage src={friend.avatar_url || ""} />
                         <AvatarFallback>
-                          // @ts-ignore: Strict unknown type check
                           {getInitials(friend.full_name)}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        // @ts-ignore: Strict unknown type check
-                        <p className="font-medium">{friend.full_name}</p>
+                        <p className="font-medium">{friend.full_name || "Honor Scholar"}</p>
                         <p className="text-xs text-muted-foreground capitalize">
-                          // @ts-ignore: Strict unknown type check
-                          {friend.membership_classification?.replace(/_/g, " ")}
+                          {friend.membership_classification?.replace(/_/g, " ") || "Member"}
                         </p>
                       </div>
                     </div>
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline" asChild>
-                        // @ts-ignore: Strict unknown type check
-                        <a href={`/dashboard/messages?userId=${friend.id}`}>
+                        <a href={`/dashboard/messages?recipientId=${friend.id}`}>
                           <MessageSquare className="h-4 w-4 mr-2" /> Message
                         </a>
                       </Button>
@@ -245,7 +260,6 @@ export default async function FriendsPage() {
                         <input
                           type="hidden"
                           name="requestId"
-                          // @ts-ignore: Strict unknown type check
                           value={friend.friend_id}
                         />
                         <Button
@@ -264,8 +278,7 @@ export default async function FriendsPage() {
             </div>
           ) : (
             <p className="text-sm text-muted-foreground border rounded-lg p-8 text-center bg-card">
-              You haven't added any friends yet. Check out the Users Directory
-              to connect with others!
+              You haven't added any friends yet. Check out the Users Directory to connect with others!
             </p>
           )}
 
@@ -279,22 +292,18 @@ export default async function FriendsPage() {
               </h2>
 
               <div className="space-y-3">
-                {blockedUsers.map((blockedUser: unknown) => (
-                  // @ts-ignore: Strict unknown type check
-                  <Card key={blockedUser.id} className="opacity-70 grayscale">
+                {blockedUsers.map((blockedUser) => (
+                  <Card key={blockedUser.friend_id} className="opacity-70 grayscale">
                     <CardContent className="p-4 flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3">
                         <Avatar>
-                          // @ts-ignore: Strict unknown type check
                           <AvatarImage src={blockedUser.avatar_url || ""} />
                           <AvatarFallback>
-                            // @ts-ignore: Strict unknown type check
                             {getInitials(blockedUser.full_name)}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          // @ts-ignore: Strict unknown type check
-                          <p className="font-medium">{blockedUser.full_name}</p>
+                          <p className="font-medium">{blockedUser.full_name || "User"}</p>
                         </div>
                       </div>
                       <div className="flex gap-2">
@@ -302,7 +311,6 @@ export default async function FriendsPage() {
                           <input
                             type="hidden"
                             name="requestId"
-                            // @ts-ignore: Strict unknown type check
                             value={blockedUser.friend_id}
                           />
                           <Button

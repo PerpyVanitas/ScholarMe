@@ -1,8 +1,8 @@
 import { format } from "date-fns";
 import type { Poll } from "@/lib/types";
 
-/** True when poll's end_date is still in the future */
-export function isPollActive(poll: Poll): boolean {
+/** True when poll's end_date is still in the future and not closed */
+export function isPollActive(poll: { end_date: string; status?: string }): boolean {
   return new Date(poll.end_date) > new Date() && poll.status !== "closed";
 }
 

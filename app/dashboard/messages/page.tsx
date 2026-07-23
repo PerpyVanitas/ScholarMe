@@ -13,10 +13,11 @@ export const metadata = {
 export default async function MessagesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ conversationId?: string }>;
+  searchParams: Promise<{ conversationId?: string; recipientId?: string }>;
 }) {
   const resolvedParams = await searchParams;
-  const defaultConversationId = resolvedParams.conversationId;
+  let defaultConversationId = resolvedParams.conversationId;
+  const recipientId = resolvedParams.recipientId;
   const supabase = await createClient();
 
   const {
@@ -25,6 +26,27 @@ export default async function MessagesPage({
 
   if (!user) {
     redirect("/auth/login");
+  }
+
+  // If recipientId is provided and no conversationId, check for existing 1-on-1 conversation
+  if (!defaultConversationId && recipientId && recipientId !== user.id) {
+    const { data: userConvs } = await supabase
+      .from("conversation_participants")
+      .select("conversation_id")
+      .eq("profile_id", user.id);
+
+    const { data: recipientConvs } = await supabase
+      .from("conversation_participants")
+      .select("conversation_id")
+      .eq("profile_id", recipientId);
+
+    if (userConvs && recipientConvs) {
+      const userConvSet = new Set(userConvs.map((c) => c.conversation_id));
+      const sharedConvId = recipientConvs.find((c) => userConvSet.has(c.conversation_id))?.conversation_id;
+      if (sharedConvId) {
+        defaultConversationId = sharedConvId;
+      }
+    }
   }
 
   // Fetch the logged-in user's profile with their role

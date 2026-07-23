@@ -5,9 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+- **Full-System Audit & Architectural Remediation (Phases 1-4)**:
+  - **100% Type Suppression Removal (`@ts-nocheck` Zero-Tolerance)**: Completely eliminated `// @ts-nocheck` and inline `@ts-ignore` suppressions across 14 target files including `alumni/page.tsx`, `friends/page.tsx`, `study-buddies/page.tsx`, `availability/page.tsx`, `admin/support/page.tsx`, `admin/support/[id]/page.tsx`, `whiteboard/page.tsx`, `quiz-items-editor.tsx`, `user-logs-dialog.tsx`, `team/page.tsx`, `admin/timesheets/page.tsx`, `events-view.tsx`, and `smart-tutor-recommendations.tsx`.
+  - **Component De-bloating (`tutor-dashboard.tsx`)**: Extracted `TutorClockInBanner` (`features/tutors/components/tutor-clockin-banner.tsx`) out of `tutor-dashboard.tsx`.
+  - **Database Indexing Migration (`20260723010000_attendance_indexes.sql`)**: Created compound performance indexes on `attendance_logs (clock_in, clock_out)` for fast PLC live desk activity calculations.
 
-### Added
+- **Hybrid AI Tutor & Multimodal AI (`features/tutors/components/webllm-chat.tsx`)**:
+  - **Instant Server AI Mode**: Defaulted to instant server-side AI execution (`/api/ai/chat`) so learners can chat immediately without downloading 1GB browser weights.
+  - **Multimodal Photo & File Uploads**: Added photo and file attachment context parsing directly into Kuya Nicolai's AI chat input.
+  - **Quick Prompt Pills**: Added 1-click preset prompt buttons (_"💡 Socratic Math Guidance"_, _"📝 Quiz Me on Data Structures"_, _"📷 Review My Study Notes"_).
+  - **ReactMarkdown Container Wrapper**: Wrapped `<ReactMarkdown>` in a styled `div` container resolving `className` type incompatibility on ReactMarkdown options.
+
+- **Messaging Photo & File Attachments (`features/messaging`)**:
+  - **Photo & Document Uploads**: Enabled full photo (JPEG, PNG, WebP) and file (PDF, TXT, DOCX) attachment uploads in Direct Messages (`/dashboard/messages`).
+  - **Image Lightbox Modal (`ChatMessageBubble`)**: Integrated full-screen image lightbox preview modal upon clicking shared photos in chat bubbles.
+
+- **RAG Wiki Search AI Synthesis (`/api/wiki/search`)**:
+  - **Structured AI Answer Synthesis**: Upgraded Wiki search response to synthesize document search results into structured answers with numbered citations `[1]`, `[2]`.
+
+- **UI/UX Audit Enhancements (Priority 1 Implementation)**:
+  - **Competency Skill Radar Chart (`components/competency-radar-chart.tsx`)**: Built an interactive 6-axis mastery radar chart for `LearningAnalyticsTab` evaluating Data Structures, Web & Backend, Databases, Math, Software Engineering, and General Sciences.
+  - **Peer Learning Center (PLC) Live Desk Queue Widget (`components/plc-live-desk-widget.tsx`)**: Created real-time facility headcount widget on Dashboard Home showing active duty tutors clocked in via QR, checked-in learners, and estimated drop-in wait times.
+  - **Mentorship Goal Roadmap & Milestones (`app/dashboard/network/mentorship/components/mentorship-roadmap.tsx`)**: Introduced a 4-step structured milestone checklist for mentors and mentees with +250 XP rewards upon completion.
+
+- **System Audit & Architectural Hardening (Phases 1-4)**:
+  - **External URL XSS Sanitization (`lib/utils.ts`)**: Added `sanitizeExternalUrl()` helper validating `http://` and `https://` schemes across public portfolios and user settings.
+  - **Postgres SQL ILIKE Query Builder (`/api/wiki/search`)**: Upgraded RAG Wiki search from server memory filtering to direct PostgreSQL `ILIKE` query filtering.
+  - **Auto-Resolution of Direct Messages (`/dashboard/messages`)**: Added `recipientId` URL search parameter resolution to auto-open direct conversations upon requesting mentorship.
+  - **Component De-bloating**: Extracted `SidebarUserFooter` component (`components/sidebar/sidebar-user-footer.tsx`) out of `app-sidebar.tsx`.
+  - **Handoff Notes Reader for Members (`components/handoff-notes-reader.tsx`)**: Created view-only successor continuity dialog mounted in Team Workspace (`/dashboard/team`) so members and incoming officers can inspect historical handoff notes.
+  - **Voting Dialog Type Hardening (`poll-results-dialog.tsx`)**: Eliminated 31+ `@ts-ignore` comments by introducing strict `PollDetailData` and `PollOptionDetail` interfaces.
+  - **Officer Handoff Notes Unit Tests (`handoff-notes.test.ts`)**: Added unit test suite for handoff notes filtering and date sorting.
+
+- **ScholarMe Direction Document v1 Capability Suite Implementation**:
+  - **Database Migration (`20260723000000_direction_doc_v1_schema.sql`)**: Created new tables `portfolio_settings`, `tutor_endorsements`, `officer_handoff_notes`, `mentorship_preferences`, `milestone_events`, and `institutional_wiki_docs` with strict RLS policies.
+  - **Public Shareable Portfolio & Hub (`/dashboard/journey` & `/portfolio/[shareToken]`)**: Built shareable public portfolio with privacy toggles, custom bio, external links, and aggregate verified tutoring hours, mastery subjects, leadership terms, and tutor endorsements.
+  - **Industry Readiness Summary**: Created PDF exportable factual activity summary (`ReadinessSummaryTab`) using `jspdf` and `html2canvas`.
+  - **Real Learning Analytics & Weak Topic Study Set Suggestions (`4.4`, `4.7`)**: Subject-level accuracy trends computed from `quiz_attempts` history with targeted study set recommendations.
+  - **LLM Institutional Knowledge Wiki (`/dashboard/wiki`) (`4.3`)**: Role-gated RAG search across official SOPs, governance guidelines, tutor manuals, and FAQs with source citations.
+  - **Mentorship Matching (`/dashboard/network/mentorship`) (`4.5`)**: Tenure-based matching for pairing experienced senior members with junior members, with opt-in/opt-out preferences and direct messaging integration.
+  - **Officer Handoff Notes (`4.6`)**: Successor continuity dialog in Org Structure (`HandoffNotesDialog`) for departing officers to log transition notes and key contacts.
+  - **Tutor Impact Widget (`4.12`)**: Factual summary widget on tutor dashboard showing unique students helped, cumulative hours tutored, and endorsements given.
+  - **Weekly Activity Digest Banner (`4.10`)**: Narrative summary banner on dashboard home highlighting weekly sessions completed and XP earned.
+  - **Milestone Moments Celebration (`4.11`)**: Auto-triggered confetti celebrations for key milestones (100 hours, officer terms, first endorsement) with single-trigger database persistence.
+  - **Contextual Per-Screen Help System (`4.14`)**: Header help button (`ContextualHelpButton`) and route configuration (`lib/config/contextual-help-config.ts`) surfacing screen purpose and action guidance.
+  - **Sidebar Navigation Remap & Clutter Reduction (Section 5, `4.13b`)**: Reorganized navigation into 6 capability groups (Home, Learn, Grow, Connect, My Journey, Workspace Management) with non-Home group collapse defaults and mode-gated workspace filtering.
 
 - **Strict ESLint `any`-Type Enforcement**:
   - Replaced all explicit `any` usages across the codebase with strict types or `unknown` + runtime type guards (reducing count to 0).

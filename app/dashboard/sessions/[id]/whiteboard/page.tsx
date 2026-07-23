@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,7 +7,6 @@ import { createClient } from "@/lib/supabase/client";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-// Excalidraw must be imported dynamically to prevent SSR errors
 const Excalidraw = dynamic(
   async () => (await import("@excalidraw/excalidraw")).Excalidraw,
   {
@@ -21,17 +19,28 @@ const Excalidraw = dynamic(
   },
 );
 
+interface WhiteboardSessionData {
+  id: string;
+  tutors?: {
+    profiles?: { full_name?: string | null } | null;
+  } | null;
+  profiles?: {
+    full_name?: string | null;
+  } | null;
+}
+
 export default function WhiteboardPage() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = params?.id as string;
   const router = useRouter();
-  const [sessionData, setSessionData] = useState<unknown>(null);
+  const [sessionData, setSessionData] = useState<WhiteboardSessionData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
+      if (!id) return;
       const supabase = createClient();
 
-      // Verify session exists and user has access
       const { data } = await supabase
         .from("sessions")
         .select("*, tutors(*, profiles(*)), profiles!learner_id(*)")
@@ -39,7 +48,7 @@ export default function WhiteboardPage() {
         .single();
 
       if (data) {
-        setSessionData(data);
+        setSessionData(data as unknown as WhiteboardSessionData);
       }
       setLoading(false);
     }
@@ -67,7 +76,6 @@ export default function WhiteboardPage() {
 
   return (
     <div className="flex h-screen flex-col w-full absolute inset-0 z-50 bg-background">
-      {/* Top Header Bar */}
       <div className="flex h-14 items-center justify-between border-b px-4 shrink-0 bg-card">
         <div className="flex items-center gap-4">
           <Button
@@ -80,16 +88,13 @@ export default function WhiteboardPage() {
           <div className="flex flex-col">
             <span className="font-semibold text-sm">Session Whiteboard</span>
             <span className="text-xs text-muted-foreground">
-              // @ts-ignore
-              {sessionData.tutors?.profiles?.full_name} &{" "}
-              // @ts-ignore
-              {sessionData.profiles?.full_name}
+              {sessionData.tutors?.profiles?.full_name || "Tutor"} &{" "}
+              {sessionData.profiles?.full_name || "Learner"}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Excalidraw Canvas */}
       <div className="flex-1 w-full relative">
         <Excalidraw
           theme="dark"

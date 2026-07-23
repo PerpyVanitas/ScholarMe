@@ -1,5 +1,4 @@
-// @ts-nocheck
-﻿import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
   CardContent,
@@ -26,6 +25,7 @@ import {
   ListChecks,
 } from "lucide-react";
 import { getRoleName, TEAMWORK_ROLES, hasAnyRole } from "@/lib/utils/roles";
+import { HandoffNotesReader } from "@/components/handoff-notes-reader";
 
 const STATUS_CONFIG = {
   todo: {
@@ -72,22 +72,41 @@ export default async function TeamDashboard() {
     redirect("/dashboard");
   }
 
-  const { data: tasks } = await supabase
+  const { data: rawTasks } = await supabase
     .from("team_tasks")
     .select("*, profiles(full_name)")
     .order("created_at", { ascending: false });
 
-  const { data: schedules } = await supabase
+  const tasks = (rawTasks || []) as Array<{
+    id: string;
+    title: string;
+    description?: string | null;
+    status: StatusKey;
+    assigned_to?: string | null;
+    created_at: string;
+    profiles?: { full_name?: string | null } | null;
+  }>;
+
+  const { data: rawSchedules } = await supabase
     .from("team_schedules")
     .select("*, profiles(full_name)")
     .order("date", { ascending: true });
+
+  const schedules = (rawSchedules || []) as Array<{
+    id: string;
+    user_id: string;
+    date: string;
+    start_time: string;
+    end_time: string;
+    notes?: string | null;
+    profiles?: { full_name?: string | null } | null;
+  }>;
 
   const now = new Date();
   const taskCounts = columns.reduce(
     (acc, col) => ({
       ...acc,
-      // @ts-ignore: Strict unknown type check
-      [col]: tasks?.filter((t: unknown) => t.status === col).length ?? 0,
+      [col]: tasks.filter((t) => t.status === col).length,
     }),
     {} as Record<StatusKey, number>,
   );
@@ -95,11 +114,17 @@ export default async function TeamDashboard() {
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
       {/* Header */}
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold tracking-tight">Team Workspace</h1>
-        <p className="text-muted-foreground text-sm">
-          Manage committee tasks, track deliverables, and log team availability.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-bold tracking-tight">Team Workspace</h1>
+          <p className="text-muted-foreground text-sm">
+            Manage committee tasks, track deliverables, and log team availability.
+          </p>
+        </div>
+        <HandoffNotesReader
+          positionKey={roleName.toLowerCase().replace(/\s+/g, "_")}
+          positionTitle={roleName}
+        />
       </div>
 
       {/* Summary cards */}
@@ -168,8 +193,7 @@ export default async function TeamDashboard() {
             {columns.map((col) => {
               const cfg = STATUS_CONFIG[col];
               const colTasks =
-                // @ts-ignore: Strict unknown type check
-                tasks?.filter((t: unknown) => t.status === col) ?? [];
+                (tasks as Array<{ id: string; deliverable: string; deadline?: string; status: string; profiles?: { full_name?: string } }>)?.filter((t) => t.status === col) ?? [];
               return (
                 <div key={col} className="flex flex-col gap-3">
                   <div className="flex items-center gap-2 px-1">
@@ -186,40 +210,30 @@ export default async function TeamDashboard() {
                         No tasks
                       </div>
                     ) : (
-                      colTasks.map((t: unknown) => {
+                      colTasks.map((t) => {
                         const isOverdue =
-                          // @ts-ignore: Strict unknown type check
                           t.deadline &&
-                          // @ts-ignore: Strict unknown type check
                           new Date(t.deadline) < now &&
-                          // @ts-ignore: Strict unknown type check
                           t.status !== "done";
                         return (
                           <Card
-                            // @ts-ignore: Strict unknown type check
                             key={t.id}
                             className="border-border/60 shadow-sm"
                           >
                             <CardContent className="p-3">
                               <p className="text-sm font-medium leading-snug">
-                                // @ts-ignore: Strict unknown type check
                                 {t.deliverable}
                               </p>
-                              // @ts-ignore: Strict unknown type check
                               {t.profiles?.full_name && (
                                 <p className="text-xs text-muted-foreground mt-0.5">
-                                  // @ts-ignore: Strict unknown type check
                                   {t.profiles.full_name}
                                 </p>
                               )}
-                              // @ts-ignore: Strict unknown type check
                               {t.deadline && (
                                 <p
                                   className={`text-xs mt-1 ${isOverdue ? "text-destructive font-medium" : "text-muted-foreground"}`}
                                 >
-                                  Due:{" "}
-                                  // @ts-ignore: Strict unknown type check
-                                  {new Date(t.deadline).toLocaleDateString()}
+                                  Due: {new Date(t.deadline).toLocaleDateString()}
                                   {isOverdue && " · Overdue"}
                                 </p>
                               )}
@@ -228,7 +242,6 @@ export default async function TeamDashboard() {
                                   <form
                                     action={async () => {
                                       "use server";
-                                      // @ts-ignore: Strict unknown type check
                                       await updateTaskStatus(t.id, "done");
                                     }}
                                   >
@@ -246,7 +259,6 @@ export default async function TeamDashboard() {
                                     action={async () => {
                                       "use server";
                                       await updateTaskStatus(
-                                        // @ts-ignore: Strict unknown type check
                                         t.id,
                                         "in_progress",
                                       );
@@ -265,7 +277,6 @@ export default async function TeamDashboard() {
                                   <form
                                     action={async () => {
                                       "use server";
-                                      // @ts-ignore: Strict unknown type check
                                       await updateTaskStatus(t.id, "review");
                                     }}
                                   >
@@ -326,13 +337,10 @@ export default async function TeamDashboard() {
               </Card>
             ) : (
               <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                {schedules.map((s: unknown) => {
-                  // @ts-ignore: Strict unknown type check
+                {(schedules as Array<{ id: string; date: string; activity: string; profiles?: { full_name?: string } }>).map((s) => {
                   const isPast = new Date(s.date) < now;
                   return (
                     <Card
-                      // @ts-ignore: Strict unknown type check
                       key={s.id}
                       className={`border-border/60 ${isPast ? "opacity-60" : ""}`}
                     >
@@ -342,15 +350,12 @@ export default async function TeamDashboard() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium">
-                            // @ts-ignore: Strict unknown type check
                             {s.profiles?.full_name || "Unknown"}
                           </p>
                           <p className="text-xs text-muted-foreground mt-0.5 break-words">
-                            // @ts-ignore: Strict unknown type check
                             {s.activity}
                           </p>
                           <p className="text-xs font-medium mt-1 text-primary">
-                            // @ts-ignore: Strict unknown type check
                             {new Date(s.date).toLocaleDateString("en-US", {
                               weekday: "short",
                               year: "numeric",

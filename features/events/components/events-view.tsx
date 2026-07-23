@@ -1,10 +1,10 @@
-// @ts-nocheck
 import { CalendarDays } from "lucide-react";
 import { addMonths, endOfMonth, startOfMonth, subMonths } from "date-fns";
 import { AnnouncementCalendar } from "@/features/events/components/announcement-calendar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getEvents } from "@/features/events/api/actions";
 import { CalendarActions } from "@/app/dashboard/calendar/components/calendar-actions";
+import type { FacilityEvent } from "@/lib/types";
 
 interface EventsViewProps {
   title: string;
@@ -23,12 +23,12 @@ export async function EventsView({
   const monthStart = subMonths(startOfMonth(now), 1);
   const monthEnd = addMonths(endOfMonth(now), 1);
 
-  let initialEvents: unknown[] = [];
+  let initialEvents: FacilityEvent[] = [];
   try {
-    initialEvents = await getEvents(monthStart, monthEnd);
+    const data = await getEvents(monthStart, monthEnd);
+    initialEvents = (data || []) as FacilityEvent[];
   } catch (error) {
     console.error("Error fetching events:", error);
-    // Server component cannot toast, we log instead.
   }
 
   return (
@@ -50,7 +50,6 @@ export async function EventsView({
         />
       )}
 
-      // @ts-ignore: Strict unknown type check
       <AnnouncementCalendar initialEvents={initialEvents} />
     </div>
   );

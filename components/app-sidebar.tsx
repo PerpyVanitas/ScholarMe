@@ -86,53 +86,61 @@ import { HonorSocietyLogo } from "@/components/honsoc-logo";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { TosLink, PrivacyLink } from "@/components/legal-modals";
+import { SidebarUserFooter } from "@/components/sidebar/sidebar-user-footer";
 
-interface AppSidebarProps {
+export interface AppSidebarProps {
   profile: Profile;
   role: UserRole;
   notificationCount: number;
 }
 
+export interface SidebarNavItem {
+  title: string;
+  href?: string;
+  icon: LucideIcon;
+  subItems?: { title: string; href: string; icon?: LucideIcon }[];
+}
+
+export interface SidebarNavGroup {
+  label: string;
+  items: SidebarNavItem[];
+}
+
 function getNavItems(role: UserRole, profile: Profile) {
-  // Core items available to everyone
-  const coreItems = [
+  // 1. Home
+  const homeItems = [
     { title: "Dashboard", href: "/dashboard/home", icon: LayoutDashboard },
     { title: "Profile", href: "/dashboard/profile", icon: Settings },
     { title: "Notifications", href: "/dashboard/notifications", icon: Bell },
   ];
 
-  // Study Tools
-  const studyItems = [
+  // 2. Learn
+  const learnItems = [
     { title: "Study Sets", href: "/dashboard/study-sets", icon: Layers },
     { title: "AI Tutor", href: "/dashboard/ai-tutor", icon: Bot },
+    { title: "Library & Resources", href: "/dashboard/resources", icon: BookOpen },
+    { title: "Institutional Wiki", href: "/dashboard/wiki", icon: FileText },
   ];
 
-  // Library & Resources
-  const libraryItems = [
-    {
-      title: "Library & Resources",
-      href: "/dashboard/resources",
-      icon: BookOpen,
-    },
-  ];
-
-  // Community items depending on role
-  const communityItems = [
+  // 3. Grow
+  const growItems = [
+    { title: "Tutoring Sessions", href: "/dashboard/sessions", icon: Calendar },
     { title: "Events Calendar", href: "/dashboard/calendar", icon: Calendar },
+    { title: "Leaderboard", href: "/dashboard/leaderboard", icon: Trophy },
+  ];
+
+  // 4. Connect
+  const connectItems = [
     { title: "People & Network", href: "/dashboard/network", icon: Network },
-    ...(role === "learner"
-      ? [{ title: "My Sessions", href: "/dashboard/sessions", icon: Calendar }]
-      : [
-          {
-            title: role === "tutor" ? "Tutoring Sessions" : "Sessions",
-            href: "/dashboard/sessions",
-            icon: Calendar,
-          },
-        ]),
+    { title: "Mentorship Matching", href: "/dashboard/network/mentorship", icon: Users },
     { title: "Community Hub", href: "/dashboard/forums", icon: MessageSquare },
     { title: "My Messages", href: "/dashboard/messages", icon: MessageSquare },
     { title: "Voting", href: "/dashboard/voting", icon: Vote },
-    { title: "Leaderboard", href: "/dashboard/leaderboard", icon: Trophy },
+  ];
+
+  // 5. My Journey
+  const journeyItems = [
+    { title: "My Journey", href: "/dashboard/journey", icon: Globe },
   ];
 
   const usersItems = [];
@@ -140,7 +148,7 @@ function getNavItems(role: UserRole, profile: Profile) {
   const financeItems = [];
   const systemItems = [];
 
-  // 1. Users & Access
+  // 6. Workspace Management
   if (hasAnyRole(role, EXECUTIVE_ROLES) || hasAnyRole(role, ADMIN_ROLES)) {
     usersItems.push({
       title: "User Management",
@@ -163,7 +171,6 @@ function getNavItems(role: UserRole, profile: Profile) {
     );
   }
 
-  // 2. Academic & Tutoring
   if (hasAnyRole(role, TUTOR_ROLES)) {
     academicItems.push(
       { title: "My Timesheet", href: "/dashboard/timesheet", icon: Timer },
@@ -190,7 +197,6 @@ function getNavItems(role: UserRole, profile: Profile) {
     );
   }
 
-  // 3. Financial & Operations
   if (hasAnyRole(role, FINANCE_VIEW_ROLES)) {
     financeItems.push(
       {
@@ -237,7 +243,6 @@ function getNavItems(role: UserRole, profile: Profile) {
     );
   }
 
-  // 4. System Settings
   if (hasAnyRole(role, EXECUTIVE_ROLES) || hasAnyRole(role, ADMIN_ROLES)) {
     systemItems.push({
       title: "Admin Dashboard",
@@ -279,15 +284,7 @@ function getNavItems(role: UserRole, profile: Profile) {
     }
   }
 
-  const managementGroups: {
-    label: string;
-    items: {
-      title: string;
-      href?: string;
-      icon: LucideIcon;
-      subItems?: { title: string; href: string; icon?: LucideIcon }[];
-    }[];
-  }[] = [];
+  const managementGroups: SidebarNavGroup[] = [];
 
   const adminCategories = [];
   if (usersItems.length > 0) {
@@ -321,16 +318,17 @@ function getNavItems(role: UserRole, profile: Profile) {
 
   if (adminCategories.length > 0) {
     managementGroups.push({
-      label: "Management Tools",
+      label: "Workspace Management",
       items: adminCategories,
     });
   }
 
-  const learnerGroups: typeof managementGroups = [
-    { label: "Core", items: coreItems },
-    { label: "Study Tools", items: studyItems },
-    { label: "Library & Resources", items: libraryItems },
-    { label: "Community & Interaction", items: communityItems },
+  const learnerGroups: SidebarNavGroup[] = [
+    { label: "Home", items: homeItems },
+    { label: "Learn", items: learnItems },
+    { label: "Grow", items: growItems },
+    { label: "Connect", items: connectItems },
+    { label: "My Journey", items: journeyItems },
   ];
 
   return {
@@ -370,7 +368,7 @@ export function AppSidebar({
   const initials = profile?.full_name
     ? profile.full_name
         .split(" ")
-        .map((n) => n[0])
+        .map((n: string) => n[0])
         .join("")
         .toUpperCase()
         .slice(0, 2)
@@ -600,7 +598,8 @@ export function AppSidebar({
                         href: string;
                         icon: LucideIcon;
                       } | null = null;
-                      for (const g of learnerGroups.concat(managementGroups)) {
+                      const allNavGroups: SidebarNavGroup[] = learnerGroups.concat(managementGroups);
+                      for (const g of allNavGroups) {
                         for (const i of g.items) {
                           if (i.href === favHref) {
                             favItem = {
@@ -612,10 +611,10 @@ export function AppSidebar({
                           }
                           if (i.subItems) {
                             const sub = i.subItems.find(
-                              (s) => s.href === favHref,
+                              (s: { title: string; href: string; icon?: LucideIcon }) => s.href === favHref,
                             );
                             if (sub) {
-                              favItem = { ...sub, icon: sub.icon || i.icon };
+                              favItem = { title: sub.title, href: sub.href, icon: sub.icon || i.icon };
                               break;
                             }
                           }
@@ -675,10 +674,10 @@ export function AppSidebar({
                 <CollapsibleContent>
                   <SidebarGroupContent>
                     <SidebarMenu>
-                      {group.items.map((item) => {
+                      {group.items.map((item: SidebarNavItem) => {
                         if (item.subItems) {
                           const isSubActive = item.subItems.some(
-                            (sub) =>
+                            (sub: { href: string }) =>
                               pathname === sub.href ||
                               pathname.startsWith(sub.href + "/"),
                           );
@@ -698,7 +697,7 @@ export function AppSidebar({
                                 </CollapsibleTrigger>
                                 <CollapsibleContent>
                                   <SidebarMenuSub>
-                                    {item.subItems.map((subItem) => (
+                                    {item.subItems.map((subItem: { title: string; href: string }) => (
                                       <SidebarMenuSubItem key={subItem.title}>
                                         <SidebarMenuSubButton
                                           asChild
@@ -818,67 +817,7 @@ export function AppSidebar({
         )}
       </SidebarContent>
 
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton size="lg">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src={getAvatarUrl(profile?.avatar_url)}
-                      alt={profile?.full_name || "User"}
-                    />
-                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col gap-0.5 leading-none overflow-hidden">
-                    <span className="text-sm font-bold truncate">
-                      {profile?.full_name || "User"}
-                    </span>
-                    <span className="text-[10px] uppercase font-bold text-primary truncate">
-                      {profile?.current_level
-                        ? `Level ${profile.current_level} • ${profile.total_xp} XP`
-                        : "Novice"}
-                    </span>
-                  </div>
-                  <ChevronsUpDown className="ml-auto h-4 w-4 text-muted-foreground" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" side="top" className="w-56">
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard/profile">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Profile Settings
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard/settings">
-                    <Globe className="mr-2 h-4 w-4" />
-                    Site Settings
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <form action={signOut}>
-                    <button type="submit" className="flex w-full items-center">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Sign Out
-                    </button>
-                  </form>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
-        <div className="flex justify-center items-center gap-4 mt-4 px-2 py-1 text-[10px] text-muted-foreground/60">
-          <TosLink className="hover:text-foreground transition-colors" />
-          <span>&middot;</span>
-          <PrivacyLink className="hover:text-foreground transition-colors" />
-        </div>
-      </SidebarFooter>
+      <SidebarUserFooter profile={profile} />
     </Sidebar>
   );
 }

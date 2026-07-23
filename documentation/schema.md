@@ -242,6 +242,79 @@ Module for managing organizational funds, strictly guarded by Executive access.
 
 ---
 
+## 🚀 Institutional Journey & Capability Suite Schema (v1)
+
+### `portfolio_settings`
+
+Configures public share tokens and display preferences for member portfolio links.
+
+- **`user_id`** _(uuid, PK, FK to `profiles`)_
+- **`share_token`** _(text, Unique, default `gen_random_uuid()`)_
+- **`custom_bio`** _(text, nullable)_
+- **`linkedin_url`** _(text, nullable)_
+- **`github_url`** _(text, nullable)_
+- **`show_tutoring_hours`** _(boolean, default true)_
+- **`show_subjects_mastered`** _(boolean, default true)_
+- **`show_leadership_terms`** _(boolean, default true)_
+- **`show_endorsements`** _(boolean, default true)_
+
+### `tutor_endorsements`
+
+Factual peer endorsements for tutors.
+
+- **`id`** _(uuid, PK)_
+- **`tutor_id`** _(uuid, FK to `tutors`)_
+- **`endorser_id`** _(uuid, FK to `profiles`)_
+- **`skill`** _(text)_
+- **`comment`** _(text, nullable)_
+- **`created_at`** _(timestamptz)_
+
+### `officer_handoff_notes`
+
+Leadership handoff and continuity logs for departing officers.
+
+- **`id`** _(uuid, PK)_
+- **`position`** _(text)_ — e.g. `president`, `academic_head`.
+- **`committee`** _(text, nullable)_
+- **`outgoing_officer_id`** _(uuid, FK to `profiles`)_
+- **`notes`** _(text)_
+- **`key_contacts`** _(text, nullable)_
+- **`created_at`** _(timestamptz)_
+
+### `mentorship_preferences`
+
+Member mentorship pool participation settings.
+
+- **`user_id`** _(uuid, PK, FK to `profiles`)_
+- **`is_available`** _(boolean, default true)_
+- **`preferred_topics`** _(text[])_
+- **`bio`** _(text, nullable)_
+- **`updated_at`** _(timestamptz)_
+
+### `milestone_events`
+
+Database persistence to ensure single-trigger milestone celebrations.
+
+- **`id`** _(uuid, PK)_
+- **`user_id`** _(uuid, FK to `profiles`)_
+- **`milestone_type`** _(text)_ — e.g. `100_hours_tutored`, `officer_term_completed`.
+- **`title`** _(text)_
+- **`triggered_at`** _(timestamptz)_
+
+### `institutional_wiki_docs`
+
+Document store for the RAG search engine across org SOPs, governance, and manuals.
+
+- **`id`** _(uuid, PK)_
+- **`title`** _(text)_
+- **`category`** _(text)_ — `sop`, `governance`, `tutor_manual`, `faq`.
+- **`content`** _(text)_
+- **`min_role`** _(text, default 'learner')_
+- **`author`** _(text, nullable)_
+- **`updated_at`** _(timestamptz)_
+
+---
+
 ## ⚙️ Critical Database Triggers and Functions
 
 | Trigger Name                         | Purpose                                                                                   | Rule Enforcement                                                      |

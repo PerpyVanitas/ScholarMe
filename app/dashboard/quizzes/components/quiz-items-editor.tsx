@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,6 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Trash2 } from "lucide-react";
 import { ImageOcclusionEditor } from "@/features/quizzes/components/image-occlusion-editor";
+
+export interface QuizItemPreview {
+  question?: string;
+  instructions?: string;
+  answer?: string;
+  correct_answer?: string;
+  type?: string;
+  image_url?: string;
+  occlusion_masks?: Array<{ id: string; x: number; y: number; width: number; height: number }>;
+}
 
 interface QuizItemsEditorProps {
   structuredItems: Record<string, unknown>[];
@@ -21,6 +30,8 @@ export function QuizItemsEditor({
   formData,
 }: QuizItemsEditorProps) {
   if (structuredItems.length === 0) return null;
+
+  const items = structuredItems as unknown as QuizItemPreview[];
 
   return (
     <div className="space-y-4 mt-6">
@@ -64,7 +75,7 @@ export function QuizItemsEditor({
         </div>
       </div>
       <div className="max-h-[600px] overflow-y-auto space-y-4 pr-2 scrollbar-thin">
-        {structuredItems.map((item, i) => (
+        {items.map((item, i) => (
           <div
             key={i}
             className="p-4 bg-muted/30 border border-border/50 rounded-xl text-sm relative group focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/50 transition-all"
@@ -86,7 +97,6 @@ export function QuizItemsEditor({
                 variant="outline"
                 className="text-[10px] uppercase bg-background"
               >
-                // @ts-ignore: Strict unknown type check
                 {item.type?.replace(/_/g, " ") || formData.type}
               </Badge>
             </div>
@@ -97,15 +107,15 @@ export function QuizItemsEditor({
                   Question
                 </Label>
                 <Textarea
-                  // @ts-ignore: Strict unknown type check
                   value={item.question || item.instructions || ""}
                   onChange={(e) => {
                     const newItems = [...structuredItems];
-                    if (newItems[i].question !== undefined)
-                      newItems[i].question = e.target.value;
-                    else if (newItems[i].instructions !== undefined)
-                      newItems[i].instructions = e.target.value;
-                    else newItems[i].question = e.target.value;
+                    const target = newItems[i] as QuizItemPreview;
+                    if (target.question !== undefined)
+                      target.question = e.target.value;
+                    else if (target.instructions !== undefined)
+                      target.instructions = e.target.value;
+                    else target.question = e.target.value;
                     setStructuredItems(newItems);
                   }}
                   className="min-h-[40px] text-sm resize-none bg-background border-none shadow-none px-2 py-2 focus-visible:ring-1"
@@ -118,15 +128,15 @@ export function QuizItemsEditor({
                   Answer
                 </Label>
                 <Input
-                  // @ts-ignore: Strict unknown type check
                   value={item.correct_answer || item.answer || ""}
                   onChange={(e) => {
                     const newItems = [...structuredItems];
-                    if (newItems[i].correct_answer !== undefined)
-                      newItems[i].correct_answer = e.target.value;
-                    else if (newItems[i].answer !== undefined)
-                      newItems[i].answer = e.target.value;
-                    else newItems[i].answer = e.target.value;
+                    const target = newItems[i] as QuizItemPreview;
+                    if (target.correct_answer !== undefined)
+                      target.correct_answer = e.target.value;
+                    else if (target.answer !== undefined)
+                      target.answer = e.target.value;
+                    else target.answer = e.target.value;
                     setStructuredItems(newItems);
                   }}
                   className="h-8 text-sm font-medium bg-background border-none shadow-none px-2 focus-visible:ring-1"
@@ -143,25 +153,21 @@ export function QuizItemsEditor({
                     type="url"
                     placeholder="https://example.com/image.png"
                     className="h-8 text-xs"
-                    // @ts-ignore: Strict unknown type check
                     value={item.image_url || ""}
                     onChange={(e) => {
                       const newItems = [...structuredItems];
-                      newItems[i].image_url = e.target.value;
+                      (newItems[i] as QuizItemPreview).image_url = e.target.value;
                       setStructuredItems(newItems);
                     }}
                   />
                 </div>
-                // @ts-ignore: Strict unknown type check
                 {item.image_url && (
                   <ImageOcclusionEditor
-                    // @ts-ignore: Strict unknown type check
                     imageUrl={item.image_url}
-                    // @ts-ignore: Strict unknown type check
-                    masks={item.occlusion_masks || []}
+                    masks={(item.occlusion_masks as unknown as Array<{ id: string; x: number; y: number; width: number; height: number }>) || []}
                     onChange={(masks) => {
                       const newItems = [...structuredItems];
-                      newItems[i].occlusion_masks = masks;
+                      (newItems[i] as QuizItemPreview).occlusion_masks = masks as unknown as Array<{ id: string; x: number; y: number; width: number; height: number }>;
                       setStructuredItems(newItems);
                     }}
                   />

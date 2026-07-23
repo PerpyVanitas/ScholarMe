@@ -148,3 +148,38 @@ ScholarMe is divided into several primary domains, each governed by the access c
   - **Notifications**: Toggles for Session Booked emails, Review emails, and Browser Push notifications.
   - **Display**: Theme switching (Light/Dark/System) and Reduced Motion.
   - **Data & Privacy**: Toggles for Public Profile visibility and Analytics sharing. (Account deletion/export is handled securely under Profile Settings).
+
+---
+
+## 🚀 Institutional Journey & Capability Suite (v1 Direction Doc)
+
+- **My Journey & Public Portfolio (`/dashboard/journey` & `/portfolio/[shareToken]`)**:
+  - **Public Portfolio Hub**: Users configure custom bios, external links (LinkedIn, GitHub), and privacy toggles (showing/hiding tutoring hours, mastery subjects, leadership terms, endorsements).
+  - **Public Shareable Link**: `/portfolio/[shareToken]` displays verified CIT-U Honor Society credentials to external employers and partners without requiring a login.
+  - **Industry Readiness Summary**: Generates a factual activity summary tab (`ReadinessSummaryTab`) listing verified tutoring hours, subjects mastered, leadership terms, and peer evaluations with instant PDF export functionality (`jspdf` + `html2canvas`).
+  - **Real Learning Analytics**: Computes subject-level accuracy trends from past `quiz_attempts` and highlights top weak topics requiring review.
+  - **Weak Topic Study Suggestions**: Dynamically recommends target study sets (`WeakTopicSuggestions`) matching identified weak subjects.
+
+- **Institutional Knowledge Wiki (`/dashboard/wiki`)**:
+  - **RAG Search Engine**: Full-text and vector search (`/api/wiki/search`) across official Honor Society SOPs, governance documents, tutor manuals, and FAQs.
+  - **Role-Based Document Filtering**: Limits executive-only or admin-only wiki articles to authorized user roles. Includes clickable source references.
+
+- **Mentorship Matching (`/dashboard/network/mentorship`)**:
+  - **Matching Pool**: Connects experienced senior members (tutors/officers with 2+ semesters) with junior members seeking academic and career guidance.
+  - **Opt-in / Opt-out**: Members toggle their availability in the mentorship pool and select preferred guidance subjects.
+  - **Direct Messaging Integration**: Clicking "Request Mentorship" opens an active chat room directly with the mentor.
+
+- **Officer Handoff Notes (`HandoffNotesDialog`)**:
+  - **Org Structure Integration**: Departing officers and committee heads log successor transition notes, operational advice, and key contacts directly on the Org Structure page (`/dashboard/admin/org-structure`).
+  - **Successor Continuity**: Incoming officers view historical handoff notes left by predecessors for seamless leadership transitions.
+
+- **Tutor Endorsements & Impact**:
+  - **Tutor Impact Widget**: Renders on the tutor dashboard displaying verified total students tutored, cumulative hours, and endorsements earned.
+  - **Peer Endorsements**: Tutors can write factual, professional skill endorsements for fellow tutors after joint sessions.
+
+- **Weekly Digest & Milestone Moments**:
+  - **Weekly Digest Banner**: Renders narrative summaries on the home dashboard highlighting sessions completed, subjects mastered, and XP earned during the current week.
+  - **Milestone Moments Celebration**: Triggered automatically upon reaching key achievements (100 tutoring hours, officer term completion, first endorsement) with interactive confetti and single-trigger database persistence (`milestone_events`).
+
+- **Contextual Help System**:
+  - **Header Help Button (`ContextualHelpButton`)**: Surfaces per-screen purpose, capability mapping, primary actions, and related institutional wiki links configured in `lib/config/contextual-help-config.ts`.

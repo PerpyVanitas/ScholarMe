@@ -38,6 +38,18 @@ export function getAvatarUrl(
   return avatarUrl;
 }
 
+export function sanitizeExternalUrl(url: string | null | undefined): string | null {
+  if (!url || typeof url !== "string") return null;
+  const trimmed = url.trim();
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+  if (trimmed.startsWith("www.")) {
+    return `https://${trimmed}`;
+  }
+  return null;
+}
+
 export function generateIcs(
   title: string,
   description: string,

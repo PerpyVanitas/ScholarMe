@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { useEffect, useState } from "react";
@@ -60,6 +59,14 @@ import {
   formatDuration
 } from "./components/timesheets-table";
 
+interface PeriodDetail {
+  id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  is_active?: boolean;
+}
+
 export default function AdminTimesheetsPage() {
   const {
     data: config,
@@ -75,7 +82,7 @@ export default function AdminTimesheetsPage() {
     data: periods,
     mutate: mutatePeriods,
     isLoading: periodsLoading,
-  } = useSWR<unknown[]>("/api/timesheets/periods", fetcher);
+  } = useSWR<PeriodDetail[]>("/api/timesheets/periods", fetcher);
   const {
     data: entries,
     mutate: mutateEntries,
@@ -85,8 +92,7 @@ export default function AdminTimesheetsPage() {
   });
 
   // Modal Details View
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [detailPeriod, setDetailPeriod] = useState<any | null>(null);
+  const [detailPeriod, setDetailPeriod] = useState<PeriodDetail | null>(null);
   const [search, setSearch] = useState("");
   const [modalSearch, setModalSearch] = useState("");
 

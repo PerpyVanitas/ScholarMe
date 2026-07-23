@@ -30,6 +30,8 @@ import { SESSION_STATUS_COLORS } from "@/lib/constants";
 import { toast } from "sonner";
 import type { Profile, Session, Tutor } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
+import { TutorImpactWidget } from "@/components/tutor-impact-widget";
+import { TutorClockInBanner } from "./tutor-clockin-banner";
 
 import {
   DndContext,
@@ -274,126 +276,77 @@ export function TutorDashboard({
         </Card>
       ) : null,
 
-    clock_in:
-      tutor && clockCheckDone ? (
-        <Card
-          className={`border-border/60 ${isLongClockIn ? "border-destructive/50 ring-1 ring-destructive/20" : ""}`}
-        >
-          <CardContent className="flex flex-col p-4 gap-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-full ${clockedIn ? (isLongClockIn ? "bg-destructive/10" : "bg-green-500/10") : "bg-muted"}`}
-                >
-                  <Timer
-                    className={`h-5 w-5 ${clockedIn ? (isLongClockIn ? "text-destructive" : "text-green-600 dark:text-green-400") : "text-muted-foreground"}`}
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <span
-                    className={`text-sm font-medium ${clockedIn ? (isLongClockIn ? "text-destructive" : "text-green-600 dark:text-green-400") : "text-muted-foreground"}`}
-                  >
-                    {clockedIn ? "Currently Clocked In" : "Not Clocked In"}
-                  </span>
-                  <Link
-                    href="/dashboard/timesheet"
-                    className="text-xs text-primary hover:underline"
-                  >
-                    View timesheet
-                  </Link>
-                </div>
-              </div>
-              {clockedIn ? (
-                <Button
-                  onClick={() => handleClock("clock_out")}
-                  disabled={clockLoading}
-                  variant="destructive"
-                  size="sm"
-                  className="gap-2"
-                >
-                  <LogOut className="h-3.5 w-3.5" />
-                  {clockLoading ? "..." : "Clock Out"}
-                </Button>
-              ) : (
-                <Button
-                  onClick={() => handleClock("clock_in")}
-                  disabled={clockLoading}
-                  size="sm"
-                  className="gap-2"
-                >
-                  <LogIn className="h-3.5 w-3.5" />
-                  {clockLoading ? "..." : "Clock In"}
-                </Button>
-              )}
-            </div>
-            {isLongClockIn && (
-              <div className="flex items-start gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive-foreground">
-                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-destructive" />
-                <p className="text-destructive font-medium">
-                  You have been clocked in for over 12 hours. Please clock out
-                  if you have finished your shift to prevent inaccurate
-                  timesheets.
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ) : null,
+    clock_in: (
+      <TutorClockInBanner
+        tutor={tutor}
+        clockCheckDone={clockCheckDone}
+        clockedIn={clockedIn}
+        clockInTime={clockInTime}
+        clockingIn={clockLoading}
+        isLongClockIn={isLongClockIn}
+        elapsedStr={elapsedStr}
+        onClockIn={() => handleClock("clock_in")}
+        onClockOut={() => handleClock("clock_out")}
+      />
+    ),
 
     stats: (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-        <Card className="border-border/60">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-              <Clock className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-2xl font-bold text-foreground">
-                {stats.upcomingSessions}
-              </span>
-              <span className="text-xs text-muted-foreground">Upcoming</span>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-border/60">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-success/10">
-              <CheckCircle2 className="h-5 w-5 text-success" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-2xl font-bold text-foreground">
-                {stats.completedSessions}
-              </span>
-              <span className="text-xs text-muted-foreground">Completed</span>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-border/60">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/30">
-              <Star className="h-5 w-5 text-accent-foreground" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-2xl font-bold text-foreground">
-                {stats.rating > 0 ? stats.rating.toFixed(1) : "N/A"}
-              </span>
-              <span className="text-xs text-muted-foreground">Avg Rating</span>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-border/60">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-              <Star className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-2xl font-bold text-foreground">
-                {stats.totalRatings}
-              </span>
-              <span className="text-xs text-muted-foreground">Reviews</span>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+          <Card className="border-border/60">
+            <CardContent className="flex items-center gap-4 p-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <Clock className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold text-foreground">
+                  {stats.upcomingSessions}
+                </span>
+                <span className="text-xs text-muted-foreground">Upcoming</span>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-border/60">
+            <CardContent className="flex items-center gap-4 p-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-success/10">
+                <CheckCircle2 className="h-5 w-5 text-success" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold text-foreground">
+                  {stats.completedSessions}
+                </span>
+                <span className="text-xs text-muted-foreground">Completed</span>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-border/60">
+            <CardContent className="flex items-center gap-4 p-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/30">
+                <Star className="h-5 w-5 text-accent-foreground" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold text-foreground">
+                  {stats.rating > 0 ? stats.rating.toFixed(1) : "N/A"}
+                </span>
+                <span className="text-xs text-muted-foreground">Avg Rating</span>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-border/60">
+            <CardContent className="flex items-center gap-4 p-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                <Star className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold text-foreground">
+                  {stats.totalRatings}
+                </span>
+                <span className="text-xs text-muted-foreground">Reviews</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <TutorImpactWidget profile={profile} />
       </div>
     ),
 

@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { useState, useEffect } from "react";
@@ -32,7 +31,7 @@ interface LogEntry {
   created_at: string;
 }
 
-const actionIcons: Record<string, unknown> = {
+const actionIcons: Record<string, React.ElementType> = {
   user_created: UserPlus,
   user_edited: Settings,
   user_deleted: UserMinus,
@@ -112,13 +111,12 @@ export function UserLogsDialog({
           ) : (
             <div className="flex flex-col gap-0">
               {logs.map((log, i) => {
-                const Icon = actionIcons[log.action] || History;
+                const IconComponent = actionIcons[log.action] || History;
                 return (
                   <div key={log.id}>
                     <div className="flex gap-3 py-3">
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
-                        // @ts-ignore: Strict unknown type check
-                        <Icon className="h-4 w-4 text-muted-foreground" />
+                        <IconComponent className="h-4 w-4 text-muted-foreground" />
                       </div>
                       <div className="flex flex-col gap-0.5 min-w-0">
                         <span className="text-sm font-medium text-foreground">

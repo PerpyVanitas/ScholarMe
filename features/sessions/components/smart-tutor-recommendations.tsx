@@ -1,9 +1,8 @@
-// @ts-nocheck
 "use client";
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Tutor } from "@/lib/types";
+import type { Tutor, Profile } from "@/lib/types";
 import {
   Card,
   CardContent,
@@ -18,26 +17,24 @@ import { getAvatarUrl } from "@/lib/utils";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 
+type RecommendedTutor = Tutor & {
+  profiles?: Profile | null;
+  specializations?: { name?: string | null } | null;
+};
+
 export function SmartTutorRecommendations() {
-  const [recommendations, setRecommendations] = useState<unknown[]>([]);
+  const [recommendations, setRecommendations] = useState<RecommendedTutor[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadRecommendations() {
       const supabase = createClient();
 
-      // Simple heuristic: fetch top rated tutors who have the same major as the user, or just top rated
       const { data: userResponse } = await supabase.auth.getUser();
       if (!userResponse.user) {
         setLoading(false);
         return;
       }
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("major")
-        .eq("id", userResponse.user.id)
-        .single();
 
       const query = supabase
         .from("tutors")
@@ -47,7 +44,7 @@ export function SmartTutorRecommendations() {
         .order("rating", { ascending: false })
         .limit(3);
 
-      setRecommendations(tutors || []);
+      setRecommendations((tutors || []) as unknown as RecommendedTutor[]);
       setLoading(false);
     }
     loadRecommendations();
@@ -71,44 +68,35 @@ export function SmartTutorRecommendations() {
       <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {recommendations.map((tutor) => (
           <div
-            // @ts-ignore: Strict unknown type check
             key={tutor.id}
             className="flex flex-col gap-3 p-4 rounded-xl border bg-card hover:bg-accent/10 transition-colors"
           >
             <div className="flex items-start justify-between">
               <Avatar className="h-10 w-10">
-                // @ts-ignore: Strict unknown type check
                 <AvatarImage src={getAvatarUrl(tutor.profiles?.avatar_url)} />
                 <AvatarFallback>
-                  // @ts-ignore: Strict unknown type check
                   {tutor.profiles?.full_name?.charAt(0) || "T"}
                 </AvatarFallback>
               </Avatar>
               <div className="flex items-center gap-1 text-sm font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-2 py-0.5 rounded-full">
                 <Star className="h-3 w-3 fill-current" />
-                // @ts-ignore: Strict unknown type check
-                <span>{tutor.rating.toFixed(1)}</span>
+                <span>{(tutor.rating || 5.0).toFixed(1)}</span>
               </div>
             </div>
             <div>
-              // @ts-ignore: Strict unknown type check
-              <h4 className="font-semibold">{tutor.profiles?.full_name}</h4>
+              <h4 className="font-semibold">{tutor.profiles?.full_name || "Scholar Tutor"}</h4>
               <p className="text-xs text-muted-foreground line-clamp-1">
-                // @ts-ignore: Strict unknown type check
                 {tutor.bio || "Expert Tutor"}
               </p>
             </div>
             <div className="flex flex-wrap gap-1 mt-auto">
-              // @ts-ignore: Strict unknown type check
-              {tutor.specializations && (
+              {tutor.specializations?.name && (
                 <Badge variant="secondary" className="text-[10px]">
-                  // @ts-ignore: Strict unknown type check
                   {tutor.specializations.name}
                 </Badge>
               )}
             </div>
             <Button asChild size="sm" className="w-full mt-2" variant="outline">
-              // @ts-ignore: Strict unknown type check
               <Link href={`/dashboard/tutors/${tutor.id}`}>
                 View Profile <ChevronRight className="h-3 w-3 ml-1" />
               </Link>

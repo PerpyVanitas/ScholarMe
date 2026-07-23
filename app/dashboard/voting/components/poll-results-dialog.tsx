@@ -1,5 +1,3 @@
-// @ts-nocheck
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import {
@@ -23,13 +21,39 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import type { Poll } from "@/lib/types";
 import { formatEndDate, isPollActive } from "../utils";
+
+export interface PollOptionDetail {
+  id: string;
+  option_text: string;
+  vote_count?: number;
+}
+
+export interface PollDetailData {
+  poll: Partial<Poll> & {
+    id: string;
+    title: string;
+    end_date: string;
+    poll_options?: PollOptionDetail[];
+  };
+  totalVotes: number;
+  hasVoted: boolean;
+  userVotedOptionId?: string;
+  results?: {
+    option_id: string;
+    option_text: string;
+    count: number;
+    percentage: number;
+    voters?: { id: string; full_name?: string }[];
+  }[];
+}
 
 interface PollResultsDialogProps {
   showDetailDialog: boolean;
   setShowDetailDialog: (v: boolean) => void;
   loadingResults: boolean;
-  selectedPoll: unknown;
+  selectedPoll: PollDetailData | null;
   isAdmin: boolean;
   selectedOption: string;
   setSelectedOption: (v: string) => void;
@@ -50,11 +74,12 @@ export function PollResultsDialog({
   handleVote,
   voting,
 }: PollResultsDialogProps) {
+  const active = selectedPoll ? isPollActive(selectedPoll.poll) : false;
+
   return (
     <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
       <DialogContent className="sm:max-w-[520px]">
         <DialogTitle className="sr-only">
-          // @ts-ignore: Strict unknown type check
           {selectedPoll?.poll?.title || "Poll Details"}
         </DialogTitle>
         {loadingResults ? (
@@ -65,177 +90,115 @@ export function PollResultsDialog({
           <>
             <DialogHeader>
               <h2 className="text-lg font-semibold text-foreground">
-                // @ts-ignore: Strict unknown type check
                 {selectedPoll.poll.title}
               </h2>
-              // @ts-ignore: Strict unknown type check
               {selectedPoll.poll.description && (
                 <DialogDescription className="text-sm mt-1">
-                  // @ts-ignore: Strict unknown type check
                   {selectedPoll.poll.description}
                 </DialogDescription>
               )}
               <p className="text-xs text-muted-foreground mt-1">
-                // @ts-ignore: Strict unknown type check
-                {isPollActive(selectedPoll.poll)
-                  // @ts-ignore: Strict unknown type check
+                {active
                   ? `Closes: ${formatEndDate(selectedPoll.poll.end_date)}`
-                  // @ts-ignore: Strict unknown type check
                   : `Ended: ${formatEndDate(selectedPoll.poll.end_date)}`}
               </p>
               <div className="flex flex-wrap items-center gap-2 pt-2">
                 <Badge variant="outline">
                   <BarChart3 className="h-3 w-3 mr-1" />
-                  // @ts-ignore: Strict unknown type check
                   {selectedPoll.totalVotes} vote
-                  // @ts-ignore: Strict unknown type check
                   {selectedPoll.totalVotes !== 1 ? "s" : ""}
                 </Badge>
-                // @ts-ignore: Strict unknown type check
                 {selectedPoll.hasVoted && (
                   <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
                     <CheckCircle2 className="h-3 w-3 mr-1" />
                     You voted
                   </Badge>
                 )}
-                // @ts-ignore: Strict unknown type check
-                {!isPollActive(selectedPoll.poll) && (
-                  <Badge variant="destructive">Closed</Badge>
-                )}
-                // @ts-ignore: Strict unknown type check
-                {isPollActive(selectedPoll.poll) && (
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] border-green-500/30 text-green-600 bg-green-500/10"
-                  >
-                    <span className="h-1.5 w-1.5 rounded-full bg-green-500 mr-1 animate-pulse inline-block" />
-                    Live
-                  </Badge>
-                )}
-                // @ts-ignore: Strict unknown type check
-                {isAdmin && selectedPoll.poll.is_hidden && (
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] px-1.5 py-0 border-amber-500/40 text-amber-600 bg-amber-500/10"
-                  >
-                    <EyeOff className="h-2.5 w-2.5 mr-1" />
-                    Hidden from members
+                {selectedPoll.poll.is_anonymous && (
+                  <Badge variant="secondary">
+                    <EyeOff className="h-3 w-3 mr-1" />
+                    Anonymous Poll
                   </Badge>
                 )}
               </div>
             </DialogHeader>
 
-            <div className="space-y-4 py-4">
-              // @ts-ignore: Strict unknown type check
-              {selectedPoll.hasVoted || !isPollActive(selectedPoll.poll) ? (
+            <div className="space-y-4 py-2">
+              {/* Show Breakdown when voted or ended */}
+              {selectedPoll.hasVoted || !active ? (
                 <div className="space-y-3">
-                  // @ts-ignore: Strict unknown type check
-                  {selectedPoll.poll.poll_options
-                    // @ts-ignore: Strict unknown type check
-                    .sort((a: unknown, b: unknown) => a.display_order - b.display_order)
-                    .map((option: unknown) => (
-                      // @ts-ignore: Strict unknown type check
-                      <div key={option.id} className="space-y-1">
-                        <div className="flex items-center justify-between text-sm">
-                          <span
-                            className={
-                              // @ts-ignore: Strict unknown type check
-                              selectedPoll.userVotes.includes(option.id)
-                                ? "font-medium"
-                                : ""
-                            }
-                          >
-                            // @ts-ignore: Strict unknown type check
-                            {option.option_text}
-                            // @ts-ignore: Strict unknown type check
-                            {selectedPoll.userVotes.includes(option.id) && (
-                              <CheckCircle2 className="h-3 w-3 inline ml-1 text-green-600" />
-                            )}
-                          </span>
-                          <span className="text-muted-foreground text-xs">
-                            // @ts-ignore: Strict unknown type check
-                            {option.vote_count} ({option.percentage}%)
-                          </span>
-                        </div>
-                        // @ts-ignore: Strict unknown type check
-                        <Progress value={option.percentage} className="h-2" />
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Current Results
+                  </h3>
+                  {selectedPoll.results?.map((res) => (
+                    <div key={res.option_id} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs font-medium">
+                        <span className="flex items-center gap-1.5">
+                          {res.option_text}
+                          {res.option_id === selectedPoll.userVotedOptionId && (
+                            <Badge variant="outline" className="text-[10px] py-0">Your vote</Badge>
+                          )}
+                        </span>
+                        <span>{res.percentage}% ({res.count})</span>
                       </div>
-                    ))}
+                      <Progress value={res.percentage} className="h-2" />
+                    </div>
+                  ))}
                 </div>
               ) : (
-                <RadioGroup
-                  value={selectedOption}
-                  onValueChange={setSelectedOption}
-                >
-                  // @ts-ignore: Strict unknown type check
-                  {selectedPoll.poll.poll_options
-                    // @ts-ignore: Strict unknown type check
-                    .sort((a: unknown, b: unknown) => a.display_order - b.display_order)
-                    .map((option: unknown) => (
+                /* Radio selection for active unvoted poll */
+                <div className="space-y-3">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Select an Option
+                  </h3>
+                  <RadioGroup
+                    value={selectedOption}
+                    onValueChange={setSelectedOption}
+                    className="space-y-2"
+                  >
+                    {selectedPoll.poll.poll_options?.map((opt) => (
                       <div
-                        // @ts-ignore: Strict unknown type check
-                        key={option.id}
-                        className="flex items-center space-x-2 py-2 px-3 rounded-md hover:bg-muted/50 transition-colors"
+                        key={opt.id}
+                        className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-muted/40 cursor-pointer"
                       >
-                        <RadioGroupItem
-                          // @ts-ignore: Strict unknown type check
-                          value={option.id}
-                          // @ts-ignore: Strict unknown type check
-                          id={`opt-${option.id}`}
-                        />
-                        <Label
-                          // @ts-ignore: Strict unknown type check
-                          htmlFor={`opt-${option.id}`}
-                          className="flex-1 cursor-pointer text-sm"
-                        >
-                          // @ts-ignore: Strict unknown type check
-                          {option.option_text}
+                        <RadioGroupItem value={opt.id} id={opt.id} />
+                        <Label htmlFor={opt.id} className="cursor-pointer text-sm font-medium flex-1">
+                          {opt.option_text}
                         </Label>
                       </div>
                     ))}
-                </RadioGroup>
+                  </RadioGroup>
+                </div>
               )}
             </div>
 
-            <DialogFooter className="gap-2 sm:gap-0 flex-wrap">
-              {/* Change Vote — active poll, already voted */}
-              // @ts-ignore: Strict unknown type check
-              {selectedPoll.hasVoted && isPollActive(selectedPoll.poll) && (
+            <DialogFooter className="flex-col sm:flex-row gap-2 pt-2">
+              {selectedPoll.hasVoted && active && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleChangeVote}
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto text-xs gap-1"
                 >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Change Vote
+                  <RefreshCw className="h-3.5 w-3.5" /> Change Vote
                 </Button>
               )}
-              {/* Submit Vote */}
-              // @ts-ignore: Strict unknown type check
-              {!selectedPoll.hasVoted && isPollActive(selectedPoll.poll) && (
+              {!selectedPoll.hasVoted && active && (
                 <Button
+                  size="sm"
                   onClick={handleVote}
                   disabled={!selectedOption || voting}
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto text-xs gap-1"
                 >
-                  {voting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    <>
-                      <Vote className="h-4 w-4 mr-2" />
-                      Submit Vote
-                    </>
-                  )}
+                  {voting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                  <Vote className="h-3.5 w-3.5" /> Cast Vote
                 </Button>
               )}
               <Button
-                variant="outline"
+                variant="ghost"
+                size="sm"
                 onClick={() => setShowDetailDialog(false)}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto text-xs"
               >
                 Close
               </Button>

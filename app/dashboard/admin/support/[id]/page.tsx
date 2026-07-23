@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { useState, useEffect, useRef, use } from "react";
@@ -13,6 +12,14 @@ import { SupportMessage } from "@/lib/types";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
+interface SupportTicketDetail {
+  id: string;
+  user_id: string;
+  status: "open" | "in_progress" | "resolved" | "closed";
+  created_at: string;
+  profiles?: { full_name?: string | null; email?: string | null } | null;
+}
+
 export default function AdminSupportChat({
   params,
 }: {
@@ -21,7 +28,7 @@ export default function AdminSupportChat({
   const { id } = use(params);
   const router = useRouter();
   const [messages, setMessages] = useState<SupportMessage[]>([]);
-  const [ticket, setTicket] = useState<unknown>(null);
+  const [ticket, setTicket] = useState<SupportTicketDetail | null>(null);
   const [input, setInput] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
   const supabase = createClient();
@@ -38,12 +45,12 @@ export default function AdminSupportChat({
         .eq("id", id)
         .single();
       
-      if (ticketData) setTicket(ticketData);
+      if (ticketData) setTicket(ticketData as unknown as SupportTicketDetail);
 
       fetchMessages();
     }
     init();
-  }, [id]);
+  }, [id, supabase]);
 
   useEffect(() => {
     const channel = supabase
@@ -61,8 +68,8 @@ export default function AdminSupportChat({
       
     return () => {
       supabase.removeChannel(channel);
-    }
-  }, [id]);
+    };
+  }, [id, supabase]);
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -78,7 +85,7 @@ export default function AdminSupportChat({
       .order("created_at", { ascending: true });
     
     if (data) {
-      setMessages(data);
+      setMessages(data as unknown as SupportMessage[]);
       scrollToBottom();
     }
   }
@@ -96,11 +103,9 @@ export default function AdminSupportChat({
       content
     });
     
-    // Auto-update ticket to in-progress if it was open
-    // @ts-ignore
-    if (ticket?.status === "open") {
-      await supabase.from("support_tickets").update({ status: "in-progress" }).eq("id", id);
-      setTicket({ ...ticket, status: "in-progress" });
+    if (ticket && ticket.status === "open") {
+      await supabase.from("support_tickets").update({ status: "in_progress" }).eq("id", id);
+      setTicket({ ...ticket, status: "in_progress" });
     }
     
     scrollToBottom();
@@ -123,20 +128,16 @@ export default function AdminSupportChat({
             </Link>
           </Button>
           <h1 className="text-2xl font-bold tracking-tight">
-            // @ts-ignore
             Chat with {ticket?.profiles?.full_name || "User"}
           </h1>
           <div className="flex items-center gap-2 mt-2">
-            // @ts-ignore
             <Badge variant={ticket?.status === 'resolved' ? 'outline' : ticket?.status === 'open' ? 'destructive' : 'default'}>
-              // @ts-ignore
               {ticket?.status || "Loading..."}
             </Badge>
             <span className="text-sm text-muted-foreground">Ticket ID: {id}</span>
           </div>
         </div>
         
-        // @ts-ignore
         {ticket?.status !== "resolved" && (
           <Button variant="outline" onClick={resolveTicket} className="gap-2">
             <CheckCircle className="h-4 w-4" /> Resolve Ticket
@@ -148,10 +149,10 @@ export default function AdminSupportChat({
         <CardContent className="flex-1 p-4 overflow-y-auto bg-muted/30 flex flex-col gap-4">
           {messages.map((msg, i) => {
             const isMe = msg.sender_id === userId;
+            const senderFullName = (msg.profiles as unknown as { full_name?: string })?.full_name || "User";
             return (
               <div key={msg.id || i} className={`flex flex-col max-w-[70%] ${isMe ? 'self-end' : 'self-start'}`}>
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                {!isMe && <span className="text-xs text-muted-foreground mb-1 ml-1">{((msg.profiles as unknown as Record<string, unknown>)?.full_name as string) || "User"}</span>}
+                {!isMe && <span className="text-xs text-muted-foreground mb-1 ml-1">{senderFullName}</span>}
                 <div className={`px-4 py-2 rounded-2xl text-sm ${isMe ? 'bg-primary text-primary-foreground rounded-br-none' : 'bg-background border shadow-sm rounded-bl-none'}`}>
                   {msg.content}
                 </div>
@@ -167,12 +168,10 @@ export default function AdminSupportChat({
               value={input} 
               onChange={e => setInput(e.target.value)} 
               placeholder="Type a reply..." 
-              className="flex-1"
-              // @ts-ignore
+              className="flex-1 text-xs"
               disabled={ticket?.status === "resolved"}
             />
-            // @ts-ignore
-            <Button type="submit" disabled={!input.trim() || ticket?.status === "resolved"}>
+            <Button type="submit" disabled={!input.trim() || ticket?.status === "resolved"} size="sm">
               <Send className="h-4 w-4 mr-2" /> Send
             </Button>
           </form>

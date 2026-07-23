@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,20 +12,27 @@ export const metadata = {
   title: "Alumni Network - ScholarMe",
 };
 
+interface AlumnusProfile {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  degree_program: string | null;
+  bio: string | null;
+}
+
 export default async function AlumniNetworkPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) redirect("/login");
 
-  // Get Alumni role id
   const { data: alumniRole } = await supabase
     .from("roles")
     .select("id")
     .eq("name", "Alumni")
     .single();
 
-  let alumni: unknown[] = [];
+  let alumni: AlumnusProfile[] = [];
   if (alumniRole) {
     const { data } = await supabase
       .from("profiles")
@@ -35,7 +41,7 @@ export default async function AlumniNetworkPage() {
       .limit(50);
     
     if (data) {
-      alumni = data;
+      alumni = data as AlumnusProfile[];
     }
   }
 
@@ -61,21 +67,17 @@ export default async function AlumniNetworkPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {alumni.map((alumnus) => (
-            // @ts-ignore: Strict unknown type check
             <Card key={alumnus.id} className="overflow-hidden flex flex-col">
               <CardHeader className="pb-4 border-b bg-primary/5">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-16 w-16 border-2 border-background shadow-sm">
-                    // @ts-ignore: Strict unknown type check
                     <AvatarImage src={getAvatarUrl(alumnus.avatar_url) || ""} />
                     <AvatarFallback className="bg-primary/20 text-primary font-bold text-lg">
-                      // @ts-ignore: Strict unknown type check
                       {alumnus.full_name?.charAt(0) || "?"}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    // @ts-ignore: Strict unknown type check
-                    <CardTitle className="text-lg">{alumnus.full_name}</CardTitle>
+                    <CardTitle className="text-lg">{alumnus.full_name || "Honor Scholar"}</CardTitle>
                     <CardDescription className="flex items-center gap-1 mt-1">
                       <Badge variant="outline" className="text-xs bg-background">Alumnus</Badge>
                     </CardDescription>
@@ -87,7 +89,6 @@ export default async function AlumniNetworkPage() {
                   Graduated From
                 </div>
                 <div className="text-sm mb-3">
-                  // @ts-ignore: Strict unknown type check
                   {alumnus.degree_program || "Unknown Degree"}
                 </div>
                 
@@ -95,13 +96,11 @@ export default async function AlumniNetworkPage() {
                   Bio / Current Role
                 </div>
                 <p className="text-sm text-muted-foreground line-clamp-3">
-                  // @ts-ignore: Strict unknown type check
                   {alumnus.bio || "No bio provided."}
                 </p>
               </CardContent>
               <CardFooter className="pt-4 border-t bg-muted/20">
-                // @ts-ignore: Strict unknown type check
-                <Link href={`/dashboard/messages?new=${alumnus.id}`} className="w-full">
+                <Link href={`/dashboard/messages?recipientId=${alumnus.id}`} className="w-full">
                   <Button className="w-full gap-2" variant="outline">
                     <MessageSquare className="h-4 w-4" />
                     Reach Out

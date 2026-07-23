@@ -14,7 +14,20 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Send, Download, Loader2, CheckCheck } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  User,
+  Send,
+  Download,
+  Loader2,
+  Paperclip,
+  Sparkles,
+  Zap,
+  ShieldCheck,
+  FileText,
+  ImageIcon,
+  X,
+} from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 
@@ -22,6 +35,7 @@ type Message = {
   role: "system" | "user" | "assistant";
   content: string;
   created_at?: string;
+  attachments?: { name: string; type: string; previewUrl?: string }[];
 };
 
 interface WebLLMChatProps {
@@ -29,25 +43,30 @@ interface WebLLMChatProps {
   profileId?: string;
 }
 
-// Use the WebWorker engine to offload ML computations from the main thread.
-// We will create the worker from a separate file to ensure it bundles correctly.
 export function WebLLMChat({
   initialContext = "",
   profileId,
 }: WebLLMChatProps) {
+  // Mode: "server" (Instant Server AI) vs "local" (WebLLM in-browser cache)
+  const [engineMode, setEngineMode] = useState<"server" | "local">("server");
+
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "system",
-      content: `You are Kuya Nicolai, the friendly, supportive, and knowledgeable mascot of the Honor Society. You act as an AI peer study buddy to university students. You are encouraging, use a friendly tone, and sometimes sprinkle in supportive phrases. Keep your answers concise, structured, and easy to read. Do not provide direct answers to homework or quizzes; instead, guide the student to the answer using the Socratic method.\n\nYou have access to the following resources and study materials that the user can currently access. If they ask about something related to these, you can help them recall it.\n\n${initialContext}`,
+      content: `You are Kuya Nicolai, the friendly, supportive mascot of the Honor Society. You act as an AI peer study buddy. Guide the student using the Socratic method.\n\nContext:\n${initialContext}`,
     },
     {
       role: "assistant",
       content:
-        "Hello! I am Kuya Nicolai, your friendly peer study buddy from the Honor Society. I'm here to help you study and answer any questions you have about your materials. What would you like to focus on today?",
+        "Hello! I am Kuya Nicolai, your peer study buddy from the Honor Society. Ask me anything, or upload a photo of your study material!",
     },
   ]);
+
   const [input, setInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [attachment, setAttachment] = useState<File | null>(null);
+  const [attachmentPreview, setAttachmentPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { engine, isLoading, isReady, initProgress, initializeEngine } =
@@ -59,268 +78,389 @@ export function WebLLMChat({
     });
 
   useEffect(() => {
-    // Scroll to bottom on new message
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, initProgress]);
+  }, [messages, isGenerating]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!input.trim() || !isReady || !engine || isGenerating) return;
-
-    const userMessage = input.trim();
-    setInput("");
-
-    setIsGenerating(true);
-    let extraContext = "";
-
-    try {
-      if (profileId) {
-        // Fetch context from RAG
-        const searchRes = await fetch("/api/rag/search", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query: userMessage, profileId }),
-        });
-        if (searchRes.ok) {
-          const searchData = await searchRes.json();
-          if (searchData.chunks && searchData.chunks.length > 0) {
-            extraContext =
-              "\n\nRelevant information from the user's library resources:\n" +
-              searchData.chunks.join("\n\n");
-          }
-        }
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("Attachment size must be under 10MB");
+        return;
       }
-    } catch (e) {
-      console.error("Failed to fetch RAG context", e);
+      setAttachment(file);
+      if (file.type.startsWith("image/")) {
+        setAttachmentPreview(URL.createObjectURL(file));
+      } else {
+        setAttachmentPreview(null);
+      }
     }
+  };
 
-    const updatedMessages: Message[] = [
-      ...messages,
-      { role: "user", content: userMessage + extraContext },
-    ];
+  const clearAttachment = () => {
+    setAttachment(null);
+    setAttachmentPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  async function sendMessageContent(textToSend: string) {
+    if ((!textToSend.trim() && !attachment) || isGenerating) return;
+
+    const userText = textToSend.trim();
+    const currentAttachment = attachment;
+    const currentPreview = attachmentPreview;
+    
+    setInput("");
+    clearAttachment();
+    setIsGenerating(true);
 
     const now = new Date().toISOString();
+    const attachmentsMeta = currentAttachment
+      ? [
+          {
+            name: currentAttachment.name,
+            type: currentAttachment.type,
+            previewUrl: currentPreview || undefined,
+          },
+        ]
+      : undefined;
+
     setMessages((prev) => [
       ...prev,
-      { role: "user", content: userMessage, created_at: now },
+      {
+        role: "user",
+        content: userText || `[Uploaded file: ${currentAttachment?.name}]`,
+        created_at: now,
+        attachments: attachmentsMeta,
+      },
     ]);
 
-    try {
-      // Add a placeholder for the assistant's response
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "",
-          created_at: new Date().toISOString(),
-        },
-      ]);
-
-      const chunks = await (
-        engine as unknown as {
-          chat: {
-            completions: {
-              create: (
-                req: unknown,
-              ) => Promise<
-                AsyncIterable<{ choices: { delta?: { content?: string } }[] }>
-              >;
-            };
-          };
-        }
-      ).chat.completions.create({
-        messages: updatedMessages,
-        temperature: 0.7,
-        stream: true,
-      });
-
-      let currentResponse = "";
-      for await (const chunk of chunks) {
-        const text = chunk.choices[0]?.delta?.content || "";
-        currentResponse += text;
-
-        // Update the last message (the assistant's placeholder)
-        setMessages((prev) => {
-          const newM = [...prev];
-          newM[newM.length - 1].content = currentResponse;
-          return newM;
-        });
+    let attachmentTextContent = "";
+    if (currentAttachment && !currentAttachment.type.startsWith("image/")) {
+      try {
+        attachmentTextContent = await currentAttachment.text();
+      } catch {
+        attachmentTextContent = `File: ${currentAttachment.name}`;
       }
-    } catch (error) {
-      console.error("Chat error:", error);
-      toast.error(error instanceof Error ? error.message : "An error occurred");
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "I encountered an error generating a response.",
-          created_at: new Date().toISOString(),
-        },
-      ]);
+    }
+
+    try {
+      // Server AI Mode Execution (Instant & Responsive)
+      if (engineMode === "server") {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: "",
+            created_at: new Date().toISOString(),
+          },
+        ]);
+
+        const reqBody = {
+          messages: messages.concat([{ role: "user", content: userText }]),
+          attachments: currentAttachment
+            ? [{ name: currentAttachment.name, type: currentAttachment.type, content: attachmentTextContent }]
+            : undefined,
+        };
+
+        const response = await fetch("/api/ai/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(reqBody),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server AI Error (${response.status})`);
+        }
+
+        const data = await response.json();
+        const replyText = data.choices?.[0]?.message?.content || "No response generated.";
+
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1].content = replyText;
+          return updated;
+        });
+      } else {
+        // Local WebLLM Execution
+        if (!isReady || !engine) {
+          toast.error("Local engine not initialized yet. Download model first or switch to Server AI.");
+          setIsGenerating(false);
+          return;
+        }
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: "",
+            created_at: new Date().toISOString(),
+          },
+        ]);
+
+        const updatedMessages: Message[] = [
+          ...messages,
+          { role: "user", content: userText },
+        ];
+
+        const chunks = await (
+          engine as unknown as {
+            chat: {
+              completions: {
+                create: (
+                  req: unknown,
+                ) => Promise<
+                  AsyncIterable<{ choices: { delta?: { content?: string } }[] }>
+                >;
+              };
+            };
+          }
+        ).chat.completions.create({
+          messages: updatedMessages,
+          temperature: 0.7,
+          stream: true,
+        });
+
+        let currentResponse = "";
+        for await (const chunk of chunks) {
+          const text = chunk.choices[0]?.delta?.content || "";
+          currentResponse += text;
+          setMessages((prev) => {
+            const newM = [...prev];
+            newM[newM.length - 1].content = currentResponse;
+            return newM;
+          });
+        }
+      }
+    } catch (err: unknown) {
+      console.error("AI Chat Error:", err);
+      toast.error("Failed to generate AI response");
     } finally {
       setIsGenerating(false);
     }
   }
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    sendMessageContent(input);
+  };
+
+  const presetPrompts = [
+    "💡 Socratic Math Guidance",
+    "📝 Quiz Me on Data Structures",
+    "📷 Review My Study Notes",
+    "⚡ Honor Society Exam Prep",
+  ];
+
   return (
-    <Card className="flex flex-col h-[700px] w-full max-w-4xl mx-auto shadow-lg border-primary/10">
-      <CardHeader className="bg-muted/30 border-b pb-4">
-        <CardTitle className="flex items-center gap-2">
-          <Avatar className="h-8 w-8">
+    <Card className="flex flex-col h-[720px] w-full max-w-4xl mx-auto shadow-lg border-primary/20">
+      <CardHeader className="bg-card border-b p-4 flex flex-row items-center justify-between">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Avatar className="h-9 w-9 ring-2 ring-primary/20">
             <AvatarImage src="/kuya-nicolai.png" alt="Kuya Nicolai" />
             <AvatarFallback>KN</AvatarFallback>
           </Avatar>
-          Kuya Nicolai
+          <div>
+            <div className="font-bold flex items-center gap-2">
+              Kuya Nicolai AI
+              <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/20">
+                {engineMode === "server" ? "Instant Server AI" : "Local WebLLM"}
+              </Badge>
+            </div>
+            <p className="text-[11px] text-muted-foreground font-normal">
+              CIT-U Honor Society Socratic Peer Study Buddy
+            </p>
+          </div>
         </CardTitle>
+
+        {/* Engine Mode Selector */}
+        <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-lg border text-xs">
+          <Button
+            type="button"
+            size="sm"
+            variant={engineMode === "server" ? "default" : "ghost"}
+            className="h-7 text-[11px] gap-1 px-2.5"
+            onClick={() => setEngineMode("server")}
+          >
+            <Zap className="h-3 w-3" /> Fast Server AI
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={engineMode === "local" ? "default" : "ghost"}
+            className="h-7 text-[11px] gap-1 px-2.5"
+            onClick={() => setEngineMode("local")}
+          >
+            <ShieldCheck className="h-3 w-3" /> Private Local
+          </Button>
+        </div>
       </CardHeader>
 
-      <CardContent className="flex-1 p-0 overflow-hidden relative">
-        {!isReady && (
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-8 text-center">
-            <Avatar className="h-20 w-20 mb-4 animate-pulse ring-4 ring-primary/20">
+      <CardContent className="flex-1 p-0 overflow-hidden relative bg-muted/10">
+        {/* Local Engine Download Overlay if local mode chosen & not ready */}
+        {engineMode === "local" && !isReady && (
+          <div className="absolute inset-0 bg-background/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-8 text-center">
+            <Avatar className="h-16 w-16 mb-3 animate-pulse ring-4 ring-primary/20">
               <AvatarImage src="/kuya-nicolai.png" alt="Kuya Nicolai" />
               <AvatarFallback>KN</AvatarFallback>
             </Avatar>
-            <h3 className="text-xl font-bold mb-2">Initialize Local AI</h3>
-            <p className="text-muted-foreground mb-6 max-w-md">
-              To chat privately, we need to download a small language model to
-              your browser&apos;s cache (~1GB). This only happens once.
+            <h3 className="text-lg font-bold mb-1">Initialize Local WebLLM Engine</h3>
+            <p className="text-muted-foreground text-xs mb-4 max-w-md">
+              Download small in-browser LLM weights (~1GB) for 100% offline private processing.
             </p>
-
             {initProgress ? (
               <div className="w-full max-w-md space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>{initProgress.text}</span>
-                </div>
                 <Progress value={initProgress.progress * 100} className="h-2" />
+                <p className="text-[11px] text-muted-foreground">{initProgress.text}</p>
               </div>
             ) : (
-              <Button
-                onClick={initializeEngine}
-                disabled={isLoading}
-                size="lg"
-                className="gap-2"
-              >
-                {isLoading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <Download className="h-5 w-5" />
-                )}
-                Download & Initialize Model
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={initializeEngine} disabled={isLoading} size="sm" className="gap-2 text-xs">
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                  Download Local Model
+                </Button>
+                <Button onClick={() => setEngineMode("server")} variant="outline" size="sm" className="text-xs">
+                  Switch to Fast Server AI
+                </Button>
+              </div>
             )}
           </div>
         )}
 
         <ScrollArea ref={scrollRef} className="h-full p-6">
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-5">
             {messages
               .filter((m) => m.role !== "system")
-              .map((msg, index) => (
-                <div
-                  key={index}
-                  className={`flex gap-3 max-w-[85%] ${
-                    msg.role === "user" ? "ml-auto flex-row-reverse" : "mr-auto"
-                  }`}
-                >
+              .map((msg, index) => {
+                const isUser = msg.role === "user";
+                return (
                   <div
-                    className={`flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-full ${
-                      msg.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground border"
-                    }`}
+                    key={index}
+                    className={`flex gap-3 ${isUser ? "flex-row-reverse" : "flex-row"}`}
                   >
-                    {msg.role === "user" ? (
-                      <User className="h-5 w-5" />
-                    ) : (
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage
-                          src="/kuya-nicolai.png"
-                          alt="Kuya Nicolai"
-                        />
-                        <AvatarFallback>KN</AvatarFallback>
-                      </Avatar>
-                    )}
-                  </div>
-                  <div
-                    className={`rounded-lg p-4 ${
-                      msg.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted border shadow-sm"
-                    }`}
-                  >
-                    <div className="prose prose-sm dark:prose-invert max-w-none break-words">
-                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    <Avatar className="h-8 w-8 shrink-0 mt-0.5">
+                      {isUser ? (
+                        <>
+                          <AvatarImage src="" />
+                          <AvatarFallback className="bg-primary text-primary-foreground text-xs">U</AvatarFallback>
+                        </>
+                      ) : (
+                        <>
+                          <AvatarImage src="/kuya-nicolai.png" alt="Kuya Nicolai" />
+                          <AvatarFallback>KN</AvatarFallback>
+                        </>
+                      )}
+                    </Avatar>
+
+                    <div
+                      className={`flex flex-col gap-1.5 max-w-[80%] rounded-xl p-4 text-xs shadow-sm ${
+                        isUser
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-card border text-card-foreground"
+                      }`}
+                    >
+                      {msg.attachments && msg.attachments.length > 0 && (
+                        <div className="space-y-1 pb-1">
+                          {msg.attachments.map((att, i) => (
+                            <div key={i} className="flex items-center gap-2 p-1.5 rounded bg-background/20 text-[11px]">
+                              {att.previewUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={att.previewUrl} alt={att.name} className="h-10 w-10 object-cover rounded border" />
+                              ) : (
+                                <FileText className="h-4 w-4" />
+                              )}
+                              <span className="truncate">{att.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {msg.content ? (
+                        <div className="prose dark:prose-invert text-xs leading-relaxed max-w-none">
+                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-muted-foreground py-1">
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" /> Thinking...
+                        </div>
+                      )}
                     </div>
-                    {msg.created_at && (
-                      <div
-                        className={`flex items-center gap-1 mt-1 text-[9px] ${msg.role === "user" ? "text-primary-foreground/70 justify-end" : "text-muted-foreground justify-end"}`}
-                      >
-                        <span>
-                          {new Date(msg.created_at).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                        {msg.role === "user" && (
-                          <CheckCheck className="h-3 w-3 ml-0.5" />
-                        )}
-                      </div>
-                    )}
                   </div>
-                </div>
-              ))}
-            {isLoading && isReady && (
-              <div className="flex gap-3 mr-auto max-w-[85%] animate-pulse">
-                <div className="flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-full bg-muted text-muted-foreground border">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src="/kuya-nicolai.png" alt="Kuya Nicolai" />
-                    <AvatarFallback>KN</AvatarFallback>
-                  </Avatar>
-                </div>
-                <div className="rounded-lg p-4 bg-muted border shadow-sm flex items-center gap-2">
-                  <div
-                    className="h-2 w-2 bg-primary rounded-full animate-bounce"
-                    style={{ animationDelay: "0ms" }}
-                  />
-                  <div
-                    className="h-2 w-2 bg-primary rounded-full animate-bounce"
-                    style={{ animationDelay: "150ms" }}
-                  />
-                  <div
-                    className="h-2 w-2 bg-primary rounded-full animate-bounce"
-                    style={{ animationDelay: "300ms" }}
-                  />
-                </div>
-              </div>
-            )}
+                );
+              })}
           </div>
         </ScrollArea>
       </CardContent>
 
-      <CardFooter className="p-4 border-t bg-muted/30">
-        <form onSubmit={handleSubmit} className="flex w-full gap-2">
+      {/* Preset Quick Prompts */}
+      <div className="px-4 py-2 border-t bg-card/60 flex items-center gap-2 overflow-x-auto text-xs">
+        <Sparkles className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+        {presetPrompts.map((p, i) => (
+          <Button
+            key={i}
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-6 text-[11px] shrink-0 rounded-full px-2.5 hover:bg-primary/10"
+            onClick={() => sendMessageContent(p.slice(2))}
+          >
+            {p}
+          </Button>
+        ))}
+      </div>
+
+      <CardFooter className="p-3 border-t bg-card flex flex-col gap-2">
+        {/* Attachment preview bar */}
+        {attachment && (
+          <div className="w-full flex items-center justify-between p-2 rounded border bg-muted/40 text-xs">
+            <div className="flex items-center gap-2">
+              {attachmentPreview ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={attachmentPreview} alt="preview" className="h-8 w-8 object-cover rounded border" />
+              ) : (
+                <FileText className="h-4 w-4 text-primary" />
+              )}
+              <span className="truncate font-medium">{attachment.name}</span>
+            </div>
+            <Button type="button" variant="ghost" size="icon" className="h-5 w-5" onClick={clearAttachment}>
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="flex w-full items-center gap-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            accept="image/*,.pdf,.txt,.js,.ts,.py,.doc,.docx"
+          />
+
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 shrink-0"
+            onClick={() => fileInputRef.current?.click()}
+            title="Attach photo or file"
+          >
+            <Paperclip className="h-4 w-4 text-muted-foreground" />
+          </Button>
+
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={
-              isReady
-                ? "Ask your tutor a question..."
-                : "Initialize model first..."
-            }
-            disabled={!isReady || isLoading}
-            className="flex-1"
-            autoFocus
+            placeholder="Ask Kuya Nicolai or upload study materials..."
+            className="flex-1 text-xs h-9"
+            disabled={isGenerating}
           />
-          <Button
-            type="submit"
-            disabled={!isReady || isLoading || !input.trim()}
-            size="icon"
-          >
-            <Send className="h-4 w-4" />
-            <span className="sr-only">Send message</span>
+
+          <Button type="submit" size="sm" className="h-9 gap-1.5 shrink-0" disabled={isGenerating || (!input.trim() && !attachment)}>
+            {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            Send
           </Button>
         </form>
       </CardFooter>
