@@ -34,6 +34,7 @@ interface SystemLog {
   entity_type: string;
   entity_id: string;
   details?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
   profiles?: { full_name?: string; email?: string };
 }
 
@@ -123,7 +124,7 @@ export default function SystemLogsPage() {
     : logs;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const formattedForExport = filtered.map((log: unknown) => ({
+  const formattedForExport = filtered.map((log: SystemLog) => ({
     Time: format(new Date(log.created_at), "yyyy-MM-dd HH:mm:ss"),
 
     User: log.profiles?.full_name || "System",

@@ -219,7 +219,8 @@ export async function PATCH(request: NextRequest) {
         .single();
       const memberRole = Array.isArray(memberProfile?.roles)
         ? memberProfile.roles[0]?.name
-        : ((memberProfile?.roles as Record<string, unknown> | null)?.name as string | undefined);
+        : ((memberProfile?.roles as unknown as Record<string, unknown> | null)
+            ?.name as string | undefined);
       if (memberRole === "learner") {
         return NextResponse.json(
           {
@@ -358,7 +359,8 @@ async function applyRoleFromPosition(
 
   const currentRole = Array.isArray(currentProfile?.roles)
     ? currentProfile.roles[0]?.name
-    : ((currentProfile?.roles as Record<string, unknown> | null)?.name as string | undefined);
+    : ((currentProfile?.roles as Record<string, unknown> | null)?.name as
+        string | undefined);
 
   if (currentRole === "super_admin" || currentRole === "administrator") {
     // Don't overwrite system roles â€” store assignment only, don't change role_id
@@ -402,7 +404,8 @@ async function revertToTutorIfUnassigned(
 
   const currentRole = Array.isArray(currentProfile?.roles)
     ? currentProfile.roles[0]?.name
-    : ((currentProfile?.roles as Record<string, unknown> | null)?.name as string | undefined);
+    : ((currentProfile?.roles as Record<string, unknown> | null)?.name as
+        string | undefined);
 
   if (currentRole === "super_admin" || currentRole === "administrator") return;
 
@@ -411,4 +414,3 @@ async function revertToTutorIfUnassigned(
     .update({ role_id: tutorRole.id, role_expires_at: null })
     .eq("id", user_id);
 }
-

@@ -4,26 +4,16 @@ import { createClient } from "@/lib/supabase/create-client";
 import { GOVERNANCE_ROLES, hasAnyRole } from "@/lib/utils/roles";
 
 // Helper to fetch active timesheet collection period
-async function getActivePeriod(supabase: Record<string, unknown>) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getActivePeriod(supabase: any) {
   try {
-    const { data } = await (
-      supabase as unknown as {
-        from: (table: string) => {
-          select: (cols: string) => {
-            eq: (
-              col: string,
-              val: boolean,
-            ) => { maybeSingle: () => Promise<{ data: unknown }> };
-          };
-        };
-      }
-    )
+    const { data } = await supabase
       .from("timesheet_periods")
-      .select("start_date, end_date")
+      .select("*")
       .eq("is_active", true)
-      .maybeSingle();
-    return data || null;
-  } catch {
+      .single();
+    return data;
+  } catch (e) {
     return null;
   }
 }

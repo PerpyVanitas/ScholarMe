@@ -82,6 +82,8 @@ export async function GET(
       status: string;
       location?: string;
       learner_id?: string;
+      meeting_link?: string;
+      notes?: string;
     }) => {
       icsContent += "BEGIN:VEVENT\r\n";
       icsContent += `UID:session-${session.id}@scholarme.app\r\n`;

@@ -52,7 +52,8 @@ export async function POST(request: Request) {
 
     const roleName = Array.isArray(profile?.roles)
       ? profile.roles[0]?.name
-      : ((profile?.roles as Record<string, unknown> | null)?.name as string | undefined);
+      : ((profile?.roles as unknown as Record<string, unknown> | null)?.name as
+          string | undefined);
     const isAdmin = isAdminRole(roleName as string);
 
     if (profileError || !profile || !isAdmin) {
