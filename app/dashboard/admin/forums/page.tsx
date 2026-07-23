@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
 export default function AdminForumsPage() {
-  const [reports, setReports] = useState<any[]>([]);
+  const [reports, setReports] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(true);
 
   async function loadReports() {

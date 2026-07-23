@@ -81,7 +81,7 @@ export default function ResourcesPage() {
   const [userId, setUserId] = useState("");
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
-  const [physicalResources, setPhysicalResources] = useState<any[]>([]);
+  const [physicalResources, setPhysicalResources] = useState<unknown[]>([]);
   const [activeTab, setActiveTab] = useState("digital");
 
   const [expandedRepo, setExpandedRepo] = useState<string | null>(null);

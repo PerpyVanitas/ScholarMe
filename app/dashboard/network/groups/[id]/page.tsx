@@ -63,9 +63,9 @@ export default function StudyGroupDetailPage({
       if (memberData) {
          
         const normalized = (memberData as unknown[]).map((m) => ({
-          // @ts-expect-error
+          // @ts-expect-error: required
           ...m,
-          // @ts-expect-error
+          // @ts-expect-error: required
           profiles: Array.isArray(m.profiles) ? m.profiles[0] : m.profiles,
         })) as GroupMember[];
         setMembers(normalized);

@@ -206,7 +206,7 @@ export default function TutorDetailPage({
       toast.success("Joined waitlist! You will be notified when slots open.");
      
     } catch (e: unknown) {
-      // @ts-expect-error
+      // @ts-expect-error: required
       toast.error(e.message || "Failed to join waitlist");
     } finally {
       setWaitlistLoading(false);
@@ -280,7 +280,7 @@ export default function TutorDetailPage({
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     {specs.map((s: unknown) => (
                       <Badge
-                        // @ts-expect-error
+                        // @ts-expect-error: required
                         key={s.specializations.id}
                         variant="secondary"
                         className="text-xs"

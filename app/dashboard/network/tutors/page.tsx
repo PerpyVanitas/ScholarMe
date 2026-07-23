@@ -54,7 +54,7 @@ export default function TutorsPage() {
         supabase.from("specializations").select("*").order("name"),
       ]);
       
-      // @ts-expect-error
+      // @ts-expect-error: required
       setTutors(tutorRes.data || []);
       setTotalTutors(tutorRes.count || 0);
       setSpecializations(specRes.data || []);
