@@ -18,3 +18,7 @@ At the end of every instruction implementation cycle (e.g., when finishing a tas
 - **documentation/rbac.md**: This file contains the authoritative access control rules. Keep it updated if roles change.
 
 Always review and update these documentation files before concluding your work and presenting the final walkthrough.
+
+## Pre-Commit Linting
+
+- **Auto-Fix Workflow:** Before finalizing a feature, making a commit, or finishing an iteration, you MUST proactively run `eslint . --fix` (or `pnpm run lint --fix` if available). This mimics the human developer "Auto-Fix on Save" behavior and prevents basic linting errors (like unescaped quotes or spacing) from breaking the CI pipeline.
