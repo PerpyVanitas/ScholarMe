@@ -452,27 +452,36 @@ export default function SessionsPage() {
             />
           ) : (
             <div className="flex flex-col gap-3">
-              {waitlists.map((w) => (
-                <Card key={w.id} className="border-border/60">
-                  <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex flex-col gap-1">
-                      <span className="font-medium">
-                        {role === "tutor"
-                          ? `Waitlist: ${w.learner?.full_name}`
-                          : `Waitlist: ${w.tutor?.profiles?.full_name || "Tutor"}`}
-                      </span>
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3.5 w-3.5" />
-                          Requested Date:{" "}
-                          {new Date(w.requested_date).toLocaleDateString()}
+              {waitlists.map((w) => {
+                const wl = w as {
+                  id: string;
+                  learner?: { full_name?: string };
+                  tutor?: { profiles?: { full_name?: string } };
+                  requested_date: string;
+                  status: React.ReactNode;
+                };
+                return (
+                  <Card key={wl.id} className="border-border/60">
+                    <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex flex-col gap-1">
+                        <span className="font-medium">
+                          {role === "tutor"
+                            ? `Waitlist: ${wl.learner?.full_name}`
+                            : `Waitlist: ${wl.tutor?.profiles?.full_name || "Tutor"}`}
                         </span>
-                        <Badge variant="secondary">{w.status}</Badge>
+                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3.5 w-3.5" />
+                            Requested Date:{" "}
+                            {new Date(wl.requested_date).toLocaleDateString()}
+                          </span>
+                          <Badge variant="secondary">{wl.status}</Badge>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </TabsContent>

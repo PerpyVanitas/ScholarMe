@@ -136,11 +136,14 @@ export function TutorDashboard({
   const [clockLoading, setClockLoading] = useState(false);
   const [clockCheckDone, setClockCheckDone] = useState(!tutor);
 
-  const savedWidgets = ((profile as unknown as Record<string, unknown>)?.dashboard_layout as { widgets?: string[] } | undefined)?.widgets;
+  const savedWidgets = (
+    (profile as unknown as Record<string, unknown>)?.dashboard_layout as
+      { widgets?: string[] } | undefined
+  )?.widgets;
   const initialLayout = useMemo(() => {
     if (Array.isArray(savedWidgets)) {
       return [...new Set([...savedWidgets, ...DEFAULT_LAYOUT])].filter((id) =>
-        DEFAULT_LAYOUT.includes(id)
+        DEFAULT_LAYOUT.includes(id),
       );
     }
     return DEFAULT_LAYOUT;
@@ -172,7 +175,9 @@ export function TutorDashboard({
 
   async function handleClock(action: "clock_in" | "clock_out") {
     if (!tutor) {
-      toast.error("Almost there! Please finish your tutor profile setup before clocking in.");
+      toast.error(
+        "Almost there! Please finish your tutor profile setup before clocking in.",
+      );
       return;
     }
     setClockLoading(true);
@@ -227,7 +232,8 @@ export function TutorDashboard({
     try {
       const supabase = createClient();
       const baseLayout =
-        ((profile as unknown as Record<string, unknown>)?.dashboard_layout as Record<string, unknown>) || {};
+        ((profile as unknown as Record<string, unknown>)
+          ?.dashboard_layout as Record<string, unknown>) || {};
       const updatedLayout = { ...baseLayout, widgets: layout };
       const { error } = await supabase
         .from("profiles")
@@ -238,7 +244,9 @@ export function TutorDashboard({
       toast.success("Dashboard layout saved!");
       setIsEditingLayout(false);
     } catch (err) {
-      toast.error("Hmm, we couldn't save your layout right now. Please try again.");
+      toast.error(
+        "Hmm, we couldn't save your layout right now. Please try again.",
+      );
     } finally {
       setSavingLayout(false);
     }
@@ -284,7 +292,7 @@ export function TutorDashboard({
         clockInTime={clockInTime}
         clockingIn={clockLoading}
         isLongClockIn={isLongClockIn}
-        elapsedStr={elapsedStr}
+        elapsedStr={""}
         onClockIn={() => handleClock("clock_in")}
         onClockOut={() => handleClock("clock_out")}
       />
@@ -328,7 +336,9 @@ export function TutorDashboard({
                 <span className="text-2xl font-bold text-foreground">
                   {stats.rating > 0 ? stats.rating.toFixed(1) : "N/A"}
                 </span>
-                <span className="text-xs text-muted-foreground">Avg Rating</span>
+                <span className="text-xs text-muted-foreground">
+                  Avg Rating
+                </span>
               </div>
             </CardContent>
           </Card>

@@ -24,7 +24,19 @@ vi.mock("@/lib/utils/login-history", () => ({
 }));
 
 describe("Auth Actions", () => {
-  let mockSupabase: unknown;
+  type MockSupabaseType = {
+    auth: {
+      signInWithPassword: ReturnType<typeof vi.fn>;
+      signOut: ReturnType<typeof vi.fn>;
+      getUser: ReturnType<typeof vi.fn>;
+      admin: {
+        createUser: ReturnType<typeof vi.fn>;
+      };
+    };
+    from: ReturnType<typeof vi.fn>;
+  };
+
+  let mockSupabase: MockSupabaseType;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -48,12 +60,17 @@ describe("Auth Actions", () => {
       })),
     };
 
-    (createClient as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockSupabase);
+    (createClient as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockSupabase,
+    );
   });
 
   describe("loginWithEmail", () => {
     it("should return success when credentials are correct", async () => {
-      mockSupabase.auth.signInWithPassword.mockResolvedValue({ data: { user: { id: "1" } }, error: null });
+      mockSupabase.auth.signInWithPassword.mockResolvedValue({
+        data: { user: { id: "1" } },
+        error: null,
+      });
 
       const formData = new FormData();
       formData.append("email", "test@example.com");
@@ -69,7 +86,10 @@ describe("Auth Actions", () => {
     });
 
     it("should lowercase the email automatically (P3-3)", async () => {
-      mockSupabase.auth.signInWithPassword.mockResolvedValue({ data: { user: { id: "1" } }, error: null });
+      mockSupabase.auth.signInWithPassword.mockResolvedValue({
+        data: { user: { id: "1" } },
+        error: null,
+      });
 
       const formData = new FormData();
       formData.append("email", "USER@eXaMpLe.com");
@@ -114,7 +134,9 @@ describe("Auth Actions", () => {
         data: { user: { id: "user-123" } },
       });
 
-      (mockSupabase.from as unknown as ReturnType<typeof vi.fn>).mockImplementation((table: string) => {
+      (
+        mockSupabase.from as unknown as ReturnType<typeof vi.fn>
+      ).mockImplementation((table: string) => {
         if (table === "timesheets") {
           return {
             select: vi.fn().mockReturnThis(),

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { PhysicalResource } from "@/lib/types";
 import {
   Card,
   CardContent,
@@ -154,7 +155,7 @@ export default function ResourcesPage() {
       return false;
     });
     setRepos(visibleRepos);
-    
+
     // Fetch physical resources for the LibraryCatalog
     try {
       const pResources = await getLibraryCatalog();
@@ -311,253 +312,259 @@ export default function ResourcesPage() {
 
         <TabsContent value="digital" className="mt-0 flex flex-col gap-6">
           <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search repositories..."
-            className="pl-9"
-          />
-        </div>
-        <Select value={filterType} onValueChange={setFilterType}>
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="All Types" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="pdf">PDF</SelectItem>
-            <SelectItem value="document">Documents</SelectItem>
-            <SelectItem value="spreadsheet">Spreadsheets</SelectItem>
-            <SelectItem value="presentation">Presentations</SelectItem>
-            <SelectItem value="image">Images</SelectItem>
-            <SelectItem value="video">Videos</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {filteredRepos.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 py-16">
-            <div className="rounded-full bg-muted p-4">
-              <BookOpen className="h-6 w-6 text-muted-foreground" />
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search repositories..."
+                className="pl-9"
+              />
             </div>
-            <h3 className="text-lg font-semibold text-foreground">
-              No repositories found
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {search
-                ? "Try adjusting your search."
-                : canManage
-                  ? "Create a repository and start uploading resources."
-                  : "Check back later for learning materials."}
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {filteredRepos.map((repo) => {
-            const isExpanded = expandedRepo === repo.id;
-            const isLoading = loadingResources === repo.id;
-            const items = repoResources[repo.id] || [];
-            const isOwner = repo.owner_id === userId;
-            const canAdd =
-              isOwner || role === "administrator" || role === "super_admin";
-            const filtered =
-              filterType === "all"
-                ? items
-                : items.filter((r) => r.file_type === filterType);
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="All Types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="pdf">PDF</SelectItem>
+                <SelectItem value="document">Documents</SelectItem>
+                <SelectItem value="spreadsheet">Spreadsheets</SelectItem>
+                <SelectItem value="presentation">Presentations</SelectItem>
+                <SelectItem value="image">Images</SelectItem>
+                <SelectItem value="video">Videos</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-            return (
-              <Card key={repo.id}>
-                <CardHeader
-                  className="cursor-pointer select-none p-4"
-                  onClick={() => toggleRepo(repo.id)}
-                >
-                  <div className="flex items-center gap-3">
-                    {isExpanded ? (
-                      <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    )}
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                      <FolderOpen className="h-4 w-4 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <CardTitle className="text-sm font-semibold truncate">
-                          {repo.title}
-                        </CardTitle>
-                        <Badge
-                          variant="outline"
-                          className={`text-[10px] shrink-0 ${accessBadge[repo.access_role] || ""}`}
-                        >
-                          {accessLabels[repo.access_role] || repo.access_role}
-                        </Badge>
-                      </div>
-                      <CardDescription className="text-xs mt-0.5 truncate">
-                        {repo.description || "No description"} · by{" "}
-                        {(repo.profiles as { full_name: string } | null)
-                          ?.full_name || "Unknown"}
-                      </CardDescription>
-                    </div>
-                    {canAdd && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="shrink-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openUploadForRepo(repo.id);
-                        }}
-                      >
-                        <Plus className="h-4 w-4" />
-                        <span className="sr-only">Add resource</span>
-                      </Button>
-                    )}
-                  </div>
-                </CardHeader>
-                {isExpanded && (
-                  <CardContent className="border-t border-border/60 px-4 pt-3 pb-4">
-                    {isLoading ? (
-                      <div className="flex justify-center py-6">
-                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                      </div>
-                    ) : filtered.length === 0 ? (
-                      <div className="text-center py-6">
-                        <p className="text-sm text-muted-foreground">
-                          {filterType !== "all"
-                            ? "No matching resources for this filter."
-                            : "No resources in this repository yet."}
-                        </p>
-                        {canAdd && filterType === "all" && (
+          {filteredRepos.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center gap-3 py-16">
+                <div className="rounded-full bg-muted p-4">
+                  <BookOpen className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground">
+                  No repositories found
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {search
+                    ? "Try adjusting your search."
+                    : canManage
+                      ? "Create a repository and start uploading resources."
+                      : "Check back later for learning materials."}
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {filteredRepos.map((repo) => {
+                const isExpanded = expandedRepo === repo.id;
+                const isLoading = loadingResources === repo.id;
+                const items = repoResources[repo.id] || [];
+                const isOwner = repo.owner_id === userId;
+                const canAdd =
+                  isOwner || role === "administrator" || role === "super_admin";
+                const filtered =
+                  filterType === "all"
+                    ? items
+                    : items.filter((r) => r.file_type === filterType);
+
+                return (
+                  <Card key={repo.id}>
+                    <CardHeader
+                      className="cursor-pointer select-none p-4"
+                      onClick={() => toggleRepo(repo.id)}
+                    >
+                      <div className="flex items-center gap-3">
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        )}
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                          <FolderOpen className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <CardTitle className="text-sm font-semibold truncate">
+                              {repo.title}
+                            </CardTitle>
+                            <Badge
+                              variant="outline"
+                              className={`text-[10px] shrink-0 ${accessBadge[repo.access_role] || ""}`}
+                            >
+                              {accessLabels[repo.access_role] ||
+                                repo.access_role}
+                            </Badge>
+                          </div>
+                          <CardDescription className="text-xs mt-0.5 truncate">
+                            {repo.description || "No description"} · by{" "}
+                            {(repo.profiles as { full_name: string } | null)
+                              ?.full_name || "Unknown"}
+                          </CardDescription>
+                        </div>
+                        {canAdd && (
                           <Button
                             size="sm"
-                            variant="outline"
-                            className="mt-3"
-                            onClick={() => openUploadForRepo(repo.id)}
+                            variant="ghost"
+                            className="shrink-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openUploadForRepo(repo.id);
+                            }}
                           >
-                            <Plus className="mr-2 h-3.5 w-3.5" />
-                            Upload First Resource
+                            <Plus className="h-4 w-4" />
+                            <span className="sr-only">Add resource</span>
                           </Button>
                         )}
                       </div>
-                    ) : (
-                      <div className="flex flex-col gap-2">
-                        {filtered.map((resource) => {
-                          const info = getTypeInfo(resource.file_type);
-                          const Icon = info.icon;
-                          const canDelete =
-                            role === "administrator" ||
-                            role === "super_admin" ||
-                            resource.uploaded_by === userId ||
-                            isOwner;
-                          // A resource is considered private if is_public is explicitly false
-                          const isPrivate = resource.is_public === false;
-                          // Users who can bypass the private lock
-                          const canViewPrivate = canDelete || role === "tutor";
-
-                          return (
-                            <div
-                              key={resource.id}
-                              className={`flex items-center gap-3 rounded-lg border border-border/60 p-3 transition-colors ${isPrivate && !canViewPrivate ? "opacity-60 cursor-not-allowed" : "hover:bg-muted/30 cursor-pointer"}`}
-                              onClick={() => {
-                                if (isPrivate && !canViewPrivate) return;
-                                setPreviewResource(resource);
-                                setPreviewOpen(true);
-                              }}
-                            >
-                              <div
-                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${info.color}`}
+                    </CardHeader>
+                    {isExpanded && (
+                      <CardContent className="border-t border-border/60 px-4 pt-3 pb-4">
+                        {isLoading ? (
+                          <div className="flex justify-center py-6">
+                            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                          </div>
+                        ) : filtered.length === 0 ? (
+                          <div className="text-center py-6">
+                            <p className="text-sm text-muted-foreground">
+                              {filterType !== "all"
+                                ? "No matching resources for this filter."
+                                : "No resources in this repository yet."}
+                            </p>
+                            {canAdd && filterType === "all" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="mt-3"
+                                onClick={() => openUploadForRepo(repo.id)}
                               >
-                                <Icon className="h-4 w-4" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm font-medium text-foreground break-words overflow-hidden max-w-full min-w-0">
-                                    {resource.title}
-                                  </span>
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-[10px] shrink-0"
+                                <Plus className="mr-2 h-3.5 w-3.5" />
+                                Upload First Resource
+                              </Button>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex flex-col gap-2">
+                            {filtered.map((resource) => {
+                              const info = getTypeInfo(resource.file_type);
+                              const Icon = info.icon;
+                              const canDelete =
+                                role === "administrator" ||
+                                role === "super_admin" ||
+                                resource.uploaded_by === userId ||
+                                isOwner;
+                              // A resource is considered private if is_public is explicitly false
+                              const isPrivate = resource.is_public === false;
+                              // Users who can bypass the private lock
+                              const canViewPrivate =
+                                canDelete || role === "tutor";
+
+                              return (
+                                <div
+                                  key={resource.id}
+                                  className={`flex items-center gap-3 rounded-lg border border-border/60 p-3 transition-colors ${isPrivate && !canViewPrivate ? "opacity-60 cursor-not-allowed" : "hover:bg-muted/30 cursor-pointer"}`}
+                                  onClick={() => {
+                                    if (isPrivate && !canViewPrivate) return;
+                                    setPreviewResource(resource);
+                                    setPreviewOpen(true);
+                                  }}
+                                >
+                                  <div
+                                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${info.color}`}
                                   >
-                                    {info.label}
-                                  </Badge>
+                                    <Icon className="h-4 w-4" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-medium text-foreground break-words overflow-hidden max-w-full min-w-0">
+                                        {resource.title}
+                                      </span>
+                                      <Badge
+                                        variant="secondary"
+                                        className="text-[10px] shrink-0"
+                                      >
+                                        {info.label}
+                                      </Badge>
+                                    </div>
+                                    {resource.description && (
+                                      <p className="text-xs text-muted-foreground truncate mt-0.5">
+                                        {resource.description}
+                                      </p>
+                                    )}
+                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                      {(
+                                        resource.profiles as {
+                                          full_name: string;
+                                        } | null
+                                      )?.full_name || "Unknown"}{" "}
+                                      ·{" "}
+                                      {new Date(
+                                        resource.created_at,
+                                      ).toLocaleDateString()}
+                                    </p>
+                                  </div>
+                                  <div
+                                    className="flex items-center gap-1 shrink-0"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    {isPrivate && !canViewPrivate ? (
+                                      <span className="flex items-center gap-1 text-xs text-muted-foreground px-2">
+                                        <Lock className="h-3.5 w-3.5" />
+                                        Private
+                                      </span>
+                                    ) : (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        asChild
+                                      >
+                                        <a
+                                          href={`${resource.url}?download=`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          aria-label={`Download ${resource.title}`}
+                                        >
+                                          <Download className="h-4 w-4" />
+                                        </a>
+                                      </Button>
+                                    )}
+                                    {canDelete && (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-destructive hover:text-destructive"
+                                        onClick={() =>
+                                          handleDeleteResource(resource)
+                                        }
+                                        aria-label={`Delete ${resource.title}`}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    )}
+                                  </div>
                                 </div>
-                                {resource.description && (
-                                  <p className="text-xs text-muted-foreground truncate mt-0.5">
-                                    {resource.description}
-                                  </p>
-                                )}
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                  {(
-                                    resource.profiles as {
-                                      full_name: string;
-                                    } | null
-                                  )?.full_name || "Unknown"}{" "}
-                                  ·{" "}
-                                  {new Date(
-                                    resource.created_at,
-                                  ).toLocaleDateString()}
-                                </p>
-                              </div>
-                              <div
-                                className="flex items-center gap-1 shrink-0"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                {isPrivate && !canViewPrivate ? (
-                                  <span className="flex items-center gap-1 text-xs text-muted-foreground px-2">
-                                    <Lock className="h-3.5 w-3.5" />
-                                    Private
-                                  </span>
-                                ) : (
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    asChild
-                                  >
-                                    <a
-                                      href={`${resource.url}?download=`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      aria-label={`Download ${resource.title}`}
-                                    >
-                                      <Download className="h-4 w-4" />
-                                    </a>
-                                  </Button>
-                                )}
-                                {canDelete && (
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-destructive hover:text-destructive"
-                                    onClick={() =>
-                                      handleDeleteResource(resource)
-                                    }
-                                    aria-label={`Delete ${resource.title}`}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </CardContent>
                     )}
-                  </CardContent>
-                )}
-              </Card>
-            );
-          })}
-        </div>
-      )}
-      </TabsContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
 
-      <TabsContent value="physical" className="mt-0">
-        <LibraryCatalog initialResources={physicalResources} />
-      </TabsContent>
+        <TabsContent value="physical" className="mt-0">
+          <LibraryCatalog
+            initialResources={
+              physicalResources as unknown as PhysicalResource[]
+            }
+          />
+        </TabsContent>
       </Tabs>
 
       {canManage && (

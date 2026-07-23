@@ -28,7 +28,13 @@ export function ProfileView({
   profile,
   currentUserId,
 }: {
-  profile: Record<string, unknown>;
+  profile: Profile & {
+    status_message?: string | null;
+    degree_program?: string | null;
+    year_level?: string | null;
+    academic_year_joined?: string | null;
+    committee?: string | null;
+  };
   currentUserId: string;
 }) {
   const router = useRouter();

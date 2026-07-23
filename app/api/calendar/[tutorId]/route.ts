@@ -54,7 +54,9 @@ export async function GET(
   icsContent += "METHOD:PUBLISH\r\n";
 
   const rawProfiles = (tutor as unknown as Record<string, unknown>)?.profiles;
-  const tutorProfile = (Array.isArray(rawProfiles) ? rawProfiles[0] : rawProfiles) as Record<string, string> | undefined;
+  const tutorProfile = (
+    Array.isArray(rawProfiles) ? rawProfiles[0] : rawProfiles
+  ) as Record<string, string> | undefined;
   const tutorName = tutorProfile?.first_name
     ? `${tutorProfile.first_name} ${tutorProfile.last_name || ""}`.trim()
     : "Tutor";
@@ -70,37 +72,48 @@ export async function GET(
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  sessions.forEach((session: Record<string, unknown>) => {
-    icsContent += "BEGIN:VEVENT\r\n";
-    icsContent += `UID:session-${session.id}@scholarme.app\r\n`;
-    icsContent += `DTSTAMP:${getStamp()}\r\n`;
-    icsContent += `DTSTART:${formatICSDate(session.scheduled_date, session.start_time)}\r\n`;
-    icsContent += `DTEND:${formatICSDate(session.scheduled_date, session.end_time)}\r\n`;
+  sessions.forEach(
+    (session: {
+      id: string;
+      scheduled_date: string;
+      start_time: string;
+      end_time: string;
+      specializations?: { name?: string };
+      status: string;
+      location?: string;
+      learner_id?: string;
+    }) => {
+      icsContent += "BEGIN:VEVENT\r\n";
+      icsContent += `UID:session-${session.id}@scholarme.app\r\n`;
+      icsContent += `DTSTAMP:${getStamp()}\r\n`;
+      icsContent += `DTSTART:${formatICSDate(session.scheduled_date, session.start_time)}\r\n`;
+      icsContent += `DTEND:${formatICSDate(session.scheduled_date, session.end_time)}\r\n`;
 
-    let summary = "Tutoring Session";
-    if (session.specializations?.name) {
-      summary += ` - ${session.specializations.name}`;
-    }
+      let summary = "Tutoring Session";
+      if (session.specializations?.name) {
+        summary += ` - ${session.specializations.name}`;
+      }
 
-    icsContent += `SUMMARY:${summary}\r\n`;
+      icsContent += `SUMMARY:${summary}\r\n`;
 
-    let description = "ScholarMe Tutoring Session";
-    if (session.meeting_link) {
-      description += `\\nMeeting Link: ${session.meeting_link}`;
-    }
-    if (session.notes) {
-      description += `\\nNotes: ${session.notes}`;
-    }
+      let description = "ScholarMe Tutoring Session";
+      if (session.meeting_link) {
+        description += `\\nMeeting Link: ${session.meeting_link}`;
+      }
+      if (session.notes) {
+        description += `\\nNotes: ${session.notes}`;
+      }
 
-    icsContent += `DESCRIPTION:${description}\r\n`;
+      icsContent += `DESCRIPTION:${description}\r\n`;
 
-    if (session.meeting_link) {
-      icsContent += `LOCATION:${session.meeting_link}\r\n`;
-    }
+      if (session.meeting_link) {
+        icsContent += `LOCATION:${session.meeting_link}\r\n`;
+      }
 
-    icsContent += "STATUS:CONFIRMED\r\n";
-    icsContent += "END:VEVENT\r\n";
-  });
+      icsContent += "STATUS:CONFIRMED\r\n";
+      icsContent += "END:VEVENT\r\n";
+    },
+  );
 
   icsContent += "END:VCALENDAR\r\n";
 

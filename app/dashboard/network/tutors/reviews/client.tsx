@@ -17,31 +17,28 @@ import { Badge } from "@/components/ui/badge";
 import { TutorReviewDialog } from "@/features/tutors/components/tutor-review-dialog";
 
 export function TutorReviewsClient({
-  // @ts-expect-error: Strict unknown type check
   currentTutor,
-  // @ts-expect-error: Strict unknown type check
+
   isLead,
-  // @ts-expect-error: Strict unknown type check
+
   reviews: initialReviews,
-  // @ts-expect-error: Strict unknown type check
+
   availableTutors,
- 
 }: unknown) {
   const [reviews, setReviews] = useState(initialReviews);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
 
-   
   const handleReviewSubmit = async (data: unknown) => {
     const supabase = createClient();
     const { data: newReview, error } = await supabase
       .from("tutor_reviews")
       .insert({
         reviewer_id: currentTutor.id,
-        // @ts-expect-error: Strict unknown type check
+
         tutor_id: data.tutor_id,
-        // @ts-expect-error: Strict unknown type check
+
         rating: data.rating,
-        // @ts-expect-error: Strict unknown type check
+
         feedback: data.feedback,
       })
       .select("*, tutor:tutors(*, profiles(*))")
@@ -79,37 +76,40 @@ export function TutorReviewsClient({
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {reviews.map((review: Record<string, unknown>) => (
-            // @ts-expect-error: Strict unknown type check
-            <Card key={review.id}>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center justify-between text-base">
-                  <span>
-                    {isLead
-                      // @ts-expect-error: Strict unknown type check
-                      ? review.tutor?.profiles?.full_name
-                      // @ts-expect-error: Strict unknown type check
-                      : review.reviewer?.profiles?.full_name}
-                  </span>
-                  <Badge variant="secondary" className="font-mono">
-                    <Star className="mr-1 h-3 w-3 fill-primary text-primary" />
-                    {/* @ts-expect-error: Strict unknown type check */}
-                    {review.rating}/5
-                  </Badge>
-                </CardTitle>
-                <CardDescription>
-                  {/* @ts-expect-error: Strict unknown type check */}
-                  {format(new Date(review.created_at), "PPP")}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-foreground/90 whitespace-pre-wrap">
-                  {/* @ts-expect-error: Strict unknown type check */}
-                  {review.feedback}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
+          {reviews.map(
+            (review: {
+              id: string;
+              tutor?: { profiles?: { full_name?: string } };
+              reviewer?: { profiles?: { full_name?: string } };
+              rating: number;
+              created_at: string;
+              feedback: string;
+            }) => (
+              <Card key={review.id}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center justify-between text-base">
+                    <span>
+                      {isLead
+                        ? review.tutor?.profiles?.full_name
+                        : review.reviewer?.profiles?.full_name}
+                    </span>
+                    <Badge variant="secondary" className="font-mono">
+                      <Star className="mr-1 h-3 w-3 fill-primary text-primary" />
+                      {review.rating}/5
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription>
+                    {format(new Date(review.created_at), "PPP")}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-foreground/90 whitespace-pre-wrap">
+                    {review.feedback}
+                  </p>
+                </CardContent>
+              </Card>
+            ),
+          )}
         </div>
       )}
 

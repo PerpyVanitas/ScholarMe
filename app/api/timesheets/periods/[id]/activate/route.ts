@@ -26,7 +26,8 @@ export async function POST(
 
     const roleName = Array.isArray(profile?.roles)
       ? profile.roles[0]?.name
-      : ((profile?.roles as Record<string, unknown> | null)?.name as string | undefined);
+      : ((profile?.roles as unknown as Record<string, unknown> | null)?.name as
+          string | undefined);
     const isAuthorized = hasAnyRole(roleName as string, GOVERNANCE_ROLES);
 
     if (!profile || !isAuthorized) {

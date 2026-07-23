@@ -58,7 +58,7 @@ export async function POST(req: Request) {
             : (profile.roles as Record<string, unknown> | null)?.name;
 
           // Only revert org roles — never touch system roles
-          if (ORG_ROLES.includes(roleName)) {
+          if (typeof roleName === "string" && ORG_ROLES.includes(roleName)) {
             const { error: revertError } = await supabase
               .from("profiles")
               .update({ role_id: tutorRole.id, role_expires_at: null })

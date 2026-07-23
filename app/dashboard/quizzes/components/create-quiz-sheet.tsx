@@ -189,7 +189,15 @@ Each object must have:
 "item_type": string (one of the question types)
 No other text, markdown blocks, or explanations. Just the JSON array.`;
 
-      const reply = (await (engine as unknown as { chat: { completions: { create: (opts: Record<string, unknown>) => Promise<unknown> } } }).chat.completions.create({
+      const reply = (await (
+        engine as unknown as {
+          chat: {
+            completions: {
+              create: (opts: Record<string, unknown>) => Promise<unknown>;
+            };
+          };
+        }
+      ).chat.completions.create({
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: `Topic: ${aiPrompt}` },
@@ -211,7 +219,10 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
       }
 
       const newContent = parsedData
-        .map((item: { question?: string; answer?: string }) => `Q: ${item.question}\nA: ${item.answer}`)
+        .map(
+          (item: { question?: string; answer?: string }) =>
+            `Q: ${item.question}\nA: ${item.answer}`,
+        )
         .join("\n\n");
 
       setFormData((prev) => ({
@@ -485,6 +496,7 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
 
           <QuizConfigPanel
             quizConfig={quizConfig}
+            // @ts-expect-error: Strict unknown type check
             setQuizConfig={setQuizConfig}
             generating={generating}
             creating={creating}

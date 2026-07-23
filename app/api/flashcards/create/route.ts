@@ -55,8 +55,15 @@ export async function POST(request: NextRequest) {
     // Add items if provided
     if (items && items.length > 0) {
       const itemsToInsert = items.map(
-        (item: Record<string, unknown>, index: number) =>
-          buildStudySetItemInsert(studySet.id, item, index),
+        (
+          item: {
+            question: string;
+            answer: string;
+            options?: unknown;
+            item_type?: string;
+          },
+          index: number,
+        ) => buildStudySetItemInsert(studySet.id, item, index),
       );
 
       const { error: itemsError } = await supabase

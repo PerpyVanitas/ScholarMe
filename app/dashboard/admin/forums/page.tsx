@@ -14,8 +14,16 @@ import { Loader2, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
+interface Report {
+  id: string;
+  forum_posts?: { title?: string; content?: string };
+  status: string;
+  created_at: string;
+  reason: string;
+}
+
 export default function AdminForumsPage() {
-  const [reports, setReports] = useState<unknown[]>([]);
+  const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
 
   async function loadReports() {
@@ -40,7 +48,7 @@ export default function AdminForumsPage() {
     // We would make an API call here to update the report status
     // For now, let's just do a mock update
     toast.info(`Marked report as ${status}`);
-    setReports(reports.map(r => r.id === reportId ? { ...r, status } : r));
+    setReports(reports.map((r) => (r.id === reportId ? { ...r, status } : r)));
   }
 
   return (
@@ -77,22 +85,46 @@ export default function AdminForumsPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1">
                     <CardTitle className="text-lg">
-                      Report on Post: {report.forum_posts?.title || "Unknown Post"}
+                      Report on Post:{" "}
+                      {report.forum_posts?.title || "Unknown Post"}
                     </CardTitle>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Badge variant={report.status === 'pending' ? 'destructive' : 'secondary'}>
+                      <Badge
+                        variant={
+                          report.status === "pending"
+                            ? "destructive"
+                            : "secondary"
+                        }
+                      >
                         {report.status}
                       </Badge>
                       <span>•</span>
-                      <span>Reported {formatDistanceToNow(new Date(report.created_at), { addSuffix: true })}</span>
+                      <span>
+                        Reported{" "}
+                        {formatDistanceToNow(new Date(report.created_at), {
+                          addSuffix: true,
+                        })}
+                      </span>
                     </div>
                   </div>
-                  {report.status === 'pending' && (
+                  {report.status === "pending" && (
                     <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" onClick={() => handleUpdateStatus(report.id, 'dismissed')}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          handleUpdateStatus(report.id, "dismissed")
+                        }
+                      >
                         Dismiss
                       </Button>
-                      <Button size="sm" variant="destructive" onClick={() => handleUpdateStatus(report.id, 'reviewed')}>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() =>
+                          handleUpdateStatus(report.id, "reviewed")
+                        }
+                      >
                         Take Action
                       </Button>
                     </div>
@@ -102,7 +134,9 @@ export default function AdminForumsPage() {
               <CardContent className="py-2 pb-4">
                 <div className="space-y-4">
                   <div>
-                    <h4 className="text-sm font-semibold mb-1">Reason for Report</h4>
+                    <h4 className="text-sm font-semibold mb-1">
+                      Reason for Report
+                    </h4>
                     <p className="text-sm text-muted-foreground bg-muted p-3 rounded-md">
                       {report.reason}
                     </p>

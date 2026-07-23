@@ -67,7 +67,9 @@ export default async function TeamDashboard() {
     .eq("id", user.id)
     .single();
 
-  const roleName = getRoleName(profile as unknown as Parameters<typeof getRoleName>[0]);
+  const roleName = getRoleName(
+    profile as unknown as Parameters<typeof getRoleName>[0],
+  );
   if (!hasAnyRole(roleName, TEAMWORK_ROLES)) {
     redirect("/dashboard");
   }
@@ -77,7 +79,7 @@ export default async function TeamDashboard() {
     .select("*, profiles(full_name)")
     .order("created_at", { ascending: false });
 
-  const tasks = (rawTasks || []) as Array<{
+  const tasks = (rawTasks || []) as unknown as Array<{
     id: string;
     title: string;
     description?: string | null;
@@ -92,7 +94,7 @@ export default async function TeamDashboard() {
     .select("*, profiles(full_name)")
     .order("date", { ascending: true });
 
-  const schedules = (rawSchedules || []) as Array<{
+  const schedules = (rawSchedules || []) as unknown as Array<{
     id: string;
     user_id: string;
     date: string;
@@ -118,7 +120,8 @@ export default async function TeamDashboard() {
         <div className="flex flex-col gap-1">
           <h1 className="text-3xl font-bold tracking-tight">Team Workspace</h1>
           <p className="text-muted-foreground text-sm">
-            Manage committee tasks, track deliverables, and log team availability.
+            Manage committee tasks, track deliverables, and log team
+            availability.
           </p>
         </div>
         <HandoffNotesReader
@@ -193,7 +196,15 @@ export default async function TeamDashboard() {
             {columns.map((col) => {
               const cfg = STATUS_CONFIG[col];
               const colTasks =
-                (tasks as Array<{ id: string; deliverable: string; deadline?: string; status: string; profiles?: { full_name?: string } }>)?.filter((t) => t.status === col) ?? [];
+                (
+                  tasks as unknown as Array<{
+                    id: string;
+                    deliverable: string;
+                    deadline?: string;
+                    status: string;
+                    profiles?: { full_name?: string };
+                  }>
+                )?.filter((t) => t.status === col) ?? [];
               return (
                 <div key={col} className="flex flex-col gap-3">
                   <div className="flex items-center gap-2 px-1">
@@ -233,7 +244,8 @@ export default async function TeamDashboard() {
                                 <p
                                   className={`text-xs mt-1 ${isOverdue ? "text-destructive font-medium" : "text-muted-foreground"}`}
                                 >
-                                  Due: {new Date(t.deadline).toLocaleDateString()}
+                                  Due:{" "}
+                                  {new Date(t.deadline).toLocaleDateString()}
                                   {isOverdue && " · Overdue"}
                                 </p>
                               )}
@@ -337,7 +349,14 @@ export default async function TeamDashboard() {
               </Card>
             ) : (
               <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-                {(schedules as Array<{ id: string; date: string; activity: string; profiles?: { full_name?: string } }>).map((s) => {
+                {(
+                  schedules as unknown as Array<{
+                    id: string;
+                    date: string;
+                    activity: string;
+                    profiles?: { full_name?: string };
+                  }>
+                ).map((s) => {
                   const isPast = new Date(s.date) < now;
                   return (
                     <Card

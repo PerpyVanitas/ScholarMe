@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
           ["administrator", "super_admin"].includes(role?.name || ""),
         )
       : ["administrator", "super_admin"].includes(
-          ((profile?.roles as Record<string, unknown> | null)
+          ((profile?.roles as unknown as Record<string, unknown> | null)
             ?.name as string) || "",
         );
 

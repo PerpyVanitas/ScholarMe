@@ -15,7 +15,11 @@ vi.mock("next/server", () => ({
 }));
 
 describe("Join Session Logic", () => {
-  let mockSupabase: unknown;
+  type MockSupabaseType = {
+    auth: { getUser: ReturnType<typeof vi.fn> };
+    from: ReturnType<typeof vi.fn>;
+  };
+  let mockSupabase: MockSupabaseType;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -29,13 +33,13 @@ describe("Join Session Logic", () => {
       from: vi.fn(),
     };
 
-    (createClient as never).mockResolvedValue(mockSupabase);
+    (createClient as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockSupabase,
+    );
   });
 
   it("should prevent joining if session is not a group session (max_participants <= 1)", async () => {
-    (
-      mockSupabase.from as unknown as ReturnType<typeof vi.fn>
-    ).mockImplementation((table: string) => {
+    mockSupabase.from.mockImplementation((table: string) => {
       if (table === "sessions") {
         return {
           select: vi.fn().mockReturnThis(),
@@ -62,9 +66,7 @@ describe("Join Session Logic", () => {
   });
 
   it("should prevent joining if session is full", async () => {
-    (
-      mockSupabase.from as unknown as ReturnType<typeof vi.fn>
-    ).mockImplementation((table: string) => {
+    mockSupabase.from.mockImplementation((table: string) => {
       if (table === "sessions") {
         return {
           select: vi.fn().mockReturnThis(),
@@ -95,9 +97,7 @@ describe("Join Session Logic", () => {
   });
 
   it("should allow joining if session has capacity", async () => {
-    (
-      mockSupabase.from as unknown as ReturnType<typeof vi.fn>
-    ).mockImplementation((table: string) => {
+    mockSupabase.from.mockImplementation((table: string) => {
       if (table === "sessions") {
         return {
           select: vi.fn().mockReturnThis(),

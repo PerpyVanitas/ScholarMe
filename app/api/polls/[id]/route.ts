@@ -26,7 +26,8 @@ async function resolveRole(
 
   const roleName: string | undefined = Array.isArray(profile?.roles)
     ? profile.roles[0]?.name
-    : ((profile?.roles as Record<string, unknown> | null)?.name as string | undefined);
+    : ((profile?.roles as unknown as Record<string, unknown> | null)?.name as
+        string | undefined);
 
   return {
     roleName,

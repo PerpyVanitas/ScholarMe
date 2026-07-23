@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getActiveCheckouts, returnResource } from "../api/actions";
@@ -9,8 +14,21 @@ import { toast } from "sonner";
 import { Loader2, BookOpen, Undo2 } from "lucide-react";
 import { format } from "date-fns";
 
-export function ActiveCheckoutsModal({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
-  const [checkouts, setCheckouts] = useState<Record<string, unknown>[]>([]);
+interface ResourceCheckout {
+  id: string;
+  due_date: string;
+  resource?: { title: string };
+  profile?: { full_name: string };
+}
+
+export function ActiveCheckoutsModal({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [checkouts, setCheckouts] = useState<ResourceCheckout[]>([]);
   const [loading, setLoading] = useState(true);
   const [returningId, setReturningId] = useState<string | null>(null);
 
@@ -23,9 +41,10 @@ export function ActiveCheckoutsModal({ open, onOpenChange }: { open: boolean, on
   async function load() {
     setLoading(true);
     try {
-      const data = await getActiveCheckouts();
+      const data =
+        (await getActiveCheckouts()) as unknown as ResourceCheckout[];
       setCheckouts(data);
-    } catch (e) {
+    } catch (e: unknown) {
       console.error(e);
       toast.error("Failed to load active checkouts");
     } finally {
@@ -40,8 +59,8 @@ export function ActiveCheckoutsModal({ open, onOpenChange }: { open: boolean, on
       toast.success("Resource returned successfully!");
       await load();
       // Optionally trigger an event to refresh catalog counts, though revalidatePath will handle the server state
-    } catch (e) {
-      toast.error(e.message || "Failed to return resource");
+    } catch (e: unknown) {
+      toast.error((e as Error).message || "Failed to return resource");
     } finally {
       setReturningId(null);
     }
@@ -53,7 +72,7 @@ export function ActiveCheckoutsModal({ open, onOpenChange }: { open: boolean, on
         <DialogHeader>
           <DialogTitle>Active Checkouts</DialogTitle>
         </DialogHeader>
-        
+
         <div className="flex-1 overflow-y-auto pr-2 space-y-4">
           {loading ? (
             <div className="flex justify-center p-8">
@@ -66,26 +85,38 @@ export function ActiveCheckoutsModal({ open, onOpenChange }: { open: boolean, on
             </div>
           ) : (
             checkouts.map((checkout) => (
-              <div key={checkout.id} className="flex items-center justify-between p-4 border rounded-lg">
+              <div
+                key={checkout.id}
+                className="flex items-center justify-between p-4 border rounded-lg"
+              >
                 <div>
                   <h4 className="font-medium">{checkout.resource?.title}</h4>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Checked out by: <span className="font-medium text-foreground">{checkout.profile?.full_name}</span>
+                    Checked out by:{" "}
+                    <span className="font-medium text-foreground">
+                      {checkout.profile?.full_name}
+                    </span>
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     Due: {format(new Date(checkout.due_date), "MMM d, yyyy")}
                     {new Date(checkout.due_date) < new Date() && (
-                      <Badge variant="destructive" className="ml-2 scale-90">Overdue</Badge>
+                      <Badge variant="destructive" className="ml-2 scale-90">
+                        Overdue
+                      </Badge>
                     )}
                   </p>
                 </div>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant="outline"
                   onClick={() => handleReturn(checkout.id)}
                   disabled={returningId === checkout.id}
                 >
-                  {returningId === checkout.id ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Undo2 className="h-4 w-4 mr-2" />}
+                  {returningId === checkout.id ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Undo2 className="h-4 w-4 mr-2" />
+                  )}
                   Return
                 </Button>
               </div>

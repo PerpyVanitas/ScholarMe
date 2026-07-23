@@ -216,7 +216,8 @@ export async function updateBudgetRequestStatus(
 
   if (error) throw new Error(error.message);
 
-  const profileData = existing.profiles as unknown as Record<string, unknown> | Array<Record<string, unknown>> | null;
+  const profileData = existing.profiles as unknown as
+    Record<string, unknown> | Array<Record<string, unknown>> | null;
   const userEmail = profileData
     ? Array.isArray(profileData)
       ? profileData[0]?.email
@@ -224,7 +225,11 @@ export async function updateBudgetRequestStatus(
     : null;
 
   if (userEmail) {
-    await notifyStatusChange(userEmail, existing.activity_title, status);
+    await notifyStatusChange(
+      userEmail as string,
+      existing.activity_title,
+      status,
+    );
   }
 
   revalidatePath("/dashboard/finance");

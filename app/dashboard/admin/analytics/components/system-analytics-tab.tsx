@@ -20,7 +20,7 @@ import {
 } from "recharts";
 
 interface SystemAnalyticsTabProps {
-  stats: unknown;
+  stats: { supply_demand?: Array<Record<string, unknown>> } | null;
 }
 
 export function SystemAnalyticsTab({ stats }: SystemAnalyticsTabProps) {
@@ -41,7 +41,7 @@ export function SystemAnalyticsTab({ stats }: SystemAnalyticsTabProps) {
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart
                 data={
-                  (stats.supply_demand as unknown as Array<
+                  (stats?.supply_demand as unknown as Array<
                     Record<string, unknown>
                   >) || []
                 }

@@ -21,7 +21,8 @@ export default async function OrgStructureLayout({
 
   const roleName = Array.isArray(profile?.roles)
     ? profile.roles[0]?.name
-    : ((profile?.roles as Record<string, unknown> | null)?.name as string | undefined);
+    : ((profile?.roles as unknown as Record<string, unknown> | null)?.name as
+        string | undefined);
 
   if (roleName !== "super_admin") {
     redirect("/dashboard/admin");

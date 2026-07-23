@@ -56,7 +56,7 @@ import {
   calcMinutes,
   fmtDate,
   fmtTime,
-  formatDuration
+  formatDuration,
 } from "./components/timesheets-table";
 
 interface PeriodDetail {
@@ -263,18 +263,14 @@ export default function AdminTimesheetsPage() {
                   </thead>
                   <tbody>
                     {periods.map((p) => (
-                      // @ts-expect-error: Strict unknown type check
                       <tr key={p.id} className="border-b border-border/30">
                         <td className="py-3 pr-4 font-medium text-foreground">
-                          {/* @ts-expect-error: Strict unknown type check */}
                           {p.name}
                         </td>
                         <td className="py-3 pr-4 text-muted-foreground text-xs font-mono">
-                          {/* @ts-expect-error: Strict unknown type check */}
                           {fmtDate(p.start_date)} – {fmtDate(p.end_date)}
                         </td>
                         <td className="py-3 pr-4">
-                          {/* @ts-expect-error: Strict unknown type check */}
                           {p.is_active ? (
                             <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">
                               Active
@@ -400,10 +396,16 @@ export default function AdminTimesheetsPage() {
           </div>
 
           {/* Per-Tutor Summary */}
-          <TutorSummaryTable isLoading={isLoading} filteredTutors={filteredTutors} />
+          <TutorSummaryTable
+            isLoading={isLoading}
+            filteredTutors={filteredTutors}
+          />
 
           {/* Full Log */}
-          <AllEntriesTable isLoading={isLoading} filteredEntries={filteredEntries} />
+          <AllEntriesTable
+            isLoading={isLoading}
+            filteredEntries={filteredEntries}
+          />
         </>
       )}
 
