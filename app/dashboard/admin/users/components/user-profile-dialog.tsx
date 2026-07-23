@@ -138,7 +138,7 @@ export function UserProfileDialog({
                 Status
               </span>
               <span className="text-sm font-medium">
-                {(user as Record<string, unknown>).is_active ? "Active" : "Inactive"}
+                {((user as unknown) as Record<string, unknown>).is_active ? "Active" : "Inactive"}
               </span>
             </div>
           </div>
