@@ -13,8 +13,8 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("Session Expiry & Inactivity (Phase 3)", () => {
-  let mockSupabase: any;
-  let mockRouter: any;
+  let mockSupabase: unknown;
+  let mockRouter: unknown;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -31,7 +31,7 @@ describe("Session Expiry & Inactivity (Phase 3)", () => {
     mockRouter = {
       push: vi.fn(),
     };
-    (vi.mocked(useRouter) as any).mockReturnValue(mockRouter);
+    (vi.mocked(useRouter) as unknown).mockReturnValue(mockRouter);
   });
 
   afterEach(() => {

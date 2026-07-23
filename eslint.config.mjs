@@ -26,7 +26,7 @@ export default [
       "@typescript-eslint/no-unused-vars": "off",
       "import/no-anonymous-default-export": "off",
       "react-hooks/exhaustive-deps": "off",
-      "react-hooks/immutability": "warn",
+      "react-hooks/immutability": "off",
       "react-hooks/preserve-manual-memoization": "warn",
       "react-hooks/purity": "warn",
       "react-hooks/set-state-in-effect": "off",

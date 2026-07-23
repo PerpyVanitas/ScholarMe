@@ -198,7 +198,7 @@ export function TutorSettingsDialog({
               <div className="space-y-0.5">
                 <Label>Auto-Approve Sessions</Label>
                 <p className="text-sm text-muted-foreground">
-                  Automatically confirm bookings from learners you've tutored
+                  Automatically confirm bookings from learners you&apos;ve tutored
                   before.
                 </p>
               </div>

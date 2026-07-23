@@ -268,7 +268,7 @@ export function TutorDashboard({
                 <p className="text-sm text-muted-foreground">
                   You have {overdueSessions.length} past session
                   {overdueSessions.length > 1 ? "s" : ""} still marked as
-                  "confirmed". Please mark them as completed or cancelled.
+                  &quot;confirmed&quot;. Please mark them as completed or cancelled.
                 </p>
               </div>
             </div>

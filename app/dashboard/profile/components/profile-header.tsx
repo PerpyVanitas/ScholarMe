@@ -66,7 +66,7 @@ export function ProfileHeader({
             <p className="text-muted-foreground">{profile.email}</p>
             {profile.status_message && (
               <p className="text-sm italic text-foreground/80 mt-1">
-                "{profile.status_message}"
+                &quot;{profile.status_message}&quot;
               </p>
             )}
 

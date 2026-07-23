@@ -47,7 +47,7 @@ export function TutorReviewDialog({
     formState: { isSubmitting },
   } = useForm();
 
-  const handleFormSubmit = async (data: any) => {
+  const handleFormSubmit = async (data: unknown) => {
     await onSubmit({ ...data, rating });
     reset();
     onOpenChange(false);

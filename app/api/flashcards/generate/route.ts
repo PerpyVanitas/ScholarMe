@@ -52,7 +52,7 @@ export async function POST(req: Request) {
 
     // Reconstruct rawTopic and rawCount to precisely mimic original destructuring logic
     // `rawTopic` is simply the parsed topic (string | null | undefined)
-    let rawTopic = parsed.data.topic;
+    const rawTopic = parsed.data.topic;
     // `rawCount` applies default `5` only if the `count` key was missing or `undefined` in the JSON body.
     // If `count` was explicitly `null`, `rawCount` remains `null`.
     let rawCount = parsed.data.count;

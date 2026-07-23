@@ -210,7 +210,7 @@ export function ProfileView({
           {profile.status_message && (
             <div className="mt-8 p-4 bg-muted/50 rounded-lg border-l-4 border-primary">
               <p className="italic text-foreground/80">
-                "{profile.status_message}"
+                &quot;{profile.status_message}&quot;
               </p>
             </div>
           )}

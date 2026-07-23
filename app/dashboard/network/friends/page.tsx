@@ -278,7 +278,7 @@ export default async function FriendsPage() {
             </div>
           ) : (
             <p className="text-sm text-muted-foreground border rounded-lg p-8 text-center bg-card">
-              You haven't added any friends yet. Check out the Users Directory to connect with others!
+              You haven&apos;t added any friends yet. Check out the Users Directory to connect with others!
             </p>
           )}
 

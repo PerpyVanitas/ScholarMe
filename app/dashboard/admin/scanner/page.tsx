@@ -94,7 +94,7 @@ export default function AdminScannerPage() {
             QR Scanner
           </CardTitle>
           <CardDescription>
-            Position the user's ID card QR code within the frame.
+            Position the user&apos;s ID card QR code within the frame.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">

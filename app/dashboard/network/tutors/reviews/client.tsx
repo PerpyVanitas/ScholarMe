@@ -27,8 +27,8 @@ export function TutorReviewsClient({
 }: {
   currentTutor: { id: string };
   isLead: boolean;
-  reviews: any[];
-  availableTutors: any[];
+  reviews: unknown[];
+  availableTutors: unknown[];
 }) {
   const [reviews, setReviews] = useState(initialReviews);
   const [isReviewOpen, setIsReviewOpen] = useState(false);

@@ -136,7 +136,7 @@ export function UsersDirectory({
                   )}
                   {user.status_message && (
                     <div className="mt-2 text-sm italic border-l-2 border-primary/30 pl-2 text-muted-foreground truncate">
-                      "{user.status_message}"
+                      &quot;{user.status_message}&quot;
                     </div>
                   )}
                 </div>

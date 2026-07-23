@@ -377,7 +377,7 @@ export default function OrgStructurePage() {
               No Active Term
             </p>
             <p className="text-xs text-muted-foreground">
-              Click "New Term" to create an org term before assigning positions.
+              Click &quot;New Term&quot; to create an org term before assigning positions.
             </p>
           </div>
         </div>

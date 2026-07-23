@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-let mockSupabase: any;
+let mockSupabase: unknown;
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: () => mockSupabase

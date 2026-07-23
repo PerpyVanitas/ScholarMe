@@ -31,7 +31,7 @@ vi.mock("@/components/auth/idle-timeout", () => ({
 }));
 
 describe("Layout Redirects (Authentication)", () => {
-  let mockSupabase: any;
+  let mockSupabase: unknown;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -48,7 +48,7 @@ describe("Layout Redirects (Authentication)", () => {
     };
 
     vi.mocked(createClient).mockResolvedValue(mockSupabase);
-    (vi.mocked(cookies) as any).mockResolvedValue({ get: vi.fn() });
+    (vi.mocked(cookies) as unknown).mockResolvedValue({ get: vi.fn() });
   });
 
   it("should redirect to /auth/login if unauthenticated", async () => {

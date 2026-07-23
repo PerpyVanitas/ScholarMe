@@ -28,7 +28,7 @@ vi.mock("@/components/idle-timeout-provider", () => ({
 }));
 
 describe("Integration: Auth Flows", () => {
-  let mockSupabase: any;
+  let mockSupabase: unknown;
 
   beforeEach(() => {
     vi.clearAllMocks();
