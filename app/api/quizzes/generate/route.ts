@@ -18,6 +18,13 @@ import {
   GEMINI_TIMEOUT_MS,
   logAndSanitizeAIError,
 } from "@/lib/ai/gemini";
+import { z } from "zod";
+
+const QuizGenerateSchema = z.object({
+  topic: z.string().min(1, "Topic is required").max(500, "Topic must be 500 characters or less"),
+  type: z.enum(["multiple_choice", "true_false"]).default("multiple_choice"),
+  count: z.coerce.number().int().min(1, "Count must be at least 1").max(20, "Count must be at most 20").default(5),
+});
 
 export async function POST(req: Request) {
   // ── [C1] Auth gate ────────────────────────────────────────────────────────
@@ -34,18 +41,14 @@ export async function POST(req: Request) {
   }
 
   try {
-    const {
-      topic: rawTopic,
-      type = "multiple_choice",
-      count: rawCount = 5,
-    } = await req.json();
+    const body = await req.json();
+    const parseResult = QuizGenerateSchema.safeParse(body);
 
-    const topic = String(rawTopic || "").slice(0, 500);
-    const count = Math.min(Math.max(1, Number(rawCount)), 20);
-
-    if (!topic) {
-      return NextResponse.json({ error: "Topic is required" }, { status: 400 });
+    if (!parseResult.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { topic, type, count } = parseResult.data;
 
     // ── [H2] Prompt injection protection — topic inside explicit delimiters ──
     const prompt = `

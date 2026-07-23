@@ -40,6 +40,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@ducanh2912/next-pwa": "^10.2.9",
     "@excalidraw/excalidraw": "^0.18.1",
+    "@google-cloud/documentai": "^9.6.2",
     "@google/genai": "^2.10.0",
     "@hookform/resolvers": "^3.10.0",
     "@mlc-ai/web-llm": "^0.2.84",

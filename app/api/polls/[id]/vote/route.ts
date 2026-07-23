@@ -2,6 +2,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { createSuccessResponse, createErrorResponse } from "@/lib/api-errors";
+import { z } from "zod";
 
 export async function POST(
   request: NextRequest,
@@ -23,17 +24,18 @@ export async function POST(
     );
   }
 
-  const body = await request.json();
-  const { option_id } = body;
+  const voteBodySchema = z.object({
+    option_id: z.string(),
+  });
 
-  if (!option_id) {
-    return NextResponse.json(
-      createErrorResponse("VALID_001_GENERAL", {
-        option_id: "Option selection is required",
-      }),
-      { status: 400 },
-    );
+  const body = await request.json();
+  const parsedBody = voteBodySchema.safeParse(body);
+
+  if (!parsedBody.success) {
+    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
+
+  const { option_id } = parsedBody.data;
 
   // Check if poll exists and is active
   const { data: poll } = await supabase

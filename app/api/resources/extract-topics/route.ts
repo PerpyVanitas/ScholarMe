@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { handleApiError } from "@/lib/utils/api-error";
 /**
  * POST /api/resources/extract-topics
@@ -21,12 +22,17 @@ import {
   MAX_FILE_BYTES,
   logAndSanitizeAIError,
 } from "@/lib/ai/gemini";
+
 import { rateLimit } from "@/lib/rate-limit";
 
 const supabaseAdmin = createSupabaseAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
+
+const extractTopicsBodySchema = z.object({
+  resource_id: z.string().min(1, "Resource ID is required"),
+});
 
 export async function POST(req: Request) {
   // ── [C1] Auth gate ────────────────────────────────────────────────────────
@@ -59,14 +65,13 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { resource_id } = body;
+    const parsedBody = extractTopicsBodySchema.safeParse(body);
 
-    if (!resource_id) {
-      return NextResponse.json(
-        { error: "Resource ID is required" },
-        { status: 400 },
-      );
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { resource_id } = parsedBody.data;
 
     // Fetch resource metadata
     const { data: resource, error } = await supabaseAdmin

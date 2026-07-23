@@ -2,6 +2,7 @@ import { handleApiError } from "@/lib/utils/api-error";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { GOVERNANCE_ROLES, hasAnyRole } from "@/lib/utils/roles";
+import { z } from "zod";
 
 export async function POST(
   req: Request,
@@ -37,7 +38,15 @@ export async function POST(
       );
     }
 
-    const { is_active } = await req.json();
+    const postSchema = z.object({
+      is_active: z.boolean(),
+    });
+    const body = await req.json();
+    const parsedBody = postSchema.safeParse(body);
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    }
+    const { is_active } = parsedBody.data;
 
     const adminClient = await createAdminClient();
 

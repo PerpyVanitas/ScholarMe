@@ -1,12 +1,25 @@
-/** GET /api/tutors -- list all tutors with profiles and specializations (highest-rated first). */
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
   const supabase = await createClient();
   const { searchParams } = new URL(request.url);
-  const search = searchParams.get("search") || "";
-  const specialization = searchParams.get("specialization") || "";
+
+  const searchParamsSchema = z.object({
+    search: z.string().default(""),
+    specialization: z.string().default(""),
+    page: z.string().default("1").transform((v) => parseInt(v, 10)).pipe(z.number().int().positive()),
+    limit: z.string().default("10").transform((v) => parseInt(v, 10)).pipe(z.number().int().positive()),
+  });
+
+  const parsedParams = searchParamsSchema.safeParse(Object.fromEntries(searchParams.entries()));
+
+  if (!parsedParams.success) {
+    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+  }
+
+  const { search, specialization, page, limit } = parsedParams.data;
 
   // Fetch all tutors with their profile info and specializations (nested JOIN)
   // tutors -> profiles (user info)
@@ -58,8 +71,6 @@ export async function GET(request: Request) {
   }
 
   // Pagination (P14-4)
-  const page = parseInt(searchParams.get("page") || "1", 10);
-  const limit = parseInt(searchParams.get("limit") || "10", 10);
   const startIndex = (page - 1) * limit;
   const endIndex = page * limit;
 

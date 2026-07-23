@@ -3,8 +3,15 @@ import { NextResponse } from "next/server";
 import { sendEmail } from "@/lib/email";
 import { createClient } from "@/lib/supabase/server";
 import { rateLimit } from "@/lib/rate-limit";
+import { z } from "zod";
 
 const emailLimiter = rateLimit({ interval: 60 * 60 * 1000, limit: 10 }); // 10 emails per hour per user
+
+const emailSchema = z.object({
+  to: z.string().email("Invalid recipient email address").min(1, "Recipient email is required"),
+  subject: z.string().min(1, "Subject is required"),
+  html: z.string().min(1, "Email body is required"),
+});
 
 export async function POST(req: Request) {
   try {
@@ -55,14 +62,14 @@ export async function POST(req: Request) {
       );
     }
 
-    const { to, subject, html } = await req.json();
+    const body = await req.json();
+    const parsedBody = emailSchema.safeParse(body);
 
-    if (!to || !subject || !html) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 },
-      );
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { to, subject, html } = parsedBody.data;
 
     const result = await sendEmail({ to, subject, html });
 

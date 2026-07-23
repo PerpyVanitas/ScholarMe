@@ -1,8 +1,9 @@
-﻿import { handleApiError } from "@/lib/utils/api-error";
+import { handleApiError } from "@/lib/utils/api-error";
 /** POST/PUT /api/admin/cards -- admin-only: toggle is_card_issued. */
 import { createClient } from "@/lib/supabase/create-client";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -35,14 +36,35 @@ export async function POST(request: Request) {
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
 
-  const { user_id, is_card_issued } = await request.json();
+  // Define Zod schema for the request body
+  const PostSchema = z.object({
+    user_id: z.string(), // Assuming user_id is a string (e.g., a UUID)
+    is_card_issued: z.boolean(), // Assuming is_card_issued is a boolean
+  });
 
-  if (!user_id || is_card_issued === undefined) {
-    return NextResponse.json(
-      { error: "Missing required fields" },
-      { status: 400 },
-    );
+  let body;
+  try {
+    body = await request.json();
+  } catch (err) {
+    // If request.json() itself fails, it's likely a malformed JSON body
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
+
+  const parsedBody = PostSchema.safeParse(body);
+
+  if (!parsedBody.success) {
+    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+  }
+
+  const { user_id, is_card_issued } = parsedBody.data;
+
+  // The original check for missing fields is now handled by Zod's schema
+  // if (!user_id || is_card_issued === undefined) {
+  //   return NextResponse.json(
+  //     { error: "Missing required fields" },
+  //     { status: 400 },
+  //   );
+  // }
 
   const adminClient = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -62,4 +84,3 @@ export async function POST(request: Request) {
 
   return NextResponse.json(data);
 }
-

@@ -1,33 +1,35 @@
 /** POST /api/auth/register-card -- Admin endpoint to create and register new auth cards */
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { createErrorResponse, createSuccessResponse } from "@/lib/api-errors";
 import { isAdminRole } from "@/lib/utils/roles";
 import bcrypt from "bcryptjs";
+
+const registerCardSchema = z.object({
+  card_id: z.string({
+    required_error: "Card ID is required",
+    invalid_type_error: "Card ID must be a string",
+  }),
+  pin: z
+    .string({
+      required_error: "PIN is required",
+      invalid_type_error: "PIN must be a string",
+    })
+    .min(4, "PIN must be at least 4 digits"),
+  assigned_to_user_id: z.string().optional().nullable(),
+});
+
 export async function POST(request: Request) {
   try {
-    const { card_id, pin, assigned_to_user_id } = await request.json();
+    const body = await request.json();
+    const parsed = registerCardSchema.safeParse(body);
 
-    // Validate input
-    if (!card_id || !pin) {
-      return NextResponse.json(
-        createErrorResponse("VALID_001_GENERAL", {
-          card_id: !card_id ? "Card ID is required" : "",
-          pin: !pin ? "PIN is required" : "",
-        }),
-        { status: 400 },
-      );
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
-    if (pin.length < 4) {
-      return NextResponse.json(
-        createErrorResponse(
-          "VALID_001_PASSWORD_SHORT",
-          "PIN must be at least 4 digits",
-        ),
-        { status: 400 },
-      );
-    }
+    const { card_id, pin, assigned_to_user_id } = parsed.data;
 
     const supabase = await createClient();
 

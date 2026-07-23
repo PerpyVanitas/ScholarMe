@@ -1,3 +1,4 @@
+import { z } from "zod";
 /**
  * PATCH /api/polls/[id]  — Update poll (admin only, with date-window enforcement)
  * DELETE /api/polls/[id] — Delete poll (admin only, with date-window enforcement)
@@ -92,18 +93,21 @@ export async function PATCH(
   }
 
   // ── Parse + validate body ─────────────────────────────────────────────────
-  const body = await request.json();
-  const { title, description, end_date, is_hidden } = body;
+  const patchPollBodySchema = z.object({
+    title: z.string().min(1, "Title is required"),
+    description: z.string().nullable().optional(),
+    end_date: z.string().min(1, "End date is required"),
+    is_hidden: z.boolean().optional(),
+  });
 
-  if (!title || !end_date) {
-    return NextResponse.json(
-      createErrorResponse(
-        "VALID_001_GENERAL",
-        "Title and end date are required",
-      ),
-      { status: 400 },
-    );
+  const body = await request.json();
+  const parsedBody = patchPollBodySchema.safeParse(body);
+
+  if (!parsedBody.success) {
+    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
+
+  const { title, description, end_date, is_hidden } = parsedBody.data;
 
   // Build update payload — only super_admin can change is_hidden
   const updatePayload: Record<string, unknown> = {

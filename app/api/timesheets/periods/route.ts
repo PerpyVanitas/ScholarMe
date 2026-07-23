@@ -2,6 +2,7 @@ import { handleApiError } from "@/lib/utils/api-error";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { GOVERNANCE_ROLES, hasAnyRole } from "@/lib/utils/roles";
+import { z } from "zod";
 
 export async function GET() {
   try {
@@ -33,6 +34,12 @@ export async function GET() {
   }
 }
 
+const createSemesterConfigSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  start_date: z.string().min(1, "Start date is required"),
+  end_date: z.string().min(1, "End date is required"),
+});
+
 export async function POST(req: Request) {
   try {
     const supabase = await createClient();
@@ -63,13 +70,14 @@ export async function POST(req: Request) {
       );
     }
 
-    const { name, start_date, end_date } = await req.json();
-    if (!name || !start_date || !end_date) {
-      return NextResponse.json(
-        { error: "Name, start date, and end date are required" },
-        { status: 400 },
-      );
+    const body = await req.json();
+    const validation = createSemesterConfigSchema.safeParse(body);
+
+    if (!validation.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { name, start_date, end_date } = validation.data;
 
     const adminClient = await createAdminClient();
     const { data, error } = await adminClient

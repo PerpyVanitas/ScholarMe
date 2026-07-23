@@ -2,6 +2,7 @@ import { handleApiError } from "@/lib/utils/api-error";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { GOVERNANCE_ROLES, hasAnyRole } from "@/lib/utils/roles";
+import { z } from "zod";
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -25,7 +26,19 @@ export async function GET(request: NextRequest) {
   }
 
   const url = new URL(request.url);
-  const semesterId = url.searchParams.get("semester_id");
+  const searchParams = Object.fromEntries(url.searchParams);
+
+  const GetSchema = z.object({
+    semester_id: z.string().optional(),
+  });
+
+  const parsed = GetSchema.safeParse(searchParams);
+
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+  }
+
+  const { semester_id: semesterId } = parsed.data;
 
   try {
     let tsQuery = supabase

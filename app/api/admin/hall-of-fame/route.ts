@@ -1,20 +1,32 @@
 import { handleApiError } from "@/lib/utils/api-error";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { z } from "zod"; // Added Zod import
 
 export async function GET(request: Request) {
   try {
     const supabase = await createClient();
-    const { searchParams } = new URL(request.url);
-    const start_date = searchParams.get("start_date");
-    const end_date = searchParams.get("end_date");
 
-    if (!start_date || !end_date) {
-      return NextResponse.json(
-        { error: "Missing date range" },
-        { status: 400 },
-      );
+    // Define schema for URL search parameters
+    const GetHallOfFameSchema = z.object({
+      start_date: z.string().nonempty("start_date is required"),
+      end_date: z.string().nonempty("end_date is required"),
+    });
+
+    const { searchParams } = new URL(request.url);
+    // Convert URLSearchParams to a plain object for Zod validation
+    const params = Object.fromEntries(searchParams.entries());
+
+    const parsedParams = GetHallOfFameSchema.safeParse(params);
+
+    if (!parsedParams.success) {
+      // Return a 400 response with a generic "Invalid input" error
+      // The specific Zod errors can be logged or returned for debugging if needed.
+      console.error("Validation error:", parsedParams.error);
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { start_date, end_date } = parsedParams.data;
 
     // Verify user is an admin
     const {

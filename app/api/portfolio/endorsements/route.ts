@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -10,11 +11,28 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { learnerId, sessionId, content } = await req.json();
+    // Define Zod schema for the request body
+    const endorsementSchema = z.object({
+      learnerId: z.string(), // learnerId is required based on original validation
+      sessionId: z.string().optional(), // sessionId is optional based on original validation
+      content: z.string().trim().min(1, "Content cannot be empty"), // content is required and must be a non-empty string after trimming
+    });
 
-    if (!learnerId || !content || typeof content !== "string" || content.trim().length === 0) {
-      return NextResponse.json({ error: "Invalid request parameters" }, { status: 400 });
+    // Parse and validate the request body
+    const body = await req.json();
+    const result = endorsementSchema.safeParse(body);
+
+    if (!result.success) {
+      // Return 400 with a generic error message as per requirement
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { learnerId, sessionId, content } = result.data;
+
+    // Original manual validation removed as it's now covered by Zod schema
+    // if (!learnerId || !content || typeof content !== "string" || content.trim().length === 0) {
+    //   return NextResponse.json({ error: "Invalid request parameters" }, { status: 400 });
+    // }
 
     // Security Check: Verify that the tutor has at least one completed session with this learner
     const { data: verifiedSessions } = await supabase
@@ -38,7 +56,7 @@ export async function POST(req: Request) {
         tutor_id: user.id,
         learner_id: learnerId,
         session_id: sessionId || verifiedSessions[0].id,
-        content: content.trim(),
+        content: content, // content is already trimmed and validated by Zod
         is_public: true,
       })
       .select()

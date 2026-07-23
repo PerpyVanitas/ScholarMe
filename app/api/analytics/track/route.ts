@@ -1,14 +1,24 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { event, properties, page } = body as {
-      event?: string;
-      properties?: Record<string, unknown>;
-      page?: string;
-    };
+    const bodyRaw = await request.json();
+
+    const BodySchema = z.object({
+      event: z.string().optional(),
+      properties: z.record(z.unknown()).optional(),
+      page: z.string().optional(),
+    });
+
+    const parsedBody = BodySchema.safeParse(bodyRaw);
+
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    }
+
+    const { event, properties, page } = parsedBody.data;
 
     const supabase = await createClient();
     const {

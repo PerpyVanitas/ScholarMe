@@ -3,6 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { GOVERNANCE_ROLES, getRoleName, hasAnyRole } from "@/lib/utils/roles";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { z } from "zod";
+
+const magicLinkBodySchema = z.object({
+  email: z.string().email(),
+});
 
 export async function POST(request: Request) {
   try {
@@ -27,12 +32,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const body = await request.json();
-    const { email } = body;
+    const bodyResult = magicLinkBodySchema.safeParse(await request.json());
 
-    if (!email) {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    if (!bodyResult.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { email } = bodyResult.data;
 
     const adminAuthClient = createAdminClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -1,9 +1,23 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { rateLimit } from "@/lib/rate-limit";
+import { z } from "zod";
 
 // Rate limit for server-side AI endpoint
 const aiRateLimiter = rateLimit({ interval: 60 * 1000, limit: 20 }); // 20 requests per minute
+
+const PostBodySchema = z.object({
+  messages: z.array(z.object({
+    role: z.string(),
+    content: z.string(),
+  })),
+  attachments: z.array(z.object({
+    name: z.string(),
+    type: z.string(),
+    content: z.string().optional(),
+    base64: z.string().optional(),
+  })).optional(),
+});
 
 export async function POST(req: Request) {
   try {
@@ -19,12 +33,12 @@ export async function POST(req: Request) {
       return new NextResponse("Rate limit exceeded. Please wait a moment before sending another message.", { status: 429 });
     }
 
-    const body = await req.json();
-    const { messages, attachments } = body;
-
-    if (!messages || !Array.isArray(messages)) {
-      return new NextResponse("Invalid request: messages array is required", { status: 400 });
+    const parseResult = PostBodySchema.safeParse(await req.json());
+    if (!parseResult.success) {
+      console.error("Invalid request body:", parseResult.error);
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+    const { messages, attachments } = parseResult.data;
 
     const apiKey = process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY;
     const lastUserMsg = messages[messages.length - 1]?.content || "";
@@ -35,7 +49,7 @@ export async function POST(req: Request) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const visionContent: any[] = [];
 
-    if (attachments && Array.isArray(attachments) && attachments.length > 0) {
+    if (attachments && attachments.length > 0) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const imgAttachment = attachments.find((a: any) => a.base64);
       if (imgAttachment) {

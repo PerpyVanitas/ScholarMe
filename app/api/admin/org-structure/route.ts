@@ -1,8 +1,9 @@
+import { z } from "zod";
 import { handleApiError } from "@/lib/utils/api-error";
 /**
- * GET  /api/admin/org-structure â€” fetch current term + all assignments
- * POST /api/admin/org-structure â€” create a new org term (super_admin only)
- * PATCH /api/admin/org-structure â€” save assignments for current term (super_admin only)
+ * GET  /api/admin/org-structure — fetch current term + all assignments
+ * POST /api/admin/org-structure — create a new org term (super_admin only)
+ * PATCH /api/admin/org-structure — save assignments for current term (super_admin only)
  */
 import { createClient } from "@/lib/supabase/create-client";
 import { createClient as createBareAdminClient } from "@supabase/supabase-js";
@@ -37,7 +38,7 @@ async function requireSuperAdmin(
   return user;
 }
 
-// GET â€” fetch current term and all assignments joined with profile data
+// GET — fetch current term and all assignments joined with profile data
 export async function GET() {
   try {
     const adminClient = getAdminSupabase();
@@ -105,7 +106,7 @@ export async function GET() {
   }
 }
 
-// POST â€” create a new term
+// POST — create a new term
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -117,13 +118,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { label, term_start, term_end } = await request.json();
-    if (!label || !term_start || !term_end) {
-      return NextResponse.json(
-        { error: "label, term_start, and term_end are required" },
-        { status: 400 },
-      );
+    const PostBodySchema = z.object({
+      label: z.string(),
+      term_start: z.string(),
+      term_end: z.string(),
+    });
+
+    const parseResult = await PostBodySchema.safeParseAsync(await request.json());
+
+    if (!parseResult.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { label, term_start, term_end } = parseResult.data;
 
     const adminClient = getAdminSupabase();
 
@@ -164,7 +171,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PATCH â€” save or update assignments for the current term
+// PATCH — save or update assignments for the current term
 export async function PATCH(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -188,13 +195,22 @@ export async function PATCH(request: NextRequest) {
      * }
      * user_id: null means "clear this position"
      */
-    const { term_id, assignments } = await request.json();
-    if (!term_id || !Array.isArray(assignments)) {
-      return NextResponse.json(
-        { error: "term_id and assignments array are required" },
-        { status: 400 },
-      );
+    const PatchBodySchema = z.object({
+      term_id: z.string().uuid(),
+      assignments: z.array(z.object({
+        position: z.string(),
+        committee: z.string().nullable(),
+        user_id: z.string().uuid().nullable(),
+      })),
+    });
+
+    const parseResult = await PatchBodySchema.safeParseAsync(await request.json());
+
+    if (!parseResult.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { term_id, assignments } = parseResult.data;
 
     const adminClient = getAdminSupabase();
 
@@ -259,7 +275,7 @@ export async function PATCH(request: NextRequest) {
 
       // Upsert the assignment
       if (prev) {
-        // Assignment exists â€” update it
+        // Assignment exists — update it
         const { data: updated, error: updateErr } = await adminClient
           .from("org_assignments")
           .update({ user_id, updated_at: new Date().toISOString() })
@@ -363,7 +379,7 @@ async function applyRoleFromPosition(
         string | undefined);
 
   if (currentRole === "super_admin" || currentRole === "administrator") {
-    // Don't overwrite system roles â€” store assignment only, don't change role_id
+    // Don't overwrite system roles — store assignment only, don't change role_id
     return;
   }
 

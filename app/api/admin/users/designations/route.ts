@@ -1,8 +1,9 @@
-﻿import { handleApiError } from "@/lib/utils/api-error";
+import { handleApiError } from "@/lib/utils/api-error";
 import { createClient } from "@/lib/supabase/create-client";
 import { createClient as createBareAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { GOVERNANCE_ROLES, hasAnyRole } from "@/lib/utils/roles";
+import { z } from "zod";
 
 function getAdminSupabase() {
   return createBareAdminClient(
@@ -33,13 +34,18 @@ async function getAdminUser(
   return user;
 }
 
+const GetRequestSchema = z.object({
+  userId: z.string().uuid(),
+});
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const userId = searchParams.get("userId");
+  const result = GetRequestSchema.safeParse(Object.fromEntries(searchParams));
 
-  if (!userId) {
-    return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+  if (!result.success) {
+    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
+  const { userId } = result.data;
 
   const supabase = await createClient();
   const admin = await getAdminUser(supabase);
@@ -64,6 +70,14 @@ export async function GET(request: Request) {
   return NextResponse.json({ designations: data }, { status: 200 });
 }
 
+const PostRequestSchema = z.object({
+  user_id: z.string().uuid(),
+  designation: z.string(),
+  position: z.string().optional().nullable(),
+  academic_year: z.string(),
+  is_current: z.boolean().optional(),
+});
+
 export async function POST(request: Request) {
   const supabase = await createClient();
   const admin = await getAdminUser(supabase);
@@ -71,15 +85,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  const { user_id, designation, position, academic_year, is_current } =
-    await request.json();
+  const body = await request.json();
+  const result = PostRequestSchema.safeParse(body);
 
-  if (!user_id || !designation || !academic_year) {
-    return NextResponse.json(
-      { error: "Missing required fields" },
-      { status: 400 },
-    );
+  if (!result.success) {
+    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
+  const { user_id, designation, position, academic_year, is_current } =
+    result.data;
 
   const adminClient = getAdminSupabase();
 
@@ -126,6 +139,15 @@ export async function POST(request: Request) {
   return NextResponse.json({ designation: data }, { status: 201 });
 }
 
+const PatchRequestSchema = z.object({
+  designation_id: z.string().uuid(),
+  user_id: z.string().uuid(),
+  designation: z.string(),
+  position: z.string().optional().nullable(),
+  academic_year: z.string(),
+  is_current: z.boolean().optional(),
+});
+
 export async function PATCH(request: Request) {
   const supabase = await createClient();
   const admin = await getAdminUser(supabase);
@@ -133,6 +155,12 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
+  const body = await request.json();
+  const result = PatchRequestSchema.safeParse(body);
+
+  if (!result.success) {
+    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+  }
   const {
     designation_id,
     user_id,
@@ -140,14 +168,7 @@ export async function PATCH(request: Request) {
     position,
     academic_year,
     is_current,
-  } = await request.json();
-
-  if (!designation_id || !user_id) {
-    return NextResponse.json(
-      { error: "Missing designation_id or user_id" },
-      { status: 400 },
-    );
-  }
+  } = result.data;
 
   const adminClient = getAdminSupabase();
 
@@ -194,6 +215,11 @@ export async function PATCH(request: Request) {
   return NextResponse.json({ designation: data }, { status: 200 });
 }
 
+const DeleteRequestSchema = z.object({
+  designation_id: z.string().uuid(),
+  user_id: z.string().uuid(),
+});
+
 export async function DELETE(request: Request) {
   const supabase = await createClient();
   const admin = await getAdminUser(supabase);
@@ -201,14 +227,13 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  const { designation_id, user_id } = await request.json();
+  const body = await request.json();
+  const result = DeleteRequestSchema.safeParse(body);
 
-  if (!designation_id || !user_id) {
-    return NextResponse.json(
-      { error: "Missing designation_id or user_id" },
-      { status: 400 },
-    );
+  if (!result.success) {
+    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
+  const { designation_id, user_id } = result.data;
 
   const adminClient = getAdminSupabase();
 
@@ -236,4 +261,3 @@ export async function DELETE(request: Request) {
 
   return NextResponse.json({ success: true }, { status: 200 });
 }
-

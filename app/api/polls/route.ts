@@ -1,3 +1,30 @@
+import { z } from "zod";
+import { createClient } from "@/lib/supabase/server";
+import { NextRequest, NextResponse } from "next/server";
+import { createSuccessResponse, createErrorResponse } from "@/lib/api-errors";
+import {
+  parsePaginationParams,
+  createPaginatedResponse,
+} from "@/lib/api/pagination";
+import { isAdminRole, getRoleName } from "@/lib/utils/roles";
+
+// Define Zod schemas for request validation
+const GetPollsSchema = z.object({
+  status: z.enum(["active", "closed"]).optional().default("active"),
+  page: z.string().optional(),
+  limit: z.string().optional(),
+});
+
+const CreatePollSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  end_date: z.string().datetime("End date must be a valid ISO 8601 date string"),
+  options: z.array(z.string().min(1, "Option text cannot be empty")).min(2, "At least 2 options are required"),
+  allow_multiple_votes: z.boolean().optional().default(false),
+  is_anonymous: z.boolean().optional().default(false),
+});
+
+
 /**
  * GET /api/polls?status=active|closed&page=1&limit=20
  *
@@ -8,27 +35,25 @@
  * The `status` column in the DB is kept for reference but the real
  * source-of-truth for lifecycle is end_date vs now().
  */
-import { createClient } from "@/lib/supabase/server";
-import { NextRequest, NextResponse } from "next/server";
-import { createSuccessResponse, createErrorResponse } from "@/lib/api-errors";
-import {
-  parsePaginationParams,
-  createPaginatedResponse,
-} from "@/lib/api/pagination";
-import { isAdminRole, getRoleName } from "@/lib/utils/roles";
-
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const { page, limit, offset } = parsePaginationParams(
-      Object.fromEntries(searchParams),
+
+    // Zod validation for GET search parameters
+    const result = GetPollsSchema.safeParse(Object.fromEntries(searchParams));
+
+    if (!result.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    }
+
+    const { status, page, limit } = result.data;
+
+    const { page: parsedPage, limit: parsedLimit, offset } = parsePaginationParams(
+      { page, limit },
       20,
     );
 
-    // "active" = polls whose end_date is still in the future
-    // "closed" = polls that have passed their end_date (or were manually closed)
-    const statusParam =
-      (searchParams.get("status") as "active" | "closed") || "active";
+    const statusParam = status; // Use the validated status
 
     const supabase = await createClient();
 
@@ -83,7 +108,7 @@ export async function GET(request: NextRequest) {
       data: polls,
       error,
       count,
-    } = await query.range(offset, offset + limit - 1);
+    } = await query.range(offset, offset + parsedLimit - 1);
 
     if (error) {
       return NextResponse.json(
@@ -93,7 +118,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(
-      createPaginatedResponse(polls || [], page, limit, count || 0),
+      createPaginatedResponse(polls || [], parsedPage, parsedLimit, count || 0),
     );
   } catch {
     return NextResponse.json(
@@ -145,6 +170,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+
+    // Zod validation for POST body
+    const result = CreatePollSchema.safeParse(body);
+
+    if (!result.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    }
+
     const {
       title,
       description,
@@ -152,21 +185,7 @@ export async function POST(request: NextRequest) {
       options,
       allow_multiple_votes,
       is_anonymous,
-    } = body;
-
-    if (!title || !end_date || !options || options.length < 2) {
-      return NextResponse.json(
-        createErrorResponse("VALID_001_GENERAL", {
-          title: !title ? "Title is required" : "",
-          end_date: !end_date ? "End date is required" : "",
-          options:
-            !options || options.length < 2
-              ? "At least 2 options are required"
-              : "",
-        }),
-        { status: 400 },
-      );
-    }
+    } = result.data; // Destructure from validated data
 
     // Create poll
     const { data: poll, error: pollError } = await supabase
@@ -176,8 +195,8 @@ export async function POST(request: NextRequest) {
         description,
         created_by: user.id,
         end_date,
-        allow_multiple_votes: allow_multiple_votes || false,
-        is_anonymous: is_anonymous || false,
+        allow_multiple_votes: allow_multiple_votes,
+        is_anonymous: is_anonymous,
         is_hidden: false,
       })
       .select(

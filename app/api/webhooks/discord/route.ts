@@ -1,11 +1,74 @@
 import { handleApiError } from "@/lib/utils/api-error";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/create-client";
+import { z } from "zod";
+
+// Zod schemas for request body validation
+const newUserSignupPayloadSchema = z.object({
+  name: z.string().optional(),
+  email: z.string().email().optional(), // Added email validation
+  program: z.string().optional(),
+}).passthrough(); // Allow extra fields if they exist in the payload
+
+const newAnnouncementPayloadSchema = z.object({
+  title: z.string().optional(),
+  description: z.string().optional(),
+}).passthrough();
+
+const newResourceAddedPayloadSchema = z.object({
+  title: z.string().optional(),
+}).passthrough();
+
+// Main schema for the request body with dynamic payload validation
+const requestBodySchema = z.object({
+  type: z.string(),
+  payload: z.any(), // Initially accept any payload, then refine based on 'type'
+}).superRefine((data, ctx) => {
+  // Dynamically validate `payload` based on the `type` field
+  if (data.type === "NEW_USER_SIGNUP") {
+    const parsedPayload = newUserSignupPayloadSchema.safeParse(data.payload);
+    if (!parsedPayload.success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Invalid payload for type ${data.type}: ${parsedPayload.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(', ')}`,
+        path: ["payload"],
+      });
+    }
+  } else if (data.type === "NEW_ANNOUNCEMENT") {
+    const parsedPayload = newAnnouncementPayloadSchema.safeParse(data.payload);
+    if (!parsedPayload.success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Invalid payload for type ${data.type}: ${parsedPayload.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(', ')}`,
+        path: ["payload"],
+      });
+    }
+  } else if (data.type === "NEW_RESOURCE_ADDED") {
+    const parsedPayload = newResourceAddedPayloadSchema.safeParse(data.payload);
+    if (!parsedPayload.success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Invalid payload for type ${data.type}: ${parsedPayload.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(', ')}`,
+        path: ["payload"],
+      });
+    }
+  }
+  // For any other 'type', payload: z.any() is acceptable, so no further validation is needed here.
+});
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { type, payload } = body;
+    // Validate request body using Zod's safeParseAsync
+    const parsedBody = await requestBodySchema.safeParseAsync(await req.json());
+
+    if (!parsedBody.success) {
+      // Return a 400 Bad Request response if validation fails
+      // console.error("Request body validation failed:", parsedBody.error); // Optional: log errors for debugging
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    }
+
+    // Destructure validated data. 'payload' will be typed as 'any' but runtime-validated.
+    const { type, payload } = parsedBody.data;
 
     // We expect the Discord webhook URL to be stored in the environment
     const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;

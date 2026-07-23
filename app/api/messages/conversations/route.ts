@@ -2,6 +2,10 @@ import { handleApiError } from "@/lib/utils/api-error";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createSimpleAdminClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { z } from "zod"; // Added this line
+import { rateLimit } from "@/lib/rate-limit";
+
+const conversationRateLimiter = rateLimit({ interval: 60 * 1000, limit: 10 });
 
 export async function POST(req: Request) {
   try {
@@ -17,13 +21,29 @@ export async function POST(req: Request) {
       );
     }
 
-    const { participantId } = await req.json();
-    if (!participantId) {
+    const ip = req.headers.get("x-forwarded-for") || "unknown";
+    const limitRes = await conversationRateLimiter.check(`conv:${user.id}:${ip}`);
+    if (!limitRes.success) {
       return NextResponse.json(
-        { success: false, error: "Participant ID is required" },
-        { status: 400 },
+        { success: false, error: "Too many requests" },
+        { status: 429 },
       );
     }
+
+    // Zod schema for the request body
+    const postBodySchema = z.object({
+      participantId: z.string().uuid(), // Assuming participantId is a UUID string based on typical Supabase profile_id
+    });
+
+    const body = await req.json();
+    const validation = postBodySchema.safeParse(body);
+
+    if (!validation.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    }
+
+    const { participantId } = validation.data;
+    // Original check `if (!participantId)` is now redundant due to `z.string().uuid()` validation.
 
     const adminSupabase = createSimpleAdminClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -2,6 +2,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/create-client";
 import { TimesheetCorrectionSchema } from "@/features/timesheets/schema";
+import { z } from "zod";
+
+// Define the Zod schema for the incoming request body
+const RequestBodySchema = z.object({
+  timesheet_id: z.string().min(1, "Timesheet ID is required"),
+  requested_clock_out: z.string().datetime("Invalid requested clock out format. Expected ISO 8601 string."),
+  reason: z.string().min(1, "Reason is required and cannot be empty"),
+});
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -11,15 +19,25 @@ export async function POST(req: NextRequest) {
   if (!user)
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
+  // Parse the request body using the Zod schema
   const body = await req.json();
-  const { timesheet_id, requested_clock_out, reason } = body;
+  const parsedBody = RequestBodySchema.safeParse(body);
 
-  if (!timesheet_id || !requested_clock_out || !reason?.trim()) {
-    return NextResponse.json(
-      { error: "timesheet_id, requested_clock_out, and reason are required" },
-      { status: 400 },
-    );
+  // If validation fails, return an error response
+  if (!parsedBody.success) {
+    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
+
+  // Destructure the validated data
+  const { timesheet_id, requested_clock_out, reason } = parsedBody.data;
+
+  // The original manual validation check is now handled by the Zod schema
+  // if (!timesheet_id || !requested_clock_out || !reason?.trim()) {
+  //   return NextResponse.json(
+  //     { error: "timesheet_id, requested_clock_out, and reason are required" },
+  //     { status: 400 },
+  //   );
+  // }
 
   // Verify the timesheet belongs to this user
   const { data: entry } = await supabase

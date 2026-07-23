@@ -2,6 +2,7 @@ import { handleApiError } from "@/lib/utils/api-error";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/create-client";
 import { GOVERNANCE_ROLES, hasAnyRole } from "@/lib/utils/roles";
+import { z } from "zod";
 
 // Helper to fetch active timesheet collection period
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -17,6 +18,11 @@ async function getActivePeriod(supabase: any) {
     return null;
   }
 }
+
+const searchParamsSchema = z.object({
+  start_date: z.string().optional(),
+  end_date: z.string().optional(),
+});
 
 export async function GET(req: NextRequest) {
   const supabase = await createClient();
@@ -43,8 +49,15 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = new URL(req.url);
-  const startDateParam = searchParams.get("start_date");
-  const endDateParam = searchParams.get("end_date");
+  const parsedSearchParams = Object.fromEntries(searchParams.entries());
+
+  const validationResult = searchParamsSchema.safeParse(parsedSearchParams);
+
+  if (!validationResult.success) {
+    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+  }
+
+  const { start_date: startDateParam, end_date: endDateParam } = validationResult.data;
 
   let query = supabase.from("timesheets").select("*, tutors(*, profiles(*))");
 

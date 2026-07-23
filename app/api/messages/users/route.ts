@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { handleApiError } from "@/lib/utils/api-error";
+import { z } from "zod";
 
 type UserProfileRow = {
   id: string;
@@ -22,6 +23,11 @@ function formatProfile(p: UserProfileRow) {
   };
 }
 
+const GetProfileSearchParamsSchema = z.object({
+  q: z.string().optional().default(""),
+  userId: z.string().optional(),
+});
+
 export async function GET(req: Request) {
   try {
     const supabase = await createClient();
@@ -37,8 +43,15 @@ export async function GET(req: Request) {
     }
 
     const { searchParams } = new URL(req.url);
-    const q = searchParams.get("q") || "";
-    const userId = searchParams.get("userId");
+    const rawSearchParams = Object.fromEntries(searchParams.entries());
+
+    const parsedSearchParams = GetProfileSearchParamsSchema.safeParse(rawSearchParams);
+
+    if (!parsedSearchParams.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    }
+
+    const { q, userId } = parsedSearchParams.data;
 
     if (userId) {
       const { data: profile, error } = await supabase

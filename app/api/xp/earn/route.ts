@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { handleApiError } from "@/lib/utils/api-error";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
@@ -12,17 +13,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { action, reason } = body;
+    const BodySchema = z.object({
+      action: z.string(),
+      reason: z.string().min(1, "Reason is required"),
+    });
 
-    if (!action || !XP_AWARDS[action as keyof typeof XP_AWARDS]) {
+    const parseResult = BodySchema.safeParse(await req.json());
+
+    if (!parseResult.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    }
+
+    const { action, reason } = parseResult.data;
+
+    if (!XP_AWARDS[action as keyof typeof XP_AWARDS]) {
       return NextResponse.json({ error: "Invalid or missing action" }, { status: 400 });
     }
     const amount = XP_AWARDS[action as keyof typeof XP_AWARDS];
-
-    if (!reason || typeof reason !== 'string') {
-      return NextResponse.json({ error: "Reason is required" }, { status: 400 });
-    }
 
     // Insert into xp_logs
     const { data, error } = await supabase

@@ -2,6 +2,7 @@ import { handleApiError } from "@/lib/utils/api-error";
 import { createClient, createAdminClient } from "@/lib/supabase/create-client";
 import { NextRequest, NextResponse } from "next/server";
 import { createSuccessResponse, createErrorResponse } from "@/lib/api-errors";
+import { z } from "zod";
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,17 +48,26 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { users } = body;
 
-    if (!Array.isArray(users) || users.length === 0) {
-      return NextResponse.json(
-        createErrorResponse(
-          "VALID_001_GENERAL",
-          "A valid array of users is required",
-        ),
-        { status: 400 },
-      );
+    // Define Zod schema for the request body
+    const UserSchema = z.object({
+      email: z.string().email("Invalid email address"),
+      full_name: z.string().min(1, "Full name is required"),
+      role_name: z.string().optional(),
+    });
+
+    const BulkUserImportSchema = z.object({
+      users: z.array(UserSchema).min(1, "At least one user is required"),
+    });
+
+    // Validate the request body
+    const validation = BulkUserImportSchema.safeParse(body);
+
+    if (!validation.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { users } = validation.data;
 
     const adminClient = await createAdminClient();
 

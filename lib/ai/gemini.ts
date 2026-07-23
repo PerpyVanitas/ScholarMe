@@ -8,16 +8,18 @@ import { GoogleGenAI } from "@google/genai";
 
 export const GEMINI_MODEL = "gemini-2.5-flash";
 
-/** Lazily create a GoogleGenAI client, failing fast if the key is missing. */
+/** Lazily create a GoogleGenAI client configured for Vertex AI. */
 export function getAIClient(): GoogleGenAI {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) {
+  const project = process.env.GOOGLE_CLOUD_PROJECT_ID;
+  const location = process.env.GOOGLE_CLOUD_LOCATION || "us-central1";
+
+  if (!project) {
     throw new Error(
-      "GEMINI_API_KEY environment variable is not configured. " +
+      "GOOGLE_CLOUD_PROJECT_ID environment variable is not configured. " +
         "Check your .env.local and deployment environment settings.",
     );
   }
-  return new GoogleGenAI({ apiKey: key });
+  return new GoogleGenAI({ vertexai: true, project, location });
 }
 
 /**
@@ -26,7 +28,7 @@ export function getAIClient(): GoogleGenAI {
  */
 export function logAndSanitizeAIError(context: string, error: unknown): string {
   console.error(`[AI Error — ${context}]`, error);
-  if (error instanceof Error && error.message.includes("GEMINI_API_KEY")) {
+  if (error instanceof Error && (error.message.includes("GEMINI_API_KEY") || error.message.includes("GOOGLE_CLOUD_PROJECT_ID"))) {
     return "AI service is not configured. Please contact support.";
   }
   return "AI generation failed. Please try again later.";

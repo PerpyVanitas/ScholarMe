@@ -2,6 +2,7 @@ import { handleApiError } from "@/lib/utils/api-error";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { calculateSM2, type SM2Rating } from "@/lib/utils/sm2";
+import { z } from "zod";
 
 export async function POST(req: Request) {
   try {
@@ -14,18 +15,29 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { study_set_item_id, rating } = body as {
-      study_set_item_id: string;
-      rating: SM2Rating;
-    };
+    // Zod schema for the request body
+    const FlashcardAttemptBodySchema = z.object({
+      study_set_item_id: z.string(),
+      // Inferring SM2Rating as a number based on its usage in calculateSM2 and comparison with `undefined`.
+      // Common SM2 ratings are integers between 0 and 5.
+      rating: z.number(), 
+    });
 
-    if (!study_set_item_id || rating === undefined) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 },
-      );
+    const parseResult = FlashcardAttemptBodySchema.safeParse(await req.json());
+
+    if (!parseResult.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { study_set_item_id, rating } = parseResult.data;
+
+    // The manual check for missing fields is now handled by Zod schema validation
+    // if (!study_set_item_id || rating === undefined) {
+    //   return NextResponse.json(
+    //     { error: "Missing required fields" },
+    //     { status: 400 },
+    //   );
+    // }
 
     // Get previous attempt data
     const { data: previousAttempt, error: fetchError } = await supabase

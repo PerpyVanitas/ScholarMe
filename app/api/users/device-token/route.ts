@@ -1,3 +1,4 @@
+import { z } from "zod";
 /** POST /api/users/device-token -- Register device token for push notifications */
 import { createClient } from "@/lib/supabase/client";
 import { NextResponse } from "next/server";
@@ -5,21 +6,18 @@ import { createErrorResponse, createSuccessResponse } from "@/lib/api-errors";
 
 export async function POST(request: Request) {
   try {
-    const { token, platform } = await request.json();
+    const postBodySchema = z.object({
+      token: z.string(),
+      platform: z.enum(["ios", "android", "web"]),
+    });
 
-    if (!token || !platform) {
-      return NextResponse.json(
-        createErrorResponse("VALID_001_MISSING_REQUIRED_FIELD", "token and platform are required"),
-        { status: 400 }
-      );
+    const parseResult = postBodySchema.safeParse(await request.json());
+
+    if (!parseResult.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
-    if (!["ios", "android", "web"].includes(platform)) {
-      return NextResponse.json(
-        createErrorResponse("VALID_001_GENERAL", "platform must be ios, android, or web"),
-        { status: 400 }
-      );
-    }
+    const { token, platform } = parseResult.data;
 
     const supabase = createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -69,14 +67,17 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const { token } = await request.json();
+    const deleteBodySchema = z.object({
+      token: z.string(),
+    });
 
-    if (!token) {
-      return NextResponse.json(
-        createErrorResponse("VALID_001_MISSING_REQUIRED_FIELD", "token is required"),
-        { status: 400 }
-      );
+    const parseResult = deleteBodySchema.safeParse(await request.json());
+
+    if (!parseResult.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { token } = parseResult.data;
 
     const supabase = createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();

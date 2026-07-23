@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { handleApiError } from "@/lib/utils/api-error";
 /** POST /api/auth/card-login -- authenticate via Card ID + PIN (uses admin client to bypass RLS). */
 import { createClient } from "@/lib/supabase/create-client";
@@ -8,20 +9,26 @@ import bcrypt from "bcryptjs";
 import { rateLimit } from "@/lib/rate-limit";
 import { verifyCardSignature } from "@/lib/security/card-token";
 
+const CardLoginSchema = z.object({
+  cardId: z.string().min(1, "Card ID is required"),
+  pin: z.string().optional(),
+  sig: z.string().optional(),
+}).refine(data => data.pin || data.sig, {
+  message: "PIN or Signature is required",
+  path: ["pin", "sig"],
+});
+
 const cardLoginRateLimiter = rateLimit({ interval: 10 * 60 * 1000, limit: 10 });
 export async function POST(request: Request) {
   try {
-    const { cardId, pin, sig } = await request.json();
+    const body = await request.json();
+    const validation = CardLoginSchema.safeParse(body);
 
-    if (!cardId || (!pin && !sig)) {
-      return NextResponse.json(
-        createErrorResponse("VALID_001_GENERAL", {
-          cardId: !cardId ? "Card ID is required" : "",
-          pin: !pin && !sig ? "PIN or Signature is required" : "",
-        }),
-        { status: 400 },
-      );
+    if (!validation.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { cardId, pin, sig } = validation.data;
 
     // Apply Rate Limiting
     const rateLimitResult = await cardLoginRateLimiter.check(cardId);

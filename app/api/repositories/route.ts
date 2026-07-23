@@ -1,4 +1,5 @@
-﻿import { handleApiError } from "@/lib/utils/api-error";
+import { z } from "zod";
+import { handleApiError } from "@/lib/utils/api-error";
 /** GET/POST /api/repositories -- list or create resource repositories. */
 import { createClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
@@ -18,6 +19,12 @@ export async function GET() {
   return NextResponse.json(repos);
 }
 
+const postBodySchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  access_role: z.string().optional(),
+});
+
 export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -26,11 +33,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { title, description, access_role } = await request.json();
+  const body = await request.json();
+  const parsedBody = postBodySchema.safeParse(body);
 
-  if (!title) {
-    return NextResponse.json({ error: "Title is required" }, { status: 400 });
+  if (!parsedBody.success) {
+    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
+
+  const { title, description, access_role } = parsedBody.data;
 
   const { data, error } = await supabase
     .from("repositories")
@@ -49,4 +59,3 @@ export async function POST(request: Request) {
 
   return NextResponse.json(data, { status: 201 });
 }
-

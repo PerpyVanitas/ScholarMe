@@ -3,6 +3,7 @@ import { handleApiError } from "@/lib/utils/api-error";
 import { createClient as createServerClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
 import { AUTH_VALIDATORS } from "@/features/auth/utils/validators";
+import { z } from "zod";
 
 // Simple in-memory rate limiting (resets per server restart)
 const passwordChangeAttempts = new Map<
@@ -40,6 +41,11 @@ function checkRateLimit(userId: string): {
   return { allowed: true };
 }
 
+const passwordChangeSchema = z.object({
+  currentPassword: z.string(),
+  newPassword: z.string(),
+});
+
 export async function PUT(request: Request) {
   try {
     const supabase = await createServerClient();
@@ -60,15 +66,13 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: rateCheck.message }, { status: 429 });
     }
 
-    const body = await request.json();
-    const { currentPassword, newPassword } = body;
+    const parseResult = await passwordChangeSchema.safeParseAsync(await request.json());
 
-    if (!currentPassword || !newPassword) {
-      return NextResponse.json(
-        { error: "Current password and new password are required." },
-        { status: 400 },
-      );
+    if (!parseResult.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { currentPassword, newPassword } = parseResult.data;
 
     const passErr = AUTH_VALIDATORS.password(newPassword);
     if (passErr) {

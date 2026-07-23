@@ -3,6 +3,13 @@ import { handleApiError } from "@/lib/utils/api-error";
 import { createClient, createAdminClient } from "@/lib/supabase/create-client";
 import { NextRequest, NextResponse } from "next/server";
 import { createSuccessResponse, createErrorResponse } from "@/lib/api-errors";
+import { z } from "zod";
+
+const createAdminSchema = z.object({
+  email: z.string().email("Invalid email format"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  full_name: z.string().min(1, "Full name is required"),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,27 +53,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, password, full_name } = body;
+    const parsed = createAdminSchema.safeParse(body);
 
-    if (!email || !password || !full_name) {
-      return NextResponse.json(
-        createErrorResponse(
-          "VALID_001_GENERAL",
-          "Email, password, and full name are required",
-        ),
-        { status: 400 },
-      );
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
-    if (password.length < 8) {
-      return NextResponse.json(
-        createErrorResponse(
-          "VALID_001_PASSWORD_WEAK",
-          "Password must be at least 8 characters",
-        ),
-        { status: 400 },
-      );
-    }
+    const { email, password, full_name } = parsed.data;
 
     const adminClient = await createAdminClient();
 

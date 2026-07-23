@@ -1,7 +1,17 @@
-/** PUT /api/sessions/[id]/status -- update session status (confirm, complete, cancel). */
 import { createClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
 import { handleApiError } from "@/lib/utils/api-error";
+import { z } from "zod"; // Added Zod import
+
+const updateSessionSchema = z.object({
+  status: z.enum(["confirmed", "completed", "cancelled", "no_show"]).optional(),
+  meeting_link: z.string().url().or(z.literal("")).nullable().optional(), // Can be a URL, empty string, or null, or omitted
+  start_time: z.string().datetime({ offset: true }).optional(), // Must be ISO date string if present, otherwise omitted
+  end_time: z.string().datetime({ offset: true }).optional(), // Must be ISO date string if present, otherwise omitted
+  scheduled_date: z.string().datetime({ offset: true }).optional(), // Must be ISO date string if present, otherwise omitted
+  transfer_to_tutor_id: z.string().uuid().nullable().optional(), // Must be a UUID or null if present, otherwise omitted
+  tutor_id: z.string().uuid().optional(), // Must be a UUID if present, otherwise omitted
+});
 
 export async function PUT(
   request: Request,
@@ -17,6 +27,14 @@ export async function PUT(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const body = await request.json();
+  const parsedBody = updateSessionSchema.safeParse(body);
+
+  if (!parsedBody.success) {
+    // console.error(parsedBody.error); // Uncomment for debugging Zod errors
+    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+  }
+
   const {
     status,
     meeting_link,
@@ -25,14 +43,15 @@ export async function PUT(
     scheduled_date,
     transfer_to_tutor_id,
     tutor_id,
-  } = await request.json();
+  } = parsedBody.data;
 
-  if (
-    status &&
-    !["confirmed", "completed", "cancelled", "no_show"].includes(status)
-  ) {
-    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
-  }
+  // The original status validation is now handled by the Zod schema.
+  // if (
+  //   status &&
+  //   !["confirmed", "completed", "cancelled", "no_show"].includes(status)
+  // ) {
+  //   return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  // }
 
   const updateData: Record<string, unknown> = {};
   if (status) updateData.status = status;

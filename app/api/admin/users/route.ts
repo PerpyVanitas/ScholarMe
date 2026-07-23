@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { handleApiError } from "@/lib/utils/api-error";
 // POST /api/admin/users -- create user
 // PATCH /api/admin/users -- edit user details
@@ -36,6 +37,13 @@ async function getAdminUser(
   return { user, roleName };
 }
 
+const postSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6), // Supabase default min password length is 6
+  full_name: z.string().min(1),
+  role_name: z.string().optional(),
+});
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
@@ -45,13 +53,14 @@ export async function POST(request: Request) {
 
     const { user: admin, roleName: adminRoleName } = adminData;
 
-    const { email, password, full_name, role_name } = await request.json();
-    if (!email || !password || !full_name) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 },
-      );
+    const body = await request.json();
+    const parsed = postSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { email, password, full_name, role_name } = parsed.data;
 
     if (
       role_name &&
@@ -110,6 +119,15 @@ export async function POST(request: Request) {
   }
 }
 
+const patchSchema = z.object({
+  user_id: z.string().uuid(), // Assuming it's a UUID for Supabase user ID
+  full_name: z.string().min(1).optional(),
+  email: z.string().email().optional(),
+  role_name: z.string().optional(),
+  password: z.string().min(6).optional(), // Supabase default min password length is 6
+  role_expires_at: z.string().datetime().nullable().optional(), // Assuming it's an ISO date string
+});
+
 export async function PATCH(request: Request) {
   try {
     const supabase = await createClient();
@@ -119,10 +137,15 @@ export async function PATCH(request: Request) {
 
     const { user: admin, roleName: adminRoleName } = adminData;
 
+    const body = await request.json();
+    const parsed = patchSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    }
+
     const { user_id, full_name, email, role_name, password, role_expires_at } =
-      await request.json();
-    if (!user_id)
-      return NextResponse.json({ error: "Missing user_id" }, { status: 400 });
+      parsed.data;
 
     const adminClient = getAdminSupabase();
 
@@ -225,6 +248,10 @@ export async function PATCH(request: Request) {
   }
 }
 
+const deleteSchema = z.object({
+  user_id: z.string().uuid(), // Assuming it's a UUID for Supabase user ID
+});
+
 export async function DELETE(request: Request) {
   try {
     const supabase = await createClient();
@@ -234,9 +261,14 @@ export async function DELETE(request: Request) {
 
     const { user: admin } = adminData;
 
-    const { user_id } = await request.json();
-    if (!user_id)
-      return NextResponse.json({ error: "Missing user_id" }, { status: 400 });
+    const body = await request.json();
+    const parsed = deleteSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    }
+
+    const { user_id } = parsed.data;
 
     if (user_id === admin.id) {
       return NextResponse.json(

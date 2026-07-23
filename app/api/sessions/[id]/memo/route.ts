@@ -1,5 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { z } from "zod";
+
+const putBodySchema = z.object({
+  memo: z.string(),
+});
 
 export async function PUT(
   request: Request,
@@ -9,11 +14,13 @@ export async function PUT(
     const params = await context.params;
     const id = params.id;
     const body = await request.json();
-    const { memo } = body;
+    const parsedBody = putBodySchema.safeParse(body);
 
-    if (typeof memo !== "string") {
-      return new NextResponse("Invalid memo", { status: 400 });
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { memo } = parsedBody.data;
 
     const supabase = await createClient();
 

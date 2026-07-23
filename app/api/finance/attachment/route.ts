@@ -1,13 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSecureAttachmentUrl } from "@/features/finance/actions/finance-actions";
+import { z } from "zod";
+
+const GetPathSchema = z.object({
+  path: z.string(),
+});
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const path = searchParams.get("path");
+  const paramsObject = Object.fromEntries(searchParams);
 
-  if (!path) {
-    return new NextResponse("Missing file path", { status: 400 });
+  const result = GetPathSchema.safeParse(paramsObject);
+
+  if (!result.success) {
+    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
+
+  const { path } = result.data;
 
   try {
     const signedUrl = await getSecureAttachmentUrl(path);

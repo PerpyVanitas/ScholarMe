@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { handleApiError } from "@/lib/utils/api-error";
@@ -18,15 +19,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { postId, reason } = body;
+    const reportBodySchema = z.object({
+      postId: z.string(),
+      reason: z.string(),
+    });
 
-    if (!postId || !reason) {
-      return NextResponse.json(
-        { error: "Missing required fields", code: "VALIDATION_ERROR" },
-        { status: 400 },
-      );
+    const parsedBody = reportBodySchema.safeParse(await request.json());
+
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { postId, reason } = parsedBody.data;
 
     const { error: insertError } = await supabase
       .from('forum_reports')

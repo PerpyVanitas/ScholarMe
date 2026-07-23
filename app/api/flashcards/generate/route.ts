@@ -11,6 +11,7 @@ import { handleApiError } from "@/lib/utils/api-error";
  *  - [M2] 60-second timeout via httpOptions
  *  - [L2] Sanitized error messages — full error logged, generic msg to client
  */
+import { z } from "zod";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -19,6 +20,12 @@ import {
   GEMINI_TIMEOUT_MS,
   logAndSanitizeAIError,
 } from "@/lib/ai/gemini";
+
+// Define the Zod schema for the raw request body
+const FlashcardGenerateRawSchema = z.object({
+  topic: z.string().nullable().optional(), // topic can be string, null, or undefined
+  count: z.number().nullable().optional(), // count can be number, null, or undefined
+});
 
 export async function POST(req: Request) {
   // ── [C1] Auth gate ────────────────────────────────────────────────────────
@@ -35,8 +42,25 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { topic: rawTopic, count: rawCount = 5 } = await req.json();
+    const body = await req.json();
+    const parsed = FlashcardGenerateRawSchema.safeParse(body);
 
+    if (!parsed.success) {
+      // Zod validation failed for the basic structure/types
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    }
+
+    // Reconstruct rawTopic and rawCount to precisely mimic original destructuring logic
+    // `rawTopic` is simply the parsed topic (string | null | undefined)
+    let rawTopic = parsed.data.topic;
+    // `rawCount` applies default `5` only if the `count` key was missing or `undefined` in the JSON body.
+    // If `count` was explicitly `null`, `rawCount` remains `null`.
+    let rawCount = parsed.data.count;
+    if (rawCount === undefined) {
+      rawCount = 5;
+    }
+
+    // Apply existing transformations
     const topic = String(rawTopic || "").slice(0, 500);
     const count = Math.min(Math.max(1, Number(rawCount)), 20);
 

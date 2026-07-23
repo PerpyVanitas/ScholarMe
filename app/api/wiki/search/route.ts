@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -10,11 +11,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { query } = await req.json();
+    const postBodySchema = z.object({
+      query: z.string().min(1, "Query cannot be empty."),
+    });
 
-    if (!query || typeof query !== "string" || query.trim().length === 0) {
-      return NextResponse.json({ error: "Query parameters invalid" }, { status: 400 });
+    const body = await req.json();
+    const parsedBody = postBodySchema.safeParse(body);
+
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { query } = parsedBody.data;
 
     // Fetch user profile role
     const { data: profile } = await supabase

@@ -1,7 +1,27 @@
-﻿import { handleApiError } from "@/lib/utils/api-error";
+import { handleApiError } from "@/lib/utils/api-error";
 /** POST /api/sessions -- book a new tutoring session (learner_id = current user). */
 import { createClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
+import { rateLimit } from "@/lib/rate-limit";
+import { z } from "zod";
+
+const bookingRateLimiter = rateLimit({ interval: 60 * 1000, limit: 10 });
+
+// Define Zod schema for the request body
+const postBookingSchema = z.object({
+  tutor_id: z.string().uuid("Tutor ID must be a valid UUID"), // Assuming UUIDs for IDs
+  scheduled_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format, expected YYYY-MM-DD"),
+  start_time: z.string().regex(/^\d{2}:\d{2}$/, "Invalid time format, expected HH:MM"),
+  end_time: z.string().regex(/^\d{2}:\d{2}$/, "Invalid time format, expected HH:MM"),
+  specialization_id: z.string().uuid().optional().nullable(), // Assuming UUIDs for IDs
+  notes: z.string().optional().nullable(),
+  prep_notes: z.string().optional().nullable(),
+  is_recurring: z.boolean().optional(),
+  max_participants: z.number().int().min(1, "Max participants must be at least 1").optional(),
+  is_office_hours: z.boolean().optional(),
+  tutor_notes: z.string().optional().nullable(),
+  status: z.string().optional(),
+});
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -11,6 +31,15 @@ export async function POST(request: Request) {
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const ip = request.headers.get("x-forwarded-for") || "unknown";
+  const limitRes = await bookingRateLimiter.check(`booking:${user.id}:${ip}`);
+  if (!limitRes.success) {
+    return NextResponse.json(
+      { error: "Too many booking requests" },
+      { status: 429 },
+    );
   }
 
   // Check if booking is suspended
@@ -32,7 +61,14 @@ export async function POST(request: Request) {
     );
   }
 
-  const body = await request.json();
+  // Validate request body using Zod
+  const bodyResult = postBookingSchema.safeParse(await request.json());
+
+  if (!bodyResult.success) {
+    // console.error("Zod validation error:", bodyResult.error.issues); // Uncomment for debugging
+    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+  }
+
   const {
     tutor_id,
     scheduled_date,
@@ -46,14 +82,10 @@ export async function POST(request: Request) {
     is_office_hours,
     tutor_notes,
     status,
-  } = body;
+  } = bodyResult.data;
 
-  if (!tutor_id || !scheduled_date || !start_time || !end_time) {
-    return NextResponse.json(
-      { error: "Missing required fields" },
-      { status: 400 },
-    );
-  }
+  // The original check `if (!tutor_id || !scheduled_date || !start_time || !end_time)`
+  // is now redundant because Zod schema validates these fields as required.
 
   // Check for overlapping sessions for this learner
   const { data: overlappingSessions } = await supabase
@@ -121,10 +153,9 @@ export async function POST(request: Request) {
     initialStatus = status;
   }
 
-  const participantCap = Math.min(
-    Math.max(Number(max_participants) || 1, 1),
-    10,
-  );
+  // max_participants is already validated as a number (if present).
+  // Default to 1 if not provided, then cap at 10.
+  const participantCap = Math.min(max_participants ?? 1, 10);
 
   // Handle recurring logic (e.g., next 4 weeks)
   const numWeeks = is_recurring ? 4 : 1;
@@ -184,4 +215,3 @@ export async function POST(request: Request) {
     status: 201,
   });
 }
-

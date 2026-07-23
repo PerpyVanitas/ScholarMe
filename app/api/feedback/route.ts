@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { handleApiError } from "@/lib/utils/api-error";
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
@@ -19,24 +20,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { content } = body;
+    const FeedbackSchema = z.object({
+      content: z.string().trim().min(1, "Feedback content is required"),
+    });
 
-    if (!content || !content.trim()) {
-      return NextResponse.json(
-        createErrorResponse(
-          "VALID_001_GENERAL",
-          "Feedback content is required",
-        ),
-        { status: 400 },
-      );
+    const body = await request.json();
+    const parsedBody = FeedbackSchema.safeParse(body);
+
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { content } = parsedBody.data;
 
     const { data: feedback, error } = await supabase
       .from("system_feedback")
       .insert({
         user_id: user.id,
-        content: content.trim(),
+        content: content, // content is already trimmed by Zod schema
         status: "pending",
       })
       .select()

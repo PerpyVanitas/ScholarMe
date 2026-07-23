@@ -1,6 +1,7 @@
-﻿import { handleApiError } from "@/lib/utils/api-error";
+import { handleApiError } from "@/lib/utils/api-error";
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,16 +14,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const body = await request.json();
-    // We ignore the 'score' and 'total_questions' passed by the client to prevent manipulation
-    const { study_set_id, answers, time_spent_seconds } = body;
+    const postBodySchema = z.object({
+      study_set_id: z.string().min(1, "Study set ID is required"),
+      answers: z.record(z.string(), z.string()).min(1, "Answers are required"),
+      time_spent_seconds: z.number().int().nonnegative().optional(),
+    });
 
-    if (!study_set_id || !answers) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 },
-      );
+    const body = await request.json();
+    const parsedBody = postBodySchema.safeParse(body);
+
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    // We ignore the 'score' and 'total_questions' passed by the client to prevent manipulation
+    const { study_set_id, answers, time_spent_seconds } = parsedBody.data;
+
+    // Original check `if (!study_set_id || !answers)` is now handled by Zod schema
 
     // Fetch the correct answers from the database securely
     const { data: studySetItems, error: fetchError } = await supabase
@@ -88,7 +96,19 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const studySetId = searchParams.get("study_set_id");
+
+    const getSearchParamsSchema = z.object({
+      study_set_id: z.string().optional(),
+    });
+
+    const params = Object.fromEntries(searchParams);
+    const parsedParams = getSearchParamsSchema.safeParse(params);
+
+    if (!parsedParams.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    }
+
+    const { study_set_id: studySetId } = parsedParams.data;
 
     let query = supabase
       .from("quiz_attempts")
@@ -116,4 +136,3 @@ export async function GET(request: NextRequest) {
     return handleApiError(error);
   }
 }
-

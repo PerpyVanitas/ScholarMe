@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/create-client";
 import { ensureTutorRow } from "@/features/tutors/api/db";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { z } from "zod";
 
 // Helper to fetch active timesheet collection period
 async function getActivePeriod(supabase: SupabaseClient) {
@@ -75,6 +76,22 @@ export async function GET() {
   return NextResponse.json(data);
 }
 
+// Zod schema for POST request body
+const postBodySchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("confirm_presence"),
+  }),
+  z.object({
+    action: z.literal("clock_in"),
+    lat: z.number(),
+    lng: z.number(),
+    location_verified: z.boolean(),
+  }),
+  z.object({
+    action: z.literal("clock_out"),
+  }),
+]);
+
 export async function POST(req: Request) {
   const supabase = await createClient();
   const {
@@ -94,7 +111,29 @@ export async function POST(req: Request) {
     );
   }
 
-  const { action, lat, lng, location_verified } = await req.json();
+  // Validate request body using Zod
+  const body = await req.json();
+  const parsed = postBodySchema.safeParse(body);
+
+  if (!parsed.success) {
+    // console.error("Validation error:", parsed.error); // Optional for debugging
+    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+  }
+
+  const { action } = parsed.data;
+  // Initialize lat, lng, location_verified to undefined.
+  // They will only be assigned if action is 'clock_in', as per the schema.
+  let lat: number | undefined;
+  let lng: number | undefined;
+  let location_verified: boolean | undefined;
+
+  if (action === "clock_in") {
+    // TypeScript correctly infers `parsed.data` type within this block for `clock_in` action
+    const clockInPayload = parsed.data;
+    lat = clockInPayload.lat;
+    lng = clockInPayload.lng;
+    location_verified = clockInPayload.location_verified;
+  }
 
   const ensured = await ensureTutorRow(supabase, user);
   if (!ensured.ok) {

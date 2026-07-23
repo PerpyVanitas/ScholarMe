@@ -2,6 +2,7 @@ import { handleApiError } from "@/lib/utils/api-error";
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { createSuccessResponse, createErrorResponse } from "@/lib/api-errors";
+import { z } from "zod";
 
 export async function GET(request: NextRequest) {
   try {
@@ -91,15 +92,20 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { feedback_id, status } = body;
+    // Zod schema for PATCH request body
+    const patchFeedbackSchema = z.object({
+      feedback_id: z.string(), // Assuming IDs are strings in Supabase
+      status: z.string(),      // Assuming status is a string (e.g., "pending", "resolved")
+    });
 
-    if (!feedback_id || !status) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 },
-      );
+    const body = await request.json();
+    const parsed = patchFeedbackSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { feedback_id, status } = parsed.data;
 
     const { error } = await supabase
       .from("system_feedback")

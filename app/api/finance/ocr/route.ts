@@ -1,10 +1,16 @@
+import { z } from "zod";
 import { handleApiError } from "@/lib/utils/api-error";
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import { DocumentProcessorServiceClient } from "@google-cloud/documentai";
+import { getAIClient, GEMINI_MODEL } from "@/lib/ai/gemini";
 
-const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+const docaiClient = new DocumentProcessorServiceClient();
+
+// Define a Zod schema for the expected fields from req.formData()
+const receiptUploadSchema = z.object({
+  receipt: z.instanceof(File).optional(), // Expecting a File object, and it's optional before the explicit check
+});
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,15 +24,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (!ai) {
-      return NextResponse.json(
-        { error: "AI not configured. Missing API key." },
-        { status: 503 },
-      );
+    // Call req.formData() and then validate with Zod
+    const rawFormData = await req.formData();
+    const parsedFormData = receiptUploadSchema.safeParse(Object.fromEntries(rawFormData.entries()));
+
+    if (!parsedFormData.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
-    const formData = await req.formData();
-    const file = formData.get("receipt") as File | null;
+    // Extract the validated 'receipt' file, which will be File | undefined
+    const file = parsedFormData.data.receipt;
 
     if (!file) {
       return NextResponse.json(
@@ -38,6 +45,60 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const base64Data = buffer.toString("base64");
+
+    const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID;
+    const location = process.env.GOOGLE_CLOUD_LOCATION || "us";
+    const processorId = process.env.DOCUMENT_AI_PROCESSOR_ID;
+
+    // Try Document AI first
+    if (projectId && processorId) {
+      try {
+        const name = `projects/${projectId}/locations/${location}/processors/${processorId}`;
+        const request = {
+          name,
+          rawDocument: {
+            content: base64Data,
+            mimeType: file.type || "image/jpeg",
+          },
+        };
+        const [result] = await docaiClient.processDocument(request);
+        const { document } = result;
+
+        let vendorName = "Unknown Vendor";
+        let totalAmount = 0;
+
+        if (document?.entities) {
+          for (const entity of document.entities) {
+            if (entity.type === "supplier_name" && !vendorName.startsWith("Unknown")) {
+              vendorName = entity.mentionText || vendorName;
+            } else if (entity.type === "supplier_name") {
+              vendorName = entity.mentionText || vendorName;
+            }
+            if (entity.type === "total_amount") {
+              totalAmount = parseFloat(entity.normalizedValue?.text || entity.mentionText || "0");
+            }
+          }
+        }
+
+        return NextResponse.json({
+          vendorName,
+          totalAmount,
+        });
+      } catch (docaiError) {
+        console.warn("[Document AI Error] Falling back to Gemini:", docaiError);
+      }
+    }
+
+    // Fallback to Gemini
+    let ai;
+    try {
+      ai = getAIClient();
+    } catch (configError) {
+      return NextResponse.json(
+        { error: "AI not configured. Missing API key or Project ID." },
+        { status: 503 },
+      );
+    }
 
     const prompt = `You are a financial OCR assistant. Analyze the uploaded receipt image.
 Extract the following information:
@@ -51,7 +112,7 @@ Respond strictly with a JSON object in this format:
 }`;
 
     const response = await ai.models.generateContent({
-      model: process.env.GEMINI_MODEL_ID ?? "gemini-2.0-flash",
+      model: GEMINI_MODEL,
       contents: [
         {
           role: "user",

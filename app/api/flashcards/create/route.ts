@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { handleApiError } from "@/lib/utils/api-error";
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
@@ -5,6 +6,23 @@ import {
   buildStudySetInsert,
   buildStudySetItemInsert,
 } from "@/features/quizzes/api/study-sets-db";
+
+const studySetBodySchema = z.object({
+  title: z.string().trim().min(1, "Title is required"),
+  description: z.string().trim().nullable().optional(),
+  type: z.string(), // Inferring string, adjust if specific enum/literal is known
+  is_public: z.boolean(),
+  source_type: z.string().optional(),
+  source_resource_id: z.string().optional(),
+  items: z.array(
+    z.object({
+      question: z.string(),
+      answer: z.string(),
+      options: z.unknown().optional(),
+      item_type: z.string().optional(),
+    })
+  ).optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +35,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const body = await request.json();
+    const parseResult = studySetBodySchema.safeParse(await request.json());
+
+    if (!parseResult.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    }
+
     const {
       title,
       description,
@@ -26,11 +49,7 @@ export async function POST(request: NextRequest) {
       source_type,
       source_resource_id,
       items,
-    } = body;
-
-    if (!title?.trim()) {
-      return NextResponse.json({ error: "Title is required" }, { status: 400 });
-    }
+    } = parseResult.data;
 
     // Create study set
     const { data: studySet, error: setError } = await supabase

@@ -7,15 +7,24 @@ import {
   deleteStoredAvatar,
   uploadAvatarForUser,
 } from "@/features/profiles/api/avatar-upload";
+import { z } from "zod";
+
+const GetAvatarSchema = z.object({
+  pathname: z.string(),
+});
 
 // GET /api/avatar - Serve private avatar image
 export async function GET(request: NextRequest) {
   try {
-    const pathname = request.nextUrl.searchParams.get("pathname");
+    const parsedSearchParams = GetAvatarSchema.safeParse(
+      Object.fromEntries(request.nextUrl.searchParams),
+    );
 
-    if (!pathname) {
-      return NextResponse.json({ error: "Missing pathname" }, { status: 400 });
+    if (!parsedSearchParams.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { pathname } = parsedSearchParams.data;
 
     // If already a public URL (e.g. legacy data), just redirect.
     if (pathname.startsWith("http://") || pathname.startsWith("https://")) {
@@ -99,6 +108,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
+const PostAvatarSchema = z.object({
+  file: z.instanceof(File),
+});
+
 // POST /api/avatar - Upload new avatar
 export async function POST(request: NextRequest) {
   try {
@@ -112,11 +125,15 @@ export async function POST(request: NextRequest) {
     }
 
     const formData = await request.formData();
-    const file = formData.get("file") as File;
+    const fileEntry = formData.get("file");
 
-    if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    const parsedBody = PostAvatarSchema.safeParse({ file: fileEntry });
+
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { file } = parsedBody.data;
 
     const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
     if (!allowedTypes.includes(file.type)) {

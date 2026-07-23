@@ -1,7 +1,21 @@
-﻿import { handleApiError } from "@/lib/utils/api-error";
+import { handleApiError } from "@/lib/utils/api-error";
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { tryUnlockBadge } from "@/lib/utils/badges";
+import { z } from "zod";
+
+const postBodySchema = z.object({
+  study_set_id: z.string().min(1, "study_set_id is required"),
+  answers: z.record(z.string(), z.string()).refine((obj) => Object.keys(obj).length > 0, {
+    message: "answers cannot be empty",
+  }),
+  time_spent_seconds: z.number().optional().default(0), // Default 0 handles `time_spent_seconds || 0`
+  // 'score' and 'total_questions' are intentionally ignored per original comment
+});
+
+const getSearchParamsSchema = z.object({
+  study_set_id: z.string().optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,16 +28,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const body = await request.json();
-    // We ignore the 'score' and 'total_questions' passed by the client to prevent manipulation
-    const { study_set_id, answers, time_spent_seconds } = body;
+    const bodyResult = postBodySchema.safeParse(await request.json());
 
-    if (!study_set_id || !answers) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 },
-      );
+    if (!bodyResult.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
+
+    const { study_set_id, answers, time_spent_seconds } = bodyResult.data;
+
+    // The original check `if (!study_set_id || !answers)` is now handled by the Zod schema's `min(1)` and `refine` checks.
 
     // Fetch the correct answers from the database securely
     const { data: studySetItems, error: fetchError } = await supabase
@@ -61,7 +74,7 @@ export async function POST(request: NextRequest) {
         total_items: totalItems,
         total_questions: totalItems,
         answers,
-        time_spent_seconds: time_spent_seconds || 0,
+        time_spent_seconds, // Used the value parsed by Zod, which defaults to 0 if undefined
         completed_at: new Date().toISOString(),
       })
       .select()
@@ -98,7 +111,15 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const studySetId = searchParams.get("study_set_id");
+    const searchParamsObject = Object.fromEntries(searchParams);
+
+    const parseResult = getSearchParamsSchema.safeParse(searchParamsObject);
+
+    if (!parseResult.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    }
+    
+    const { study_set_id: studySetId } = parseResult.data;
 
     let query = supabase
       .from("quiz_attempts")
@@ -126,4 +147,3 @@ export async function GET(request: NextRequest) {
     return handleApiError(error);
   }
 }
-

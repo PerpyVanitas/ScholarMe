@@ -1,6 +1,6 @@
-/** POST /api/sessions/[id]/rate -- submit a 1-5 star rating and recalculate the tutor's average. */
 import { createClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 export async function POST(
   request: Request,
@@ -14,11 +14,19 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { rating, feedback } = await request.json();
+  const PostBodySchema = z.object({
+    rating: z.number().int().min(1).max(5),
+    feedback: z.string().optional().nullable(),
+  });
 
-  if (!rating || rating < 1 || rating > 5) {
-    return NextResponse.json({ error: "Rating must be 1-5" }, { status: 400 });
+  const body = await request.json();
+  const parsedBody = PostBodySchema.safeParse(body);
+
+  if (!parsedBody.success) {
+    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
+
+  const { rating, feedback } = parsedBody.data;
 
   // Verify that the user is the learner of this session
   const { data: session } = await supabase
