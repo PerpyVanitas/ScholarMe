@@ -53,7 +53,14 @@ export default async function TutorReviewsPage() {
 
   // Fetch reviews based on role
    
-  let reviews: unknown[] = [];
+  let reviews: Array<{
+    id: string;
+    tutor?: { profiles?: { full_name?: string } };
+    reviewer?: { profiles?: { full_name?: string } };
+    rating: number;
+    created_at: string;
+    feedback: string;
+  }> = [];
   if (isLead) {
     // Lead tutors / admins see reviews they wrote
     const { data: myReviews } = await supabase
@@ -76,7 +83,7 @@ export default async function TutorReviewsPage() {
 
   // If lead/admin, fetch all other active tutors to review
    
-  let availableTutors: unknown[] = [];
+  let availableTutors: Array<{ id: string; profiles?: { full_name: string } | null; }> = [];
   if (isLead) {
     const { data: tutors } = await supabase
       .from("tutors")

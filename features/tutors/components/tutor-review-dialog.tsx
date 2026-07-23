@@ -48,7 +48,8 @@ export function TutorReviewDialog({
   } = useForm();
 
   const handleFormSubmit = async (data: unknown) => {
-    await onSubmit({ ...data, rating });
+    const formData = data as { tutor_id: string; feedback: string };
+    await onSubmit({ ...formData, rating });
     reset();
     onOpenChange(false);
   };
