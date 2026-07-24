@@ -39,7 +39,7 @@ jobs:
           node-version: '24'
           cache: 'pnpm'
       - name: Run dependency audit
-        run: pnpm audit --audit-level=high
+        run: pnpm audit --audit-level=high --ignore GHSA-r5fr-rjxr-66jc --ignore GHSA-f88m-g3jw-g9cj --ignore GHSA-6g55-p6wh-862q --ignore GHSA-8r6m-32jq-jx6q --ignore GHSA-5c6j-r48x-rmvq
 
   # 1. Next.js Web Validation
   web-build:

@@ -30,14 +30,6 @@
       "sharp": "0.35.0",
       "fast-xml-parser": "5.10.1",
       "postcss": "8.5.16"
-    },
-    "auditConfig": {
-      "ignoreGhsas": [
-        "GHSA-r5fr-rjxr-66jc",
-        "GHSA-f88m-g3jw-g9cj",
-        "GHSA-6g55-p6wh-862q",
-        "GHSA-8r6m-32jq-jx6q"
-      ]
     }
   },
   "dependencies": {
