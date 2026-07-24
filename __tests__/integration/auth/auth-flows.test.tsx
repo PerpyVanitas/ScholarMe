@@ -28,7 +28,8 @@ vi.mock("@/components/idle-timeout-provider", () => ({
 }));
 
 describe("Integration: Auth Flows", () => {
-  let mockSupabase: unknown;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mockSupabase: any;
 
   beforeEach(() => {
     vi.clearAllMocks();

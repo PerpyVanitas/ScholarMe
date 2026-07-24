@@ -13,8 +13,10 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("Session Expiry & Inactivity (Phase 3)", () => {
-  let mockSupabase: unknown;
-  let mockRouter: unknown;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mockSupabase: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mockRouter: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -31,7 +33,8 @@ describe("Session Expiry & Inactivity (Phase 3)", () => {
     mockRouter = {
       push: vi.fn(),
     };
-    (vi.mocked(useRouter) as unknown).mockReturnValue(mockRouter);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (vi.mocked(useRouter) as any).mockReturnValue(mockRouter);
   });
 
   afterEach(() => {

@@ -8,7 +8,8 @@ vi.mock("@/lib/supabase/client", () => ({
 }));
 
 describe("Auth Providers (OAuth & Magic Links)", () => {
-  let mockSupabase: unknown;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mockSupabase: any;
 
   beforeEach(() => {
     vi.clearAllMocks();

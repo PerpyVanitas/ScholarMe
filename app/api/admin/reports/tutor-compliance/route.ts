@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
         existing.total_minutes += mins;
         existing.sessions_count += 1;
       } else {
-                const profile = ((ts.tutors as unknown as Record<string, unknown>)?.profiles as Record<string, unknown> | undefined);
+                const profile = ((ts.tutors as unknown as Record<string, unknown>)?.profiles as { full_name?: string; avatar_url?: string | null } | undefined);
         tutorMap.set(tid, {
           tutor_id: tid,
           full_name: profile?.full_name ?? "Unknown",

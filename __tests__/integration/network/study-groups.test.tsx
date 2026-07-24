@@ -83,10 +83,13 @@ vi.mock("next/navigation", () => ({
 describe("Study Groups (Network/Groups)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(useUser).mockReturnValue({
-      profile: { id: "user123", full_name: "Test User" } as unknown,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      profile: { id: "user123", full_name: "Test User" } as any,
       loading: false,
-    } as unknown);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
   });
 
   it("renders a list of available study groups", async () => {
