@@ -19,7 +19,7 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background p-4">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background p-4">
       <div className="flex flex-col items-center gap-4 text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
           <AlertTriangle className="h-8 w-8 text-destructive" />
@@ -43,6 +43,6 @@ export default function GlobalError({
         </Button>
         <Button onClick={() => (window.location.href = "/")}>Go Home</Button>
       </div>
-    </div>
+    </main>
   );
 }

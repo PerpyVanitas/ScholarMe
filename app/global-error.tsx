@@ -13,22 +13,27 @@ export default function GlobalError({
 }) {
   return (
     <html lang="en">
+      <head>
+        <title>Error | ScholarMe</title>
+      </head>
       <body style={{ fontFamily: "system-ui, sans-serif", padding: "2rem", textAlign: "center" }}>
-        <h2>Something went wrong</h2>
-        <p style={{ color: "#666" }}>{error.message || "An unexpected error occurred."}</p>
-        <button
-          onClick={reset}
-          style={{
-            marginTop: "1rem",
-            padding: "0.5rem 1rem",
-            border: "1px solid #ccc",
-            borderRadius: "0.375rem",
-            cursor: "pointer",
-            background: "white",
-          }}
-        >
-          Try again
-        </button>
+        <main>
+          <h1>Something went wrong</h1>
+          <p style={{ color: "#666" }}>{error.message || "An unexpected error occurred."}</p>
+          <button
+            onClick={reset}
+            style={{
+              marginTop: "1rem",
+              padding: "0.5rem 1rem",
+              border: "1px solid #ccc",
+              borderRadius: "0.375rem",
+              cursor: "pointer",
+              background: "white",
+            }}
+          >
+            Try again
+          </button>
+        </main>
       </body>
     </html>
   );
