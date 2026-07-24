@@ -49,7 +49,7 @@
     "@excalidraw/excalidraw": "^0.18.1",
     "@google-cloud/documentai": "^9.6.2",
     "@google/genai": "^2.13.0",
-    "@hookform/resolvers": "^3.10.0",
+    "@hookform/resolvers": "^5.4.0",
     "@mlc-ai/web-llm": "^0.2.84",
     "@radix-ui/react-accordion": "1.2.12",
     "@radix-ui/react-alert-dialog": "1.1.15",
