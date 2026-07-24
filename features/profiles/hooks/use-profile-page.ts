@@ -1,0 +1,683 @@
+import { useEffect, useState, useCallback } from "react";
+import { createClient } from "@/lib/supabase/client";
+import {
+  Profile,
+  Specialization,
+  HsDesignation,
+  DesignationType,
+} from "@/lib/types";
+import { useRouter } from "next/navigation";
+import {
+  updateProfile,
+  UpdateProfileData,
+  updateTutorInfo,
+  ensureProfile,
+} from "@/app/dashboard/profile/actions";
+import { useUser } from "@/lib/user-context";
+import { getRoleName, hasAnyRole, TUTOR_ROLES } from "@/lib/utils/roles";
+import { roleNameFromUser } from "@/features/profiles/api/db";
+import { toast } from "sonner";
+
+export function useProfilePage() {
+  const router = useRouter();
+  const supabase = createClient();
+  const { refreshProfile } = useUser();
+
+  // Profile state
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [roleName, setRoleName] = useState("learner");
+  const [loading, setLoading] = useState(true);
+  const [specializations, setSpecializations] = useState<Specialization[]>([]);
+
+  // Edit modal state
+  const [editOpen, setEditOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editFirstName, setEditFirstName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editBirthdate, setEditBirthdate] = useState("");
+  const [editMembershipNumber, setEditMembershipNumber] = useState("");
+  const [editUniqueIdNumber, setEditUniqueIdNumber] = useState("");
+  const [editDegreeProgram, setEditDegreeProgram] = useState("");
+  const [editYearLevel, setEditYearLevel] = useState("");
+  const [editAvatarUrl, setEditAvatarUrl] = useState<string | null>(null);
+  const [editPronouns, setEditPronouns] = useState("");
+  const [editStatusMessage, setEditStatusMessage] = useState("");
+  const [editGithubUrl, setEditGithubUrl] = useState("");
+  const [editLinkedinUrl, setEditLinkedinUrl] = useState("");
+  const [editIsPrivate, setEditIsPrivate] = useState(false);
+  const [editAcademicYearJoined, setEditAcademicYearJoined] = useState("");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  // Tutor settings state
+  const [tutorSettingsOpen, setTutorSettingsOpen] = useState(false);
+  const [tutorBio, setTutorBio] = useState("");
+  const [hourlyRate, setHourlyRate] = useState<number | null>(null);
+  const [yearsExperience, setYearsExperience] = useState<number | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const [calendarSyncEnabled, setCalendarSyncEnabled] = useState(false);
+  const [autoApprovePastLearners, setAutoApprovePastLearners] = useState(false);
+  const [selectedSpecializations, setSelectedSpecializations] = useState<
+    string[]
+  >([]);
+  const [allSpecializations, setAllSpecializations] = useState<
+    Specialization[]
+  >([]);
+  const [tutorData, setTutorData] = useState<Record<string, unknown> | null>(
+    null,
+  );
+  const [savingTutor, setSavingTutor] = useState(false);
+
+  const isTutor = hasAnyRole(roleName, TUTOR_ROLES);
+
+  // Designation state
+  const [designations, setDesignations] = useState<HsDesignation[]>([]);
+  const [designationDialogOpen, setDesignationDialogOpen] = useState(false);
+  const [masteryVerificationOpen, setMasteryVerificationOpen] = useState(false);
+  const [editingDesignation, setEditingDesignation] =
+    useState<HsDesignation | null>(null);
+  const [desigType, setDesigType] = useState<DesignationType>("member");
+  const [desigPosition, setDesigPosition] = useState("");
+  const [desigAcademicYear, setDesigAcademicYear] = useState("2024-2025");
+  const [desigIsCurrent, setDesigIsCurrent] = useState(false);
+  const [savingDesignation, setSavingDesignation] = useState(false);
+
+  // Image cropper state
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [cropperImageSrc, setCropperImageSrc] = useState<string | null>(null);
+
+  // Load profile data
+  useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    async function loadProfile() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        if (!signal.aborted) router.push("/auth/login");
+        return;
+      }
+
+      if (signal.aborted) return;
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select(
+          "id, first_name, last_name, full_name, email, phone_number, birthdate, date_of_birth, membership_number, degree_program, year_level, academic_year_joined, total_xp, current_level, avatar_url, pronouns, status_message, social_links, created_at, roles(name)",
+        )
+        .eq("id", user.id)
+        .abortSignal(signal)
+        .maybeSingle();
+
+      if (signal.aborted) return;
+
+      if (error || !data) {
+        console.warn(
+          "Profile fetch returned error or no data, healing:",
+          error,
+        );
+        const heal = await ensureProfile();
+        if (heal.success) {
+          const { data: healed } = await supabase
+            .from("profiles")
+            .select(
+              "id, first_name, last_name, full_name, email, phone_number, birthdate, date_of_birth, membership_number, degree_program, year_level, academic_year_joined, total_xp, current_level, avatar_url, pronouns, status_message, social_links, created_at, roles(name)",
+            )
+            .eq("id", user.id)
+            .abortSignal(signal)
+            .maybeSingle();
+          
+          if (signal.aborted) return;
+            
+          if (healed) {
+            setProfile(healed as unknown as Profile);
+            setRoleName(getRoleName(healed as unknown as Profile));
+            setLoading(false);
+            return;
+          }
+        }
+
+        const fallbackRole = roleNameFromUser(user);
+
+        const fullNameStr =
+          user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
+        let derivedFirstName = user.user_metadata?.first_name || "";
+        let derivedLastName = user.user_metadata?.last_name || "";
+        if (!derivedFirstName && !derivedLastName) {
+          const parts = fullNameStr.trim().split(/\s+/);
+          derivedFirstName = parts[0] || "";
+          derivedLastName = parts.slice(1).join(" ") || "";
+        }
+
+        const fallbackProfile: Profile = {
+          id: user.id,
+          role_id: null,
+          full_name: fullNameStr,
+          first_name: derivedFirstName || null,
+          last_name: derivedLastName || null,
+          email: user.email || "",
+          avatar_url: null,
+          phone_number: null,
+          birthdate: null,
+          date_of_birth: null,
+          membership_number: null,
+          degree_program: null,
+          year_level: null,
+          total_xp: 0,
+          current_level: 1,
+          profile_completed: false,
+          created_at: user.created_at || new Date().toISOString(),
+          roles: [{ id: "fallback-role-id", name: fallbackRole }],
+        };
+
+        setProfile(fallbackProfile);
+        setRoleName(fallbackRole);
+      } else {
+        setProfile(data as unknown as Profile);
+        const loadedRole = getRoleName(data as unknown as Profile);
+        setRoleName(loadedRole);
+
+        if (loadedRole === "tutor") {
+          const { data: allSpecs } = await supabase
+            .from("specializations")
+            .select("id, name")
+            .abortSignal(signal);
+          
+          if (signal.aborted) return;
+          if (allSpecs) setAllSpecializations(allSpecs);
+
+          const { data: tutorInfo } = await supabase
+            .from("tutors")
+            .select(
+              "id, bio, hourly_rate, years_experience, is_paused, calendar_sync_enabled, auto_approve_past_learners, tutor_specializations(specializations(id, name))",
+            )
+            .eq("user_id", user.id)
+            .abortSignal(signal)
+            .single();
+
+          if (signal.aborted) return;
+
+          if (tutorInfo) {
+            setTutorData(tutorInfo);
+            setTutorBio(tutorInfo.bio || "");
+            setHourlyRate(tutorInfo.hourly_rate);
+            setYearsExperience(tutorInfo.years_experience);
+            setIsPaused(!!tutorInfo.is_paused);
+            setCalendarSyncEnabled(!!tutorInfo.calendar_sync_enabled);
+            setAutoApprovePastLearners(!!tutorInfo.auto_approve_past_learners);
+
+            if (tutorInfo.tutor_specializations) {
+              const specs = tutorInfo.tutor_specializations
+                .map((ts: { specializations: unknown | unknown[] }) => {
+                  const s = Array.isArray(ts.specializations)
+                    ? ts.specializations
+                    : [];
+                  return s.length > 0 ? s[0] : null;
+                })
+                .filter(Boolean);
+              setSpecializations(specs as Specialization[]);
+              setSelectedSpecializations(
+                (specs as Specialization[]).map((s: { id: string }) => s.id),
+              );
+            }
+          }
+        }
+
+        const { data: desigData } = await supabase
+          .from("hs_designations")
+          .select(
+            "id, user_id, designation, position, academic_year, is_current, created_at",
+          )
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .abortSignal(signal);
+          
+        if (signal.aborted) return;
+          
+        if (desigData) setDesignations(desigData as HsDesignation[]);
+      }
+      setLoading(false);
+    }
+
+    loadProfile();
+
+    return () => {
+      controller.abort();
+    };
+  }, [supabase, router]);
+
+  const getInitialNames = useCallback((prof: Profile) => {
+    let fn = prof.first_name || "";
+    let ln = prof.last_name || "";
+    if ((!fn || !ln) && prof.full_name) {
+      const parts = prof.full_name.trim().split(/\s+/);
+      fn = fn || parts[0] || "";
+      ln = ln || parts.slice(1).join(" ") || "";
+    }
+    return { fn, ln };
+  }, []);
+
+  const openEditModal = useCallback(() => {
+    if (!profile) return;
+
+    const { fn, ln } = getInitialNames(profile);
+
+    setEditFirstName(fn);
+    setEditLastName(ln);
+    setEditPhone(profile.phone_number || "");
+    setEditBirthdate(profile.birthdate || profile.date_of_birth || "");
+    setEditMembershipNumber(profile.membership_number || "");
+    setEditUniqueIdNumber(profile.unique_id_number || "");
+    setEditDegreeProgram(profile.degree_program || "");
+    setEditYearLevel(profile.year_level?.toString() || "");
+    setEditAcademicYearJoined(profile.academic_year_joined || "");
+    setEditPronouns(profile.pronouns || "");
+    setEditStatusMessage(profile.status_message || "");
+    setEditGithubUrl(profile.social_links?.github || "");
+    setEditLinkedinUrl(profile.social_links?.linkedin || "");
+    setEditIsPrivate(profile.is_private || false);
+    if (profile.avatar_url?.startsWith("avatars/")) {
+      setEditAvatarUrl(
+        `/api/avatar?pathname=${encodeURIComponent(profile.avatar_url)}`,
+      );
+    } else {
+      setEditAvatarUrl(profile.avatar_url || null);
+    }
+    setEditOpen(true);
+  }, [profile, getInitialNames]);
+
+  const handleEditOpenChange = (open: boolean) => {
+    if (open) {
+      setEditOpen(true);
+      return;
+    }
+    if (profile) {
+      const { fn, ln } = getInitialNames(profile);
+      const hasUnsaved =
+        editFirstName.trim() !== fn ||
+        editLastName.trim() !== ln ||
+        editPhone.trim() !== (profile.phone_number || "") ||
+        (editBirthdate || "") !==
+          (profile.birthdate || profile.date_of_birth || "") ||
+        editMembershipNumber.trim() !== (profile.membership_number || "") ||
+        editUniqueIdNumber.trim() !== (profile.unique_id_number || "") ||
+        editDegreeProgram.trim() !== (profile.degree_program || "") ||
+        editYearLevel !== (profile.year_level?.toString() || "") ||
+        editAcademicYearJoined !== (profile.academic_year_joined || "") ||
+        editPronouns.trim() !== (profile.pronouns || "") ||
+        editStatusMessage.trim() !== (profile.status_message || "") ||
+        editGithubUrl.trim() !== (profile.social_links?.github || "") ||
+        editLinkedinUrl.trim() !== (profile.social_links?.linkedin || "") ||
+        editIsPrivate !== (profile.is_private || false);
+
+      if (hasUnsaved) {
+        if (
+          !window.confirm(
+            "You have unsaved changes. Are you sure you want to close?",
+          )
+        ) {
+          return;
+        }
+      }
+    }
+    setEditOpen(false);
+  };
+
+  const handleTutorSettingsOpenChange = (open: boolean) => {
+    if (open) {
+      setTutorSettingsOpen(true);
+      return;
+    }
+    if (tutorData) {
+      const hasUnsaved =
+        tutorBio.trim() !== (tutorData.bio || "") ||
+        hourlyRate !== tutorData.hourly_rate ||
+        yearsExperience !== tutorData.years_experience ||
+        isPaused !== !!tutorData.is_paused ||
+        calendarSyncEnabled !== !!tutorData.calendar_sync_enabled ||
+        autoApprovePastLearners !== !!tutorData.auto_approve_past_learners;
+
+      if (hasUnsaved) {
+        if (
+          !window.confirm(
+            "You have unsaved changes. Are you sure you want to close?",
+          )
+        ) {
+          return;
+        }
+      }
+    }
+    setTutorSettingsOpen(false);
+  };
+
+  const handleAvatarFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Please upload a JPEG, PNG, GIF, or WebP image");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be less than 5MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropperImageSrc(reader.result as string);
+      setCropperOpen(true);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const handleCroppedUpload = async (blob: Blob) => {
+    setCropperOpen(false);
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", blob, "avatar.jpg");
+      const res = await fetch("/api/avatar", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+      const apiUrl = data.pathname
+        ? `/api/avatar?pathname=${encodeURIComponent(data.pathname)}`
+        : data.url;
+      setEditAvatarUrl(apiUrl);
+      if (profile) {
+        const updated = { ...profile, avatar_url: data.pathname || data.url };
+        setProfile(updated as Profile);
+      }
+      await refreshProfile();
+      toast.success("Photo updated!");
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to upload photo",
+      );
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleSaveTutorSettings = async () => {
+    setSavingTutor(true);
+    try {
+      const result = await updateTutorInfo({
+        bio: tutorBio.trim() || null,
+        hourly_rate: hourlyRate,
+        years_experience: yearsExperience,
+        specialization_ids: selectedSpecializations,
+        is_paused: isPaused,
+        calendar_sync_enabled: calendarSyncEnabled,
+        auto_approve_past_learners: autoApprovePastLearners,
+      });
+      if (!result.success) throw new Error(result.error);
+      toast.success("Tutor settings updated successfully");
+      setTutorSettingsOpen(false);
+      await refreshProfile();
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update tutor settings",
+      );
+    } finally {
+      setSavingTutor(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    setUploadingAvatar(true);
+    try {
+      const res = await fetch("/api/avatar", { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to remove photo");
+      }
+      setEditAvatarUrl(null);
+      setProfile((prev) => (prev ? { ...prev, avatar_url: null } : null));
+      await refreshProfile();
+      toast.success("Photo removed");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to remove photo",
+      );
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!editFirstName.trim() || !editLastName.trim()) {
+      toast.error("First name and last name are required");
+      return;
+    }
+    setSaving(true);
+    const updateData: UpdateProfileData = {
+      first_name: editFirstName.trim(),
+      last_name: editLastName.trim(),
+      phone_number: editPhone.trim() || null,
+      birthdate: editBirthdate || null,
+      membership_number: editMembershipNumber.trim() || null,
+      unique_id_number: editUniqueIdNumber.trim() || null,
+      degree_program: !isTutor ? editDegreeProgram.trim() || null : null,
+      year_level: !isTutor ? parseInt(editYearLevel) || null : null,
+      academic_year_joined: editAcademicYearJoined || null,
+      pronouns: editPronouns.trim() || null,
+      status_message: editStatusMessage.trim() || null,
+      social_links: {
+        github: editGithubUrl.trim(),
+        linkedin: editLinkedinUrl.trim(),
+      },
+      is_private: editIsPrivate,
+    };
+    const result = await updateProfile(updateData);
+    if (result.success) {
+      setProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              first_name: updateData.first_name,
+              last_name: updateData.last_name,
+              full_name: `${updateData.first_name} ${updateData.last_name}`,
+              phone_number: updateData.phone_number,
+              birthdate: updateData.birthdate,
+              date_of_birth: updateData.birthdate,
+              membership_number: updateData.membership_number,
+              unique_id_number: updateData.unique_id_number,
+              degree_program: updateData.degree_program,
+              year_level: updateData.year_level,
+              academic_year_joined: updateData.academic_year_joined,
+            }
+          : null,
+      );
+      toast.success("Profile updated successfully");
+      setEditOpen(false);
+      await refreshProfile();
+    } else {
+      toast.error(result.error || "Failed to update profile");
+    }
+    setSaving(false);
+  };
+
+  const handleSaveDesignation = async () => {
+    setSavingDesignation(true);
+    try {
+      if (editingDesignation) {
+        const { error } = await supabase
+          .from("hs_designations")
+          .update({
+            designation: desigType,
+            position: desigType === "officer" ? desigPosition : null,
+            academic_year: desigAcademicYear,
+            is_current: desigIsCurrent,
+          })
+          .eq("id", editingDesignation.id);
+        if (error) throw error;
+        setDesignations((prev) =>
+          prev.map((d) =>
+            d.id === editingDesignation.id
+              ? {
+                  ...d,
+                  designation: desigType,
+                  position: desigType === "officer" ? desigPosition : null,
+                  academic_year: desigAcademicYear,
+                  is_current: desigIsCurrent,
+                }
+              : desigIsCurrent
+                ? { ...d, is_current: false }
+                : d,
+          ),
+        );
+        toast.success("Designation updated");
+      } else {
+        const { data, error } = await supabase
+          .from("hs_designations")
+          .insert({
+            user_id: profile?.id,
+            designation: desigType,
+            position: desigType === "officer" ? desigPosition : null,
+            academic_year: desigAcademicYear,
+            is_current: desigIsCurrent,
+          })
+          .select()
+          .single();
+        if (error) throw error;
+        setDesignations((prev) =>
+          desigIsCurrent
+            ? [data, ...prev.map((d) => ({ ...d, is_current: false }))]
+            : [data, ...prev],
+        );
+        toast.success("Designation added");
+      }
+      setDesignationDialogOpen(false);
+    } catch {
+      toast.error("Failed to save designation");
+    } finally {
+      setSavingDesignation(false);
+    }
+  };
+
+  const formatDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return "Not set";
+    try {
+      return new Date(dateStr).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const displayName =
+    profile?.full_name ||
+    `${profile?.first_name || ""} ${profile?.last_name || ""}`.trim() ||
+    "User";
+
+  return {
+    profile,
+    roleName,
+    loading,
+    specializations,
+    editOpen,
+    saving,
+    editFirstName,
+    setEditFirstName,
+    editLastName,
+    setEditLastName,
+    editPhone,
+    setEditPhone,
+    editBirthdate,
+    setEditBirthdate,
+    editMembershipNumber,
+    setEditMembershipNumber,
+    editUniqueIdNumber,
+    setEditUniqueIdNumber,
+    editDegreeProgram,
+    setEditDegreeProgram,
+    editYearLevel,
+    setEditYearLevel,
+    editAvatarUrl,
+    editPronouns,
+    setEditPronouns,
+    editStatusMessage,
+    setEditStatusMessage,
+    editGithubUrl,
+    setEditGithubUrl,
+    editLinkedinUrl,
+    setEditLinkedinUrl,
+    editIsPrivate,
+    setEditIsPrivate,
+    editAcademicYearJoined,
+    setEditAcademicYearJoined,
+    uploadingAvatar,
+    tutorSettingsOpen,
+    setTutorSettingsOpen,
+    tutorBio,
+    setTutorBio,
+    hourlyRate,
+    setHourlyRate,
+    yearsExperience,
+    setYearsExperience,
+    isPaused,
+    setIsPaused,
+    calendarSyncEnabled,
+    setCalendarSyncEnabled,
+    autoApprovePastLearners,
+    setAutoApprovePastLearners,
+    selectedSpecializations,
+    setSelectedSpecializations,
+    allSpecializations,
+    savingTutor,
+    isTutor,
+    designations,
+    setDesignations,
+    designationDialogOpen,
+    setDesignationDialogOpen,
+    masteryVerificationOpen,
+    setMasteryVerificationOpen,
+    editingDesignation,
+    setEditingDesignation,
+    desigType,
+    setDesigType,
+    desigPosition,
+    setDesigPosition,
+    desigAcademicYear,
+    setDesigAcademicYear,
+    desigIsCurrent,
+    setDesigIsCurrent,
+    savingDesignation,
+    cropperOpen,
+    setCropperOpen,
+    cropperImageSrc,
+    setCropperImageSrc,
+    openEditModal,
+    handleEditOpenChange,
+    handleTutorSettingsOpenChange,
+    handleAvatarFileSelect,
+    handleCroppedUpload,
+    handleSaveTutorSettings,
+    handleRemoveAvatar,
+    handleSaveProfile,
+    handleSaveDesignation,
+    formatDate,
+    getInitials,
+    displayName
+  };
+}

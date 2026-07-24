@@ -1,1 +1,2 @@
 npm run lint && npm run openapi && bash scripts/check-api-schemas.sh
+node scripts/check-env.js

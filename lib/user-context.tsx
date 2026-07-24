@@ -21,7 +21,7 @@ interface UserContextType {
   loading: boolean;
   notificationCount: number;
   isAuthenticated: boolean;
-  refreshProfile: () => Promise<void>;
+  refreshProfile: (signal?: AbortSignal) => Promise<void>;
   refreshNotifications: () => Promise<void>;
 }
 
@@ -34,7 +34,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const loadUserData = useCallback(async () => {
+  const loadUserData = useCallback(async (signal?: AbortSignal) => {
     const supabase = createClient();
     const {
       data: { user },
@@ -66,7 +66,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
           
         if (p.role_expires_at && new Date(p.role_expires_at) < new Date() && roleName !== "learner") {
           roleName = "learner";
-          fetch("/api/auth/revert-role", { method: "POST" }).catch((err) => {
+          fetch("/api/auth/revert-role", { method: "POST", signal }).catch((err) => {
+            if (err.name === 'AbortError') return;
             console.error("Role revert failed:", err);
             toast.error("Your temporary role has expired but could not be reverted automatically. Please refresh the page.");
           });
@@ -219,8 +220,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, [profile]);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadUserData();
+    loadUserData(controller.signal);
 
     const supabase = createClient();
 
@@ -233,7 +236,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         event === "SIGNED_OUT" ||
         event === "TOKEN_REFRESHED"
       ) {
-        loadUserData();
+        loadUserData(controller.signal);
       }
     });
 
@@ -269,6 +272,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setupRealtime();
 
     return () => {
+      controller.abort();
       authSubscription.unsubscribe();
       if (roleSubscription) {
         supabase.removeChannel(roleSubscription);

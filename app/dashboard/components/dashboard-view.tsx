@@ -80,7 +80,7 @@ export default function DashboardView() {
           // Always load both tutor AND learner data so toggling is instant
           const { data: tutor } = await supabase
             .from("tutors")
-            .select("*")
+            .select("id, user_id, bio, rating, total_ratings, hourly_rate, years_experience")
             .eq("user_id", profile?.id || "")
             .abortSignal(signal)
             .maybeSingle();
@@ -88,7 +88,7 @@ export default function DashboardView() {
           if (signal.aborted) return;
 
           if (!tutor?.id) {
-            extra.tutor = tutor ?? null;
+            extra.tutor = (tutor as unknown as Tutor) ?? null;
             extra.upcomingSessions = [];
             extra.overdueSessions = [];
             extra.tutorStats = {
@@ -100,7 +100,7 @@ export default function DashboardView() {
           } else {
             const { data: sessions } = await supabase
               .from("sessions")
-              .select("*, specializations(*)")
+              .select("id, tutor_id, learner_id, scheduled_date, start_time, end_time, status, meeting_link, specializations(id, name)")
               .eq("tutor_id", tutor.id)
               .in("status", ["pending", "confirmed"])
               .order("scheduled_date", { ascending: true })
@@ -143,16 +143,16 @@ export default function DashboardView() {
               overdueSessionIds.length > 0
                 ? await supabase
                     .from("sessions")
-                    .select("*, specializations(*)")
+                    .select("id, tutor_id, learner_id, scheduled_date, start_time, end_time, status, meeting_link, specializations(id, name)")
                     .in("id", overdueSessionIds)
                     .abortSignal(signal)
                 : { data: [] };
 
             if (signal.aborted) return;
 
-            extra.tutor = tutor;
-            extra.upcomingSessions = sessions || [];
-            extra.overdueSessions = overdueSessions || [];
+            extra.tutor = tutor as unknown as Tutor;
+            extra.upcomingSessions = (sessions as unknown as Session[]) || [];
+            extra.overdueSessions = (overdueSessions as unknown as Session[]) || [];
             extra.tutorStats = {
               completedSessions: completedCount || 0,
               upcomingSessions: upcomingCount || 0,
@@ -164,7 +164,7 @@ export default function DashboardView() {
           // Also load learner data for the learner view toggle
           const { data: learnSessions } = await supabase
             .from("sessions")
-            .select("*, tutors(*, profiles(*)), specializations(*)")
+            .select("id, tutor_id, learner_id, scheduled_date, start_time, end_time, status, meeting_link, tutors(id, user_id, profiles(full_name, avatar_url)), specializations(id, name)")
             .eq("learner_id", profile?.id || "")
             .in("status", ["pending", "confirmed"])
             .order("scheduled_date", { ascending: true })
@@ -196,15 +196,15 @@ export default function DashboardView() {
           };
           // Store learner upcoming sessions so we can pass them when in learner view
           if (!extra.upcomingSessions) {
-            extra.upcomingSessions = learnSessions || [];
+            extra.upcomingSessions = (learnSessions as unknown as Session[]) || [];
           }
           // Attach learner sessions as a separate field for toggling
           (extra as DashboardData & { learnerUpcomingSessions?: Session[] }).learnerUpcomingSessions =
-            learnSessions || [];
+            (learnSessions as unknown as Session[]) || [];
         } else {
           const { data: sessions } = await supabase
             .from("sessions")
-            .select("*, tutors(*, profiles(*)), specializations(*)")
+            .select("id, tutor_id, learner_id, scheduled_date, start_time, end_time, status, meeting_link, tutors(id, user_id, profiles(full_name, avatar_url)), specializations(id, name)")
             .eq("learner_id", profile?.id || "")
             .in("status", ["pending", "confirmed"])
             .order("scheduled_date", { ascending: true })
@@ -226,7 +226,7 @@ export default function DashboardView() {
 
           if (signal.aborted) return;
 
-          extra.upcomingSessions = sessions || [];
+          extra.upcomingSessions = (sessions as unknown as Session[]) || [];
           extra.learnerStats = {
             totalSessions: totalCount || 0,
             completedSessions: completedCount || 0,

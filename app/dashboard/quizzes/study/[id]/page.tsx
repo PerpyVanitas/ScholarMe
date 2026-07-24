@@ -91,12 +91,14 @@ export default function StudyModePage({
   }, []);
 
   useEffect(() => {
-    loadStudySet();
+    const controller = new AbortController();
+    loadStudySet(controller.signal);
+    return () => controller.abort();
   }, [id]);
 
-  async function loadStudySet() {
+  async function loadStudySet(signal?: AbortSignal) {
     try {
-      const res = await fetch(`/api/quizzes/${id}`);
+      const res = await fetch(`/api/quizzes/${id}`, { signal });
       if (!res.ok) {
         throw new Error("Failed to load study set");
       }
@@ -108,11 +110,15 @@ export default function StudyModePage({
           (a: StudySetItem, b: StudySetItem) => a.order_index - b.order_index,
         ) || [];
       setShuffledItems(items);
-    } catch (error) {
+    } catch (err: unknown) {
+      const error = err as Error;
+      if (error.name === "AbortError") return;
       toast.error("Failed to load study set");
       router.push("/dashboard/quizzes");
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   }
 

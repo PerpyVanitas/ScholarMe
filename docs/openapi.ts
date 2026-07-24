@@ -1,121 +1,98 @@
-import {
-  OpenAPIRegistry,
-  OpenApiGeneratorV3,
-} from "@asteasolutions/zod-to-openapi";
+import { OpenAPIRegistry, OpenApiGeneratorV3, extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
+import { z } from "zod";
 import * as fs from "fs";
 
-/**
- * ScholarMe OpenAPI Spec Generator
- * Generates docs/openapi.json for internal and external API consumers.
- * Run via: `pnpm run openapi`
- */
+extendZodWithOpenApi(z);
+
 export const registry = new OpenAPIRegistry();
 
-// --- OPENAPI SCHEMAS ---
+// Define Zod Schemas
+const HealthSchema = z.object({
+  status: z.string().openapi({ example: "ok" }),
+  timestamp: z.string().openapi({ example: "2026-07-22T12:00:00.000Z" }),
+  build: z.string().openapi({ example: "1.0.0" }),
+}).openapi("Health");
 
-const HealthSchema = {
-  type: "object",
-  properties: {
-    status: { type: "string", example: "ok" },
-    timestamp: { type: "string", example: "2026-07-22T12:00:00.000Z" },
-    build: { type: "string", example: "1.0.0" },
-  },
-};
+const UserSchema = z.object({
+  id: z.string().uuid(),
+  full_name: z.string(),
+  email: z.string().email(),
+  role: z.string(),
+  avatar_url: z.string().url().optional(),
+}).openapi("User");
 
-const UserSchema = {
-  type: "object",
-  properties: {
-    id: { type: "string", format: "uuid" },
-    full_name: { type: "string" },
-    email: { type: "string", format: "email" },
-    role: { type: "string" },
-    avatar_url: { type: "string", format: "uri" },
-  },
-};
+const CardLoginSchema = z.object({
+  cardId: z.string().openapi({ example: "CARD-12345" }),
+  sig: z.string().openapi({ example: "a3f5..." }),
+  pin: z.string().openapi({ example: "1234" }),
+}).openapi("CardLogin");
 
-const CardLoginSchema = {
-  type: "object",
-  properties: {
-    cardId: { type: "string", example: "CARD-12345" },
-    sig: { type: "string", example: "a3f5..." },
-    pin: { type: "string", example: "1234" },
-  },
-};
+const RegisterCardSchema = z.object({
+  userId: z.string().uuid(),
+  cardId: z.string().openapi({ example: "CARD-12345" }),
+  pin: z.string().min(4).max(4),
+}).openapi("RegisterCard");
 
-const RegisterCardSchema = {
-  type: "object",
-  properties: {
-    userId: { type: "string", format: "uuid" },
-    cardId: { type: "string", example: "CARD-12345" },
-    pin: { type: "string", minLength: 4, maxLength: 4 },
-  },
-};
+const TutorSchema = z.object({
+  id: z.string().uuid(),
+  user_id: z.string().uuid(),
+  rating: z.number().min(0).max(5),
+  total_ratings: z.number().int(),
+  is_available: z.boolean(),
+  hourly_rate: z.number(),
+}).openapi("Tutor");
 
-const TutorSchema = {
-  type: "object",
-  properties: {
-    id: { type: "string", format: "uuid" },
-    user_id: { type: "string", format: "uuid" },
-    rating: { type: "number", minimum: 0, maximum: 5 },
-    total_ratings: { type: "integer" },
-    is_available: { type: "boolean" },
-    hourly_rate: { type: "number" },
-  },
-};
+const SessionSchema = z.object({
+  id: z.string().uuid(),
+  tutor_id: z.string().uuid(),
+  learner_id: z.string().uuid(),
+  subject: z.string(),
+  status: z.enum(["pending", "confirmed", "completed", "cancelled", "no_show"]),
+  scheduled_date: z.string(),
+  start_time: z.string(),
+  end_time: z.string(),
+  meeting_link: z.string().url().optional(),
+}).openapi("Session");
 
-const SessionSchema = {
-  type: "object",
-  properties: {
-    id: { type: "string", format: "uuid" },
-    tutor_id: { type: "string", format: "uuid" },
-    learner_id: { type: "string", format: "uuid" },
-    subject: { type: "string" },
-    status: { type: "string", enum: ["pending", "confirmed", "completed", "cancelled", "no_show"] },
-    scheduled_date: { type: "string", format: "date" },
-    start_time: { type: "string" },
-    end_time: { type: "string" },
-    meeting_link: { type: "string", format: "uri" },
-  },
-};
+const BudgetRequestSchema = z.object({
+  id: z.string().uuid(),
+  title: z.string(),
+  amount: z.number().min(0),
+  purpose: z.string(),
+  status: z.enum(["pending", "finance_approved", "president_approved", "rejected", "disbursed"]),
+  submitted_by: z.string().uuid(),
+}).openapi("BudgetRequest");
 
-const BudgetRequestSchema = {
-  type: "object",
-  properties: {
-    id: { type: "string", format: "uuid" },
-    title: { type: "string" },
-    amount: { type: "number", minimum: 0 },
-    purpose: { type: "string" },
-    status: { type: "string", enum: ["pending", "finance_approved", "president_approved", "rejected", "disbursed"] },
-    submitted_by: { type: "string", format: "uuid" },
-  },
-};
+const PettyCashSchema = z.object({
+  id: z.string().uuid(),
+  amount: z.number().min(0),
+  purpose: z.string(),
+  custodian_id: z.string().uuid(),
+  receipt_url: z.string().url().optional(),
+}).openapi("PettyCash");
 
-const PettyCashSchema = {
-  type: "object",
-  properties: {
-    id: { type: "string", format: "uuid" },
-    amount: { type: "number", minimum: 0 },
-    purpose: { type: "string" },
-    custodian_id: { type: "string", format: "uuid" },
-    receipt_url: { type: "string", format: "uri" },
-  },
-};
+const LiquidationSchema = z.object({
+  id: z.string().uuid(),
+  budget_request_id: z.string().uuid(),
+  total_spent: z.number().min(0),
+  receipt_urls: z.array(z.string().url()),
+  status: z.enum(["pending", "approved", "rejected"]),
+  is_late: z.boolean(),
+}).openapi("Liquidation");
 
-const LiquidationSchema = {
-  type: "object",
-  properties: {
-    id: { type: "string", format: "uuid" },
-    budget_request_id: { type: "string", format: "uuid" },
-    total_spent: { type: "number", minimum: 0 },
-    receipt_urls: { type: "array", items: { type: "string", format: "uri" } },
-    status: { type: "string", enum: ["pending", "approved", "rejected"] },
-    is_late: { type: "boolean" },
-  },
-};
+// Register schemas in OpenAPI registry
+registry.register("Health", HealthSchema);
+registry.register("User", UserSchema);
+registry.register("CardLogin", CardLoginSchema);
+registry.register("RegisterCard", RegisterCardSchema);
+registry.register("Tutor", TutorSchema);
+registry.register("Session", SessionSchema);
+registry.register("BudgetRequest", BudgetRequestSchema);
+registry.register("PettyCash", PettyCashSchema);
+registry.register("Liquidation", LiquidationSchema);
 
 // --- PATH REGISTRATIONS ---
 
-// 1. System Health
 registry.registerPath({
   method: "get",
   path: "/api/health",
@@ -123,22 +100,17 @@ registry.registerPath({
   responses: {
     200: {
       description: "Health status details",
-      content: { "application/json": { schema: HealthSchema as never } },
+      content: { "application/json": { schema: HealthSchema } },
     },
     503: { description: "Service unavailable" },
   },
 });
 
-// 2. Authentication APIs (/api/auth/*)
 registry.registerPath({
   method: "post",
   path: "/api/auth/card-login",
   description: "Authenticate user via HMAC-SHA256 encrypted QR ID card scan",
-  request: {
-    body: {
-      content: { "application/json": { schema: CardLoginSchema as never } },
-    },
-  },
+  request: { body: { content: { "application/json": { schema: CardLoginSchema } } } },
   responses: {
     200: { description: "Card login successful and session established" },
     400: { description: "Invalid payload or signature format" },
@@ -150,27 +122,22 @@ registry.registerPath({
 registry.registerPath({
   method: "post",
   path: "/api/auth/register-card",
-  description: "Register or link an HMAC-signed QR ID card to a user profile (Admin/Officer only)",
-  request: {
-    body: {
-      content: { "application/json": { schema: RegisterCardSchema as never } },
-    },
-  },
+  description: "Register or link an HMAC-signed QR ID card to a user profile",
+  request: { body: { content: { "application/json": { schema: RegisterCardSchema } } } },
   responses: {
     200: { description: "Card successfully linked to profile" },
-    403: { description: "Forbidden: Officer or Admin privileges required" },
+    403: { description: "Forbidden" },
   },
 });
 
-// 3. Tutors APIs (/api/tutors/*)
 registry.registerPath({
   method: "get",
   path: "/api/tutors",
-  description: "List all active available tutors with profile metadata",
+  description: "List all active available tutors",
   responses: {
     200: {
       description: "Array of available tutors",
-      content: { "application/json": { schema: { type: "array", items: TutorSchema as never } } },
+      content: { "application/json": { schema: z.array(TutorSchema) } },
     },
   },
 });
@@ -178,17 +145,16 @@ registry.registerPath({
 registry.registerPath({
   method: "get",
   path: "/api/tutors/{id}",
-  description: "Retrieve detailed profile, ratings, and availability for a specific tutor",
+  description: "Retrieve specific tutor",
   responses: {
     200: {
       description: "Tutor details object",
-      content: { "application/json": { schema: TutorSchema as never } },
+      content: { "application/json": { schema: TutorSchema } },
     },
     404: { description: "Tutor not found" },
   },
 });
 
-// 4. Sessions APIs (/api/sessions/*)
 registry.registerPath({
   method: "get",
   path: "/api/sessions",
@@ -196,7 +162,7 @@ registry.registerPath({
   responses: {
     200: {
       description: "List of user sessions",
-      content: { "application/json": { schema: { type: "array", items: SessionSchema as never } } },
+      content: { "application/json": { schema: z.array(SessionSchema) } },
     },
     401: { description: "Unauthorized" },
   },
@@ -216,7 +182,7 @@ registry.registerPath({
 registry.registerPath({
   method: "put",
   path: "/api/sessions/{id}/status",
-  description: "Update tutoring session status (confirm, complete, cancel, no_show)",
+  description: "Update tutoring session status",
   responses: {
     200: { description: "Status updated successfully" },
     400: { description: "Invalid status transition" },
@@ -227,22 +193,21 @@ registry.registerPath({
 registry.registerPath({
   method: "post",
   path: "/api/sessions/{id}/join",
-  description: "Generate video meeting tokens and track learner/tutor attendance",
+  description: "Generate video meeting tokens",
   responses: {
     200: { description: "Meeting room details and tokens" },
     403: { description: "Not a participant in this session" },
   },
 });
 
-// 5. Finance APIs (/api/finance/*)
 registry.registerPath({
   method: "get",
   path: "/api/finance/budget-requests",
-  description: "Retrieve organizational budget requests (Finance review roles)",
+  description: "Retrieve organizational budget requests",
   responses: {
     200: {
       description: "Array of budget requests",
-      content: { "application/json": { schema: { type: "array", items: BudgetRequestSchema as never } } },
+      content: { "application/json": { schema: z.array(BudgetRequestSchema) } },
     },
     403: { description: "Forbidden" },
   },
@@ -261,11 +226,11 @@ registry.registerPath({
 registry.registerPath({
   method: "get",
   path: "/api/finance/petty-cash",
-  description: "Retrieve petty cash disbursements and log history",
+  description: "Retrieve petty cash disbursements",
   responses: {
     200: {
       description: "Array of petty cash entries",
-      content: { "application/json": { schema: { type: "array", items: PettyCashSchema as never } } },
+      content: { "application/json": { schema: z.array(PettyCashSchema) } },
     },
   },
 });
@@ -273,11 +238,11 @@ registry.registerPath({
 registry.registerPath({
   method: "get",
   path: "/api/finance/liquidations",
-  description: "Retrieve liquidation reports and receipt attachments",
+  description: "Retrieve liquidation reports",
   responses: {
     200: {
       description: "Array of liquidations",
-      content: { "application/json": { schema: { type: "array", items: LiquidationSchema as never } } },
+      content: { "application/json": { schema: z.array(LiquidationSchema) } },
     },
   },
 });
@@ -289,7 +254,7 @@ function generateOpenAPI() {
     info: {
       version: "1.0.0",
       title: "ScholarMe API Specification",
-      description: "Authoritative OpenAPI 3.0 specification for ScholarMe core API route groups.",
+      description: "Authoritative OpenAPI 3.0 specification generated from Zod schemas.",
     },
     servers: [{ url: "https://scholarme.vercel.app" }],
   });

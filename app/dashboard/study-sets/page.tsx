@@ -81,15 +81,15 @@ function StudySetsContent() {
   const [createQuizOpen, setCreateQuizOpen] = useState(false);
   const [createFlashcardsOpen, setCreateFlashcardsOpen] = useState(false);
 
-  const loadStudySets = useCallback(async () => {
+  const loadStudySets = useCallback(async (signal?: AbortSignal) => {
     try {
       setLoading(true);
       const [myQuizRes, sharedQuizRes, myFlashRes, sharedFlashRes] =
         await Promise.all([
-          fetch("/api/quizzes/my-sets"),
-          fetch("/api/quizzes/shared"),
-          fetch("/api/flashcards/my-sets"),
-          fetch("/api/flashcards/shared"),
+          fetch("/api/quizzes/my-sets", { signal }),
+          fetch("/api/quizzes/shared", { signal }),
+          fetch("/api/flashcards/my-sets", { signal }),
+          fetch("/api/flashcards/shared", { signal }),
         ]);
 
       const combined: StudySet[] = [];
@@ -118,16 +118,22 @@ function StudySetsContent() {
 
       setMyStudySets(combined.sort(sortByDate));
       setSharedStudySets(sharedCombined.sort(sortByDate));
-    } catch (error) {
+    } catch (err: unknown) {
+      const error = err as Error;
+      if (error.name === "AbortError") return;
       console.error("Error loading study sets:", error);
       toast.error("Failed to load study sets — try refreshing the page.");
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
-    loadStudySets();
+    const controller = new AbortController();
+    loadStudySets(controller.signal);
+    return () => controller.abort();
   }, [loadStudySets]);
 
   const handleDelete = (id: string) => {

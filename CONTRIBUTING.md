@@ -3,30 +3,39 @@
 First off, thank you for considering contributing to ScholarMe!
 
 ## Development Setup
-*(To be expanded: Instructions for setting up Supabase, Node, etc.)*
 
-## Testing Philosophy
+1. **Clone the repository**
+   `ash
+   git clone https://github.com/your-org/ScholarMe.git
+   cd ScholarMe
+   ``n
+2. **Web Frontend & API (Next.js)**
+   `ash
+   corepack enable
+   corepack prepare pnpm@10.28.0 --activate
+   pnpm install
+   pnpm run dev
+   ``n
+3. **Database (Supabase)**
+   The project uses Supabase for database, authentication, and storage. Refer to the .env.example file for necessary environment variables.
 
-ScholarMe maintains a strong testing culture to ensure reliability and prevent regressions, especially for high-risk endpoints (AI processing, Financial transactions, etc).
+## Architecture Guidelines
 
-### 1. Integration Tests vs Route-level Tests
-We use both Integration tests (`__tests__/integration/`) and Route-level tests (`__tests__/api/` or co-located `__tests__/route.test.ts`).
+### Routing (pp/) vs Features (eatures/)
+- **pp/ Directory:** Used strictly for Next.js App Router routing, layout definitions, error boundaries, and API route handlers (oute.ts). Keep logic here minimal, mostly focused on data fetching and orchestrating components.
+- **eatures/ Directory:** Used for domain-specific components, hooks, and logic (e.g., eatures/tutors, eatures/gamification). Reusable components should go here instead of cluttering the pp/ directory.
 
-**Integration tests supplement, but DO NOT replace, route-level tests.**
+## Testing
 
-- **Route-level tests** are mandatory for regression protection. They ensure that a specific endpoint's response shape, error handling, validation, and fallback mechanisms remain intact. You must add these for any new endpoints you create, especially AI or messaging routes.
-- **Integration tests** test the behavior at the feature level across multiple domains (e.g. "User signs up and creates a study group").
+Ensure your changes pass existing tests before submitting a Pull Request:
+- **Unit/Integration Tests**: We use Vitest. Run pnpm run test or pnpm run test:watch.
+- **Linting**: Run pnpm run lint and pnpm tsc --noEmit.
+- **Zero-Tolerance for ny**: We enforce strict TypeScript typing. Do not use @typescript-eslint/no-explicit-any.
 
-If you are modifying an existing route, ensure its route-level test is updated. If one does not exist, please add it!
+## Pull Request Guidelines
 
-### 2. E2E Naming Conventions
-- Playwright end-to-end tests live in `/e2e`.
-- Multi-step feature flows written in Vitest live in `/__tests__/flows/` (formerly `__tests__/e2e/`).
+- We use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) for commit messages and PR titles (e.g., eat(web): add login page, ix(api): resolve race condition in sessions).
+- Reference any relevant issues in your PR description.
+- Ensure CI workflows pass successfully before requesting a review.
+- Every reported and fixed bug must include a permanent regression test.
 
-### 3. Resilience and Fallbacks
-Every external API call (Vertex AI, Document AI, Stripe) must have tests proving that the system gracefully degrades if the external service fails or times out.
-
-## Code Quality
-- We enforce zero `any` types. Use `unknown` or specific types/interfaces.
-- Run `npm run lint` before committing.
-- Ensure all tests pass by running `npm run test`.

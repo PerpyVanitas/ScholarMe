@@ -109,7 +109,7 @@ export default async function FinanceDashboard() {
 
   const { data: vendorsData } = await supabase
     .from("finance_vendors")
-    .select("*")
+    .select("id, name, category")
     .order("name", { ascending: true });
 
   const vendors = (vendorsData || []) as FinanceVendor[];

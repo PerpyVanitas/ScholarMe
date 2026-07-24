@@ -71,12 +71,14 @@ export default function StudyModePage({
   const [showShuffleConfirm, setShowShuffleConfirm] = useState(false);
 
   useEffect(() => {
-    loadStudySet();
+    const controller = new AbortController();
+    loadStudySet(controller.signal);
+    return () => controller.abort();
   }, [id]);
 
-  async function loadStudySet() {
+  async function loadStudySet(signal?: AbortSignal) {
     try {
-      const res = await fetch(`/api/flashcards/${id}`);
+      const res = await fetch(`/api/flashcards/${id}`, { signal });
       if (!res.ok) {
         throw new Error("Failed to load study set");
       }
@@ -89,11 +91,15 @@ export default function StudyModePage({
           (a: StudySetItem, b: StudySetItem) => a.order_index - b.order_index,
         ) || [];
       setShuffledItems(items);
-    } catch (error) {
+    } catch (err: unknown) {
+      const error = err as Error;
+      if (error.name === "AbortError") return;
       toast.error("Failed to load study set");
       router.push("/dashboard/flashcards");
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   }
 

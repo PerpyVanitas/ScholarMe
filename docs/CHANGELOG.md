@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+- **Component Splitting & Architectural Refactoring**:
+  - Extracted orchestration logic out of `app/dashboard/profile/page.tsx` into a `useProfilePage` hook and separated UI components, reducing the file from 800+ lines to ~250 lines of pure layout.
+  - Split `app/auth/sign-up/page.tsx` into modular steps (`SignUpStep1`, `SignUpStep2`, `SignUpStep3`) stored in `features/auth/components/sign-up-steps.tsx` to adhere to Domain-Driven Design principles.
+  - Successfully passed strict `npx tsc --noEmit` and `npx eslint . --fix` checks following the refactor.
+
 - **Test Coverage Improvements**:
   - Achieved >38% global branch coverage requirement for Vitest.
   - Implemented missing route-level API tests for AI features (`chat`, `quizzes/generate`, `flashcards/generate`, `finance/ocr`), validating logic, mocking external dependencies (Document AI, Vertex AI), and testing error handling.
@@ -537,12 +542,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cleaned root directory of deprecated files (e.g., \dump.sql\, \
   un_sql.js\) and removed duplicate \migrations/\ folder to remove unpushed migration errors.
 - Consolidated disparate types from \lib/types/*\ into a single \lib/types.ts\ for simplified central type definitions, fixing import redundancy.
-- Addressed component sprawl by migrating generic components into domain-specific \eatures/\ directories:
-  - Moved \nnouncement-calendar.tsx\ to \eatures/events/components\
-  - Moved \streak-indicator.tsx\ to \eatures/gamification/components\
-  - Moved \onboarding-tour.tsx\ and \ utorial-panel.tsx\ to \eatures/onboarding/components\
-  - Moved \webllm-chat.tsx\ to \eatures/tutors/components\
-  - Moved \image-occlusion-editor.tsx\ and \image-occlusion-viewer.tsx\ to \eatures/quizzes/components\
+- Addressed component sprawl by migrating generic components into domain-specific \eatures/\ directories:
+  - Moved \nnouncement-calendar.tsx\ to \eatures/events/components\
+  - Moved \streak-indicator.tsx\ to \eatures/gamification/components\
+  - Moved \onboarding-tour.tsx\ and \ utorial-panel.tsx\ to \eatures/onboarding/components\
+  - Moved \webllm-chat.tsx\ to \eatures/tutors/components\
+  - Moved \image-occlusion-editor.tsx\ and \image-occlusion-viewer.tsx\ to \eatures/quizzes/components\
 - Updated import statements globally to refer to the new component locations.
 - Verified successful production build using \
   pm run build\ and confirmed no type errors remain.
@@ -560,10 +565,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **E2E Onboarding Fix:** Disabled Playwright trace recording and moved output directories to dot-folders (`.playwright-results`) to prevent Next.js from detecting file changes and triggering infinite Fast Refresh loops during tests. Fixed an incorrect locator in `tutor-onboarding.spec.ts` (`academicYearJoined` is now a select).
 - **Phase 14 (Scale Readiness) & Appendix (Error Sweeps) Completion:**
-  - **API Error Normalization:** Swept 49 raw API routes (pp/api/**) that previously leaked raw internal errors or Postgres stack traces. Enforced usage of the centralized @/lib/utils/api-error handler to ensure secure, normalized 500 error responses and server-side Sentry capturing.
+  - **API Error Normalization:** Swept 49 raw API routes (pp/api/**) that previously leaked raw internal errors or Postgres stack traces. Enforced usage of the centralized @/lib/utils/api-error handler to ensure secure, normalized 500 error responses and server-side Sentry capturing.
   - **Health Check Securement:** Hardened the API health endpoint to prevent error leakage while remaining observable.
   - **Load Testing Configuration:** Drafted docs/scale/load-testing-guide.md specifying k6 concurrency models (500 CCU) and the necessity for a PgBouncer connection pool of 60.
-  - **Build Corrections:** Removed conflicting/duplicate middleware.ts in favor of existing proxy.ts, allowing secure Next.js builds containing CORS/CSRF/CSP protections. Corrected strict TypeScript typings in itest.config.ts.
+  - **Build Corrections:** Removed conflicting/duplicate middleware.ts in favor of existing proxy.ts, allowing secure Next.js builds containing CORS/CSRF/CSP protections. Corrected strict TypeScript typings in itest.config.ts.
   - **Rate Limiting Scaled:** Increased QR Kiosk card login attempt thresholds to 10 attempts per 10 minutes to properly accommodate 200 daily physical officers.
 
 - **P14-8 (Notification Fan-out Load):**
@@ -578,3 +583,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Restored missing `middleware.ts` and integrated Supabase session refresh logic with CORS, CSRF, and CSP security headers.
 - Fixed incomplete Vitest mock for `generateLink` in `__tests__/security/card-login-rate-limit.test.ts`.
 - All security unit and integration tests are now passing.
+

@@ -51,10 +51,12 @@ function LeaderboardContent() {
   const [period, setPeriod] = useState<Period>("all");
 
   useEffect(() => {
-    loadLeaderboard(period, limit);
+    const controller = new AbortController();
+    loadLeaderboard(period, limit, controller.signal);
+    return () => controller.abort();
   }, [period, limit]);
 
-  async function loadLeaderboard(p: Period, lim: number) {
+  async function loadLeaderboard(p: Period, lim: number, signal?: AbortSignal) {
     setLoading(true);
     try {
       const supabase = createClient();
@@ -65,6 +67,7 @@ function LeaderboardContent() {
 
       const res = await fetch(
         `/api/android/gamification/leaderboard?limit=${lim}&period=${p}`,
+        { signal }
       );
       const result = await res.json();
 
@@ -80,8 +83,14 @@ function LeaderboardContent() {
           setCurrentUserEntry(null);
         }
       }
+    } catch (e: unknown) {
+      const err = e as Error;
+      if (err.name === "AbortError") return;
+      console.error(err);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   }
 

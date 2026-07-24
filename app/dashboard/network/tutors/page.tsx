@@ -51,7 +51,7 @@ export default function TutorsPage() {
           searchQuery: debouncedSearch,
           specialization: selectedSpec
         }),
-        supabase.from("specializations").select("*").order("name"),
+        supabase.from("specializations").select("id, name").order("name"),
       ]);
       
       // @ts-expect-error: required
