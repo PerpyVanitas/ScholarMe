@@ -11,8 +11,7 @@ const HealthSchema = z.object({
   status: z.string(),
   timestamp: z.string(),
   build: z.string(),
-}).openapi({
-  refId: "Health",
+}).openapi("Health", {
   example: {
     status: "ok",
     timestamp: "2026-07-22T12:00:00.000Z",
@@ -32,8 +31,7 @@ const CardLoginSchema = z.object({
   cardId: z.string(),
   sig: z.string(),
   pin: z.string(),
-}).openapi({
-  refId: "CardLogin",
+}).openapi("CardLogin", {
   example: {
     cardId: "CARD-12345",
     sig: "a3f5...",
@@ -45,8 +43,7 @@ const RegisterCardSchema = z.object({
   userId: z.string().uuid(),
   cardId: z.string(),
   pin: z.string().min(4).max(4),
-}).openapi({
-  refId: "RegisterCard",
+}).openapi("RegisterCard", {
   example: {
     userId: "123e4567-e89b-12d3-a456-426614174000",
     cardId: "CARD-12345",
