@@ -2,8 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useMemo, useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";import { useMemo, useEffect, useState } from "react";
 import { useDashboardMode } from "@/lib/hooks/use-dashboard-mode";
 import type { Profile, UserRole } from "@/lib/types";
 import { getAvatarUrl } from "@/lib/utils";
@@ -346,6 +345,7 @@ export function AppSidebar({
   notificationCount,
 }: AppSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { learnerGroups, managementGroups, hasManagement } = useMemo(
     () => getNavItems(role, profile),
     [role, profile],
@@ -362,7 +362,18 @@ export function AppSidebar({
           : "learner"
         : "learner";
   const setWorkspace = (ws: "learner" | "management") => {
-    if (canSwitch) setViewMode(ws === "management" ? "tutor" : "learner");
+    if (canSwitch) {
+      setViewMode(ws === "management" ? "tutor" : "learner");
+      if (ws === "management") {
+        if (role === "administrator" || role === "super_admin") {
+          router.push("/dashboard/admin");
+        } else {
+          router.push("/dashboard/home");
+        }
+      } else {
+        router.push("/dashboard/home");
+      }
+    }
   };
   const navGroups = workspace === "learner" ? learnerGroups : managementGroups;
 

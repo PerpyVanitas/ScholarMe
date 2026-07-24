@@ -5,18 +5,31 @@ import { createClient } from "@/lib/supabase/create-client";
 import { NextResponse } from "next/server";
 
 /** Fetch all repositories with owner name and resource count */
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const limit = parseInt(searchParams.get("limit") || "50", 10);
+  const offset = (page - 1) * limit;
+
   const supabase = await createClient();
-  const { data: repos, error } = await supabase
+  const { data: repos, error, count } = await supabase
     .from("repositories")
-    .select("*, profiles(full_name), resources(count)")
-    .order("created_at", { ascending: false });
+    .select("*, profiles(full_name), resources(count)", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
 
   if (error) {
     return handleApiError(error);
   }
 
-  return NextResponse.json(repos);
+  return NextResponse.json({
+    data: repos,
+    pagination: {
+      page,
+      limit,
+      total: count || 0,
+    }
+  });
 }
 
 const postBodySchema = z.object({

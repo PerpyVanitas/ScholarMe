@@ -86,7 +86,9 @@ export function DesignationCard({
               .sort((a, b) => {
                 if (a.is_current && !b.is_current) return -1;
                 if (!a.is_current && b.is_current) return 1;
-                return b.academic_year.localeCompare(a.academic_year);
+                const ayA = a.academic_year || "";
+                const ayB = b.academic_year || "";
+                return ayB.localeCompare(ayA);
               })
               .map((d) => (
                 <div

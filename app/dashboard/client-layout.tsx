@@ -28,7 +28,7 @@ import { MobileFab } from "@/components/mobile-fab";
 import { PageTutorialButton } from "@/components/page-tutorial-button";
 import { AnalyticsPageTracker } from "@/components/analytics-page-tracker";
 import { ChatHeadsContainer } from "@/features/messaging/components/chat-heads-container";
-import { SupportChatWidget } from "@/components/support-chat-widget";
+
 import { ContextualHelpButton } from "@/components/contextual-help-button";
 
 import {
@@ -166,7 +166,7 @@ function DashboardLayoutContent({
         <AnalyticsPageTracker />
         <MobileBottomNav />
         <MobileFab />
-        <SupportChatWidget />
+
       </SidebarInset>
 
       {/* Session Timeout Warning Modal */}

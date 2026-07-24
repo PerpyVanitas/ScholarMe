@@ -78,7 +78,7 @@ export function CreateQuizSheet({
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
 
   const [aiPrompt, setAiPrompt] = useState("");
-  const [aiCount] = useState(5);
+  const [aiCount, setAiCount] = useState<number | "">(5);
   const [generating, setGenerating] = useState(false);
   const [creationMethod, setCreationMethod] = useState("manual");
   const [localAIProgressText, setLocalAIProgressText] = useState("");
@@ -168,58 +168,26 @@ export function CreateQuizSheet({
         enabledTypes.length === 1 ? enabledTypes[0][0] : "mixed";
       const totalCount =
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        enabledTypes.reduce((acc, [_, conf]) => acc + conf.count, 0) || aiCount;
+        enabledTypes.reduce((acc, [_, conf]) => acc + conf.count, 0) || (typeof aiCount === "number" ? aiCount : 5);
 
-      setLocalAIProgressText("Loading model... (This may take a minute)");
-      setLocalAIProgressValue(0);
+      const res = await fetch("/api/quizzes/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic: aiPrompt,
+          type: derivedType === "mixed" ? "multiple_choice" : derivedType,
+          count: totalCount,
+        }),
+      });
 
-      const engine = await initializeEngine();
-      if (!engine) {
-        throw new Error("Failed to initialize AI engine");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to generate quiz");
       }
 
-      setLocalAIProgressText("Generating quiz...");
-      setLocalAIProgressValue(100);
-      const systemPrompt = `You are an expert quiz generator. Given a topic, generate ${totalCount} questions.
-The types of questions are: ${enabledTypes.map((t) => t[0]).join(", ")}.
-Respond ONLY with a valid JSON array of objects.
-Each object must have:
-"question": string
-"answer": string
-"options": array of strings (if multiple choice)
-"item_type": string (one of the question types)
-No other text, markdown blocks, or explanations. Just the JSON array.`;
+      const { data } = await res.json();
 
-      const reply = (await (
-        engine as unknown as {
-          chat: {
-            completions: {
-              create: (opts: Record<string, unknown>) => Promise<unknown>;
-            };
-          };
-        }
-      ).chat.completions.create({
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `Topic: ${aiPrompt}` },
-        ],
-        response_format: { type: "json_object" },
-      })) as { choices: { message: { content?: string } }[] };
-
-      const rawContent = reply.choices[0]?.message?.content || "[]";
-      let parsedData = [];
-      try {
-        parsedData = JSON.parse(rawContent);
-      } catch (e) {
-        const match = rawContent.match(/\[[\s\S]*\]/);
-        if (match) {
-          parsedData = JSON.parse(match[0]);
-        } else {
-          throw new Error("Failed to parse JSON from Local AI");
-        }
-      }
-
-      const newContent = parsedData
+      const newContent = data
         .map(
           (item: { question?: string; answer?: string }) =>
             `Q: ${item.question}\nA: ${item.answer}`,
@@ -228,20 +196,17 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
 
       setFormData((prev) => ({
         ...prev,
+        title: prev.title || aiPrompt,
         content: prev.content ? prev.content + "\n\n" + newContent : newContent,
       }));
 
-      toast.success("Questions generated locally successfully!");
+      toast.success("Questions generated successfully!");
       setCreationMethod("manual");
-      setLocalAIProgressText("");
-      setLocalAIProgressValue(0);
     } catch (error) {
       console.error("Error generating questions:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to generate questions",
       );
-      setLocalAIProgressText("");
-      setLocalAIProgressValue(0);
     } finally {
       setGenerating(false);
     }
@@ -539,6 +504,7 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
                 <div className="flex items-center justify-between">
                   <Label>Questions</Label>
                   <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     className="h-6 text-xs"
@@ -578,13 +544,31 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
                     rows={3}
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label>Number of Questions</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={aiCount === "" ? "" : aiCount}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "") setAiCount("");
+                      else {
+                        const num = parseInt(val, 10);
+                        if (!isNaN(num)) setAiCount(num);
+                      }
+                    }}
+                    disabled={generating}
+                  />
+                </div>
                 <div className="flex items-center space-x-2 border rounded-md p-4 bg-muted/20">
                   <Label className="flex-1">
                     <div className="font-medium text-primary">
-                      Powered by Local AI
+                      Powered by Vertex AI
                     </div>
                     <div className="text-xs text-muted-foreground font-normal leading-tight">
-                      Generates quizzes securely and directly on your device.
+                      Generates quizzes rapidly using Google Gemini.
                     </div>
                   </Label>
                 </div>

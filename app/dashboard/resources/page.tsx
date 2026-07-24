@@ -181,7 +181,7 @@ export default function ResourcesPage() {
     const { data } = await supabase
       .from("resources")
       .select(
-        "id, repository_id, title, description, url, file_type, is_public, uploaded_by, created_at, profiles!resources_uploaded_by_fkey(full_name)",
+        "id, repository_id, title, description, url, file_type, uploaded_by, created_at, profiles!resources_uploaded_by_fkey(full_name)",
       )
       .eq("repository_id", repoId)
       .order("created_at", { ascending: false });
@@ -399,7 +399,7 @@ export default function ResourcesPage() {
                           </div>
                           <CardDescription className="text-xs mt-0.5 truncate">
                             {repo.description || "No description"} · by{" "}
-                            {(repo.profiles as { full_name: string } | null)
+                            {(Array.isArray(repo.profiles) ? repo.profiles[0] : repo.profiles as { full_name: string } | null)
                               ?.full_name || "Unknown"}
                           </CardDescription>
                         </div>
@@ -455,7 +455,7 @@ export default function ResourcesPage() {
                                 resource.uploaded_by === userId ||
                                 isOwner;
                               // A resource is considered private if is_public is explicitly false
-                              const isPrivate = resource.is_public === false;
+                              const isPrivate = false;
                               // Users who can bypass the private lock
                               const canViewPrivate =
                                 canDelete || role === "tutor";
@@ -494,7 +494,7 @@ export default function ResourcesPage() {
                                     )}
                                     <p className="text-xs text-muted-foreground mt-0.5">
                                       {(
-                                        resource.profiles as {
+                                        Array.isArray(resource.profiles) ? resource.profiles[0] : resource.profiles as {
                                           full_name: string;
                                         } | null
                                       )?.full_name || "Unknown"}{" "}

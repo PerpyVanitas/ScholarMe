@@ -46,6 +46,9 @@ export default function DashboardView() {
   useEffect(() => {
     if (userLoading || !profile) return;
 
+    const controller = new AbortController();
+    const signal = controller.signal;
+
     async function loadDashboardData() {
       try {
         const supabase = createClient();
@@ -53,9 +56,10 @@ export default function DashboardView() {
 
         if (role === "administrator" || role === "super_admin") {
           try {
-            const res = await fetch("/api/admin/dashboard-stats");
+            const res = await fetch("/api/admin/dashboard-stats", { signal });
             if (res.ok) {
               const stats = await res.json();
+              if (signal.aborted) return;
               extra.adminStats = stats.adminStats;
               extra.recentSessions = stats.recentSessions;
             }
@@ -78,7 +82,10 @@ export default function DashboardView() {
             .from("tutors")
             .select("*")
             .eq("user_id", profile?.id || "")
+            .abortSignal(signal)
             .maybeSingle();
+
+          if (signal.aborted) return;
 
           if (!tutor?.id) {
             extra.tutor = tutor ?? null;
@@ -97,25 +104,29 @@ export default function DashboardView() {
               .eq("tutor_id", tutor.id)
               .in("status", ["pending", "confirmed"])
               .order("scheduled_date", { ascending: true })
-              .limit(5);
+              .limit(5)
+              .abortSignal(signal);
 
             const { count: completedCount } = await supabase
               .from("sessions")
               .select("*", { count: "exact", head: true })
               .eq("tutor_id", tutor.id)
-              .eq("status", "completed");
+              .eq("status", "completed")
+              .abortSignal(signal);
 
             const { count: upcomingCount } = await supabase
               .from("sessions")
               .select("*", { count: "exact", head: true })
               .eq("tutor_id", tutor.id)
-              .in("status", ["pending", "confirmed"]);
+              .in("status", ["pending", "confirmed"])
+              .abortSignal(signal);
 
             const { data: allConfirmed } = await supabase
               .from("sessions")
               .select("id, scheduled_date, end_time")
               .eq("tutor_id", tutor.id)
-              .eq("status", "confirmed");
+              .eq("status", "confirmed")
+              .abortSignal(signal);
 
             const now = new Date();
             const overdueSessionIds =
@@ -134,7 +145,10 @@ export default function DashboardView() {
                     .from("sessions")
                     .select("*, specializations(*)")
                     .in("id", overdueSessionIds)
+                    .abortSignal(signal)
                 : { data: [] };
+
+            if (signal.aborted) return;
 
             extra.tutor = tutor;
             extra.upcomingSessions = sessions || [];
@@ -154,18 +168,23 @@ export default function DashboardView() {
             .eq("learner_id", profile?.id || "")
             .in("status", ["pending", "confirmed"])
             .order("scheduled_date", { ascending: true })
-            .limit(5);
+            .limit(5)
+            .abortSignal(signal);
 
           const { count: learnCompletedCount } = await supabase
             .from("sessions")
             .select("*", { count: "exact", head: true })
             .eq("learner_id", profile?.id || "")
-            .eq("status", "completed");
+            .eq("status", "completed")
+            .abortSignal(signal);
 
           const { count: learnTotalCount } = await supabase
             .from("sessions")
             .select("*", { count: "exact", head: true })
-            .eq("learner_id", profile?.id || "");
+            .eq("learner_id", profile?.id || "")
+            .abortSignal(signal);
+
+          if (signal.aborted) return;
 
           // Store learner data under a separate key; render conditionally
           // We reuse upcomingSessions for whichever view is active at render
@@ -189,18 +208,23 @@ export default function DashboardView() {
             .eq("learner_id", profile?.id || "")
             .in("status", ["pending", "confirmed"])
             .order("scheduled_date", { ascending: true })
-            .limit(5);
+            .limit(5)
+            .abortSignal(signal);
 
           const { count: completedCount } = await supabase
             .from("sessions")
             .select("*", { count: "exact", head: true })
             .eq("learner_id", profile?.id || "")
-            .eq("status", "completed");
+            .eq("status", "completed")
+            .abortSignal(signal);
 
           const { count: totalCount } = await supabase
             .from("sessions")
             .select("*", { count: "exact", head: true })
-            .eq("learner_id", profile?.id || "");
+            .eq("learner_id", profile?.id || "")
+            .abortSignal(signal);
+
+          if (signal.aborted) return;
 
           extra.upcomingSessions = sessions || [];
           extra.learnerStats = {
@@ -220,11 +244,17 @@ export default function DashboardView() {
         );
         setError(true);
       } finally {
-        setDataLoading(false);
+        if (!signal.aborted) {
+          setDataLoading(false);
+        }
       }
     }
 
     loadDashboardData();
+
+    return () => {
+      controller.abort();
+    };
   }, [profile, role, userLoading, isAuthenticated]);
 
   if (userLoading || dataLoading) {
@@ -258,6 +288,26 @@ export default function DashboardView() {
     );
   }
 
+  const extendedData = dashboardData as DashboardData & {
+    learnerUpcomingSessions?: Session[];
+  };
+
+  if (viewMode === "learner") {
+    return (
+      <LearnerDashboard
+        profile={profile}
+        upcomingSessions={extendedData.learnerUpcomingSessions || []}
+        stats={
+          dashboardData.learnerStats || {
+            totalSessions: 0,
+            completedSessions: 0,
+            upcomingSessions: 0,
+          }
+        }
+      />
+    );
+  }
+
   if (role === "administrator" || role === "super_admin") {
     return (
       <AdminDashboard
@@ -274,10 +324,6 @@ export default function DashboardView() {
       />
     );
   }
-
-  const extendedData = dashboardData as DashboardData & {
-    learnerUpcomingSessions?: Session[];
-  };
 
   if (role === "tutor") {
     return (
@@ -303,6 +349,7 @@ export default function DashboardView() {
               <button
                 onClick={() => setViewMode("learner")}
                 className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all ${
+                  // @ts-expect-error viewMode was narrowed above but can change
                   viewMode === "learner"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"

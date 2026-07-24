@@ -58,13 +58,15 @@ export function ProfileView({
     checkStatus();
   }, [profile.id]);
 
-  const getInitials = (name: string) => {
+  const getInitials = (name?: string | null) => {
+    if (!name) return "U";
     return name
       .split(" ")
+      .filter(Boolean)
       .map((n) => n[0])
       .join("")
       .toUpperCase()
-      .substring(0, 2);
+      .substring(0, 2) || "U";
   };
 
   const handleAddFriend = async () => {
@@ -143,7 +145,9 @@ export function ProfileView({
                 </AvatarFallback>
               </Avatar>
               <div className="text-center sm:text-left pb-2 space-y-1">
-                <h1 className="text-3xl font-bold">{profile.full_name}</h1>
+                <h1 className="text-3xl font-bold">
+                  {profile.full_name || "Unknown User"}
+                </h1>
                 <p className="text-muted-foreground font-medium">
                   {profile.membership_classification === "learner"
                     ? "Learner"

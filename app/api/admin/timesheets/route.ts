@@ -22,6 +22,8 @@ async function getActivePeriod(supabase: SupabaseClient) {
 const searchParamsSchema = z.object({
   start_date: z.string().optional(),
   end_date: z.string().optional(),
+  page: z.string().optional(),
+  limit: z.string().optional(),
 });
 
 export async function GET(req: NextRequest) {
@@ -57,9 +59,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
 
-  const { start_date: startDateParam, end_date: endDateParam } = validationResult.data;
+  const { start_date: startDateParam, end_date: endDateParam, page: pageStr, limit: limitStr } = validationResult.data;
 
-  let query = supabase.from("timesheets").select("*, tutors(*, profiles(*))");
+  const page = parseInt(pageStr || "1", 10);
+  const limit = parseInt(limitStr || "100", 10);
+  const offset = (page - 1) * limit;
+
+  let query = supabase.from("timesheets").select("*, tutors(*, profiles(*))", { count: "exact" });
 
   if (startDateParam && endDateParam) {
     query = query.gte("clock_in", startDateParam).lte("clock_in", endDateParam);
@@ -72,8 +78,17 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const { data, error } = await query.order("clock_in", { ascending: false });
+  const { data, error, count } = await query
+    .order("clock_in", { ascending: false })
+    .range(offset, offset + limit - 1);
 
   if (error) return handleApiError(error);
-  return NextResponse.json(data);
+  return NextResponse.json({
+    data,
+    pagination: {
+      page,
+      limit,
+      total: count || 0
+    }
+  });
 }

@@ -29,7 +29,7 @@ interface PendingRequestItem {
   id: string;
   user_id1: string;
   user_id2: string;
-  profiles?: FriendProfileRelation | null;
+  profiles?: FriendProfileRelation | FriendProfileRelation[] | null;
 }
 
 interface FriendCardItem {
@@ -57,7 +57,7 @@ export default async function FriendsPage() {
       id,
       user_id1,
       user_id2,
-      profiles!friends_user_id1_fkey (id, full_name, avatar_url, membership_classification)
+      profiles!friends_user_id1_fkey (id, full_name, avatar_url)
     `,
     )
     .eq("user_id2", user.id)
@@ -71,7 +71,7 @@ export default async function FriendsPage() {
       `
       id,
       user_id2,
-      profiles!friends_user_id2_fkey (id, full_name, avatar_url, membership_classification)
+      profiles!friends_user_id2_fkey (id, full_name, avatar_url)
     `,
     )
     .eq("user_id1", user.id)
@@ -83,7 +83,7 @@ export default async function FriendsPage() {
       `
       id,
       user_id1,
-      profiles!friends_user_id1_fkey (id, full_name, avatar_url, membership_classification)
+      profiles!friends_user_id1_fkey (id, full_name, avatar_url)
     `,
     )
     .eq("user_id2", user.id)
@@ -95,25 +95,30 @@ export default async function FriendsPage() {
       `
       id,
       user_id2,
-      profiles!friends_user_id2_fkey (id, full_name, avatar_url, membership_classification)
+      profiles!friends_user_id2_fkey (id, full_name, avatar_url)
     `,
     )
     .eq("user_id1", user.id)
     .eq("status", "blocked");
 
+  const extractProfile = (profiles: unknown) => {
+    if (Array.isArray(profiles)) return profiles[0] || {};
+    return profiles || {};
+  };
+
   const acceptedFriends: FriendCardItem[] = [
-    ...((friends1 || []) as unknown as Array<{ id: string; profiles?: FriendProfileRelation }>).map((f) => ({
-      ...(f.profiles || {}),
+    ...((friends1 || []) as Record<string, unknown>[]).map((f) => ({
+      ...extractProfile(f.profiles),
       friend_id: f.id,
     })),
-    ...((friends2 || []) as unknown as Array<{ id: string; profiles?: FriendProfileRelation }>).map((f) => ({
-      ...(f.profiles || {}),
+    ...((friends2 || []) as Record<string, unknown>[]).map((f) => ({
+      ...extractProfile(f.profiles),
       friend_id: f.id,
     })),
   ];
 
-  const blockedUsers: FriendCardItem[] = ((blockedFriends || []) as unknown as Array<{ id: string; profiles?: FriendProfileRelation }>).map((f) => ({
-    ...(f.profiles || {}),
+  const blockedUsers: FriendCardItem[] = ((blockedFriends || []) as Record<string, unknown>[]).map((f) => ({
+    ...extractProfile(f.profiles),
     friend_id: f.id,
   }));
 
@@ -170,51 +175,54 @@ export default async function FriendsPage() {
 
           {pendingRequests.length > 0 ? (
             <div className="space-y-3">
-              {pendingRequests.map((req) => (
-                <Card key={req.id}>
-                  <CardContent className="p-4 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={req.profiles?.avatar_url || ""} />
-                        <AvatarFallback>
-                          {getInitials(req.profiles?.full_name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">{req.profiles?.full_name || "Peer Student"}</p>
-                        <p className="text-xs text-muted-foreground capitalize">
-                          {req.profiles?.membership_classification?.replace(
-                            /_/g,
-                            " ",
-                          ) || "Member"}
-                        </p>
+              {pendingRequests.map((req) => {
+                const profile = Array.isArray(req.profiles) ? req.profiles[0] : req.profiles;
+                return (
+                  <Card key={req.id}>
+                    <CardContent className="p-4 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarImage src={profile?.avatar_url || ""} />
+                          <AvatarFallback>
+                            {getInitials(profile?.full_name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{profile?.full_name || "Peer Student"}</p>
+                          <p className="text-xs text-muted-foreground capitalize">
+                            {profile?.membership_classification?.replace(
+                              /_/g,
+                              " ",
+                            ) || "Member"}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <form action={handleAccept}>
-                        <input type="hidden" name="requestId" value={req.id} />
-                        <Button
-                          size="icon"
-                          variant="default"
-                          className="h-8 w-8 rounded-full"
-                        >
-                          <Check className="h-4 w-4" />
-                        </Button>
-                      </form>
-                      <form action={handleDecline}>
-                        <input type="hidden" name="requestId" value={req.id} />
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className="h-8 w-8 rounded-full text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </form>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                      <div className="flex gap-2">
+                        <form action={handleAccept}>
+                          <input type="hidden" name="requestId" value={req.id} />
+                          <Button
+                            size="icon"
+                            variant="default"
+                            className="h-8 w-8 rounded-full"
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                        </form>
+                        <form action={handleDecline}>
+                          <input type="hidden" name="requestId" value={req.id} />
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            className="h-8 w-8 rounded-full text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </form>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           ) : (
             <p className="text-sm text-muted-foreground border rounded-lg p-8 text-center bg-card">

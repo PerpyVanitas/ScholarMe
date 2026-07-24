@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+- **Test Coverage Improvements**:
+  - Achieved >38% global branch coverage requirement for Vitest.
+  - Implemented missing route-level API tests for AI features (`chat`, `quizzes/generate`, `flashcards/generate`, `finance/ocr`), validating logic, mocking external dependencies (Document AI, Vertex AI), and testing error handling.
+  - Enhanced unit tests for utility functions in `lib/utils.ts` and `lib/utils/roles.ts` to increase branch coverage.
+  - Resolved tricky testing issues involving Node.js `NextRequest.formData()` constraints and class mocking with `vi.hoisted()`.
+
 - **CI Pipeline Stability**:
   - **Build-Time Resilience**: Fixed static prerendering build crashes caused by strict environment variable validation in `lib/env.ts` during Next.js builds. It now safely logs warnings instead of throwing errors in CI.
   - **Supabase Build Dummy Fallbacks**: Added dummy URL and anon-key fallbacks to `createBrowserClient` and `createServerClient` in `lib/supabase/client.ts` and `lib/supabase/create-client.ts`, preventing `@supabase/ssr` from throwing `supabaseUrl is required` instantiation errors when Webpack injects empty environment variables during static compilation.

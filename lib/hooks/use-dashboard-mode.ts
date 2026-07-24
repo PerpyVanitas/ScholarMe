@@ -23,7 +23,7 @@ interface UseDashboardModeResult {
 }
 
 export function useDashboardMode(role: UserRole): UseDashboardModeResult {
-  const canSwitch = role === "tutor";
+  const canSwitch = role !== "learner";
 
   // Default: tutors start in tutor view; everyone else is always learner
   const getInitialMode = (): DashboardViewMode => {

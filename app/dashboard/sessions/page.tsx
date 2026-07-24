@@ -54,11 +54,16 @@ export default function SessionsPage() {
   const [currentTutorId, setCurrentTutorId] = useState<string | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+
     async function load() {
       const supabase = createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();
+
+      if (signal.aborted) return;
 
       // Determine user ID and role - support demo mode
       let userId = user?.id;
@@ -85,7 +90,10 @@ export default function SessionsPage() {
           .from("tutors")
           .select("id")
           .eq("user_id", userId)
+          .abortSignal(signal)
           .maybeSingle();
+
+        if (signal.aborted) return;
 
         const tutorId =
           tutor?.id || (userRole === "tutor" ? DEMO_USERS.tutor.tutorId : "");
@@ -96,7 +104,10 @@ export default function SessionsPage() {
             "*, specializations(*), session_ratings(*), original_tutor:tutors!tutor_id(profiles(*))",
           )
           .or(`tutor_id.eq.${tutorId},transfer_to_tutor_id.eq.${tutorId}`)
-          .order("scheduled_date", { ascending: false });
+          .order("scheduled_date", { ascending: false })
+          .abortSignal(signal);
+
+        if (signal.aborted) return;
 
         setSessions(tutorSessions || []);
 
@@ -119,12 +130,16 @@ export default function SessionsPage() {
             .from("sessions")
             .select(sessionSelect)
             .eq("learner_id", userId)
-            .order("scheduled_date", { ascending: false }),
+            .order("scheduled_date", { ascending: false })
+            .abortSignal(signal),
           supabase
             .from("session_participants")
             .select(`sessions(${sessionSelect})`)
-            .eq("learner_id", userId),
+            .eq("learner_id", userId)
+            .abortSignal(signal),
         ]);
+
+        if (signal.aborted) return;
 
         const joinedSessions = (joinedRows || [])
           .map((row: { sessions: Session | Session[] | null }) =>
@@ -145,7 +160,10 @@ export default function SessionsPage() {
           .gt("max_participants", 1)
           .in("status", ["pending", "confirmed"])
           .gte("scheduled_date", today)
-          .order("scheduled_date", { ascending: true });
+          .order("scheduled_date", { ascending: true })
+          .abortSignal(signal);
+
+        if (signal.aborted) return;
 
         const filteredOpen = (openGroups || []).filter((s: Session) => {
           const count =
@@ -160,6 +178,7 @@ export default function SessionsPage() {
         setOpenGroupSessions(filteredOpen);
 
         const mw = await getMyWaitlists();
+        if (signal.aborted) return;
         setWaitlists(mw);
 
         setLoading(false);
@@ -167,6 +186,10 @@ export default function SessionsPage() {
       }
     }
     load();
+
+    return () => {
+      controller.abort();
+    };
   }, []);
 
   async function updateStatus(

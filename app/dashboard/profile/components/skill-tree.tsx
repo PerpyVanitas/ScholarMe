@@ -59,8 +59,12 @@ export function SkillTree({ profile }: SkillTreeProps) {
   const [loading, setLoading] = useState(false);
   const xp = profile.total_xp || 0;
 
-  const isSuperAdmin =
-    profile.roles?.some((r) => r.name === "super_admin") || false;
+  const rolesArray = Array.isArray(profile.roles)
+    ? profile.roles
+    : profile.roles
+      ? [profile.roles]
+      : [];
+  const isSuperAdmin = rolesArray.some((r: { name?: string }) => r?.name === "super_admin");
 
   async function unlockTheme(theme: (typeof THEMES)[0]) {
     if (!isSuperAdmin && xp < theme.cost) {

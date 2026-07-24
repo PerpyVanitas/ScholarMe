@@ -64,7 +64,6 @@ export function ResourceUploadSheet({
   const [uploadFile, setUploadFile] = useState<globalThis.File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [isPublic, setIsPublic] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Synchronize repoId if it changes externally
@@ -79,7 +78,6 @@ export function ResourceUploadSheet({
     setUploadRepoId("");
     setUploadFile(null);
     setIsDragging(false);
-    setIsPublic(true);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
@@ -136,10 +134,9 @@ export function ResourceUploadSheet({
           url: publicUrl,
           file_type: fileTypeKey,
           uploaded_by: userId,
-          is_public: isPublic,
         })
         .select(
-          "id, repository_id, title, description, url, file_type, is_public, uploaded_by, created_at, profiles!resources_uploaded_by_fkey(full_name)",
+          "id, repository_id, title, description, url, file_type, uploaded_by, created_at, profiles!resources_uploaded_by_fkey(full_name)",
         )
         .single();
       if (insertErr) throw insertErr;
@@ -293,28 +290,6 @@ export function ResourceUploadSheet({
             </div>
           </div>
 
-          {/* Visibility toggle */}
-          <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 p-3">
-            <div className="flex flex-col">
-              <span className="text-sm font-medium">Publicly Accessible</span>
-              <span className="text-xs text-muted-foreground">
-                {isPublic
-                  ? "Anyone in the repository can preview & download"
-                  : "Only you and admins can access this resource"}
-              </span>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={isPublic}
-              onClick={() => setIsPublic((v) => !v)}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors ${isPublic ? "bg-primary" : "bg-muted-foreground/30"}`}
-            >
-              <span
-                className={`pointer-events-none block h-5 w-5 rounded-full bg-white shadow-sm ring-0 transition-transform ${isPublic ? "translate-x-5" : "translate-x-0"}`}
-              />
-            </button>
-          </div>
 
           <div className="rounded-lg border border-border bg-muted/30 p-4">
             <div className="flex items-start gap-3">

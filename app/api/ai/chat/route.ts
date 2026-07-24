@@ -56,11 +56,6 @@ export async function POST(req: Request) {
       const imgAttachment = attachments.find((a) => a.base64);
       if (imgAttachment && imgAttachment.base64) {
         hasVision = true;
-        visionContent.push({ type: "text", text: lastUserMsg });
-        visionContent.push({
-          type: "image_url",
-          image_url: { url: imgAttachment.base64 }
-        });
       } else {
         const fileSummaries = attachments
           .map((a: { name: string; type: string; content?: string }) => 
@@ -71,7 +66,9 @@ export async function POST(req: Request) {
       }
     }
 
-    if (!apiKey) {
+    const hasAIConfig = apiKey || process.env.GOOGLE_CLOUD_PROJECT_ID;
+
+    if (!hasAIConfig) {
       // Return a realistic, encouraging Kuya Nicolai response when running locally without LLM API keys
       let simulatedAnswer = `Kamusta! I analyzed your query: "${lastUserMsg.slice(0, 100)}...". As Kuya Nicolai, I recommend breaking this concept down step-by-step!`;
 
@@ -95,54 +92,84 @@ export async function POST(req: Request) {
       });
     }
 
-    // Call external LLM provider (Groq or OpenAI compatible endpoint)
-    const formattedMessages = messages.map((m: { role: string, content: string }, idx: number) => {
-      if (idx === messages.length - 1 && m.role === "user") {
-        return { role: "user", content: hasVision ? visionContent : enrichedQuery };
+    const { getAIClient, GEMINI_MODEL, GEMINI_TIMEOUT_MS, logAndSanitizeAIError } = await import("@/lib/ai/gemini");
+    const ai = getAIClient();
+
+    let systemInstruction = "";
+    const filteredMessages = messages.filter((m: { role: string, content: string }) => {
+      if (m.role === "system") {
+        systemInstruction = m.content;
+        return false;
       }
-      return { role: m.role, content: m.content };
+      return true;
     });
 
-    const endpoint = process.env.GROQ_API_KEY
-      ? "https://api.groq.com/openai/v1/chat/completions"
-      : "https://api.openai.com/v1/chat/completions";
-
-    let model = process.env.GROQ_API_KEY ? "llama3-8b-8192" : "gpt-3.5-turbo";
-    if (hasVision) {
-      model = process.env.GROQ_API_KEY ? "llama-3.2-11b-vision-preview" : "gpt-4o-mini";
-    }
-
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        messages: formattedMessages,
-        temperature: 0.7,
-        max_tokens: 1024,
-      }),
+    const contents = filteredMessages.map((m: { role: string, content: string }, idx: number) => {
+      let textContent = m.content;
+      const parts: Array<{ text?: string; inlineData?: { data: string; mimeType: string } }> = [];
+      
+      // Inject attachments info into the very last user message
+      if (idx === filteredMessages.length - 1 && m.role === "user") {
+        if (hasVision && attachments) {
+          const imgAttachment = attachments.find((a) => a.base64);
+          if (imgAttachment && imgAttachment.base64) {
+            const base64Data = imgAttachment.base64.includes(",") ? imgAttachment.base64.split(",")[1] : imgAttachment.base64;
+            parts.push({
+              inlineData: { data: base64Data, mimeType: imgAttachment.type }
+            });
+          }
+        } else {
+          textContent = enrichedQuery;
+        }
+      }
+      
+      if (textContent) {
+        parts.push({ text: textContent });
+      }
+      
+      return {
+        role: m.role === "assistant" ? "model" : "user",
+        parts
+      };
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      log.error({ errorText }, "LLM Provider Error");
+    try {
+      const result = await ai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents,
+        config: {
+          temperature: 0.7,
+          httpOptions: { timeout: GEMINI_TIMEOUT_MS },
+          ...(systemInstruction ? { systemInstruction } : {})
+        }
+      });
+      
+      const replyText = result.text || "No response generated.";
+
       return NextResponse.json({
         choices: [
           {
             message: {
               role: "assistant",
-              content: "I'm having a slight connection issue reaching the AI provider. Let's try again in a moment!",
+              content: replyText,
+            },
+          },
+        ],
+      });
+    } catch (err: unknown) {
+      log.error({ error: err }, "LLM Provider Error");
+      const clientMsg = await logAndSanitizeAIError("Chat Endpoint", err);
+      return NextResponse.json({
+        choices: [
+          {
+            message: {
+              role: "assistant",
+              content: clientMsg,
             },
           },
         ],
       });
     }
-
-    const data = await response.json();
-    return NextResponse.json(data);
   } catch (error) {
     log.error({ error }, "Server-side AI Error");
     return new NextResponse("Internal Server Error", { status: 500 });

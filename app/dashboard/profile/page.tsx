@@ -158,14 +158,19 @@ export default function ProfilePage() {
 
   // Load profile data
   useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+
     async function loadProfile() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        router.push("/auth/login");
+        if (!signal.aborted) router.push("/auth/login");
         return;
       }
+
+      if (signal.aborted) return;
 
       const { data, error } = await supabase
         .from("profiles")
@@ -173,7 +178,10 @@ export default function ProfilePage() {
           "id, first_name, last_name, full_name, email, phone_number, birthdate, date_of_birth, membership_number, degree_program, year_level, academic_year_joined, total_xp, current_level, avatar_url, pronouns, status_message, social_links, created_at, roles(name)",
         )
         .eq("id", user.id)
+        .abortSignal(signal)
         .maybeSingle();
+
+      if (signal.aborted) return;
 
       if (error || !data) {
         console.warn(
@@ -188,7 +196,11 @@ export default function ProfilePage() {
               "id, first_name, last_name, full_name, email, phone_number, birthdate, date_of_birth, membership_number, degree_program, year_level, academic_year_joined, total_xp, current_level, avatar_url, pronouns, status_message, social_links, created_at, roles(name)",
             )
             .eq("id", user.id)
+            .abortSignal(signal)
             .maybeSingle();
+          
+          if (signal.aborted) return;
+            
           if (healed) {
             setProfile(healed as unknown as Profile);
             setRoleName(getRoleName(healed as unknown as Profile));
@@ -240,7 +252,10 @@ export default function ProfilePage() {
         if (loadedRole === "tutor") {
           const { data: allSpecs } = await supabase
             .from("specializations")
-            .select("id, name");
+            .select("id, name")
+            .abortSignal(signal);
+          
+          if (signal.aborted) return;
           if (allSpecs) setAllSpecializations(allSpecs);
 
           const { data: tutorInfo } = await supabase
@@ -249,7 +264,10 @@ export default function ProfilePage() {
               "id, bio, hourly_rate, years_experience, is_paused, calendar_sync_enabled, auto_approve_past_learners, tutor_specializations(specializations(id, name))",
             )
             .eq("user_id", user.id)
+            .abortSignal(signal)
             .single();
+
+          if (signal.aborted) return;
 
           if (tutorInfo) {
             setTutorData(tutorInfo);
@@ -283,13 +301,21 @@ export default function ProfilePage() {
             "id, user_id, designation, position, academic_year, is_current, created_at",
           )
           .eq("user_id", user.id)
-          .order("created_at", { ascending: false });
+          .order("created_at", { ascending: false })
+          .abortSignal(signal);
+          
+        if (signal.aborted) return;
+          
         if (desigData) setDesignations(desigData as HsDesignation[]);
       }
       setLoading(false);
     }
 
     loadProfile();
+
+    return () => {
+      controller.abort();
+    };
   }, [supabase, router]);
 
   const getInitialNames = useCallback((prof: Profile) => {
@@ -631,7 +657,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto max-w-4xl py-8 space-y-6">
+      <div className="container mx-auto max-w-4xl py-8 space-y-6" data-testid="loading-skeleton">
         <Skeleton className="h-48 w-full" />
         <Skeleton className="h-64 w-full" />
       </div>

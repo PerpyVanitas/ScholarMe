@@ -1,7 +1,7 @@
 # ScholarMe — Enterprise Academic & Honor Society Management Platform
 
 [![CI Pipeline](https://github.com/PerpyVanitas/ScholarMe/actions/workflows/ci.yml/badge.svg)](https://github.com/PerpyVanitas/ScholarMe/actions)
-[![Coverage Status](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)]()
+[![Coverage Status](https://img.shields.io/badge/coverage-CI--gated-blue.svg)]()
 ScholarMe is a full-stack, enterprise-grade academic management and peer-learning platform built for honor society organizations. It serves as a unified digital infrastructure for managing tutoring operations, organizational finances, AI-powered spaced repetition learning, digital member identity, physical and digital library cataloging, real-time community engagement, and executive administration.
 
 ---
@@ -426,7 +426,7 @@ pnpm run build
 
 ### Automated Testing Suite (SSD Compliance Matrix)
 
-The project maintains strict 100% test coverage across all Secure Software Development (SSD) requirements:
+The project maintains a Security test suite covering Secure Software Development (SSD) requirements:
 
 | Security Feature | Status | Test File |
 | :--- | :---: | :--- |

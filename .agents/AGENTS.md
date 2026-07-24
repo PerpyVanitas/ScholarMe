@@ -29,3 +29,8 @@ Always review and update these documentation files before concluding your work a
 - **Proactive Monitoring:** Whenever you launch a long-running background task, you MUST use the `schedule` tool to set a one-shot timer (e.g., 5-10 minutes) as a timeout.
 - **Handling Freezes:** If the timer expires and the system wakes you up without the task completing, use the `manage_task` tool with `Action: 'status'` to check if the task is making progress or is frozen.
 - **Intervention:** If the task appears frozen (no recent log updates for a long time) or stuck in an infinite loop, notify the user, investigate the logs, and consider using `Action: 'kill'` to terminate it if appropriate.
+
+## Bug Fix Regression Testing
+
+- **Permanent Regression Coverage:** Every time you report and fix a bug, it MUST become a permanent regression test. If it is possible to create an automated test for the issue (using Vitest, Jest, Playwright, or whichever testing framework is appropriate for the domain), you must proactively create it alongside your fix.
+- **No Manual Catching:** The goal is to ensure the user never has to manually catch the same bug again. Do not finish fixing a bug without ensuring the test suite guards against its recurrence.

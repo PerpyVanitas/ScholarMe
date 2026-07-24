@@ -87,7 +87,7 @@ export function CreateFlashcardsSheet({
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
 
   const [aiPrompt, setAiPrompt] = useState("");
-  const [aiCount, setAiCount] = useState(5);
+  const [aiCount, setAiCount] = useState<number | "">(5);
   const [generating, setGenerating] = useState(false);
   const [tagging, setTagging] = useState(false);
   const [creationMethod, setCreationMethod] = useState("manual");
@@ -152,61 +152,38 @@ export function CreateFlashcardsSheet({
 
     try {
       setGenerating(true);
-      setLocalAIProgressText("Loading model... (This may take a minute)");
-      setLocalAIProgressValue(0);
+      const res = await fetch("/api/flashcards/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic: aiPrompt,
+          count: typeof aiCount === "number" ? aiCount : 5,
+        }),
+      });
 
-      const engine = await initializeEngine();
-      if (!engine) {
-        throw new Error("Failed to initialize AI engine");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to generate flashcards");
       }
 
-      setLocalAIProgressText("Generating flashcards...");
-      setLocalAIProgressValue(100);
-      const systemPrompt = `You are an expert flashcard generator. Given a topic, generate ${aiCount} flashcards. 
-Respond ONLY with a valid JSON array of objects, where each object has a "question" string and an "answer" string.
-No other text, markdown blocks, or explanations. Just the JSON array.`;
+      const { data } = await res.json();
 
-      const reply = (await (engine as unknown as { chat: { completions: { create: (opts: Record<string, unknown>) => Promise<unknown> } } }).chat.completions.create({
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `Topic: ${aiPrompt}` },
-        ],
-        response_format: { type: "json_object" },
-      })) as { choices: { message: { content?: string } }[] };
-
-      const rawContent = reply.choices[0]?.message?.content || "[]";
-      let parsedData = [];
-      try {
-        parsedData = JSON.parse(rawContent);
-      } catch (e) {
-        // Fallback if the model wrapped it in markdown
-        const match = rawContent.match(/\[[\s\S]*\]/);
-        if (match) {
-          parsedData = JSON.parse(match[0]);
-        } else {
-          throw new Error("Failed to parse JSON from Local AI");
-        }
-      }
-
-      const newContent = parsedData
+      const newContent = data
         .map((item: { question?: string; answer?: string }) => `Q: ${item.question}\nA: ${item.answer}`)
         .join("\n\n");
 
       setFormData((prev) => ({
         ...prev,
+        title: prev.title || aiPrompt || "Generated Flashcards",
         content: prev.content ? prev.content + "\n\n" + newContent : newContent,
       }));
-      toast.success("Questions generated locally successfully!");
+      toast.success("Questions generated successfully!");
       setCreationMethod("manual");
-      setLocalAIProgressText("");
-      setLocalAIProgressValue(0);
     } catch (error) {
       console.error("Error generating questions:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to generate questions",
       );
-      setLocalAIProgressText("");
-      setLocalAIProgressValue(0);
     } finally {
       setGenerating(false);
     }
@@ -509,6 +486,7 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
               <div className="flex items-center justify-between">
                 <Label>Flashcards</Label>
                 <Button
+                  type="button"
                   variant="ghost"
                   size="sm"
                   className="h-6 text-xs"
@@ -554,23 +532,31 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
                   type="number"
                   min="1"
                   max="50"
-                  value={aiCount}
-                  onChange={(e) => setAiCount(parseInt(e.target.value) || 5)}
+                  value={aiCount === "" ? "" : aiCount}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "") setAiCount("");
+                    else {
+                      const num = parseInt(val, 10);
+                      if (!isNaN(num)) setAiCount(num);
+                    }
+                  }}
                   disabled={generating}
                 />
               </div>
               <div className="flex items-center space-x-2 border rounded-md p-4 bg-muted/20">
                 <Label className="flex-1">
                   <div className="font-medium text-primary">
-                    Powered by Local AI
+                    Powered by Vertex AI
                   </div>
                   <div className="text-xs text-muted-foreground font-normal leading-tight">
-                    Generates flashcards securely and directly on your device.
+                    Generates flashcards rapidly using Google Gemini.
                   </div>
                 </Label>
               </div>
 
               <Button
+                type="button"
                 onClick={handleGenerateQuiz}
                 disabled={generating}
                 className="w-full"

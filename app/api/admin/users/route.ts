@@ -299,6 +299,10 @@ export async function DELETE(request: Request) {
       },
     });
 
+    // Delete user's resources and repositories manually to prevent floating data
+    await adminClient.from("resources").delete().eq("uploaded_by", user_id);
+    await adminClient.from("repositories").delete().eq("owner_id", user_id);
+
     // Delete profile first (cascade), then auth user
     const { error: profileError } = await adminClient
       .from("profiles")

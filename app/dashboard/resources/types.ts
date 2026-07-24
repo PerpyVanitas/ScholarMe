@@ -121,7 +121,6 @@ export interface ResourceRow {
   description: string | null;
   url: string;
   file_type: string;
-  is_public: boolean | null;
   uploaded_by: string;
   created_at: string;
   profiles?: unknown;

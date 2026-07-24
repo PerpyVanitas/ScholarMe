@@ -113,41 +113,24 @@ export async function POST(req: Request) {
 
     let answer = "";
     if (matchedDocs.length > 0) {
-      const apiKey = process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY;
-      if (apiKey) {
-        const context = matchedDocs.map((d) => `Title: ${d.title}\nCategory: ${d.category}\nContent: ${d.content}`).join("\n\n");
-        const endpoint = process.env.GROQ_API_KEY ? "https://api.groq.com/openai/v1/chat/completions" : "https://api.openai.com/v1/chat/completions";
-        const model = process.env.GROQ_API_KEY ? "llama3-8b-8192" : "gpt-3.5-turbo";
-
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
-
-          const aiRes = await fetch(endpoint, {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${apiKey}`,
-              "Content-Type": "application/json",
-            },
-            signal: controller.signal,
-            body: JSON.stringify({
-              model,
-              messages: [
-                { role: "system", content: "You are the ScholarMe Wiki Assistant. Given the following official institutional policies and SOPs, answer the user's query clearly, concisely, and beautifully using Markdown tables or lists where appropriate. Never invent information outside the context." },
-                { role: "user", content: `Context:\n${context}\n\nQuery: ${cleanQuery}` }
-              ],
-              temperature: 0.3
-            })
-          });
-          clearTimeout(timeoutId);
-
-          if (aiRes.ok) {
-            const data = await aiRes.json();
-            answer = data.choices?.[0]?.message?.content || "";
+      const { getAIClient, GEMINI_MODEL, GEMINI_TIMEOUT_MS } = await import("@/lib/ai/gemini");
+      try {
+        const ai = getAIClient();
+        const contextStr = matchedDocs.map((d) => `Title: ${d.title}\nCategory: ${d.category}\nContent: ${d.content}`).join("\n\n");
+        const prompt = `You are the ScholarMe Wiki Assistant. Given the following official institutional policies and SOPs, answer the user's query clearly, concisely, and beautifully using Markdown tables or lists where appropriate. Never invent information outside the context.\n\nContext:\n${contextStr}\n\nQuery: ${cleanQuery}`;
+        
+        const aiRes = await ai.models.generateContent({
+          model: GEMINI_MODEL,
+          contents: prompt,
+          config: {
+            temperature: 0.3,
+            httpOptions: { timeout: GEMINI_TIMEOUT_MS }
           }
-        } catch (error) {
-          console.error("LLM timeout or error in wiki synthesis:", error);
-        }
+        });
+        
+        answer = aiRes.text || "";
+      } catch (error) {
+        console.error("LLM timeout or error in wiki synthesis:", error);
       }
 
       if (!answer) {

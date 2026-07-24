@@ -57,13 +57,15 @@ export function UsersDirectory({
     };
   }, [debouncedQuery, currentUserId]);
 
-  const getInitials = (name: string) => {
+  const getInitials = (name?: string | null) => {
+    if (!name) return "U";
     return name
       .split(" ")
+      .filter(Boolean)
       .map((n) => n[0])
       .join("")
       .toUpperCase()
-      .substring(0, 2);
+      .substring(0, 2) || "U";
   };
 
   return (
@@ -113,7 +115,7 @@ export function UsersDirectory({
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <CardTitle className="truncate text-lg">
-                    {user.full_name}
+                    {user.full_name || "Unknown User"}
                   </CardTitle>
                   <p className="text-sm text-muted-foreground truncate">
                     {user.membership_classification === "learner"

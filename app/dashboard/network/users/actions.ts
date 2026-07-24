@@ -19,7 +19,6 @@ export async function searchUsers(query: string) {
       full_name, 
       avatar_url, 
       degree_program, 
-      membership_classification, 
       status_message,
       is_private,
       roles (name)
@@ -39,13 +38,22 @@ export async function searchUsers(query: string) {
     return { success: false, error: error.message };
   }
 
+  console.log("DB returned users count:", data?.length);
+
   // Filter out private profiles in memory (unless they are tutors or we change the policy later)
-  const filteredData = data.filter((profile: unknown) => {
+  const filteredData = data.filter((profile: Record<string, unknown>) => {
     // Tutors are always visible (assuming role 'tutor')
-    // @ts-expect-error: Strict unknown type check
-    const isTutor = profile.roles?.name === "tutor";
-    // @ts-expect-error: Strict unknown type check
-    return !profile.is_private || isTutor;
+    const roles = profile.roles;
+    let isTutor = false;
+    if (Array.isArray(roles)) {
+      isTutor = roles.some((r: Record<string, unknown>) => r.name === "tutor");
+    } else if (roles && typeof roles === "object") {
+      isTutor = (roles as Record<string, unknown>).name === "tutor";
+    }
+    
+    // Convert to boolean strictly
+    const isPrivate = profile.is_private === true;
+    return !isPrivate || isTutor;
   });
 
   // Fetch blocked relationships
@@ -67,6 +75,8 @@ export async function searchUsers(query: string) {
     // @ts-expect-error: Strict unknown type check
     (profile: unknown) => !blockedUserIds.has(profile.id),
   );
+
+  console.log("Filtered users count:", nonBlockedData.length);
 
   return { success: true, data: nonBlockedData };
 }

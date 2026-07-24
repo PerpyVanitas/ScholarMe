@@ -64,6 +64,7 @@ export function WebLLMChat({
 
   const [input, setInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const isGeneratingRef = useRef(false);
   const [attachment, setAttachment] = useState<File | null>(null);
   const [attachmentPreview, setAttachmentPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -115,7 +116,7 @@ export function WebLLMChat({
   };
 
   async function sendMessageContent(textToSend: string) {
-    if ((!textToSend.trim() && !attachment) || isGenerating) return;
+    if ((!textToSend.trim() && !attachment) || isGeneratingRef.current) return;
 
     const userText = textToSend.trim();
     const currentAttachment = attachment;
@@ -124,6 +125,7 @@ export function WebLLMChat({
     setInput("");
     clearAttachment();
     setIsGenerating(true);
+    isGeneratingRef.current = true;
 
     const now = new Date().toISOString();
     const attachmentsMeta = currentAttachment
@@ -262,6 +264,7 @@ export function WebLLMChat({
       toast.error("Failed to generate AI response");
     } finally {
       setIsGenerating(false);
+      isGeneratingRef.current = false;
     }
   }
 
@@ -380,7 +383,7 @@ export function WebLLMChat({
                     <div
                       className={`flex flex-col gap-1.5 max-w-[80%] rounded-xl p-4 text-xs shadow-sm ${
                         isUser
-                          ? "bg-primary text-primary-foreground"
+                          ? "bg-primary text-primary-foreground [&_.prose]:text-inherit"
                           : "bg-card border text-card-foreground"
                       }`}
                     >
@@ -428,6 +431,7 @@ export function WebLLMChat({
             size="sm"
             className="h-6 text-[11px] shrink-0 rounded-full px-2.5 hover:bg-primary/10"
             onClick={() => sendMessageContent(p.slice(2))}
+            disabled={isGenerating}
           >
             {p}
           </Button>
@@ -478,10 +482,10 @@ export function WebLLMChat({
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask Kuya Nicolai or upload study materials..."
             className="flex-1 text-xs h-9"
-            disabled={isGenerating}
+            disabled={isGenerating || (engineMode === "local" && !isReady)}
           />
 
-          <Button type="submit" size="sm" className="h-9 gap-1.5 shrink-0" disabled={isGenerating || (!input.trim() && !attachment)}>
+          <Button type="submit" size="sm" className="h-9 gap-1.5 shrink-0" disabled={isGenerating || (!input.trim() && !attachment) || (engineMode === "local" && !isReady)}>
             {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             Send
           </Button>
