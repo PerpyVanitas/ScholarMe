@@ -61,12 +61,14 @@ export function UserDesignationsDialog({
   const [savingDesignation, setSavingDesignation] = useState(false);
 
   useEffect(() => {
+    const controller = new AbortController();
     if (user && open) {
-      loadDesignations();
+      loadDesignations(controller.signal);
     }
+    return () => controller.abort();
   }, [user, open]);
 
-  async function loadDesignations() {
+  async function loadDesignations(signal?: AbortSignal) {
     if (!user) return;
     setDesignationsLoading(true);
     setDesignations([]);
@@ -76,12 +78,17 @@ export function UserDesignationsDialog({
     setDesigAcademicYear("");
     setDesigIsCurrent(true);
 
-    const res = await fetch(`/api/admin/users/designations?userId=${user.id}`);
-    if (res.ok) {
-      const data = await res.json();
-      setDesignations(data.designations || []);
+    try {
+      const res = await fetch(`/api/admin/users/designations?userId=${user.id}`, { signal });
+      if (res.ok) {
+        const data = await res.json();
+        setDesignations(data.designations || []);
+      }
+    } catch (e: unknown) {
+      if (e instanceof Error && e.name === "AbortError") return;
+    } finally {
+      setDesignationsLoading(false);
     }
-    setDesignationsLoading(false);
   }
 
   async function handleSaveDesignation() {

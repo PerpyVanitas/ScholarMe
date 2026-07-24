@@ -68,23 +68,30 @@ export function UserLogsDialog({
   const [logs, setLogs] = useState<LogEntry[]>([]);
 
   useEffect(() => {
+    const controller = new AbortController();
     if (user && open) {
-      loadLogs();
+      loadLogs(controller.signal);
     }
+    return () => controller.abort();
   }, [user, open]);
 
-  async function loadLogs() {
+  async function loadLogs(signal?: AbortSignal) {
     if (!user) return;
     setLogsLoading(true);
     setLogs([]);
-    const res = await fetch(`/api/admin/users/${user.id}/logs`);
-    if (res.ok) {
-      const data = await res.json();
-      setLogs(data.logs || []);
-    } else {
-      toast.error("Failed to load activity logs");
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}/logs`, { signal });
+      if (res.ok) {
+        const data = await res.json();
+        setLogs(data.logs || []);
+      } else {
+        toast.error("Failed to load activity logs");
+      }
+    } catch (e: unknown) {
+      if (e instanceof Error && e.name === "AbortError") return;
+    } finally {
+      setLogsLoading(false);
     }
-    setLogsLoading(false);
   }
 
   return (

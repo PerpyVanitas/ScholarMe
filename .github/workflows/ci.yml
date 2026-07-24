@@ -60,6 +60,12 @@ jobs:
             ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
       - name: Run Next.js Build
         run: pnpm run build
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-build
+          path: .next/
+          retention-days: 1
 
   # 2. Next.js Web Tests
   web-test:
@@ -98,18 +104,15 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Next.js cache
-        uses: actions/cache@v3
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
         with:
-          path: |
-            ${{ github.workspace }}/.next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
-          restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
+          name: next-build
+          path: .next/
       - name: Bundle Size Check
         run: |
-          pnpm run build
           # Basic size limit assertion logic could go here or via Next.js bundle analyzer plugin
+          echo "Using pre-built Next.js artifacts."
       - name: Lighthouse CI
         run: |
           npm install -g @lhci/cli@0.13.x
@@ -136,18 +139,14 @@ jobs:
         run: |
           npm install -g @axe-core/cli
           npx browser-driver-manager install chrome
-      - name: Next.js cache
-        uses: actions/cache@v3
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
         with:
-          path: |
-            ${{ github.workspace }}/.next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
-          restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
+          name: next-build
+          path: .next/
       - name: Build and Start Next.js Server
         run: |
           pnpm install --frozen-lockfile
-          pnpm run build
           pnpm run start &
           sleep 5
       - name: Run accessibility audit

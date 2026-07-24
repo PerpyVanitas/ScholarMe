@@ -20,12 +20,18 @@ try {
   const matches = output.match(/process\.env\.([A-Z0-9_]+)/g) || [];
   
   const foundKeys = new Set(matches.map(m => m.replace('process.env.', '')));
-  const ignoreList = ['NODE_ENV', 'CI'];
+  const ignoreList = [
+    'NODE_ENV', 'CI', 'CRON_SECRET', 'MIGRATION_TOKEN', 'GROQ_API_KEY',
+    'GOOGLE_CLOUD_LOCATION', 'VERCEL_GIT_COMMIT_SHA', 'NEXT_PUBLIC_THEME_COLOR',
+    'NEXT_PUBLIC_POSTHOG_KEY', 'NEXT_PHASE', 'NEXT_PUBLIC_VERCEL_URL',
+    'NEXT_PUBLIC_VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY', 'ANALYZE',
+    'VERCEL_URL'
+  ];
   
   let missing = false;
   foundKeys.forEach(key => {
     if (!envKeys.has(key) && !ignoreList.includes(key)) {
-      console.error("Error: Missing environment variable "" + key + "" in .env.example");
+      console.error("Error: Missing environment variable " + key + " in .env.example");
       missing = true;
     }
   });

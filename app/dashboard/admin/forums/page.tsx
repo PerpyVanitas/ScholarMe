@@ -26,14 +26,15 @@ export default function AdminForumsPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
 
-  async function loadReports() {
+  async function loadReports(signal?: AbortSignal) {
     try {
-      const response = await fetch("/api/admin/forums/reports");
+      const response = await fetch("/api/admin/forums/reports", { signal });
       const data = await response.json();
       if (response.ok && data.success) {
         setReports(data.data.reports || []);
       }
-    } catch (error) {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name === "AbortError") return;
       toast.error("Failed to load reports");
     } finally {
       setLoading(false);
@@ -41,7 +42,9 @@ export default function AdminForumsPage() {
   }
 
   useEffect(() => {
-    loadReports();
+    const controller = new AbortController();
+    loadReports(controller.signal);
+    return () => controller.abort();
   }, []);
 
   async function handleUpdateStatus(reportId: string, status: string) {

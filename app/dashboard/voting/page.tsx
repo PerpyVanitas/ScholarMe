@@ -129,8 +129,10 @@ export default function VotingPage() {
   );
 
   useEffect(() => {
-    loadPolls();
+    const controller = new AbortController();
+    loadPolls(controller.signal);
     return () => {
+      controller.abort();
       if (realtimeChannelRef.current) {
         createClient().removeChannel(realtimeChannelRef.current);
       }
@@ -171,19 +173,20 @@ export default function VotingPage() {
     };
   }, [showDetailDialog, selectedPoll?.poll.id, loadPollResults]);
 
-  async function loadPolls() {
+  async function loadPolls(signal?: AbortSignal) {
     setLoading(true);
     try {
       const [activeRes, closedRes] = await Promise.all([
-        fetch("/api/polls?status=active"),
-        fetch("/api/polls?status=closed"),
+        fetch("/api/polls?status=active", { signal }),
+        fetch("/api/polls?status=closed", { signal }),
       ]);
       const activeData = await activeRes.json();
       const closedData = await closedRes.json();
 
       if (activeData.success) setActivePolls(activeData.data || []);
       if (closedData.success) setClosedPolls(closedData.data || []);
-    } catch {
+    } catch (e: unknown) {
+      if (e instanceof Error && e.name === "AbortError") return;
       toast.error("Failed to load polls");
     } finally {
       setLoading(false);

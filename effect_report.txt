@@ -1,0 +1,103 @@
+File: app/dashboard/admin/feedback/page.tsx
+121:   useEffect(() => {
+122:     async function loadFeedback() {
+123:       try {
+124:         const response = await fetch("/api/admin/feedback");
+125:         if (!response.ok) {
+126:           throw new Error("Failed to fetch feedback");
+127:         }
+128:         const data = await response.json();
+129:         // Set default status to pending if none
+130:         const f = (data.data || []).map((item: FeedbackItem) => ({
+131:           ...item,
+132:           status: item.status || "pending"
+133:         }));
+134:         setFeedback(f);
+135:       } catch (error) {
+136:         console.error(error);
+137:         toast.error("Failed to load feedback");
+138:       } finally {
+139:         setLoading(false);
+140:       }
+141:     }
+142:     loadFeedback();
+143:   }, []);
+
+File: app/dashboard/admin/health/page.tsx
+32:   useEffect(() => {
+33:     async function loadMetrics() {
+34:       try {
+35:         const res = await fetch("/api/admin/health");
+36:         if (res.ok) {
+37:           setMetrics(await res.json());
+38:         }
+39:       } catch (e: unknown) {
+40:         console.error("Failed to load health metrics", e);
+41:         toast.error(e instanceof Error ? e.message : "An error occurred");
+42:       } finally {
+43:         setLoading(false);
+44:       }
+45:     }
+46:     loadMetrics();
+47:   }, []);
+
+File: app/dashboard/flashcards/components/create-flashcards-sheet.tsx
+112:   useEffect(() => {
+113:     async function extractTopics(resourceId: string) {
+114:       setExtractingTopics(true);
+115:       try {
+116:         const res = await fetch("/api/resources/extract-topics", {
+117:           method: "POST",
+118:           headers: { "Content-Type": "application/json" },
+119:           body: JSON.stringify({ resource_id: resourceId }),
+120:         });
+121:         const data = await res.json();
+122:         if (data.topics) {
+123:           setExtractedTopics(data.topics);
+124:           setSelectedTopics([]);
+125:         }
+126:       } catch (e) {
+127:         console.error(e);
+128:         toast.error(e instanceof Error ? e.message : "An error occurred");
+129:       } finally {
+130:         setExtractingTopics(false);
+131:       }
+132:     }
+133:     if (selectedResource) {
+134:       extractTopics(selectedResource);
+135:     } else {
+136:       setExtractedTopics([]);
+137:       setSelectedTopics([]);
+138:     }
+139:   }, [selectedResource]);
+
+File: app/dashboard/quizzes/components/create-quiz-sheet.tsx
+119:   useEffect(() => {
+120:     async function extractTopics(resourceId: string) {
+121:       setExtractingTopics(true);
+122:       try {
+123:         const res = await fetch("/api/resources/extract-topics", {
+124:           method: "POST",
+125:           headers: { "Content-Type": "application/json" },
+126:           body: JSON.stringify({ resource_id: resourceId }),
+127:         });
+128:         const data = await res.json();
+129:         if (data.topics) {
+130:           setExtractedTopics(data.topics);
+131:           setSelectedTopics([]);
+132:         }
+133:       } catch (e) {
+134:         console.error(e);
+135:         toast.error(e instanceof Error ? e.message : "An error occurred");
+136:       } finally {
+137:         setExtractingTopics(false);
+138:       }
+139:     }
+140:     if (selectedResource) {
+141:       extractTopics(selectedResource);
+142:     } else {
+143:       setExtractedTopics([]);
+144:       setSelectedTopics([]);
+145:     }
+146:   }, [selectedResource]);
+

@@ -8,10 +8,17 @@ export const registry = new OpenAPIRegistry();
 
 // Define Zod Schemas
 const HealthSchema = z.object({
-  status: z.string().openapi({ example: "ok" }),
-  timestamp: z.string().openapi({ example: "2026-07-22T12:00:00.000Z" }),
-  build: z.string().openapi({ example: "1.0.0" }),
-}).openapi("Health");
+  status: z.string(),
+  timestamp: z.string(),
+  build: z.string(),
+}).openapi({
+  refId: "Health",
+  example: {
+    status: "ok",
+    timestamp: "2026-07-22T12:00:00.000Z",
+    build: "1.0.0"
+  }
+});
 
 const UserSchema = z.object({
   id: z.string().uuid(),
@@ -22,16 +29,30 @@ const UserSchema = z.object({
 }).openapi("User");
 
 const CardLoginSchema = z.object({
-  cardId: z.string().openapi({ example: "CARD-12345" }),
-  sig: z.string().openapi({ example: "a3f5..." }),
-  pin: z.string().openapi({ example: "1234" }),
-}).openapi("CardLogin");
+  cardId: z.string(),
+  sig: z.string(),
+  pin: z.string(),
+}).openapi({
+  refId: "CardLogin",
+  example: {
+    cardId: "CARD-12345",
+    sig: "a3f5...",
+    pin: "1234"
+  }
+});
 
 const RegisterCardSchema = z.object({
   userId: z.string().uuid(),
-  cardId: z.string().openapi({ example: "CARD-12345" }),
+  cardId: z.string(),
   pin: z.string().min(4).max(4),
-}).openapi("RegisterCard");
+}).openapi({
+  refId: "RegisterCard",
+  example: {
+    userId: "123e4567-e89b-12d3-a456-426614174000",
+    cardId: "CARD-12345",
+    pin: "1234"
+  }
+});
 
 const TutorSchema = z.object({
   id: z.string().uuid(),

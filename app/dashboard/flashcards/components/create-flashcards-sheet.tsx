@@ -110,6 +110,7 @@ export function CreateFlashcardsSheet({
   };
 
   useEffect(() => {
+    const controller = new AbortController();
     async function extractTopics(resourceId: string) {
       setExtractingTopics(true);
       try {
@@ -117,13 +118,15 @@ export function CreateFlashcardsSheet({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ resource_id: resourceId }),
+          signal: controller.signal,
         });
         const data = await res.json();
         if (data.topics) {
           setExtractedTopics(data.topics);
           setSelectedTopics([]);
         }
-      } catch (e) {
+      } catch (e: unknown) {
+        if (e instanceof Error && e.name === "AbortError") return;
         console.error(e);
         toast.error(e instanceof Error ? e.message : "An error occurred");
       } finally {
@@ -136,6 +139,7 @@ export function CreateFlashcardsSheet({
       setExtractedTopics([]);
       setSelectedTopics([]);
     }
+    return () => controller.abort();
   }, [selectedResource]);
 
   const toggleTopic = (topic: string) => {

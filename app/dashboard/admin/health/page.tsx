@@ -30,13 +30,15 @@ export default function SystemHealthPage() {
   const [metrics, setMetrics] = useState<HealthMetrics | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
     async function loadMetrics() {
       try {
-        const res = await fetch("/api/admin/health");
+        const res = await fetch("/api/admin/health", { signal: controller.signal });
         if (res.ok) {
           setMetrics(await res.json());
         }
       } catch (e: unknown) {
+        if (e instanceof Error && e.name === "AbortError") return;
         console.error("Failed to load health metrics", e);
         toast.error(e instanceof Error ? e.message : "An error occurred");
       } finally {
@@ -44,6 +46,7 @@ export default function SystemHealthPage() {
       }
     }
     loadMetrics();
+    return () => controller.abort();
   }, []);
 
   const triggerReminders = async () => {

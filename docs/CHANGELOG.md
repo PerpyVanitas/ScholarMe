@@ -584,3 +584,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed incomplete Vitest mock for `generateLink` in `__tests__/security/card-login-rate-limit.test.ts`.
 - All security unit and integration tests are now passing.
 
+
+
+### 2026-07-24 - Bug Fixes & CI Performance
+
+- Fixed an issue across 8 files where etch was called inside useEffect without an AbortController. This prevents state updates on unmounted components and avoids memory leaks.
+- Implemented build caching via GitHub Actions artifacts (upload-artifact and download-artifact) in .github/workflows/ci.yml. This improves CI performance by reusing the .next/ build output for downstream jobs (Performance Audit & Accessibility Audit) instead of rebuilding the application multiple times.

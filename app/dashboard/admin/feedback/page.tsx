@@ -119,9 +119,10 @@ export default function FeedbackPage() {
   );
 
   useEffect(() => {
+    const controller = new AbortController();
     async function loadFeedback() {
       try {
-        const response = await fetch("/api/admin/feedback");
+        const response = await fetch("/api/admin/feedback", { signal: controller.signal });
         if (!response.ok) {
           throw new Error("Failed to fetch feedback");
         }
@@ -132,7 +133,8 @@ export default function FeedbackPage() {
           status: item.status || "pending"
         }));
         setFeedback(f);
-      } catch (error) {
+      } catch (error: unknown) {
+        if (error instanceof Error && error.name === "AbortError") return;
         console.error(error);
         toast.error("Failed to load feedback");
       } finally {
@@ -140,6 +142,7 @@ export default function FeedbackPage() {
       }
     }
     loadFeedback();
+    return () => controller.abort();
   }, []);
 
   async function handleDragEnd(event: DragEndEvent) {
