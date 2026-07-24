@@ -67,7 +67,7 @@ jobs:
       - name: Run ESLint
         run: pnpm run lint
       - name: Next.js cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ${{ github.workspace }}/.next/cache
