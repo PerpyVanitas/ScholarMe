@@ -607,4 +607,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 2026-07-24 - Bug Fixes & CI Performance
 
 - Fixed an issue across 8 files where etch was called inside useEffect without an AbortController. This prevents state updates on unmounted components and avoids memory leaks.
-- Implemented build caching via GitHub Actions artifacts (upload-artifact and download-artifact) in .github/workflows/ci.yml. This improves CI performance by reusing the .next/ build output for downstream jobs (Performance Audit & Accessibility Audit) instead of rebuilding the application multiple times.
+- Implemented build caching via GitHub Actions artifacts (upload-artifact and download-artifact) in .github/workflows/ci.yml. This improves CI performance by reusing the .next/ build output for downstream jobs (Performance Audit & Accessibility Audit) instead of rebuilding the application multiple times.### 2026-07-24 - Build Stability & Zod Strictness
+
+- Fixed Next.js build errors by migrating the logic inside middleware.ts into proxy.ts and deleting the redundant middleware.ts file, resolving the conflict.
+- Upgraded GitHub Actions ctions/cache from 3 to 4 in ci.yml to resolve path validation errors.
+- Fixed strict Zod typing errors in API routes (/api/v1/analytics/track, /api/v1/auth/register-card, and /api/v1/timesheets/correction).
+- Build now succeeds both locally and in CI deployment environments.
