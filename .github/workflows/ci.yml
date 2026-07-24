@@ -37,7 +37,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-          cache: 'pnpm'
       - name: Run dependency audit
         run: pnpm audit --audit-level=high --ignore GHSA-r5fr-rjxr-66jc --ignore GHSA-f88m-g3jw-g9cj --ignore GHSA-6g55-p6wh-862q --ignore GHSA-8r6m-32jq-jx6q --ignore GHSA-5c6j-r48x-rmvq
 
@@ -56,6 +55,8 @@ jobs:
         with:
           node-version: '24'
           cache: 'pnpm'
+      - name: Ensure pnpm store path exists
+        run: mkdir -p $(pnpm store path)
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Check API Schemas
@@ -100,6 +101,8 @@ jobs:
         with:
           node-version: '24'
           cache: 'pnpm'
+      - name: Ensure pnpm store path exists
+        run: mkdir -p $(pnpm store path)
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Run Tests with Coverage
@@ -120,6 +123,8 @@ jobs:
         with:
           node-version: '24'
           cache: 'pnpm'
+      - name: Ensure pnpm store path exists
+        run: mkdir -p $(pnpm store path)
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Download build artifact
@@ -153,6 +158,8 @@ jobs:
         with:
           node-version: '24'
           cache: 'pnpm'
+      - name: Ensure pnpm store path exists
+        run: mkdir -p $(pnpm store path)
       - name: Install axe-cli
         run: |
           npm install -g @axe-core/cli
