@@ -56,7 +56,7 @@ export function UserSelector() {
       setLoading(true);
       try {
         const res = await apiClient<{ success: boolean; data?: UserProfile[] }>(
-          `/api/messages/users?q=${encodeURIComponent(debouncedQuery)}`,
+          `/api/v1/messages/users?q=${encodeURIComponent(debouncedQuery)}`,
         );
         if (res.success && isMounted) {
           setUsers(res.data || []);
@@ -91,7 +91,7 @@ export function UserSelector() {
           setSelectedUser(cached);
         } else {
           const res = await apiClient<{ success: boolean; data?: UserProfile }>(
-            `/api/messages/users?userId=${encodeURIComponent(currentUserId)}`,
+            `/api/v1/messages/users?userId=${encodeURIComponent(currentUserId)}`,
           );
           if (res.success && res.data) {
             setSelectedUser(res.data);

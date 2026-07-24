@@ -73,7 +73,7 @@ export interface EarnXpResult {
  */
 export async function earnXp(action: keyof typeof XP_AWARDS, reason: string): Promise<EarnXpResult> {
   try {
-    const res = await fetch("/api/xp/earn", {
+    const res = await fetch("/api/v1/xp/earn", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action, reason }),

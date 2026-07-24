@@ -110,7 +110,7 @@ export default function VotingPage() {
         setShowDetailDialog(true);
       }
       try {
-        const res = await fetch(`/api/polls/${pollId}/results`);
+        const res = await fetch(`/api/v1/polls/${pollId}/results`);
         const data = await res.json();
         if (data.success) {
           setSelectedPoll(data.data);
@@ -177,8 +177,8 @@ export default function VotingPage() {
     setLoading(true);
     try {
       const [activeRes, closedRes] = await Promise.all([
-        fetch("/api/polls?status=active", { signal }),
-        fetch("/api/polls?status=closed", { signal }),
+        fetch("/api/v1/polls?status=active", { signal }),
+        fetch("/api/v1/polls?status=closed", { signal }),
       ]);
       const activeData = await activeRes.json();
       const closedData = await closedRes.json();
@@ -197,7 +197,7 @@ export default function VotingPage() {
     if (!selectedPoll || !selectedOption) return;
     setVoting(true);
     try {
-      const res = await fetch(`/api/polls/${selectedPoll.poll.id}/vote`, {
+      const res = await fetch(`/api/v1/polls/${selectedPoll.poll.id}/vote`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ option_id: selectedOption }),
@@ -236,7 +236,7 @@ export default function VotingPage() {
     },
   ) {
     try {
-      const res = await fetch(`/api/polls/${pollId}`, {
+      const res = await fetch(`/api/v1/polls/${pollId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates),
@@ -259,7 +259,7 @@ export default function VotingPage() {
 
   async function handleDeletePoll(pollId: string) {
     try {
-      const res = await fetch(`/api/polls/${pollId}`, { method: "DELETE" });
+      const res = await fetch(`/api/v1/polls/${pollId}`, { method: "DELETE" });
       if (res.status === 204) {
         toast.success("Poll deleted successfully!");
         loadPolls();
@@ -276,7 +276,7 @@ export default function VotingPage() {
   async function handleToggleVisibility(poll: Poll) {
     const newHidden = !poll.is_hidden;
     try {
-      const res = await fetch(`/api/polls/${poll.id}`, {
+      const res = await fetch(`/api/v1/polls/${poll.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

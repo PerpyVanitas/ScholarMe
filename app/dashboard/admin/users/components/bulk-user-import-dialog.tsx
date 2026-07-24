@@ -142,7 +142,7 @@ export function BulkUserImportDialog({
     setProgress(0);
 
     try {
-      const res = await fetch("/api/admin/users/bulk-import", {
+      const res = await fetch("/api/v1/admin/users/bulk-import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ users: parsedUsers }),

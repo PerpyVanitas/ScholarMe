@@ -66,7 +66,7 @@ function LeaderboardContent() {
       if (!user) throw new Error("Unauthorized");
 
       const res = await fetch(
-        `/api/android/gamification/leaderboard?limit=${lim}&period=${p}`,
+        `/api/v1/android/gamification/leaderboard?limit=${lim}&period=${p}`,
         { signal }
       );
       const result = await res.json();

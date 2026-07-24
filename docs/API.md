@@ -30,8 +30,8 @@
 
 Several API endpoints implement a Supabase-backed sliding-window rate limiter to prevent abuse:
 
-- **RFID Card Login (`/api/auth/card-login`)**: 10 requests / 10 minutes.
-- **Password Reset (`/api/account/password`)**: 3 requests / 15 minutes.
-- **Session Booking (`/api/sessions`)**: 10 requests / 1 minute.
-- **Messaging (`/api/messages/conversations`)**: 10 requests / 1 minute.
-- **Resource Uploads (`/api/repositories/[id]/resources`)**: 30 requests / 1 minute.
+- **RFID Card Login (`/api/v1/auth/card-login`)**: 10 requests / 10 minutes.
+- **Password Reset (`/api/v1/account/password`)**: 3 requests / 15 minutes.
+- **Session Booking (`/api/v1/sessions`)**: 10 requests / 1 minute.
+- **Messaging (`/api/v1/messages/conversations`)**: 10 requests / 1 minute.
+- **Resource Uploads (`/api/v1/repositories/[id]/resources`)**: 30 requests / 1 minute.

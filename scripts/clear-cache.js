@@ -21,7 +21,7 @@ if (existsSync(serverTs)) {
   console.log('---');
   console.log('Contains block comment:', content.includes('/*'));
   console.log('Contains PROVIDES TWO:', content.includes('PROVIDES TWO'));
-  console.log('Contains app/api/', content.includes('app/api/'));
+  console.log('Contains app/api/v1/', content.includes('app/api/v1/'));
 } else {
   console.log('server.ts DOES NOT EXIST');
 }

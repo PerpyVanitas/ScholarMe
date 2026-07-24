@@ -1,4 +1,4 @@
-﻿# Migration Rollback Runbook (P10-3)
+# Migration Rollback Runbook (P10-3)
 
 > [!WARNING]
 > Database migrations in ScholarMe run automatically on Vercel deployment (via Supabase GitHub Actions or `supabase db push`).
@@ -24,7 +24,7 @@ Supabase does NOT currently support automated `down` migrations in production vi
 
 ### Scenario B: Destructive Change (Data Loss)
 If a migration dropped a column or table containing critical data:
-1. Immediately halt application traffic (e.g., set Vercel to maintenance mode or rollback Vercel deployment to previous commit).
+1. Immediately halt application traffic (e.g., rollback Vercel deployment to previous known-good commit via **Vercel Instant Rollback**).
 2. Follow the [Database Backup & Restore Runbook](./backup-restore-runbook.md) to restore via PITR (Point-in-Time Recovery) to the minute *before* the bad migration was applied.
 3. Revert the git commit containing the bad migration so it does not re-apply.
 

@@ -66,7 +66,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           
         if (p.role_expires_at && new Date(p.role_expires_at) < new Date() && roleName !== "learner") {
           roleName = "learner";
-          fetch("/api/auth/revert-role", { method: "POST", signal }).catch((err) => {
+          fetch("/api/v1/auth/revert-role", { method: "POST", signal }).catch((err) => {
             if (err.name === 'AbortError') return;
             console.error("Role revert failed:", err);
             toast.error("Your temporary role has expired but could not be reverted automatically. Please refresh the page.");

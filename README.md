@@ -77,7 +77,7 @@ ScholarMe replaces disjointed spreadsheets, paper sign-in sheets, manual session
   - _Kiosk QR / Card ID Authentication_: Designed for physical check-in kiosks at the Peer Learning Center (PLC). Users authenticate via Card ID + PIN.
 - **HMAC-SHA256 QR Security**:
   - Digital ID card QR codes encode an HMAC-SHA256 signature payload (`{ cardId, sig }`) derived from the user's ID, PIN, and server secret key. This completely prevents plaintext PIN exposure in printed or digital QR codes.
-  - Verification API (`/api/auth/card-login`) utilizes `crypto.timingSafeEqual` to prevent timing attacks.
+  - Verification API (`/api/v1/auth/card-login`) utilizes `crypto.timingSafeEqual` to prevent timing attacks.
 - **Brute-Force & Rate-Limiting Protection**:
   - Card login endpoints are rate-limited via a Supabase-backed sliding-window rate limiter (`increment_rate_limit` RPC) allowing a maximum of 10 attempts per 10 minutes per IP/card ID.
 - **Strict Password Complexity**:
@@ -199,7 +199,7 @@ ScholarMe replaces disjointed spreadsheets, paper sign-in sheets, manual session
 
 ### 11. Automated Reminders, Cron Sweeps & Webhooks
 
-- **Serverless Cron Sweeps (`/api/admin/cron/reminders`)**:
+- **Serverless Cron Sweeps (`/api/v1/admin/cron/reminders`)**:
   - Runs automated sweeps for upcoming Event RSVPs, overdue book checkouts, and expired officer roles.
 - **Discord Webhook Integration**:
   - Dispatches automated system digests (new member signups, daily attendance summaries, cron completion status) to configured Discord channels.

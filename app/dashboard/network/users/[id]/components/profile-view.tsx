@@ -136,7 +136,7 @@ export function ProfileView({
                 <AvatarImage
                   src={
                     profile.avatar_url?.startsWith("avatars/")
-                      ? `/api/avatar?pathname=${encodeURIComponent(profile.avatar_url)}`
+                      ? `/api/v1/avatar?pathname=${encodeURIComponent(profile.avatar_url)}`
                       : profile.avatar_url || ""
                   }
                 />

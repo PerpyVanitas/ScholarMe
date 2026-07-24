@@ -86,10 +86,10 @@ function StudySetsContent() {
       setLoading(true);
       const [myQuizRes, sharedQuizRes, myFlashRes, sharedFlashRes] =
         await Promise.all([
-          fetch("/api/quizzes/my-sets", { signal }),
-          fetch("/api/quizzes/shared", { signal }),
-          fetch("/api/flashcards/my-sets", { signal }),
-          fetch("/api/flashcards/shared", { signal }),
+          fetch("/api/v1/quizzes/my-sets", { signal }),
+          fetch("/api/v1/quizzes/shared", { signal }),
+          fetch("/api/v1/flashcards/my-sets", { signal }),
+          fetch("/api/v1/flashcards/shared", { signal }),
         ]);
 
       const combined: StudySet[] = [];
@@ -144,7 +144,7 @@ function StudySetsContent() {
 
     const isFlashcard =
       setToDelete.type === "flashcard" || setToDelete.type === "mixed";
-    const endpoint = isFlashcard ? `/api/flashcards/${id}` : `/api/quizzes/${id}`;
+    const endpoint = isFlashcard ? `/api/v1/flashcards/${id}` : `/api/v1/quizzes/${id}`;
 
     const timeoutId = setTimeout(async () => {
       try {
@@ -178,8 +178,8 @@ function StudySetsContent() {
   const handleFork = async (set: StudySet) => {
     const isFlashcard = set.type === "flashcard" || set.type === "mixed";
     const endpoint = isFlashcard
-      ? `/api/flashcards/${set.id}/fork`
-      : `/api/quizzes/${set.id}/fork`;
+      ? `/api/v1/flashcards/${set.id}/fork`
+      : `/api/v1/quizzes/${set.id}/fork`;
     try {
       toast.loading("Forking set...", { id: "fork" });
       const res = await fetch(endpoint, { method: "POST" });

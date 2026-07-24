@@ -33,7 +33,7 @@ export default function SystemHealthPage() {
     const controller = new AbortController();
     async function loadMetrics() {
       try {
-        const res = await fetch("/api/admin/health", { signal: controller.signal });
+        const res = await fetch("/api/v1/admin/health", { signal: controller.signal });
         if (res.ok) {
           setMetrics(await res.json());
         }
@@ -51,7 +51,7 @@ export default function SystemHealthPage() {
 
   const triggerReminders = async () => {
     try {
-      const res = await fetch("/api/admin/cron/reminders", { method: "POST" });
+      const res = await fetch("/api/v1/admin/cron/reminders", { method: "POST" });
       const data = await res.json();
       if (res.ok) {
         toast.success(

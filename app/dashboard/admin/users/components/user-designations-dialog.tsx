@@ -79,7 +79,7 @@ export function UserDesignationsDialog({
     setDesigIsCurrent(true);
 
     try {
-      const res = await fetch(`/api/admin/users/designations?userId=${user.id}`, { signal });
+      const res = await fetch(`/api/v1/admin/users/designations?userId=${user.id}`, { signal });
       if (res.ok) {
         const data = await res.json();
         setDesignations(data.designations || []);
@@ -104,7 +104,7 @@ export function UserDesignationsDialog({
       };
 
       if (editingDesignation) {
-        const res = await fetch("/api/admin/users/designations", {
+        const res = await fetch("/api/v1/admin/users/designations", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -125,7 +125,7 @@ export function UserDesignationsDialog({
         );
         toast.success("Designation updated");
       } else {
-        const res = await fetch("/api/admin/users/designations", {
+        const res = await fetch("/api/v1/admin/users/designations", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -158,7 +158,7 @@ export function UserDesignationsDialog({
   async function handleDeleteDesignation(id: string) {
     if (!user) return;
     try {
-      const res = await fetch("/api/admin/users/designations", {
+      const res = await fetch("/api/v1/admin/users/designations", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: user.id, designation_id: id }),

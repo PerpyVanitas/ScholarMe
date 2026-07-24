@@ -50,7 +50,7 @@ export function LiquidationsTab({
     try {
       setIsExtracting(true);
       toast.info("Extracting receipt data...");
-      const res = await fetch("/api/finance/ocr", {
+      const res = await fetch("/api/v1/finance/ocr", {
         method: "POST",
         body: formData,
       });
@@ -192,7 +192,7 @@ export function LiquidationsTab({
                 <div className="flex gap-4">
                   {liq.receipt_urls && liq.receipt_urls.length > 0 && (
                     <a
-                      href={`/api/finance/attachment?path=${encodeURIComponent(liq.receipt_urls[0])}`}
+                      href={`/api/v1/finance/attachment?path=${encodeURIComponent(liq.receipt_urls[0])}`}
                       target="_blank"
                       rel="noreferrer"
                       className="text-primary text-sm flex items-center gap-1 hover:underline"

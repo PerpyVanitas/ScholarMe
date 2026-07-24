@@ -141,7 +141,7 @@ export function PettyCashTab({ canSubmit, canReview, pettyCash, vendors }: Props
                 </p>
                 {req.attachment_url && (
                   <a
-                    href={`/api/finance/attachment?path=${encodeURIComponent(req.attachment_url)}`}
+                    href={`/api/v1/finance/attachment?path=${encodeURIComponent(req.attachment_url)}`}
                     target="_blank"
                     rel="noreferrer"
                     className="text-primary text-xs flex items-center gap-1 mt-1 hover:underline"

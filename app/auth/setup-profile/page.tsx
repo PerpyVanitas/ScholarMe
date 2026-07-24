@@ -150,7 +150,7 @@ export default function SetupProfilePage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch("/api/avatar", {
+      const res = await fetch("/api/v1/avatar", {
         method: "POST",
         body: formData,
       });
@@ -164,7 +164,7 @@ export default function SetupProfilePage() {
       // Store the actual pathname in state
       setAvatarPathname(data.pathname);
       // Convert pathname to displayable URL for private Blob
-      const displayUrl = `/api/avatar?pathname=${encodeURIComponent(data.pathname)}`;
+      const displayUrl = `/api/v1/avatar?pathname=${encodeURIComponent(data.pathname)}`;
       setAvatarUrl(displayUrl);
       toast.success("Photo uploaded!");
     } catch (err) {

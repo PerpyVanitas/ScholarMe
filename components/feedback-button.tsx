@@ -30,7 +30,7 @@ export function FeedbackButton() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/feedback", {
+      const response = await fetch("/api/v1/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: feedback }),

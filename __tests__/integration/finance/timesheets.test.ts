@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { POST } from "../../../app/api/timesheets/route";
-import { GET as CRON_GET } from "../../../app/api/cron/timesheets/route";
+import { POST } from "../../../app/api/v1/timesheets/route";
+import { GET as CRON_GET } from "../../../app/api/v1/cron/timesheets/route";
 import { signOut } from "../../../features/auth/actions";
 import { NextRequest } from "next/server";
 

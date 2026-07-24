@@ -36,7 +36,7 @@ export function UserIdCardDialog({
     const newStatus = !user.is_card_issued;
     setUpdatingCard(true);
     try {
-      const res = await fetch("/api/admin/cards", {
+      const res = await fetch("/api/v1/admin/cards", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

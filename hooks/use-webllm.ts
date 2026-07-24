@@ -78,7 +78,7 @@ export function useWebLLM({
           completions: {
             create: async (request: unknown) => {
               const reqObj = request as { messages?: unknown[] };
-              const response = await fetch("/api/ai/chat", {
+              const response = await fetch("/api/v1/ai/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ messages: reqObj?.messages || [] }),
@@ -136,7 +136,7 @@ export function useWebLLM({
           completions: {
             create: async (request: unknown) => {
               const reqObj = request as { messages?: unknown[] };
-              const response = await fetch("/api/ai/chat", {
+              const response = await fetch("/api/v1/ai/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ messages: reqObj?.messages || [] }),

@@ -116,7 +116,7 @@ registry.register("Liquidation", LiquidationSchema);
 
 registry.registerPath({
   method: "get",
-  path: "/api/health",
+  path: "/api/v1/health",
   description: "Check system health and database connectivity",
   responses: {
     200: {
@@ -129,7 +129,7 @@ registry.registerPath({
 
 registry.registerPath({
   method: "post",
-  path: "/api/auth/card-login",
+  path: "/api/v1/auth/card-login",
   description: "Authenticate user via HMAC-SHA256 encrypted QR ID card scan",
   request: { body: { content: { "application/json": { schema: CardLoginSchema } } } },
   responses: {
@@ -142,7 +142,7 @@ registry.registerPath({
 
 registry.registerPath({
   method: "post",
-  path: "/api/auth/register-card",
+  path: "/api/v1/auth/register-card",
   description: "Register or link an HMAC-signed QR ID card to a user profile",
   request: { body: { content: { "application/json": { schema: RegisterCardSchema } } } },
   responses: {
@@ -153,7 +153,7 @@ registry.registerPath({
 
 registry.registerPath({
   method: "get",
-  path: "/api/tutors",
+  path: "/api/v1/tutors",
   description: "List all active available tutors",
   responses: {
     200: {
@@ -165,7 +165,7 @@ registry.registerPath({
 
 registry.registerPath({
   method: "get",
-  path: "/api/tutors/{id}",
+  path: "/api/v1/tutors/{id}",
   description: "Retrieve specific tutor",
   responses: {
     200: {
@@ -178,7 +178,7 @@ registry.registerPath({
 
 registry.registerPath({
   method: "get",
-  path: "/api/sessions",
+  path: "/api/v1/sessions",
   description: "Get all tutoring sessions for the authenticated user",
   responses: {
     200: {
@@ -191,7 +191,7 @@ registry.registerPath({
 
 registry.registerPath({
   method: "post",
-  path: "/api/sessions",
+  path: "/api/v1/sessions",
   description: "Book a new tutoring session",
   responses: {
     201: { description: "Session booked successfully" },
@@ -202,7 +202,7 @@ registry.registerPath({
 
 registry.registerPath({
   method: "put",
-  path: "/api/sessions/{id}/status",
+  path: "/api/v1/sessions/{id}/status",
   description: "Update tutoring session status",
   responses: {
     200: { description: "Status updated successfully" },
@@ -213,7 +213,7 @@ registry.registerPath({
 
 registry.registerPath({
   method: "post",
-  path: "/api/sessions/{id}/join",
+  path: "/api/v1/sessions/{id}/join",
   description: "Generate video meeting tokens",
   responses: {
     200: { description: "Meeting room details and tokens" },
@@ -223,7 +223,7 @@ registry.registerPath({
 
 registry.registerPath({
   method: "get",
-  path: "/api/finance/budget-requests",
+  path: "/api/v1/finance/budget-requests",
   description: "Retrieve organizational budget requests",
   responses: {
     200: {
@@ -236,7 +236,7 @@ registry.registerPath({
 
 registry.registerPath({
   method: "post",
-  path: "/api/finance/budget-requests",
+  path: "/api/v1/finance/budget-requests",
   description: "Submit a new organizational budget request",
   responses: {
     201: { description: "Budget request submitted" },
@@ -246,7 +246,7 @@ registry.registerPath({
 
 registry.registerPath({
   method: "get",
-  path: "/api/finance/petty-cash",
+  path: "/api/v1/finance/petty-cash",
   description: "Retrieve petty cash disbursements",
   responses: {
     200: {
@@ -258,7 +258,7 @@ registry.registerPath({
 
 registry.registerPath({
   method: "get",
-  path: "/api/finance/liquidations",
+  path: "/api/v1/finance/liquidations",
   description: "Retrieve liquidation reports",
   responses: {
     200: {

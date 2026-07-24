@@ -4,7 +4,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { z } from "zod";
 import { routeLogger } from "@/lib/logger";
 
-const log = routeLogger("/api/ai/chat");
+const log = routeLogger("/api/v1/ai/chat");
 
 // Rate limit for server-side AI endpoint
 const aiRateLimiter = rateLimit({ interval: 60 * 1000, limit: 20 }); // 20 requests per minute

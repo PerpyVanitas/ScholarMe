@@ -114,7 +114,7 @@ export function CreateFlashcardsSheet({
     async function extractTopics(resourceId: string) {
       setExtractingTopics(true);
       try {
-        const res = await fetch("/api/resources/extract-topics", {
+        const res = await fetch("/api/v1/resources/extract-topics", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ resource_id: resourceId }),
@@ -156,7 +156,7 @@ export function CreateFlashcardsSheet({
 
     try {
       setGenerating(true);
-      const res = await fetch("/api/flashcards/generate", {
+      const res = await fetch("/api/v1/flashcards/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -246,7 +246,7 @@ export function CreateFlashcardsSheet({
     if (!selectedResource) return;
     try {
       setGenerating(true);
-      const res = await fetch("/api/quizzes/generate-from-resource", {
+      const res = await fetch("/api/v1/quizzes/generate-from-resource", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -342,7 +342,7 @@ export function CreateFlashcardsSheet({
         return;
       }
 
-      const res = await fetch("/api/flashcards", {
+      const res = await fetch("/api/v1/flashcards", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

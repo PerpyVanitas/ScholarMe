@@ -80,7 +80,7 @@ export function UserLogsDialog({
     setLogsLoading(true);
     setLogs([]);
     try {
-      const res = await fetch(`/api/admin/users/${user.id}/logs`, { signal });
+      const res = await fetch(`/api/v1/admin/users/${user.id}/logs`, { signal });
       if (res.ok) {
         const data = await res.json();
         setLogs(data.logs || []);

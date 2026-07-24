@@ -71,7 +71,7 @@ export function UserEditDialog({
   async function handleEditUser() {
     if (!user) return;
     setEditLoading(true);
-    const res = await fetch("/api/admin/users", {
+    const res = await fetch("/api/v1/admin/users", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

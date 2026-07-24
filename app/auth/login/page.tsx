@@ -63,7 +63,7 @@ export default function LoginPage() {
     setCardError("");
 
     try {
-      const res = await fetch("/api/auth/card-login", {
+      const res = await fetch("/api/v1/auth/card-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(sig ? { cardId, sig } : { cardId, pin }),

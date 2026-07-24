@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { POST } from "@/app/api/webhooks/email/route";
+import { POST } from "@/app/api/v1/webhooks/email/route";
 import { NextRequest } from "next/server";
 
 // Mock Resend

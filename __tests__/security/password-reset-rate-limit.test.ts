@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { PUT } from "@/app/api/account/password/route";
+import { PUT } from "@/app/api/v1/account/password/route";
 import { NextRequest } from "next/server";
 
 const mockSignInWithPassword = vi.fn().mockResolvedValue({ error: null });

@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+- **API Versioning & Route Isolation (Phase 1/2)**:
+  - Migrated 30+ endpoints from `app/api/...` to `app/api/v1/...` to establish a clean boundary for external consumers and mobile apps without breaking backward compatibility later.
+  - Successfully patched 68+ files (import strings, constants, and path references) using automated AST/Regex refactoring scripts.
+  - Fixed strict `vitest` unit test paths and TypeScript resolution mappings in `tsconfig.json` to properly alias `@/app/api/v1/...`.
+
+- **Security & CI Infrastucture Enhancements**:
+  - Re-established `middleware.ts` to seamlessly compose `x-request-id` injection for logging correlation alongside existing Supabase session proxy rules (`proxy.ts`), correctly parsing `/api/v1/` protected API routes.
+  - Corrected `csrf-origin.test.ts` to query `/api/v1/` routes matching the new infrastructure boundary rules, bringing the Vitest suite to a 100% passing rate.
+  - Deployed `dependency-audit` gating to GitHub Actions CI (`pnpm audit`) to proactively block vulnerable CVEs from reaching the production `main` branch.
+  - Added standardization structures: `Dockerfile` and `.devcontainer/` to prevent environment drift and support one-click contributor onboarding.
+  - Rolled out `CODE_OF_CONDUCT.md`, `SECURITY.md`, and updated the `INCIDENT_RESPONSE.md` to reference Vercel Instant Rollbacks as a priority mitigation for bad deploys.
+
 - **Component Splitting & Architectural Refactoring**:
   - Extracted orchestration logic out of `app/dashboard/profile/page.tsx` into a `useProfilePage` hook and separated UI components, reducing the file from 800+ lines to ~250 lines of pure layout.
   - Split `app/auth/sign-up/page.tsx` into modular steps (`SignUpStep1`, `SignUpStep2`, `SignUpStep3`) stored in `features/auth/components/sign-up-steps.tsx` to adhere to Domain-Driven Design principles.
@@ -26,9 +38,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Vertex AI Migration**: Migrated all Gemini calls from the deprecated library to `@google/genai` (Vertex AI).
   - **Document AI OCR**: Replaced the legacy regex OCR parser with Google Cloud Document AI (`expense-parser`) for receipt scanning, with a seamless Vertex AI fallback.
   - **Input Validation**: Added an automated schema checker (`scripts/check-api-schemas.sh`) to CI and generated Zod schemas for endpoints using Gemini.
-  - **API Schema Validations**: Fixed missing Zod validation in `/api/account/password`, `/api/admin/org-structure`, and `/api/quizzes/flag` endpoints to pass strict CI checks.
+  - **API Schema Validations**: Fixed missing Zod validation in `/api/v1/account/password`, `/api/v1/admin/org-structure`, and `/api/v1/quizzes/flag` endpoints to pass strict CI checks.
   - **ESLint Zero Warnings/Errors**: Fully resolved 34 ESLint warnings and errors across 18 files. Replaced all occurrences of `any` with strict typing (`unknown`), properly escaped HTML entities in TSX files, fixed reassignment errors (`prefer-const`), and disabled a non-standard custom immutability rule falsely flagging async function hoisting.
-  - **Rate Limiting**: Extended sliding-window rate limiting to `/api/messages/conversations`, `/api/sessions`, and `/api/repositories/[id]/resources`.
+  - **Rate Limiting**: Extended sliding-window rate limiting to `/api/v1/messages/conversations`, `/api/v1/sessions`, and `/api/v1/repositories/[id]/resources`.
   - **API Test Coverage**: Closed the test gap by writing Vitest API test suites for finance, timesheets, gamification, and messaging, and enforced coverage in `ci.yml`.
   - **Repo Hygiene & Documentation**: Purged `.idea/`, `coverage/`, and `eslint_any_errors.txt` from the repo, merged `documentation/` into `docs/`, added CI OpenAPI drift checking, updated README badges, and moved Supabase secrets to GitHub Actions secrets.
 
@@ -38,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Database Indexing Migration (`20260723010000_attendance_indexes.sql`)**: Created compound performance indexes on `attendance_logs (clock_in, clock_out)` for fast PLC live desk activity calculations.
 
 - **Hybrid AI Tutor & Multimodal AI (`features/tutors/components/webllm-chat.tsx`)**:
-  - **Instant Server AI Mode**: Defaulted to instant server-side AI execution (`/api/ai/chat`) so learners can chat immediately without downloading 1GB browser weights.
+  - **Instant Server AI Mode**: Defaulted to instant server-side AI execution (`/api/v1/ai/chat`) so learners can chat immediately without downloading 1GB browser weights.
   - **Multimodal Photo & File Uploads**: Added photo and file attachment context parsing directly into Kuya Nicolai's AI chat input.
   - **Quick Prompt Pills**: Added 1-click preset prompt buttons (_"💡 Socratic Math Guidance"_, _"📝 Quiz Me on Data Structures"_, _"📷 Review My Study Notes"_).
   - **ReactMarkdown Container Wrapper**: Wrapped `<ReactMarkdown>` in a styled `div` container resolving `className` type incompatibility on ReactMarkdown options.
@@ -47,7 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Photo & Document Uploads**: Enabled full photo (JPEG, PNG, WebP) and file (PDF, TXT, DOCX) attachment uploads in Direct Messages (`/dashboard/messages`).
   - **Image Lightbox Modal (`ChatMessageBubble`)**: Integrated full-screen image lightbox preview modal upon clicking shared photos in chat bubbles.
 
-- **RAG Wiki Search AI Synthesis (`/api/wiki/search`)**:
+- **RAG Wiki Search AI Synthesis (`/api/v1/wiki/search`)**:
   - **Structured AI Answer Synthesis**: Upgraded Wiki search response to synthesize document search results into structured answers with numbered citations `[1]`, `[2]`.
 
 - **UI/UX Audit Enhancements (Priority 1 Implementation)**:
@@ -57,7 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **System Audit & Architectural Hardening (Phases 1-4)**:
   - **External URL XSS Sanitization (`lib/utils.ts`)**: Added `sanitizeExternalUrl()` helper validating `http://` and `https://` schemes across public portfolios and user settings.
-  - **Postgres SQL ILIKE Query Builder (`/api/wiki/search`)**: Upgraded RAG Wiki search from server memory filtering to direct PostgreSQL `ILIKE` query filtering.
+  - **Postgres SQL ILIKE Query Builder (`/api/v1/wiki/search`)**: Upgraded RAG Wiki search from server memory filtering to direct PostgreSQL `ILIKE` query filtering.
   - **Auto-Resolution of Direct Messages (`/dashboard/messages`)**: Added `recipientId` URL search parameter resolution to auto-open direct conversations upon requesting mentorship.
   - **Component De-bloating**: Extracted `SidebarUserFooter` component (`components/sidebar/sidebar-user-footer.tsx`) out of `app-sidebar.tsx`.
   - **Handoff Notes Reader for Members (`components/handoff-notes-reader.tsx`)**: Created view-only successor continuity dialog mounted in Team Workspace (`/dashboard/team`) so members and incoming officers can inspect historical handoff notes.
@@ -86,7 +98,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Study Groups Unit Test Suite**:
   - Created `features/study-groups/__tests__/study-groups.test.ts` with 4 passing unit tests covering capacity limits, waitlist auto-promotion, waitlist cap enforcement, and host auto-reassignment.
 - **OpenAPI 3.0 Auto-Generator & Expanded Spec**:
-  - Updated `docs/openapi.ts` to register schemas and paths for `/api/auth/*`, `/api/finance/*`, `/api/sessions/*`, and `/api/tutors/*`.
+  - Updated `docs/openapi.ts` to register schemas and paths for `/api/v1/auth/*`, `/api/v1/finance/*`, `/api/v1/sessions/*`, and `/api/v1/tutors/*`.
   - Added `"openapi"` script in `package.json` to generate `docs/openapi.json`.
 
 ### Fixed
@@ -101,7 +113,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **2-Hour Facility Presence Verification & Auto Clock-Out**:
   - **Database Migration**: Added `20260722140000_timesheets_2hr_auto_clockout.sql` adding `last_confirmed_at` column to `public.timesheets`.
-  - **API & Cron Handlers**: Updated `/api/timesheets` with `confirm_presence` action support and automatic 2-hour shift termination at `last_confirmed_at || clock_in + 2h`. Updated `/api/cron/timesheets` to sweep and close unconfirmed shifts older than 2 hours.
+  - **API & Cron Handlers**: Updated `/api/v1/timesheets` with `confirm_presence` action support and automatic 2-hour shift termination at `last_confirmed_at || clock_in + 2h`. Updated `/api/v1/cron/timesheets` to sweep and close unconfirmed shifts older than 2 hours.
   - **Interactive Presence Dialog**: Added an in-app verification dialog on the Timesheet page (`app/dashboard/timesheet/page.tsx`) triggering at 1h 50m of shift duration with a 10-minute countdown timer asking tutors if they are still at the facility.
 - **HMAC-SHA256 Encrypted QR ID Card Authentication (Option 2)**:
   - **No Plaintext PIN Exposure**: Printed and digital ID cards now generate an HMAC-SHA256 signature payload (`{ cardId, sig }`) calculated from the user's card ID, PIN, and server secret key (`lib/security/card-token.ts`), completely removing plaintext PINs from QR codes.
@@ -151,7 +163,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **R-1 & R-2 Error Leakage**: Repaired `/api/health` and all backend routes to strip raw `error.message` strings from 500 responses to clients, migrating them to `Sentry`/`pino` logs instead.
+- **R-1 & R-2 Error Leakage**: Repaired `/api/v1/health` and all backend routes to strip raw `error.message` strings from 500 responses to clients, migrating them to `Sentry`/`pino` logs instead.
 - **P6-1 Memory Leak Test**: Resolved false positive in resilience test that flagged stateless service-role clients.
 
 ## [2026-07-19] — Phase 4: Core Features Testing (Completed)
@@ -181,7 +193,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security & Testing
 
 - **Comprehensive Security Test Suite**: Implemented 10+ integration and unit tests for critical security vulnerabilities using Vitest. Verified protection against RAG Prompt Injection (P1-11), Avatar URL XSS (P1-14), Account Enumeration (P1-23), CSRF (P1-12), CORS (P1-13), and CSP (P1-22).
-- **Rate Limit Fixes**: Resolved HTTP 500 error on the `/api/auth/card-login` route by correctly mapping the rate limit exception to `SYSTEM_001_RATE_LIMITED` instead of an invalid error code.
+- **Rate Limit Fixes**: Resolved HTTP 500 error on the `/api/v1/auth/card-login` route by correctly mapping the rate limit exception to `SYSTEM_001_RATE_LIMITED` instead of an invalid error code.
 - **Session API Refactoring**: Refactored `app/dashboard/leaderboard/page.tsx` to completely remove the last usage of `getSession()`, migrating it to automatically use Next.js cookie-based authentication via same-origin fetch. The codebase is now 100% compliant with the strict `getUser()` rule.
 - **CI Test Script**: Added `test:security` script to `package.json` to enforce security regression checks in CI.
 
@@ -191,9 +203,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Authentication Resiliency**: Migrated PIN storage from plaintext to `bcryptjs` hashing. Created a database migration (`20260714153500_hash_existing_pins.sql`) that retroactively hashes all existing plaintext PINs in the `auth_cards` table using `pgcrypto`.
 - **Atomic Rate Limiting**: Fixed a dangerous concurrency race condition (read-filter-write pattern) in the rate limiter. Created a new Postgres RPC function (`increment_rate_limit`) to handle rate limit array mutations atomically at the database level, and updated `lib/rate-limit.ts` to consume it.
-- **Brute Force Protection**: Implemented a 15-minute sliding-window rate limit (5 attempts max) on the `/api/auth/card-login` endpoint, keyed by `cardId`, to prevent PIN brute-forcing.
+- **Brute Force Protection**: Implemented a 15-minute sliding-window rate limit (5 attempts max) on the `/api/v1/auth/card-login` endpoint, keyed by `cardId`, to prevent PIN brute-forcing.
 - **Authorization Boundary Enforcement**: Replaced insecure `getSession()` calls with strict `getUser()` calls across 8 critical routes (including Webhooks, Account Export, Admin Dashboards, and Leaderboard) to ensure identities are cryptographically validated by the Supabase Auth server, closing session-spoofing vectors.
-- **Open-Relay Prevention**: Locked down the `/api/webhooks/email` endpoint by enforcing strict RBAC. The endpoint now requires the authenticated user to hold an Officer or Admin role to trigger emails, mitigating potential spam and domain reputation risks.
+- **Open-Relay Prevention**: Locked down the `/api/v1/webhooks/email` endpoint by enforcing strict RBAC. The endpoint now requires the authenticated user to hold an Officer or Admin role to trigger emails, mitigating potential spam and domain reputation risks.
 
 ## [2026-07-14] — AI Tutor Optimization
 
@@ -236,7 +248,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Resign Admin Role** button in Site Settings (Settings page): Administrators can voluntarily resign their admin role, reverting to Tutor. A confirmation dialog prevents accidental clicks. Only `administrator` role users see this; super_admin cannot self-resign.
 - **DB Migration** (`20260713_org_structure.sql`): Creates `org_terms` and `org_assignments` tables with RLS policies, a `one_current_term` unique partial index, and a `trg_enforce_single_super_admin` DB trigger. Also adds `org_assignment_id` column to `profiles`.
 - **Resign Role API** (`POST /api/admin/resign-role`): Allows administrators to self-demote to tutor. Blocked for super_admin.
-- **Org Structure API** (`/api/admin/org-structure`, GET/POST/PATCH): Fetches current term and assignments, creates new terms, saves assignments with position-to-role mapping.
+- **Org Structure API** (`/api/v1/admin/org-structure`, GET/POST/PATCH): Fetches current term and assignments, creates new terms, saves assignments with position-to-role mapping.
 
 ### Changed
 
@@ -329,7 +341,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Export Flashcards**: Added `/api/quizzes/[id]/export` endpoint to export Study Sets to CSV compatible with Anki/Quizlet.
+- **Export Flashcards**: Added `/api/v1/quizzes/[id]/export` endpoint to export Study Sets to CSV compatible with Anki/Quizlet.
 - **Text-to-Speech (TTS)**: Added browser native speech synthesis buttons for flashcard questions and answers in Study mode.
 - **Typing Mode**: Added a toggle for Spelling/Typing mode where learners must type out exactly the flashcard answer.
 - **Confidence Ratings (SM2)**: Replaced standard self-grading for flashcards with Again/Hard/Good/Easy buttons for SRS.
@@ -364,9 +376,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Study Group Chat**: Real-time group messaging via `study_group_messages` with Supabase Realtime on the group detail page.
-- **Group Session Join Flow**: Learners can browse open group sessions and join via `/api/sessions/[id]/join`; sessions page shows an "Open Groups" tab.
-- **Real System Health Metrics**: `/api/admin/health` returns live row counts from key tables; health dashboard displays real data.
-- **Analytics Persistence**: `lib/analytics.ts` writes events to `analytics_logs` via `/api/analytics/track`; dashboard tracks page views.
+- **Group Session Join Flow**: Learners can browse open group sessions and join via `/api/v1/sessions/[id]/join`; sessions page shows an "Open Groups" tab.
+- **Real System Health Metrics**: `/api/v1/admin/health` returns live row counts from key tables; health dashboard displays real data.
+- **Analytics Persistence**: `lib/analytics.ts` writes events to `analytics_logs` via `/api/v1/analytics/track`; dashboard tracks page views.
 - **Peer Review Consolidation**: Tutor detail peer reviews now use `tutor_reviews`; migration backfills from legacy `tutor_peer_reviews`.
 
 ### Changed
@@ -419,7 +431,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Automated Reminders API**: Created a serverless endpoint (`/api/admin/cron/reminders`) that functions as a Cron Job to sweep for upcoming Event RSVPs and Overdue Library Books.
+- **Automated Reminders API**: Created a serverless endpoint (`/api/v1/admin/cron/reminders`) that functions as a Cron Job to sweep for upcoming Event RSVPs and Overdue Library Books.
 - **Email Notifications**: Integrated mock email capabilities (via Resend) to dispatch customized HTML emails alerting users of upcoming events and overdue checkouts.
 - **Admin Digest (Discord)**: Intercepts completion of the Cron job and posts a summary report to the Admin Discord Webhook.
 - **Manual Trigger UI**: Added a "Trigger Now" button to the System Health dashboard to allow Admins to manually run the reminder sweep.
@@ -453,7 +465,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Physical Library Catalog**: Created a new database schema and UI to search and track physical book inventory (`physical_books`).
 - **Announcement Calendar**: Added a dynamic calendar view for tracking facility events (`facility_events`), integrating `date-fns` and Shadcn's Calendar.
 - **Bulk ID Exporter**: Admin can now select multiple users and export their ScholarMe ID cards simultaneously as a single PDF using `html2canvas` and `jspdf`.
-- **Discord Webhook Integration**: Created an API route `/api/webhooks/discord` to broadcast system notifications (new users, announcements, resources) to external channels.
+- **Discord Webhook Integration**: Created an API route `/api/v1/webhooks/discord` to broadcast system notifications (new users, announcements, resources) to external channels.
 
 ### Changed
 
@@ -483,7 +495,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved the empty states on the Tutors browsing page.
 - Refactored `app/dashboard/voting/page.tsx` by extracting `CreatePollForm`, `EditPollDialog`, and `PollResultsDialog` and implemented dynamic loading.
 - Refactored `app/dashboard/admin/analytics/page.tsx` by extracting `TutorAnalyticsTab` and `SystemAnalyticsTab` into dedicated components and implemented dynamic loading to reduce bundle size.
-- Replaced wildcard `.select("*")` queries with explicit column selections in `/api/timesheets/periods`, `/api/resources/extract-topics`, `/api/quizzes/generate-from-resource`, `/api/admin/users/designations`, and `/api/admin/users/[id]/logs`.
+- Replaced wildcard `.select("*")` queries with explicit column selections in `/api/v1/timesheets/periods`, `/api/v1/resources/extract-topics`, `/api/v1/quizzes/generate-from-resource`, `/api/v1/admin/users/designations`, and `/api/v1/admin/users/[id]/logs`.
 - Resolved critical `react-hooks/set-state-in-effect` warnings in `lib/user-context.tsx` and `use-realtime-messages.ts` that were causing unwanted cascading renders and potential UI tearing.
 - Swept the codebase to fix numerous `@typescript-eslint/no-explicit-any` violations in the `apiClient` library and `admin-charts` components.
 - Fixed non-performant `<img>` tags in `chat-interface.tsx`.
@@ -507,7 +519,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Tutor Analytics System**: Introduced database extensions to track tutor metrics (sessions completed, hours tutored, response rate).
 - **Tutor Analytics Dashboard**: Added a dedicated `Tutor Analytics` page under Admin Tools featuring a tutor leaderboard and graphical performance charts.
 - **Admin Dashboard Improvements**: Added Active Tutors KPI to the primary Admin Dashboard.
-- **Super Admin Feedback System**: New `/api/feedback` endpoint to capture user reports, and a `/dashboard/admin/feedback` interface exclusively for Super Admins to review feedback.
+- **Super Admin Feedback System**: New `/api/v1/feedback` endpoint to capture user reports, and a `/dashboard/admin/feedback` interface exclusively for Super Admins to review feedback.
 - Added "User Feedback" link to the Super Admin sidebar navigation.
 
 ### Changed
@@ -556,7 +568,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Phase 13 (Reporting & Exporting):**
   - **Forum Moderation:** Implemented full forum moderation APIs and Mod Queue UI. Users can report posts via `ReportDialog`, and Admins can dismiss or take action on reports.
-  - **Exportable Reports APIs:** Added admin report APIs for semester summary (`/api/admin/reports/semester-summary`) and finance summary (`/api/admin/reports/finance-summary`).
+  - **Exportable Reports APIs:** Added admin report APIs for semester summary (`/api/v1/admin/reports/semester-summary`) and finance summary (`/api/v1/admin/reports/finance-summary`).
 
 - **Phase 14 (Scale Readiness):**
   - **Pagination:** Fixed server-side pagination for Tutor Search and Admin User Management leveraging Supabase `.range()`.

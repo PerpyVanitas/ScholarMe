@@ -112,12 +112,12 @@ export default function TimesheetPage() {
   const { data: config, isLoading: configLoading } = useSWR<{
     start_date: string | null;
     end_date: string | null;
-  }>("/api/timesheets/config", configFetcher);
+  }>("/api/v1/timesheets/config", configFetcher);
   const {
     data: entries,
     mutate,
     isLoading,
-  } = useSWR<Timesheet[]>("/api/timesheets", fetcher, {
+  } = useSWR<Timesheet[]>("/api/v1/timesheets", fetcher, {
     refreshInterval: 10000,
   });
   const [clockLoading, setClockLoading] = useState(false);
@@ -183,7 +183,7 @@ export default function TimesheetPage() {
     }
 
     try {
-      const res = await fetch("/api/timesheets", {
+      const res = await fetch("/api/v1/timesheets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, ...locationData }),
@@ -265,7 +265,7 @@ export default function TimesheetPage() {
     }
     setCorrectionLoading(true);
     try {
-      const res = await fetch("/api/timesheets/correction", {
+      const res = await fetch("/api/v1/timesheets/correction", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -41,7 +41,7 @@ describe("Utils", () => {
     });
 
     it("proxies avatars/ prefixed URLs", () => {
-      expect(getAvatarUrl("avatars/user-123.jpg")).toBe("/api/avatar?pathname=avatars%2Fuser-123.jpg");
+      expect(getAvatarUrl("avatars/user-123.jpg")).toBe("/api/v1/avatar?pathname=avatars%2Fuser-123.jpg");
     });
 
     it("returns other URLs as is", () => {

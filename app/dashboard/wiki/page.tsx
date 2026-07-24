@@ -34,7 +34,7 @@ export default function InstitutionalWikiPage() {
       setCitations([]);
       setVoted(null);
 
-      const res = await fetch("/api/wiki/search", {
+      const res = await fetch("/api/v1/wiki/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query }),

@@ -56,7 +56,7 @@ export default function DashboardView() {
 
         if (role === "administrator" || role === "super_admin") {
           try {
-            const res = await fetch("/api/admin/dashboard-stats", { signal });
+            const res = await fetch("/api/v1/admin/dashboard-stats", { signal });
             if (res.ok) {
               const stats = await res.json();
               if (signal.aborted) return;

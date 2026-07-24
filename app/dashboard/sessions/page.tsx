@@ -199,7 +199,7 @@ export default function SessionsPage() {
   ) {
     const session = sessions.find((s) => s.id === sessionId);
 
-    const res = await fetch(`/api/sessions/${sessionId}/status`, {
+    const res = await fetch(`/api/v1/sessions/${sessionId}/status`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status, ...(extraData || {}) }),
@@ -260,7 +260,7 @@ export default function SessionsPage() {
     if (!ratingSession || ratingValue === 0) return;
     setRatingLoading(true);
 
-    const res = await fetch(`/api/sessions/${ratingSession.id}/rate`, {
+    const res = await fetch(`/api/v1/sessions/${ratingSession.id}/rate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ rating: ratingValue, feedback: ratingFeedback }),
@@ -298,7 +298,7 @@ export default function SessionsPage() {
 
   async function joinGroupSession(sessionId: string) {
     setJoiningId(sessionId);
-    const res = await fetch(`/api/sessions/${sessionId}/join`, {
+    const res = await fetch(`/api/v1/sessions/${sessionId}/join`, {
       method: "POST",
     });
     const data = await res.json();

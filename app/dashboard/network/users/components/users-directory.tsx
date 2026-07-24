@@ -105,7 +105,7 @@ export function UsersDirectory({
                   <AvatarImage
                     src={
                       user.avatar_url?.startsWith("avatars/")
-                        ? `/api/avatar?pathname=${encodeURIComponent(user.avatar_url)}`
+                        ? `/api/v1/avatar?pathname=${encodeURIComponent(user.avatar_url)}`
                         : user.avatar_url || ""
                     }
                   />

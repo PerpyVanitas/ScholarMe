@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { POST } from "@/app/api/rag/search/route";
+import { POST } from "@/app/api/v1/rag/search/route";
 import { NextRequest } from "next/server";
 
 // Mock environment variables

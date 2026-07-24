@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/create-client";
 import { sendEmail } from "@/lib/email";
 import { routeLogger } from "@/lib/logger";
 
-const log = routeLogger("/api/admin/cron/reminders");
+const log = routeLogger("/api/v1/admin/cron/reminders");
 
 export async function POST(req: Request) {
   try {

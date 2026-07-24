@@ -33,7 +33,7 @@ export function getAvatarUrl(
     return avatarUrl;
   }
   if (avatarUrl.startsWith("avatars/")) {
-    return `/api/avatar?pathname=${encodeURIComponent(avatarUrl)}`;
+    return `/api/v1/avatar?pathname=${encodeURIComponent(avatarUrl)}`;
   }
   return avatarUrl;
 }

@@ -122,7 +122,7 @@ export default function FeedbackPage() {
     const controller = new AbortController();
     async function loadFeedback() {
       try {
-        const response = await fetch("/api/admin/feedback", { signal: controller.signal });
+        const response = await fetch("/api/v1/admin/feedback", { signal: controller.signal });
         if (!response.ok) {
           throw new Error("Failed to fetch feedback");
         }
@@ -164,7 +164,7 @@ export default function FeedbackPage() {
     setFeedback(prev => prev.map(f => f.id === activeId ? { ...f, status: targetStatus } : f));
 
     try {
-      const res = await fetch("/api/admin/feedback", {
+      const res = await fetch("/api/v1/admin/feedback", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ feedback_id: activeId, status: targetStatus }),

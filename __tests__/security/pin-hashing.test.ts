@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { POST } from "@/app/api/auth/register-card/route";
+import { POST } from "@/app/api/v1/auth/register-card/route";
 import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 

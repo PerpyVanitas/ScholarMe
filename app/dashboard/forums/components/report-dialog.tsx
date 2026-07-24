@@ -27,7 +27,7 @@ export function ReportDialog({ open, onOpenChange, postId }: ReportDialogProps) 
     if (!reason.trim()) return;
     setLoading(true);
     try {
-      const response = await fetch("/api/forums/reports", {
+      const response = await fetch("/api/v1/forums/reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ postId, reason }),

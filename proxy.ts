@@ -14,7 +14,7 @@ export async function proxy(request: NextRequest) {
     ? [`http://${host}`, `https://${host}`]
     : [`https://${host}`];
 
-  const isApiRoute = request.nextUrl.pathname.startsWith("/api/");
+  const isApiRoute = request.nextUrl.pathname.startsWith("/api/v1/");
   const isCorsPreflight = request.method === "OPTIONS";
 
   if (origin && !expectedOrigins.includes(origin)) {

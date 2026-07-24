@@ -77,17 +77,17 @@ export default function AdminTimesheetsPage() {
     name: string | null;
     start_date: string | null;
     end_date: string | null;
-  }>("/api/timesheets/config", configFetcher);
+  }>("/api/v1/timesheets/config", configFetcher);
   const {
     data: periods,
     mutate: mutatePeriods,
     isLoading: periodsLoading,
-  } = useSWR<PeriodDetail[]>("/api/timesheets/periods", fetcher);
+  } = useSWR<PeriodDetail[]>("/api/v1/timesheets/periods", fetcher);
   const {
     data: entries,
     mutate: mutateEntries,
     isLoading,
-  } = useSWR<Timesheet[]>("/api/admin/timesheets", fetcher, {
+  } = useSWR<Timesheet[]>("/api/v1/admin/timesheets", fetcher, {
     refreshInterval: 30000,
   });
 
@@ -100,7 +100,7 @@ export default function AdminTimesheetsPage() {
     Timesheet[]
   >(
     detailPeriod
-      ? `/api/admin/timesheets?start_date=${detailPeriod.start_date}&end_date=${detailPeriod.end_date}`
+      ? `/api/v1/admin/timesheets?start_date=${detailPeriod.start_date}&end_date=${detailPeriod.end_date}`
       : null,
     fetcher,
   );

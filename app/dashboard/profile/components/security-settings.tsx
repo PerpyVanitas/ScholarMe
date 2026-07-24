@@ -64,7 +64,7 @@ export function SecuritySettings() {
   async function handleResignAdmin() {
     setResigning(true);
     try {
-      const res = await fetch("/api/admin/resign-role", { method: "POST" });
+      const res = await fetch("/api/v1/admin/resign-role", { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to resign role");
       toast.success("Role resigned successfully", {
@@ -126,7 +126,7 @@ export function SecuritySettings() {
 
   const handleDeleteAccount = async () => {
     setDeleting(true);
-    const res = await fetch("/api/account", { method: "DELETE" });
+    const res = await fetch("/api/v1/account", { method: "DELETE" });
     if (res.ok) {
       toast.success("Account deleted successfully");
       router.push("/");
@@ -323,7 +323,7 @@ export function SecuritySettings() {
           <Button
             variant="outline"
             onClick={() => {
-              window.location.href = "/api/account/export";
+              window.location.href = "/api/v1/account/export";
             }}
           >
             <Download className="mr-2 h-4 w-4" />

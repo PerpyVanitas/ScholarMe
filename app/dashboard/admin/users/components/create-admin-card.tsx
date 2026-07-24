@@ -32,7 +32,7 @@ export function CreateAdminCard() {
 
     setCreating(true);
     try {
-      const res = await fetch("/api/admin/create-admin", {
+      const res = await fetch("/api/v1/admin/create-admin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(adminForm),

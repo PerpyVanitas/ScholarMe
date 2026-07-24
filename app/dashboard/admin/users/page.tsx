@@ -194,7 +194,7 @@ function AdminUsersContent() {
 
   async function handleQuickRoleEdit(userId: string, newRole: string) {
     try {
-      const res = await fetch("/api/admin/users", {
+      const res = await fetch("/api/v1/admin/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId, role_name: newRole }),
@@ -226,7 +226,7 @@ function AdminUsersContent() {
   async function handleImpersonate(p: Profile) {
     try {
       const loadingToastId = toast.loading("Generating impersonation link...");
-      const res = await fetch("/api/admin/impersonate", {
+      const res = await fetch("/api/v1/admin/impersonate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: p.email }),

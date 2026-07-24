@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
 
 describe("Phases 10-14: Scale, Privacy, Features", () => {
-  it("P10-1: Blue/green deployment zero-downtime mock", () => {
+  it("P10-1: [PLACEHOLDER] Blue/green deployment zero-downtime (Documented in Runbook)", () => {
+    // This is a documentation placeholder to represent the manual process described in docs/INCIDENT_RESPONSE.md
+    // We cannot currently mock Vercel infrastructure routing at this layer.
     expect(true).toBe(true);
   });
 

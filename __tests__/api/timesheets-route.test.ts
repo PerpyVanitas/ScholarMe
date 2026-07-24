@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { POST } from "@/app/api/timesheets/route";
+import { POST } from "@/app/api/v1/timesheets/route";
 
 // Mock Supabase
 vi.mock("@/lib/supabase/create-client", () => ({

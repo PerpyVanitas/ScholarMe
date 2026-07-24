@@ -1,6 +1,6 @@
 ﻿# Monitoring & Uptime (P8-4)
 
-ScholarMe uses `/api/health` as the canonical health check endpoint.
+ScholarMe uses `/api/v1/health` as the canonical health check endpoint.
 
 ## Health Check Response
 
@@ -26,7 +26,7 @@ Failure responses return a non-2xx status with `{ "status": "error", "message": 
 
 ### Option B: UptimeRobot (Free tier)
 1. Sign up at https://uptimerobot.com
-2. New monitor → HTTP(s) → URL: `/api/health`
+2. New monitor → HTTP(s) → URL: `/api/v1/health`
 3. Monitoring interval: 5 minutes (free tier limit)
 4. Alert contacts: Slack integration or email
 
@@ -34,8 +34,8 @@ Failure responses return a non-2xx status with `{ "status": "error", "message": 
 
 | Condition | Severity | Action |
 |-----------|----------|--------|
-| `/api/health` returns non-200 | P1 | Page on-call, investigate DB |
-| `/api/health` times out (>10s) | P1 | Check Vercel + Supabase status |
+| `/api/v1/health` returns non-200 | P1 | Page on-call, investigate DB |
+| `/api/v1/health` times out (>10s) | P1 | Check Vercel + Supabase status |
 | Sentry error spike >100/hr | P2 | Review new deployment |
 | Auth flow failures spike | P1 | Check Supabase Auth service |
 

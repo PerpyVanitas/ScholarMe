@@ -46,7 +46,7 @@ export function CreatePollForm({ onSuccess }: { onSuccess: () => void }) {
 
     setCreating(true);
     try {
-      const res = await fetch("/api/polls", {
+      const res = await fetch("/api/v1/polls", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -44,7 +44,7 @@ When an admin broadcasts a push notification to all 200 active officers:
 
 ### Critical Issue Found: Sequential Fan-out
 
-The **current cron job (`/api/admin/cron/reminders/route.ts`)** processes notifications in a sequential `for...of` loop with `await` inside:
+The **current cron job (`/api/v1/admin/cron/reminders/route.ts`)** processes notifications in a sequential `for...of` loop with `await` inside:
 
 ```ts
 // ❌ SLOW: Each sendEmail() is awaited before the next starts

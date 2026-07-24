@@ -280,7 +280,7 @@ export function useProfilePage() {
     setEditIsPrivate(profile.is_private || false);
     if (profile.avatar_url?.startsWith("avatars/")) {
       setEditAvatarUrl(
-        `/api/avatar?pathname=${encodeURIComponent(profile.avatar_url)}`,
+        `/api/v1/avatar?pathname=${encodeURIComponent(profile.avatar_url)}`,
       );
     } else {
       setEditAvatarUrl(profile.avatar_url || null);
@@ -379,14 +379,14 @@ export function useProfilePage() {
     try {
       const formData = new FormData();
       formData.append("file", blob, "avatar.jpg");
-      const res = await fetch("/api/avatar", {
+      const res = await fetch("/api/v1/avatar", {
         method: "POST",
         body: formData,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Upload failed");
       const apiUrl = data.pathname
-        ? `/api/avatar?pathname=${encodeURIComponent(data.pathname)}`
+        ? `/api/v1/avatar?pathname=${encodeURIComponent(data.pathname)}`
         : data.url;
       setEditAvatarUrl(apiUrl);
       if (profile) {
@@ -434,7 +434,7 @@ export function useProfilePage() {
   const handleRemoveAvatar = async () => {
     setUploadingAvatar(true);
     try {
-      const res = await fetch("/api/avatar", { method: "DELETE" });
+      const res = await fetch("/api/v1/avatar", { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Failed to remove photo");

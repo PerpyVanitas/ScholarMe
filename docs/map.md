@@ -58,7 +58,7 @@ ScholarMe is divided into several primary domains, each governed by the access c
   - **1-on-1 Sessions**: Learner selects a subject, picks an available timeslot from the tutor's schedule, and adds prep notes.
   - **Group Sessions**: Learner can specify `max_participants` (up to 5).
   - **Recurring**: Tutors can accept 4-week recurring session blocks.
-  - **Rate Limiting**: Session creation endpoints (`/api/sessions`) enforce sliding-window rate limiting to prevent spam.
+  - **Rate Limiting**: Session creation endpoints (`/api/v1/sessions`) enforce sliding-window rate limiting to prevent spam.
 - **Waitlists and Open Groups**:
   - Learners can browse "Open Groups" and join them.
   - If a group is full, learners can join a Waitlist. Auto-promotion occurs upon cancellation.
@@ -93,7 +93,7 @@ ScholarMe is divided into several primary domains, each governed by the access c
 - **Study Groups**: Users can create public or private study groups. Includes a Supabase Realtime chat interface.
 - **Forums (Discussions)**: Organization-wide discussion boards. Users can post, reply, and upvote.
   - **Moderation**: Users can report inappropriate posts. Admins have access to a Mod Queue to review, dismiss, or delete reported posts.
-- **Direct Messaging**: 1-on-1 chats with read receipts, pinned messages, threaded replies, and file attachments. Messaging API (`/api/messages/conversations`) includes sliding-window rate limiting.
+- **Direct Messaging**: 1-on-1 chats with read receipts, pinned messages, threaded replies, and file attachments. Messaging API (`/api/v1/messages/conversations`) includes sliding-window rate limiting.
 - **Networking Algorithms**:
   - **Study Buddies**: Algorithmic matching of peers in the same degree program and year.
   - **Alumni Directory**: Connect with graduated students.
@@ -163,7 +163,7 @@ ScholarMe is divided into several primary domains, each governed by the access c
   - **Weak Topic Study Suggestions**: Dynamically recommends target study sets (`WeakTopicSuggestions`) matching identified weak subjects.
 
 - **Institutional Knowledge Wiki (`/dashboard/wiki`)**:
-  - **RAG Search Engine**: Full-text and vector search (`/api/wiki/search`) across official Honor Society SOPs, governance documents, tutor manuals, and FAQs.
+  - **RAG Search Engine**: Full-text and vector search (`/api/v1/wiki/search`) across official Honor Society SOPs, governance documents, tutor manuals, and FAQs.
   - **Role-Based Document Filtering**: Limits executive-only or admin-only wiki articles to authorized user roles. Includes clickable source references.
 
 - **Mentorship Matching (`/dashboard/network/mentorship`)**:

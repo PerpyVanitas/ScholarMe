@@ -144,7 +144,7 @@ export function ResourceUploadSheet({
       toast.success("Resource uploaded!");
 
       // Trigger embedding ingestion in the background
-      fetch("/api/rag/ingest", {
+      fetch("/api/v1/rag/ingest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

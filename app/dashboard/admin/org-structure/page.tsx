@@ -174,7 +174,7 @@ export default function OrgStructurePage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/org-structure");
+      const res = await fetch("/api/v1/admin/org-structure");
       if (!res.ok) throw new Error("Failed to load org structure");
       const data = await res.json();
 
@@ -248,7 +248,7 @@ export default function OrgStructurePage() {
         });
       }
 
-      const res = await fetch("/api/admin/org-structure", {
+      const res = await fetch("/api/v1/admin/org-structure", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ term_id: term.id, assignments }),
@@ -283,7 +283,7 @@ export default function OrgStructurePage() {
     }
     setCreatingTerm(true);
     try {
-      const res = await fetch("/api/admin/org-structure", {
+      const res = await fetch("/api/v1/admin/org-structure", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

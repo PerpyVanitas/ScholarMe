@@ -33,7 +33,7 @@ export function UserDeleteDialog({
   async function handleDeleteUser() {
     if (!user) return;
     setDeleteLoading(true);
-    const res = await fetch("/api/admin/users", {
+    const res = await fetch("/api/v1/admin/users", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ user_id: user.id }),

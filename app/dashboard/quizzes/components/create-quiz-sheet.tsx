@@ -121,7 +121,7 @@ export function CreateQuizSheet({
     async function extractTopics(resourceId: string) {
       setExtractingTopics(true);
       try {
-        const res = await fetch("/api/resources/extract-topics", {
+        const res = await fetch("/api/v1/resources/extract-topics", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ resource_id: resourceId }),
@@ -174,7 +174,7 @@ export function CreateQuizSheet({
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         enabledTypes.reduce((acc, [_, conf]) => acc + conf.count, 0) || (typeof aiCount === "number" ? aiCount : 5);
 
-      const res = await fetch("/api/quizzes/generate", {
+      const res = await fetch("/api/v1/quizzes/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -240,7 +240,7 @@ export function CreateQuizSheet({
         return;
       }
 
-      const res = await fetch("/api/quizzes/generate-from-resource", {
+      const res = await fetch("/api/v1/quizzes/generate-from-resource", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -348,7 +348,7 @@ export function CreateQuizSheet({
         return;
       }
 
-      const res = await fetch("/api/quizzes/create", {
+      const res = await fetch("/api/v1/quizzes/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

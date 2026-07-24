@@ -22,7 +22,7 @@ With WebLLM implemented on the client, most AI inference (RAG, Chat) operates co
 
 ### Rate Limits
 - At 17,000 users, assuming 20% fallback, approximately 3,400 users will hit the API server-side.
-- Ensure the rate-limit per user on AI routes (`/api/rag/search`, `/api/quizzes/generate`) is strictly capped (e.g., 5 requests per minute) to prevent malicious scraping or excessive cost.
+- Ensure the rate-limit per user on AI routes (`/api/v1/rag/search`, `/api/v1/quizzes/generate`) is strictly capped (e.g., 5 requests per minute) to prevent malicious scraping or excessive cost.
 
 ### Cost Projections
 - Assuming 1M input tokens / 200k output tokens per user per month.

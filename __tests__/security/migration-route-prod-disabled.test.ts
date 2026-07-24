@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { POST } from "@/app/api/admin/migrations/execute/route";
+import { POST } from "@/app/api/v1/admin/migrations/execute/route";
 import { NextRequest } from "next/server";
 
 describe("Migration API Route", () => {

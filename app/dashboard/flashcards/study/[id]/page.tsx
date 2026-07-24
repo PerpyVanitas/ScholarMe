@@ -78,7 +78,7 @@ export default function StudyModePage({
 
   async function loadStudySet(signal?: AbortSignal) {
     try {
-      const res = await fetch(`/api/flashcards/${id}`, { signal });
+      const res = await fetch(`/api/v1/flashcards/${id}`, { signal });
       if (!res.ok) {
         throw new Error("Failed to load study set");
       }
@@ -151,7 +151,7 @@ export default function StudyModePage({
 
     // Save this to flashcard_attempts here via an API call
     try {
-      const res = await fetch("/api/flashcards/attempts", {
+      const res = await fetch("/api/v1/flashcards/attempts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ study_set_item_id: currentItem.id, rating }),

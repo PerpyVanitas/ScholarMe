@@ -165,7 +165,7 @@ export function BudgetRequestsTab({
                 </p>
                 {req.attachment_url && (
                   <a
-                    href={`/api/finance/attachment?path=${encodeURIComponent(req.attachment_url)}`}
+                    href={`/api/v1/finance/attachment?path=${encodeURIComponent(req.attachment_url)}`}
                     target="_blank"
                     rel="noreferrer"
                     className="text-primary text-sm flex items-center gap-1 mt-2 hover:underline"

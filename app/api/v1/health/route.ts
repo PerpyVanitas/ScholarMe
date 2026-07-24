@@ -11,7 +11,7 @@ export async function GET() {
 
     if (error) {
       // Log the real DB error server-side; never expose it to the client
-      Sentry.captureException(error, { tags: { route: "/api/health", check: "db_connectivity" } });
+      Sentry.captureException(error, { tags: { route: "/api/v1/health", check: "db_connectivity" } });
       console.error("[health] DB connectivity check failed:", error.message);
       return NextResponse.json(
         { status: "error", message: "Database connection failed" },

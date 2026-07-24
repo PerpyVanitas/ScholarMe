@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { POST } from "@/app/api/finance/ocr/route";
+import { POST } from "@/app/api/v1/finance/ocr/route";
 import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 

@@ -155,7 +155,7 @@ export function TutorDashboard({
 
   const checkClockStatus = useCallback(async () => {
     try {
-      const res = await fetch("/api/timesheets");
+      const res = await fetch("/api/v1/timesheets");
       if (res.ok) {
         const data = await res.json();
         const open = Array.isArray(data)
@@ -182,7 +182,7 @@ export function TutorDashboard({
     }
     setClockLoading(true);
     try {
-      const res = await fetch("/api/timesheets", {
+      const res = await fetch("/api/v1/timesheets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action }),

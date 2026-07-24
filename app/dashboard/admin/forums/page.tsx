@@ -28,7 +28,7 @@ export default function AdminForumsPage() {
 
   async function loadReports(signal?: AbortSignal) {
     try {
-      const response = await fetch("/api/admin/forums/reports", { signal });
+      const response = await fetch("/api/v1/admin/forums/reports", { signal });
       const data = await response.json();
       if (response.ok && data.success) {
         setReports(data.data.reports || []);

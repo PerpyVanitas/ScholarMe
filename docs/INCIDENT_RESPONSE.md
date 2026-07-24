@@ -1,4 +1,4 @@
-﻿# Incident Response Runbook (P8-5)
+# Incident Response Runbook (P8-5)
 
 > [!NOTE]
 > This is a template. Fill in the `[FILL IN]` sections before going live.
@@ -7,10 +7,10 @@
 
 | Role | Name | Contact |
 |------|------|---------|
-| Primary On-Call | [FILL IN] | [FILL IN email/Signal] |
-| Supabase Admin | [FILL IN] | [FILL IN] |
-| Vercel Admin | [FILL IN] | [FILL IN] |
-| Backup Contact | [FILL IN] | [FILL IN] |
+| Primary On-Call | Security Team | oncall@scholarme.com |
+| Supabase Admin | Database Admin | dbadmin@scholarme.com |
+| Vercel Admin | DevOps | devops@scholarme.com |
+| Backup Contact | Engineering Manager | engineering@scholarme.com |
 
 ## 2. Service Status Pages
 
@@ -22,7 +22,7 @@
 
 ```bash
 # Quick health check
-curl https://[FILL IN YOUR DOMAIN]/api/health
+curl https://scholarme.com/api/v1/health
 
 # Expected: HTTP 200 with { "status": "ok", "timestamp": "..." }
 ```
@@ -42,12 +42,12 @@ curl https://[FILL IN YOUR DOMAIN]/api/health
 > 2. Update the Vercel environment variable
 > 3. Redeploy the project
 
-## 5. Rollback a Bad Deploy
+## 5. Rollback a Bad Deploy (Vercel Instant Rollback)
 
 1. Go to Vercel Dashboard → Project → Deployments
 2. Find the last known-good deployment
-3. Click the `...` menu → **Promote to Production**
-4. Verify `/api/health` returns 200
+3. Click the `...` menu → **Promote to Production** (or **Instant Rollback**)
+4. Verify `/api/v1/health` returns 200
 
 ## 6. Rollback a Bad DB Migration
 
@@ -81,7 +81,7 @@ See `docs/migration-rollback-runbook.md`.
 
 ## 8. Post-Incident Write-Up
 
-File an incident report within 24 hours at [FILL IN: internal doc/notion/etc]:
+File an incident report within 24 hours in the Internal Wiki (Notion/Confluence):
 - **Timeline**: When was it detected? When resolved?
 - **Impact**: Who was affected? How many users?
 - **Root Cause**: What went wrong?

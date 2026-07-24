@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 
 describe("CSRF / Origin Validation", () => {
   it("P1-12: State-mutating POST without correct Origin/Referer header is rejected", async () => {
-    const req = new NextRequest("http://localhost/api/account/password", {
+    const req = new NextRequest("http://localhost/api/v1/account/password", {
       method: "POST",
       headers: {
         // No origin
@@ -21,7 +21,7 @@ describe("CSRF / Origin Validation", () => {
   it("Accepts POST with matching Origin", async () => {
     // @ts-expect-error: Strict unknown type check
     process.env.NODE_ENV = "development";
-    const req = new NextRequest("http://localhost/api/account/password", {
+    const req = new NextRequest("http://localhost/api/v1/account/password", {
       method: "POST",
       headers: {
         origin: "http://localhost",

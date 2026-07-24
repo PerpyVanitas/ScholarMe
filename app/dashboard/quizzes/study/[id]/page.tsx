@@ -98,7 +98,7 @@ export default function StudyModePage({
 
   async function loadStudySet(signal?: AbortSignal) {
     try {
-      const res = await fetch(`/api/quizzes/${id}`, { signal });
+      const res = await fetch(`/api/v1/quizzes/${id}`, { signal });
       if (!res.ok) {
         throw new Error("Failed to load study set");
       }
@@ -232,7 +232,7 @@ export default function StudyModePage({
     if (!reason) return;
 
     try {
-      const res = await fetch("/api/quizzes/flag", {
+      const res = await fetch("/api/v1/quizzes/flag", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ study_set_item_id: currentItem.id, reason }),
@@ -252,7 +252,7 @@ export default function StudyModePage({
     const timeSpent = Math.floor((Date.now() - startTime) / 1000);
 
     try {
-      await fetch("/api/quizzes/attempt", {
+      await fetch("/api/v1/quizzes/attempt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -267,7 +267,7 @@ export default function StudyModePage({
       });
 
       // Earn XP for finishing a quiz
-      await fetch("/api/gamification/xp", {
+      await fetch("/api/v1/gamification/xp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -378,7 +378,7 @@ export default function StudyModePage({
             {studySet.title}
             <Button variant="outline" size="sm" asChild>
               <a
-                href={`/api/quizzes/${id}/export`}
+                href={`/api/v1/quizzes/${id}/export`}
                 target="_blank"
                 rel="noreferrer"
                 title="Export to Quizlet/Anki CSV"

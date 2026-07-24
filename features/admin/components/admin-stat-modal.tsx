@@ -199,7 +199,7 @@ export function AdminStatModal({
 }) {
   const config = STAT_CONFIG[type];
   const { data, isLoading } = useSWR(
-    open ? `/api/admin/stats/${type}` : null,
+    open ? `/api/v1/admin/stats/${type}` : null,
     fetcher,
   );
 

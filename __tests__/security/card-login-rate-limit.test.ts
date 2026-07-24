@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { POST } from "../../app/api/auth/card-login/route";
+import { POST } from "../../app/api/v1/auth/card-login/route";
 
 // Mock rate limiter
 vi.mock("@/lib/rate-limit", () => ({

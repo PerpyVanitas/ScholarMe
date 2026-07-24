@@ -189,8 +189,8 @@ export default function AdminAnalyticsPage() {
     setNoSemester(false);
     try {
       const [resAdv, resGen] = await Promise.all([
-        fetch("/api/admin/advanced-analytics"),
-        fetch("/api/admin/general-analytics"),
+        fetch("/api/v1/admin/advanced-analytics"),
+        fetch("/api/v1/admin/general-analytics"),
       ]);
       const jsonAdv = await resAdv.json();
       const jsonGen = await resGen.json();
@@ -238,7 +238,7 @@ export default function AdminAnalyticsPage() {
     setHofLoading(true);
     try {
       const res = await fetch(
-        `/api/admin/hall-of-fame?start_date=${hofStartDate}&end_date=${hofEndDate}`,
+        `/api/v1/admin/hall-of-fame?start_date=${hofStartDate}&end_date=${hofEndDate}`,
       );
       const json = await res.json();
       if (json.success) {
@@ -272,7 +272,7 @@ export default function AdminAnalyticsPage() {
     e.preventDefault();
     setConfiguring(true);
     try {
-      const res = await fetch("/api/admin/semester-config", {
+      const res = await fetch("/api/v1/admin/semester-config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(semesterForm),

@@ -172,7 +172,7 @@ export default function TutorDetailPage({
     }
     setBookingLoading(true);
 
-    const res = await fetch("/api/sessions", {
+    const res = await fetch("/api/v1/sessions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
