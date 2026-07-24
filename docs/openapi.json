@@ -3,7 +3,7 @@
   "info": {
     "version": "1.0.0",
     "title": "ScholarMe API Specification",
-    "description": "Authoritative OpenAPI 3.0 specification for ScholarMe core API route groups."
+    "description": "Authoritative OpenAPI 3.0 specification generated from Zod schemas."
   },
   "servers": [
     {
@@ -11,11 +11,318 @@
     }
   ],
   "components": {
-    "schemas": {},
+    "schemas": {
+      "Health": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          },
+          "build": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "timestamp",
+          "build"
+        ],
+        "example": {
+          "status": "ok",
+          "timestamp": "2026-07-22T12:00:00.000Z",
+          "build": "1.0.0"
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "full_name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "role": {
+            "type": "string"
+          },
+          "avatar_url": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": [
+          "id",
+          "full_name",
+          "email",
+          "role"
+        ]
+      },
+      "CardLogin": {
+        "type": "object",
+        "properties": {
+          "cardId": {
+            "type": "string"
+          },
+          "sig": {
+            "type": "string"
+          },
+          "pin": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "cardId",
+          "sig",
+          "pin"
+        ],
+        "example": {
+          "cardId": "CARD-12345",
+          "sig": "a3f5...",
+          "pin": "1234"
+        }
+      },
+      "RegisterCard": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "cardId": {
+            "type": "string"
+          },
+          "pin": {
+            "type": "string",
+            "minLength": 4,
+            "maxLength": 4
+          }
+        },
+        "required": [
+          "userId",
+          "cardId",
+          "pin"
+        ],
+        "example": {
+          "userId": "123e4567-e89b-12d3-a456-426614174000",
+          "cardId": "CARD-12345",
+          "pin": "1234"
+        }
+      },
+      "Tutor": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rating": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "total_ratings": {
+            "type": "integer"
+          },
+          "is_available": {
+            "type": "boolean"
+          },
+          "hourly_rate": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "rating",
+          "total_ratings",
+          "is_available",
+          "hourly_rate"
+        ]
+      },
+      "Session": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tutor_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "learner_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "completed",
+              "cancelled",
+              "no_show"
+            ]
+          },
+          "scheduled_date": {
+            "type": "string"
+          },
+          "start_time": {
+            "type": "string"
+          },
+          "end_time": {
+            "type": "string"
+          },
+          "meeting_link": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": [
+          "id",
+          "tutor_id",
+          "learner_id",
+          "subject",
+          "status",
+          "scheduled_date",
+          "start_time",
+          "end_time"
+        ]
+      },
+      "BudgetRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "minimum": 0
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "finance_approved",
+              "president_approved",
+              "rejected",
+              "disbursed"
+            ]
+          },
+          "submitted_by": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "amount",
+          "purpose",
+          "status",
+          "submitted_by"
+        ]
+      },
+      "PettyCash": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amount": {
+            "type": "number",
+            "minimum": 0
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "custodian_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "receipt_url": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": [
+          "id",
+          "amount",
+          "purpose",
+          "custodian_id"
+        ]
+      },
+      "Liquidation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "budget_request_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "total_spent": {
+            "type": "number",
+            "minimum": 0
+          },
+          "receipt_urls": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "approved",
+              "rejected"
+            ]
+          },
+          "is_late": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "budget_request_id",
+          "total_spent",
+          "receipt_urls",
+          "status",
+          "is_late"
+        ]
+      }
+    },
     "parameters": {}
   },
   "paths": {
-    "/api/health": {
+    "/api/v1/health": {
       "get": {
         "description": "Check system health and database connectivity",
         "responses": {
@@ -24,21 +331,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "string",
-                      "example": "ok"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "example": "2026-07-22T12:00:00.000Z"
-                    },
-                    "build": {
-                      "type": "string",
-                      "example": "1.0.0"
-                    }
-                  }
+                  "$ref": "#/components/schemas/Health"
                 }
               }
             }
@@ -49,28 +342,14 @@
         }
       }
     },
-    "/api/auth/card-login": {
+    "/api/v1/auth/card-login": {
       "post": {
         "description": "Authenticate user via HMAC-SHA256 encrypted QR ID card scan",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "cardId": {
-                    "type": "string",
-                    "example": "CARD-12345"
-                  },
-                  "sig": {
-                    "type": "string",
-                    "example": "a3f5..."
-                  },
-                  "pin": {
-                    "type": "string",
-                    "example": "1234"
-                  }
-                }
+                "$ref": "#/components/schemas/CardLogin"
               }
             }
           }
@@ -91,29 +370,14 @@
         }
       }
     },
-    "/api/auth/register-card": {
+    "/api/v1/auth/register-card": {
       "post": {
-        "description": "Register or link an HMAC-signed QR ID card to a user profile (Admin/Officer only)",
+        "description": "Register or link an HMAC-signed QR ID card to a user profile",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "userId": {
-                    "type": "string",
-                    "format": "uuid"
-                  },
-                  "cardId": {
-                    "type": "string",
-                    "example": "CARD-12345"
-                  },
-                  "pin": {
-                    "type": "string",
-                    "minLength": 4,
-                    "maxLength": 4
-                  }
-                }
+                "$ref": "#/components/schemas/RegisterCard"
               }
             }
           }
@@ -123,14 +387,14 @@
             "description": "Card successfully linked to profile"
           },
           "403": {
-            "description": "Forbidden: Officer or Admin privileges required"
+            "description": "Forbidden"
           }
         }
       }
     },
-    "/api/tutors": {
+    "/api/v1/tutors": {
       "get": {
-        "description": "List all active available tutors with profile metadata",
+        "description": "List all active available tutors",
         "responses": {
           "200": {
             "description": "Array of available tutors",
@@ -139,31 +403,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "user_id": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "rating": {
-                        "type": "number",
-                        "minimum": 0,
-                        "maximum": 5
-                      },
-                      "total_ratings": {
-                        "type": "integer"
-                      },
-                      "is_available": {
-                        "type": "boolean"
-                      },
-                      "hourly_rate": {
-                        "type": "number"
-                      }
-                    }
+                    "$ref": "#/components/schemas/Tutor"
                   }
                 }
               }
@@ -172,40 +412,16 @@
         }
       }
     },
-    "/api/tutors/{id}": {
+    "/api/v1/tutors/{id}": {
       "get": {
-        "description": "Retrieve detailed profile, ratings, and availability for a specific tutor",
+        "description": "Retrieve specific tutor",
         "responses": {
           "200": {
             "description": "Tutor details object",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "user_id": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "rating": {
-                      "type": "number",
-                      "minimum": 0,
-                      "maximum": 5
-                    },
-                    "total_ratings": {
-                      "type": "integer"
-                    },
-                    "is_available": {
-                      "type": "boolean"
-                    },
-                    "hourly_rate": {
-                      "type": "number"
-                    }
-                  }
+                  "$ref": "#/components/schemas/Tutor"
                 }
               }
             }
@@ -216,7 +432,7 @@
         }
       }
     },
-    "/api/sessions": {
+    "/api/v1/sessions": {
       "get": {
         "description": "Get all tutoring sessions for the authenticated user",
         "responses": {
@@ -227,48 +443,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "tutor_id": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "learner_id": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "subject": {
-                        "type": "string"
-                      },
-                      "status": {
-                        "type": "string",
-                        "enum": [
-                          "pending",
-                          "confirmed",
-                          "completed",
-                          "cancelled",
-                          "no_show"
-                        ]
-                      },
-                      "scheduled_date": {
-                        "type": "string",
-                        "format": "date"
-                      },
-                      "start_time": {
-                        "type": "string"
-                      },
-                      "end_time": {
-                        "type": "string"
-                      },
-                      "meeting_link": {
-                        "type": "string",
-                        "format": "uri"
-                      }
-                    }
+                    "$ref": "#/components/schemas/Session"
                   }
                 }
               }
@@ -294,9 +469,9 @@
         }
       }
     },
-    "/api/sessions/{id}/status": {
+    "/api/v1/sessions/{id}/status": {
       "put": {
-        "description": "Update tutoring session status (confirm, complete, cancel, no_show)",
+        "description": "Update tutoring session status",
         "responses": {
           "200": {
             "description": "Status updated successfully"
@@ -310,9 +485,9 @@
         }
       }
     },
-    "/api/sessions/{id}/join": {
+    "/api/v1/sessions/{id}/join": {
       "post": {
-        "description": "Generate video meeting tokens and track learner/tutor attendance",
+        "description": "Generate video meeting tokens",
         "responses": {
           "200": {
             "description": "Meeting room details and tokens"
@@ -323,9 +498,9 @@
         }
       }
     },
-    "/api/finance/budget-requests": {
+    "/api/v1/finance/budget-requests": {
       "get": {
-        "description": "Retrieve organizational budget requests (Finance review roles)",
+        "description": "Retrieve organizational budget requests",
         "responses": {
           "200": {
             "description": "Array of budget requests",
@@ -334,37 +509,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "title": {
-                        "type": "string"
-                      },
-                      "amount": {
-                        "type": "number",
-                        "minimum": 0
-                      },
-                      "purpose": {
-                        "type": "string"
-                      },
-                      "status": {
-                        "type": "string",
-                        "enum": [
-                          "pending",
-                          "finance_approved",
-                          "president_approved",
-                          "rejected",
-                          "disbursed"
-                        ]
-                      },
-                      "submitted_by": {
-                        "type": "string",
-                        "format": "uuid"
-                      }
-                    }
+                    "$ref": "#/components/schemas/BudgetRequest"
                   }
                 }
               }
@@ -387,9 +532,9 @@
         }
       }
     },
-    "/api/finance/petty-cash": {
+    "/api/v1/finance/petty-cash": {
       "get": {
-        "description": "Retrieve petty cash disbursements and log history",
+        "description": "Retrieve petty cash disbursements",
         "responses": {
           "200": {
             "description": "Array of petty cash entries",
@@ -398,28 +543,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "amount": {
-                        "type": "number",
-                        "minimum": 0
-                      },
-                      "purpose": {
-                        "type": "string"
-                      },
-                      "custodian_id": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "receipt_url": {
-                        "type": "string",
-                        "format": "uri"
-                      }
-                    }
+                    "$ref": "#/components/schemas/PettyCash"
                   }
                 }
               }
@@ -428,9 +552,9 @@
         }
       }
     },
-    "/api/finance/liquidations": {
+    "/api/v1/finance/liquidations": {
       "get": {
-        "description": "Retrieve liquidation reports and receipt attachments",
+        "description": "Retrieve liquidation reports",
         "responses": {
           "200": {
             "description": "Array of liquidations",
@@ -439,39 +563,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "budget_request_id": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "total_spent": {
-                        "type": "number",
-                        "minimum": 0
-                      },
-                      "receipt_urls": {
-                        "type": "array",
-                        "items": {
-                          "type": "string",
-                          "format": "uri"
-                        }
-                      },
-                      "status": {
-                        "type": "string",
-                        "enum": [
-                          "pending",
-                          "approved",
-                          "rejected"
-                        ]
-                      },
-                      "is_late": {
-                        "type": "boolean"
-                      }
-                    }
+                    "$ref": "#/components/schemas/Liquidation"
                   }
                 }
               }
