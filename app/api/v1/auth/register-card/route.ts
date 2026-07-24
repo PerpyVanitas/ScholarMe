@@ -7,15 +7,9 @@ import { isAdminRole } from "@/lib/utils/roles";
 import bcrypt from "bcryptjs";
 
 const registerCardSchema = z.object({
-  card_id: z.string({
-    required_error: "Card ID is required",
-    invalid_type_error: "Card ID must be a string",
-  }),
+  card_id: z.string().min(1, "Card ID is required"),
   pin: z
-    .string({
-      required_error: "PIN is required",
-      invalid_type_error: "PIN must be a string",
-    })
+    .string()
     .min(4, "PIN must be at least 4 digits"),
   assigned_to_user_id: z.string().optional().nullable(),
 });

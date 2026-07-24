@@ -3,6 +3,10 @@ import type { NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 export async function proxy(request: NextRequest) {
+  // 0. Request ID Generation
+  const requestId = request.headers.get("x-request-id") ?? crypto.randomUUID();
+  request.headers.set("x-request-id", requestId);
+
   // 1. CORS Enforcement
   const origin = request.headers.get("origin") ?? "";
   const host = request.headers.get("host") ?? "";
@@ -90,6 +94,7 @@ export async function proxy(request: NextRequest) {
   response.headers.set("Content-Security-Policy", cspHeader);
   response.headers.set("x-nonce", nonce);
   response.headers.set("x-pathname", request.nextUrl.pathname);
+  response.headers.set("x-request-id", requestId);
 
   return response;
 }

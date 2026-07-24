@@ -8,7 +8,7 @@ export async function POST(request: Request) {
 
     const BodySchema = z.object({
       event: z.string().optional(),
-      properties: z.record(z.unknown()).optional(),
+      properties: z.record(z.string(), z.unknown()).optional(),
       page: z.string().optional(),
     });
 
