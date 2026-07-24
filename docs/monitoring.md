@@ -1,4 +1,4 @@
-﻿# Monitoring & Uptime (P8-4)
+# Monitoring & Uptime (P8-4)
 
 ScholarMe uses `/api/v1/health` as the canonical health check endpoint.
 
@@ -18,7 +18,7 @@ Failure responses return a non-2xx status with `{ "status": "error", "message": 
 
 ### Option A: BetterStack (Recommended)
 1. Sign up at https://betterstack.com/uptime
-2. Create a new monitor → URL: `https://scholarme.vercel.app/api/health`
+2. Create a new monitor → URL: `https://scholarme.vercel.app/api/v1/health`
 3. Check interval: **1 minute**
 4. Assertion: Response status code = 200 AND body contains `"status":"ok"`
 5. Alert: Slack/Discord webhook for the dev channel
@@ -42,7 +42,7 @@ Failure responses return a non-2xx status with `{ "status": "error", "message": 
 ## Manual Health Check
 
 ```bash
-curl https://scholarme.vercel.app/api/health
+curl https://scholarme.vercel.app/api/v1/health
 ```
 
 Expected response: HTTP 200 with `"status":"ok"`.
