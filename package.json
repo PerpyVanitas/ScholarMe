@@ -25,6 +25,19 @@
     ]
   },
   "pnpm": {
+    "onlyBuiltDependencies": [
+      "@scarf/scarf",
+      "@tree-sitter-grammars/tree-sitter-yaml",
+      "core-js-pure",
+      "tree-sitter-json",
+      "tree-sitter",
+      "@firebase/util",
+      "@sentry/cli",
+      "core-js",
+      "protobufjs",
+      "sharp",
+      "unrs-resolver"
+    ],
     "overrides": {
       "lodash-es": "4.17.24",
       "sharp": "0.35.0",
