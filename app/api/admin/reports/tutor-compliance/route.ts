@@ -64,8 +64,7 @@ export async function GET(request: NextRequest) {
     const { data: timesheets } = await tsQuery;
     const safeTs = timesheets ?? [];
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const tutorMap = new Map<string, any>();
+        const tutorMap = new Map<string, { tutor_id: string; full_name: string; avatar_url: string | null; total_minutes: number; sessions_count: number; }>();
     for (const ts of safeTs) {
       const tid = ts.tutor_id;
       const existing = tutorMap.get(tid);
@@ -77,8 +76,7 @@ export async function GET(request: NextRequest) {
         existing.total_minutes += mins;
         existing.sessions_count += 1;
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const profile = ((ts.tutors as unknown as Record<string, unknown>)?.profiles as Record<string, unknown> | undefined);
+                const profile = ((ts.tutors as unknown as Record<string, unknown>)?.profiles as Record<string, unknown> | undefined);
         tutorMap.set(tid, {
           tutor_id: tid,
           full_name: profile?.full_name ?? "Unknown",

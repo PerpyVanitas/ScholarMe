@@ -3,9 +3,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
+export interface StructuredFlashcardItem {
+  front?: string;
+  question?: string;
+  back?: string;
+  answer?: string;
+}
+
 interface FlashcardItemsEditorProps {
-  structuredItems: Record<string, unknown>[];
-  setStructuredItems: (items: Record<string, unknown>[]) => void;
+  structuredItems: StructuredFlashcardItem[];
+  setStructuredItems: (items: StructuredFlashcardItem[]) => void;
 }
 
 export function FlashcardItemsEditor({
@@ -46,7 +53,6 @@ export function FlashcardItemsEditor({
                   Front (Question)
                 </Label>
                 <Textarea
-                  // @ts-expect-error: Strict unknown type check
                   value={item.question || item.front || ""}
                   onChange={(e) => {
                     const newItems = [...structuredItems];
@@ -66,7 +72,6 @@ export function FlashcardItemsEditor({
                   Back (Answer)
                 </Label>
                 <Input
-                  // @ts-expect-error: Strict unknown type check
                   value={item.answer || item.back || ""}
                   onChange={(e) => {
                     const newItems = [...structuredItems];

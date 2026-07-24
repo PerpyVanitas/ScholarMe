@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { logger } from "./logger";
 
 // Initialize with a dummy key if not present in env
 const resend = new Resend(process.env.RESEND_API_KEY || "re_dummy_key");
@@ -13,10 +14,7 @@ export const sendEmail = async ({
   html: string;
 }) => {
   if (!process.env.RESEND_API_KEY) {
-    console.log("Skipping actual email send (No RESEND_API_KEY provided):", {
-      to,
-      subject,
-    });
+    logger.info({ to, subject }, "Skipping actual email send (No RESEND_API_KEY provided)");
     return { success: true, dummy: true };
   }
 
@@ -30,7 +28,7 @@ export const sendEmail = async ({
 
     return { success: true, data };
   } catch (error) {
-    console.error("Email send failed:", error);
+    logger.error({ error, to, subject }, "Email send failed");
     return { success: false, error };
   }
 };

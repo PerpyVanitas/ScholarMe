@@ -29,13 +29,15 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { useWebLLM } from "@/hooks/use-webllm";
 import { QuizConfigPanel } from "./quiz-config-panel";
-import { QuizItemsEditor } from "./quiz-items-editor";
+import { QuizItemsEditor, type StructuredQuizItem } from "./quiz-items-editor";
 
 interface CreateQuizSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
+
+
 
 export function CreateQuizSheet({
   open,
@@ -53,8 +55,7 @@ export function CreateQuizSheet({
     source_resource_id: "",
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [structuredItems, setStructuredItems] = useState<Record<string, any>[]>(
+  const [structuredItems, setStructuredItems] = useState<StructuredQuizItem[]>(
     [],
   );
   const [targetChapters, setTargetChapters] = useState("");
@@ -251,8 +252,7 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
     try {
       setGenerating(true);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const question_types: Record<string, any> = {};
+      const question_types: Record<string, { enabled: boolean; question_count: number; choices_per_question?: number }> = {};
       Object.entries(quizConfig).forEach(([key, val]) => {
         if (val.enabled) {
           question_types[key] = {
@@ -335,8 +335,7 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
     try {
       setCreating(true);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let items: Record<string, any>[] = [];
+      let items: StructuredQuizItem[] = [];
 
       if (structuredItems.length > 0) {
         items = structuredItems.map((item) => ({
@@ -367,12 +366,11 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
                 question: match[1].trim(),
                 answer: match[2].trim(),
                 item_type: formData.type,
-              };
+              } as StructuredQuizItem;
             }
             return null;
           })
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .filter(Boolean) as Record<string, any>[];
+          .filter((item): item is StructuredQuizItem => item !== null);
       }
 
       if (items.length === 0) {

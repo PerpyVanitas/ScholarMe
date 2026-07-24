@@ -205,7 +205,6 @@ function AdminUsersContent() {
       }
       toast.success("Role updated successfully");
       loadProfiles();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Error updating role");
     }
@@ -253,7 +252,6 @@ function AdminUsersContent() {
         // Clipboard not available (HTTP / permissions) — show dialog instead
         setImpersonateLink(link);
       }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: unknown) {
       // @ts-expect-error: Strict unknown type check
       toast.error(e.message || "Failed to generate impersonation link");

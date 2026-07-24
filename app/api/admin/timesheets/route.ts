@@ -3,10 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/create-client";
 import { GOVERNANCE_ROLES, hasAnyRole } from "@/lib/utils/roles";
 import { z } from "zod";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 // Helper to fetch active timesheet collection period
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getActivePeriod(supabase: any) {
+async function getActivePeriod(supabase: SupabaseClient) {
   try {
     const { data } = await supabase
       .from("timesheet_periods")

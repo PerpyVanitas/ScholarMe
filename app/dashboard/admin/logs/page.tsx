@@ -123,8 +123,7 @@ export default function SystemLogsPage() {
       )
     : logs;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const formattedForExport = filtered.map((log: SystemLog) => ({
+    const formattedForExport = filtered.map((log: SystemLog) => ({
     Time: format(new Date(log.created_at), "yyyy-MM-dd HH:mm:ss"),
 
     User: log.profiles?.full_name || "System",
@@ -241,8 +240,7 @@ export default function SystemLogsPage() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      filtered.map((log: SystemLog) => (
+                                            filtered.map((log: SystemLog) => (
                         <TableRow key={log.id}>
                           <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
                             {format(

@@ -71,8 +71,7 @@ export async function GET(
     return new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  sessions.forEach(
+    sessions.forEach(
     (session: {
       id: string;
       scheduled_date: string;

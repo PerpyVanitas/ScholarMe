@@ -55,7 +55,7 @@ export function UserSelector() {
     const fetchUsers = async () => {
       setLoading(true);
       try {
-        const res = await apiClient(
+        const res = await apiClient<{ success: boolean; data?: UserProfile[] }>(
           `/api/messages/users?q=${encodeURIComponent(debouncedQuery)}`,
         );
         if (res.success && isMounted) {
@@ -90,7 +90,7 @@ export function UserSelector() {
         if (cached) {
           setSelectedUser(cached);
         } else {
-          const res = await apiClient(
+          const res = await apiClient<{ success: boolean; data?: UserProfile }>(
             `/api/messages/users?userId=${encodeURIComponent(currentUserId)}`,
           );
           if (res.success && res.data) {

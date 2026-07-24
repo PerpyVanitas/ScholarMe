@@ -2,6 +2,9 @@ import { handleApiError } from "@/lib/utils/api-error";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/create-client";
 import { sendEmail } from "@/lib/email";
+import { routeLogger } from "@/lib/logger";
+
+const log = routeLogger("/api/admin/cron/reminders");
 
 export async function POST(req: Request) {
   try {
@@ -41,7 +44,7 @@ export async function POST(req: Request) {
       .not("role_expires_at", "is", null);
 
     if (expiredError) {
-      console.error("Error fetching expired roles:", expiredError);
+      log.error({ error: expiredError }, "Error fetching expired roles");
       errors.push(expiredError);
     } else if (expiredRoles && expiredRoles.length > 0) {
       // Get tutor role id
@@ -66,9 +69,7 @@ export async function POST(req: Request) {
 
             if (!revertError) {
               rolesReverted++;
-              console.log(
-                `Reverted expired org role '${roleName}' for profile ${profile.id}`,
-              );
+              log.info({ profileId: profile.id, roleName }, "Reverted expired org role");
             }
           }
         }
@@ -96,7 +97,7 @@ export async function POST(req: Request) {
       .lt("start_time", tomorrow.toISOString());
 
     if (eventsError) {
-      console.error("Error fetching upcoming events:", eventsError);
+      log.error({ error: eventsError }, "Error fetching upcoming events");
       errors.push(eventsError);
     } else if (upcomingEvents) {
       // Collect all reminder tasks across all events, then fire in parallel
@@ -137,9 +138,7 @@ export async function POST(req: Request) {
               if (res.success) {
                 remindersSent++;
               } else {
-                console.error(
-                  `Failed to send event reminder to ${profile.email}`,
-                );
+                log.error({ email: profile.email }, "Failed to send event reminder");
               }
             }),
           );
@@ -170,7 +169,7 @@ export async function POST(req: Request) {
       .lt("due_date", now.toISOString());
 
     if (checkoutsError) {
-      console.error("Error fetching overdue checkouts:", checkoutsError);
+      log.error({ error: checkoutsError }, "Error fetching overdue checkouts");
       errors.push(checkoutsError);
     } else if (overdueCheckouts && overdueCheckouts.length > 0) {
       const overdueIds = overdueCheckouts.map((c: { id: string }) => c.id);
@@ -181,7 +180,7 @@ export async function POST(req: Request) {
         .in("id", overdueIds);
 
       if (updateError) {
-        console.error("Error updating overdue statuses:", updateError);
+        log.error({ error: updateError }, "Error updating overdue statuses");
         errors.push(updateError);
       } else {
         // Fire all overdue notice emails in parallel (P14-8 fix)
@@ -227,9 +226,7 @@ export async function POST(req: Request) {
               if (res.success) {
                 overdueNoticesSent++;
               } else {
-                console.error(
-                  `Failed to send overdue notice to ${(profile as { email: string }).email}`,
-                );
+                log.error({ email: (profile as { email: string }).email }, "Failed to send overdue notice");
               }
             });
           });
@@ -277,7 +274,7 @@ export async function POST(req: Request) {
             body: JSON.stringify(discordMessage),
           });
         } catch (discordErr) {
-          console.error("Failed to post discord digest:", discordErr);
+          log.error({ error: discordErr }, "Failed to post discord digest");
         }
       }
     }

@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { rateLimit } from "@/lib/rate-limit";
 import { z } from "zod";
+import { routeLogger } from "@/lib/logger";
+
+const log = routeLogger("/api/ai/chat");
 
 // Rate limit for server-side AI endpoint
 const aiRateLimiter = rateLimit({ interval: 60 * 1000, limit: 20 }); // 20 requests per minute
@@ -35,7 +38,7 @@ export async function POST(req: Request) {
 
     const parseResult = PostBodySchema.safeParse(await req.json());
     if (!parseResult.success) {
-      console.error("Invalid request body:", parseResult.error);
+      log.warn({ error: parseResult.error }, "Invalid request body");
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
     const { messages, attachments } = parseResult.data;
@@ -46,13 +49,12 @@ export async function POST(req: Request) {
     // Build enriched query incorporating attachments if provided
     let enrichedQuery = lastUserMsg;
     let hasVision = false;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const visionContent: any[] = [];
+    type VisionPart = { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } };
+    const visionContent: VisionPart[] = [];
 
     if (attachments && attachments.length > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const imgAttachment = attachments.find((a: any) => a.base64);
-      if (imgAttachment) {
+      const imgAttachment = attachments.find((a) => a.base64);
+      if (imgAttachment && imgAttachment.base64) {
         hasVision = true;
         visionContent.push({ type: "text", text: lastUserMsg });
         visionContent.push({
@@ -126,7 +128,7 @@ export async function POST(req: Request) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("LLM Provider Error:", errorText);
+      log.error({ errorText }, "LLM Provider Error");
       return NextResponse.json({
         choices: [
           {
@@ -142,7 +144,7 @@ export async function POST(req: Request) {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Server-side AI Error:", error);
+    log.error({ error }, "Server-side AI Error");
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

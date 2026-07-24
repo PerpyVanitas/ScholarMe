@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles, FileText, Download } from "lucide-react";
-import { CreateMLCEngine } from "@mlc-ai/web-llm";
+
 import { toast } from "sonner";
 import type { Session } from "@/lib/types";
 import ReactMarkdown from "react-markdown";
@@ -38,6 +38,7 @@ export function SessionSummaryModal({
       setSummary("");
       setProgressText("Loading AI Engine...");
 
+      const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
       const engine = await CreateMLCEngine(
         "Llama-3.2-1B-Instruct-q4f32_1-MLC",
         {

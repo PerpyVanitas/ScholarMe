@@ -140,7 +140,6 @@ export function UserDesignationsDialog({
       setDesigPosition("");
       setDesigAcademicYear("");
       setDesigIsCurrent(true);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: unknown) {
       // @ts-expect-error: Strict unknown type check
       toast.error(e.message || "Failed to save designation");
@@ -160,7 +159,6 @@ export function UserDesignationsDialog({
       if (!res.ok) throw new Error((await res.json()).error);
       setDesignations((prev) => prev.filter((d) => d.id !== id));
       toast.success("Designation removed");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: unknown) {
       // @ts-expect-error: Strict unknown type check
       toast.error(e.message || "Failed to remove designation");

@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+- **CI Pipeline Stability**:
+  - **Build-Time Resilience**: Fixed static prerendering build crashes caused by strict environment variable validation in `lib/env.ts` during Next.js builds. It now safely logs warnings instead of throwing errors in CI.
+  - **Supabase Build Dummy Fallbacks**: Added dummy URL and anon-key fallbacks to `createBrowserClient` and `createServerClient` in `lib/supabase/client.ts` and `lib/supabase/create-client.ts`, preventing `@supabase/ssr` from throwing `supabaseUrl is required` instantiation errors when Webpack injects empty environment variables during static compilation.
+  - **Module-Level Client Fix**: Removed direct `@supabase/supabase-js` instantiations at the module level in `generate-from-resource/route.ts` and `extract-topics/route.ts`, pointing them to dummy fallbacks at build time.
+  - **CI Warnings Cleaned**: Removed unneeded `NEXT_PUBLIC_SUPABASE_URL` and related secrets from `.github/workflows/ci.yml` jobs (build, test, audit), resolving "Context access might be invalid" IDE warnings, as the build is now natively resilient.
+
 - **ScholarMe Audit & Remediation (Action Items)**:
   - **Vertex AI Migration**: Migrated all Gemini calls from the deprecated library to `@google/genai` (Vertex AI).
   - **Document AI OCR**: Replaced the legacy regex OCR parser with Google Cloud Document AI (`expense-parser`) for receipt scanning, with a seamless Vertex AI fallback.

@@ -4,6 +4,7 @@
  */
 
 type AnalyticsProperties = Record<string, unknown>;
+import { logger } from "./logger";
 
 function sendToApi(payload: {
   event?: string;
@@ -35,19 +36,19 @@ export const analytics = {
   track: (eventName: string, properties?: AnalyticsProperties) => {
     sendToApi({ event: eventName, properties });
     if (process.env.NODE_ENV === "development") {
-      console.log(`[Analytics] Track: ${eventName}`, properties || {});
+      logger.debug({ properties }, `[Analytics] Track: ${eventName}`);
     }
   },
   identify: (userId: string, traits?: AnalyticsProperties) => {
     sendToApi({ event: "identify", properties: { userId, ...traits } });
     if (process.env.NODE_ENV === "development") {
-      console.log(`[Analytics] Identify: ${userId}`, traits || {});
+      logger.debug({ traits }, `[Analytics] Identify: ${userId}`);
     }
   },
   page: (pageName: string) => {
     sendToApi({ page: pageName });
     if (process.env.NODE_ENV === "development") {
-      console.log(`[Analytics] Page View: ${pageName}`);
+      logger.debug(`[Analytics] Page View: ${pageName}`);
     }
   },
 };

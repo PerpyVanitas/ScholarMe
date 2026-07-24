@@ -60,7 +60,6 @@ export function GlobalAnnouncementBoard() {
       await deleteAnnouncement(id);
       toast.success("Announcement deleted");
       fetchAnnouncements();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: unknown) {
       // @ts-expect-error: Strict unknown type check
       toast.error(e.message);
@@ -79,7 +78,6 @@ export function GlobalAnnouncementBoard() {
       setContent("");
       setPriority(false);
       fetchAnnouncements();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: unknown) {
       // @ts-expect-error: Strict unknown type check
       toast.error(e.message);

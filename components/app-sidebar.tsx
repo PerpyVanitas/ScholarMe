@@ -461,8 +461,7 @@ export function AppSidebar({
       console.error("Failed to parse recent visits", e);
       toast.error(e instanceof Error ? e.message : "An error occurred");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+  }, [pathname, learnerGroups, managementGroups]);
 
   // Load initial visits
   useEffect(() => {

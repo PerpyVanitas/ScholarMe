@@ -184,7 +184,6 @@ export default function TutorsPage() {
                             Top Rated
                           </Badge>
                         )}
-                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         {((tutor.profiles as unknown as Record<string, unknown>)?.roles as Record<string, unknown> | undefined)?.name === "officer" && (
                           <Badge
                             variant="default"

@@ -110,8 +110,7 @@ export default function AdminVerificationsPage() {
       return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mapped: VerificationRequest[] = (data as unknown[]).map((row) => ({
+        const mapped: VerificationRequest[] = (data as unknown[]).map((row) => ({
       // @ts-expect-error: Strict unknown type check
       id: `${row.tutor_id}:${row.specialization_id}`,
       // @ts-expect-error: Strict unknown type check

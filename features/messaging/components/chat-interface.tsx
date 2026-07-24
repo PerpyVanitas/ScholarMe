@@ -301,7 +301,7 @@ export function ChatInterface({
   const fetchUsers = async (query = "") => {
     setLoadingUsers(true);
     try {
-      const data = await apiClient(
+      const data = await apiClient<{ success: boolean; data?: Profile[] }>(
         `/api/messages/users?q=${encodeURIComponent(query)}`,
       );
       if (data.success) {
@@ -325,7 +325,7 @@ export function ChatInterface({
 
   const startNewConversation = async (participantId: string) => {
     try {
-      const data = await apiClient("/api/messages/conversations", {
+      const data = await apiClient<{ success: boolean; conversation: Conversation }>("/api/messages/conversations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ participantId }),

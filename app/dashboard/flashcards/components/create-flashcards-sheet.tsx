@@ -28,13 +28,15 @@ import { Loader2, CheckCircle, BookOpen, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { useWebLLM } from "@/hooks/use-webllm";
-import { FlashcardItemsEditor } from "./flashcard-items-editor";
+import { FlashcardItemsEditor, type StructuredFlashcardItem } from "./flashcard-items-editor";
 
 interface CreateFlashcardsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
+
+
 
 export function CreateFlashcardsSheet({
   open,
@@ -70,8 +72,7 @@ export function CreateFlashcardsSheet({
     source_resource_id: "",
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [structuredItems, setStructuredItems] = useState<Record<string, any>[]>(
+  const [structuredItems, setStructuredItems] = useState<StructuredFlashcardItem[]>(
     [],
   );
   const [targetChapters, setTargetChapters] = useState("");
@@ -331,8 +332,8 @@ No other text, markdown blocks, or explanations. Just the JSON array.`;
 
       if (structuredItems.length > 0) {
         items = structuredItems.map((item) => ({
-          question: item.front || item.question,
-          answer: item.back || item.answer,
+          question: item.front || item.question || "",
+          answer: item.back || item.answer || "",
           item_type: "flashcard",
         }));
       } else {

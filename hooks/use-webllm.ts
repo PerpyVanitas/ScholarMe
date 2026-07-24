@@ -1,8 +1,6 @@
-import { useState, useEffect } from "react";
-import {
-  CreateWebWorkerMLCEngine,
+import { useState, useEffect, useRef } from "react";
+import type {
   InitProgressReport,
-  hasModelInCache,
   MLCEngineInterface,
 } from "@mlc-ai/web-llm";
 
@@ -42,20 +40,25 @@ export function useWebLLM({
       ? new URL("../lib/workers/webllm.worker.ts", import.meta.url)
       : undefined);
 
+  const initializeEngineRef = useRef(initializeEngine);
+  useEffect(() => {
+    initializeEngineRef.current = initializeEngine;
+  }, [initializeEngine]);
+
   useEffect(() => {
     const checkCache = async () => {
       try {
         if (!(navigator as Navigator & { gpu?: unknown }).gpu) return; // Only check cache if GPU is available
+        const { hasModelInCache } = await import("@mlc-ai/web-llm");
         const isCached = await hasModelInCache(model);
         if (isCached) {
-          initializeEngine();
+          initializeEngineRef.current();
         }
       } catch (error) {
         console.error("Failed to check cache:", error);
       }
     };
     checkCache();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [model]);
 
   async function initializeEngine() {
@@ -107,6 +110,7 @@ export function useWebLLM({
       setProvider("webgpu");
       if (!workerToUse) throw new Error("Worker URL not provided");
 
+      const { CreateWebWorkerMLCEngine } = await import("@mlc-ai/web-llm");
       const newEngine = await CreateWebWorkerMLCEngine(
         new Worker(workerToUse, { type: "module" }),
         model,

@@ -6,20 +6,26 @@ import { Badge } from "@/components/ui/badge";
 import { Trash2 } from "lucide-react";
 import { ImageOcclusionEditor } from "@/features/quizzes/components/image-occlusion-editor";
 
-export interface QuizItemPreview {
+export interface StructuredQuizItem {
   question?: string;
   instructions?: string;
-  answer?: string;
   correct_answer?: string;
+  answer?: string;
+  back?: string;
+  correct_matches?: string[];
+  choices?: { text: string }[];
+  accepted_answers?: string[];
+  responses?: string[];
   type?: string;
+  item_type?: string;
   image_url?: string;
-  occlusion_masks?: Array<{ id: string; x: number; y: number; width: number; height: number }>;
+  occlusion_masks?: Array<{ id: string; x: number; y: number; width: number; height: number }> | string[];
 }
 
 interface QuizItemsEditorProps {
-  structuredItems: Record<string, unknown>[];
+  structuredItems: StructuredQuizItem[];
   setStructuredItems: React.Dispatch<
-    React.SetStateAction<Record<string, unknown>[]>
+    React.SetStateAction<StructuredQuizItem[]>
   >;
   formData: { type: string };
 }
@@ -31,7 +37,7 @@ export function QuizItemsEditor({
 }: QuizItemsEditorProps) {
   if (structuredItems.length === 0) return null;
 
-  const items = structuredItems as unknown as QuizItemPreview[];
+  const items = structuredItems;
 
   return (
     <div className="space-y-4 mt-6">
@@ -110,7 +116,7 @@ export function QuizItemsEditor({
                   value={item.question || item.instructions || ""}
                   onChange={(e) => {
                     const newItems = [...structuredItems];
-                    const target = newItems[i] as QuizItemPreview;
+                    const target = newItems[i];
                     if (target.question !== undefined)
                       target.question = e.target.value;
                     else if (target.instructions !== undefined)
@@ -131,7 +137,7 @@ export function QuizItemsEditor({
                   value={item.correct_answer || item.answer || ""}
                   onChange={(e) => {
                     const newItems = [...structuredItems];
-                    const target = newItems[i] as QuizItemPreview;
+                    const target = newItems[i];
                     if (target.correct_answer !== undefined)
                       target.correct_answer = e.target.value;
                     else if (target.answer !== undefined)
@@ -156,7 +162,7 @@ export function QuizItemsEditor({
                     value={item.image_url || ""}
                     onChange={(e) => {
                       const newItems = [...structuredItems];
-                      (newItems[i] as QuizItemPreview).image_url = e.target.value;
+                      newItems[i].image_url = e.target.value;
                       setStructuredItems(newItems);
                     }}
                   />
@@ -167,7 +173,7 @@ export function QuizItemsEditor({
                     masks={(item.occlusion_masks as unknown as Array<{ id: string; x: number; y: number; width: number; height: number }>) || []}
                     onChange={(masks) => {
                       const newItems = [...structuredItems];
-                      (newItems[i] as QuizItemPreview).occlusion_masks = masks as unknown as Array<{ id: string; x: number; y: number; width: number; height: number }>;
+                      newItems[i].occlusion_masks = masks as unknown as Array<{ id: string; x: number; y: number; width: number; height: number }>;
                       setStructuredItems(newItems);
                     }}
                   />

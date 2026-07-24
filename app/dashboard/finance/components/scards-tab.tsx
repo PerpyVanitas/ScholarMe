@@ -1,7 +1,6 @@
 "use client";
 
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+
 import {
   Card,
   CardContent,
@@ -61,6 +60,8 @@ export function ScardsTab({ canSubmit, canAudit, scards }: Props) {
     document.body.appendChild(div);
 
     try {
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
       const canvas = await html2canvas(div, { scale: 2 });
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("p", "mm", "a4");

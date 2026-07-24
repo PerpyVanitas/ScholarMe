@@ -176,7 +176,7 @@ export default function DashboardView() {
             upcomingSessions: learnSessions?.length || 0,
           };
           // Store learner upcoming sessions so we can pass them when in learner view
-          if (!extra.upcomingSessions || viewMode === "learner") {
+          if (!extra.upcomingSessions) {
             extra.upcomingSessions = learnSessions || [];
           }
           // Attach learner sessions as a separate field for toggling
@@ -225,7 +225,6 @@ export default function DashboardView() {
     }
 
     loadDashboardData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, role, userLoading, isAuthenticated]);
 
   if (userLoading || dataLoading) {

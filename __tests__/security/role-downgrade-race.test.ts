@@ -6,8 +6,7 @@ import { resolveRoleId } from "@/features/profiles/api/db";
 describe.skipIf(!hasTestDb)("P1-8: Role Downgrade Race Condition", () => {
   let adminClient: SupabaseClient;
   let manager: User | null = null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let managerClient: SupabaseClient<any, "public", "public", any, any> | null =
+    let managerClient: SupabaseClient<unknown, "public", "public", unknown, unknown> | null =
     null;
   let budgetId: string;
 

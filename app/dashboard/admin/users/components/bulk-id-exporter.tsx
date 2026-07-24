@@ -4,8 +4,7 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
+
 import type { Profile } from "@/lib/types";
 import { QrIdCard } from "@/features/auth/components/qr-id-card";
 
@@ -33,6 +32,8 @@ export function BulkIdExporter({ selectedUsers, onClearSelection }: BulkIdExport
     toast.info(`Generating PDF for ${selectedUsers.length} ID(s)... Please do not navigate away.`);
     
     try {
+      const { jsPDF } = await import("jspdf");
+      const html2canvas = (await import("html2canvas")).default;
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",

@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Download, ShieldCheck, Award, Clock, Briefcase, UserCheck } from "lucide-react";
 import { toast } from "sonner";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+
 
 interface ReadinessSummaryTabProps {
   profile: Profile;
@@ -113,6 +112,8 @@ export function ReadinessSummaryTab({ profile }: ReadinessSummaryTabProps) {
     if (!summaryRef.current) return;
     try {
       setExporting(true);
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
       const canvas = await html2canvas(summaryRef.current, { scale: 2, backgroundColor: "#ffffff" });
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("p", "mm", "a4");
