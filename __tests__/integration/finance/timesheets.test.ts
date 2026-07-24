@@ -210,7 +210,7 @@ describe("Integration: Timesheets", () => {
 
     const req = new NextRequest("http://localhost/api/timesheets", {
       method: "POST",
-      body: JSON.stringify({ action: "clock_in" }),
+      body: JSON.stringify({ action: "clock_in", lat: 0, lng: 0, location_verified: true }),
     });
 
     const res = await POST(req);

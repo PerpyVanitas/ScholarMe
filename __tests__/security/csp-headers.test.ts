@@ -1,10 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { proxy as middleware } from "@/proxy";
 import { NextRequest } from "next/server";
 
 describe("CSP Headers", () => {
   it("P1-22: Response includes a strict CSP header", async () => {
-    Object.defineProperty(process.env, "NODE_ENV", { value: "development", configurable: true });
+    vi.stubEnv("NODE_ENV", "development");
     const req = new NextRequest("http://localhost/dashboard");
     const res = await middleware(req);
 
