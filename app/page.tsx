@@ -37,6 +37,28 @@ import {
   STEPS,
 } from "./landing-data";
 
+function getPrimaryForeground(color: string): "#111111" | "#ffffff" {
+  const match = /^#([\da-f]{6})$/i.exec(color.trim());
+  if (!match) return "#ffffff";
+
+  const channels = [0, 2, 4].map((index) =>
+    parseInt(match[1].slice(index, index + 2), 16) / 255,
+  );
+  const luminance = channels.reduce(
+    (total, channel, index) =>
+      total +
+      [0.2126, 0.7152, 0.0722][index] *
+        (channel <= 0.04045
+          ? channel / 12.92
+          : ((channel + 0.055) / 1.055) ** 2.4),
+    0,
+  );
+  const darkContrast = (luminance + 0.05) / 0.05;
+  const lightContrast = 1.05 / (luminance + 0.05);
+
+  return darkContrast >= lightContrast ? "#111111" : "#ffffff";
+}
+
 function useCountUp(target: number, duration = 2000, start = false) {
   const [count, setCount] = useState(0);
   useEffect(() => {
@@ -96,6 +118,9 @@ export default function HomePage() {
   const [orgSettings, setOrgSettings] = useState<OrganizationSettings | null>(
     null,
   );
+  const primaryForeground = getPrimaryForeground(
+    orgSettings?.primary_color ?? "",
+  );
   const statsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -151,6 +176,7 @@ export default function HomePage() {
             __html: `
           :root {
             --primary: ${orgSettings.primary_color};
+            --primary-foreground: ${primaryForeground};
           }
         `,
           }}
