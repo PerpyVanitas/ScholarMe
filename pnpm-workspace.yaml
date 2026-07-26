@@ -1,14 +1,15 @@
 allowBuilds:
   '@firebase/util': true
   '@google/genai': true
-  '@scarf/scarf': set this to true or false
+  '@scarf/scarf': true
   '@sentry/cli': true
-  '@tree-sitter-grammars/tree-sitter-yaml': set this to true or false
+  '@tree-sitter-grammars/tree-sitter-yaml': true
   core-js: true
-  core-js-pure: set this to true or false
+  core-js-pure: true
   protobufjs: true
   sharp: true
   tesseract.js: false
-  tree-sitter: set this to true or false
-  tree-sitter-json: set this to true or false
+  tree-sitter: true
+  tree-sitter-json: true
   unrs-resolver: true
+
