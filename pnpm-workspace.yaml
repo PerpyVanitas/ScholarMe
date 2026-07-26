@@ -12,4 +12,4 @@ allowBuilds:
   tree-sitter: true
   tree-sitter-json: true
   unrs-resolver: true
-
+packageImportMethod: copy

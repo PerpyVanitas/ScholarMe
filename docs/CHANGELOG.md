@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2026-07-26] — Local Environment Recovery (NTFS Corruption Resolved)
+
+### Resolved
+- **NTFS filesystem corruption fixed**: The `locales_corrupt` directory inside `node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/` was a physically corrupted NTFS entry that could not be removed by any software-level command. Resolved by:
+  1. Running `chkdsk C: /f` scheduled on reboot (requires admin)
+  2. Restarting the PC to let chkdsk repair the NTFS journal
+  3. `Remove-Item -Recurse -Force node_modules` succeeded post-repair
+  4. `pnpm install` completed cleanly in ~2 minutes (1549 packages, 1548 reused from pnpm store)
+- **Full test suite verified green locally**: `391 passed | 15 skipped` across 83 test files — 0 failures. This confirms the corruption was isolated to `node_modules` and did not affect source code or the pnpm global store.
+- **`package-import-method=copy`** remains written to `.npmrc` for resilience against future NTFS hard-link issues.
+
+---
+
 ## [2026-07-26] — CI Stabilization & Coverage Improvements
 
 ### CI / DevOps
