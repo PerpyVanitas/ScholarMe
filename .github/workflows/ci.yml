@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main, master, dev ]
 
+permissions:
+  contents: read
+  actions: read
+
 env:
   NEXT_PUBLIC_APP_URL: "http://localhost:3000"
   NEXT_PUBLIC_SUPABASE_URL: "https://build-dummy.supabase.co"
@@ -133,9 +137,14 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Download build artifact
         uses: actions/download-artifact@v4
+        continue-on-error: true
+        id: download-build
         with:
           name: next-build
           path: .next/
+      - name: Build Next.js if artifact unavailable
+        if: steps.download-build.outcome != 'success'
+        run: pnpm run build
       - name: Bundle Size Check
         run: |
           # Basic size limit assertion logic could go here or via Next.js bundle analyzer plugin
@@ -164,18 +173,26 @@ jobs:
           cache: 'pnpm'
       - name: Ensure pnpm store path exists
         run: mkdir -p $(pnpm store path)
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
       - name: Install axe-cli
         run: |
           npm install -g @axe-core/cli
           npx browser-driver-manager install chrome
       - name: Download build artifact
         uses: actions/download-artifact@v4
+        continue-on-error: true
+        id: download-build
         with:
           name: next-build
           path: .next/
-      - name: Build and Start Next.js Server
+      - name: Build Next.js if artifact unavailable
+        if: steps.download-build.outcome != 'success'
         run: |
           pnpm install --frozen-lockfile
+          pnpm run build
+      - name: Build and Start Next.js Server
+        run: |
           pnpm run start &
           sleep 5
       - name: Run accessibility audit

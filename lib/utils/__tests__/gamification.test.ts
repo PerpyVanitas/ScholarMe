@@ -1,5 +1,15 @@
-import { describe, it, expect } from "vitest";
-import { getLevelTitle, getLevelColor, getNextLevelXp } from "../gamification";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {
+  getLevelTitle,
+  getLevelColor,
+  getNextLevelXp,
+  earnXp,
+  triggerConfetti,
+} from "../gamification";
+
+vi.mock("canvas-confetti", () => ({
+  default: vi.fn(),
+}));
 
 describe("Gamification Utils", () => {
   describe("getLevelTitle", () => {
@@ -46,6 +56,99 @@ describe("Gamification Utils", () => {
       expect(getNextLevelXp(2)).toBe(400);
       expect(getNextLevelXp(5)).toBe(2500);
       expect(getNextLevelXp(10)).toBe(10000);
+    });
+  });
+
+  describe("earnXp", () => {
+    beforeEach(() => {
+      vi.stubGlobal("fetch", vi.fn());
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it("returns success data on successful API response", async () => {
+      vi.mocked(fetch).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          success: true,
+          xp_earned: 50,
+          total_xp: 150,
+        }),
+      } as Response);
+
+      const result = await earnXp("SESSION_COMPLETED", "Finished a session");
+
+      expect(result.success).toBe(true);
+      expect(result.xp_earned).toBe(50);
+    });
+
+    it("returns error when API responds with failure", async () => {
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.mocked(fetch).mockResolvedValue({
+        ok: false,
+        json: async () => ({ success: false, error: "Rate limited" }),
+      } as Response);
+
+      const result = await earnXp("SESSION_COMPLETED", "Finished a session");
+
+      expect(result).toEqual({ success: false, error: "Rate limited" });
+      consoleSpy.mockRestore();
+    });
+
+    it("returns network error on fetch failure", async () => {
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.mocked(fetch).mockRejectedValue(new Error("network down"));
+
+      const result = await earnXp("SESSION_COMPLETED", "Finished a session");
+
+      expect(result).toEqual({ success: false, error: "Network error" });
+      consoleSpy.mockRestore();
+    });
+
+    it("triggers level-up vibration when current_level is returned", async () => {
+      const vibrate = vi.fn();
+      Object.defineProperty(globalThis, "window", {
+        value: globalThis,
+        configurable: true,
+      });
+      Object.defineProperty(navigator, "vibrate", {
+        value: vibrate,
+        configurable: true,
+      });
+
+      vi.mocked(fetch).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          success: true,
+          xp_earned: 100,
+          current_level: 5,
+        }),
+      } as Response);
+
+      await earnXp("SESSION_COMPLETED", "Level up");
+
+      expect(vibrate).toHaveBeenCalledWith([200, 100, 200, 100, 400]);
+    });
+  });
+
+  describe("triggerConfetti", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("starts confetti animation interval", async () => {
+      const confetti = (await import("canvas-confetti")).default;
+
+      triggerConfetti();
+      vi.advanceTimersByTime(500);
+
+      expect(confetti).toHaveBeenCalled();
     });
   });
 });

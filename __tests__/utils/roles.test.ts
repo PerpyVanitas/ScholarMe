@@ -2,6 +2,9 @@ import { describe, it, expect } from "vitest";
 import {
   isEsasScholar,
   isRegularMember,
+  isKnownRole,
+  isAdminRole,
+  hasAnyRole,
   canAccessAdminRoute,
   canAccessFinance,
   canSubmitFinance,
@@ -23,6 +26,29 @@ describe("Roles Utils", () => {
     expect(isRegularMember({ membership_classification: "regular_member" })).toBe(true);
     expect(isRegularMember({ membership_classification: "esas_scholar" })).toBe(false);
     expect(isRegularMember(null)).toBe(false);
+  });
+
+  describe("isKnownRole, isAdminRole, hasAnyRole", () => {
+    it("isKnownRole identifies valid roles", () => {
+      expect(isKnownRole("tutor")).toBe(true);
+      expect(isKnownRole("super_admin")).toBe(true);
+      expect(isKnownRole("invalid")).toBe(false);
+      expect(isKnownRole(null)).toBe(false);
+      expect(isKnownRole(undefined)).toBe(false);
+    });
+
+    it("isAdminRole identifies admin roles", () => {
+      expect(isAdminRole("administrator")).toBe(true);
+      expect(isAdminRole("super_admin")).toBe(true);
+      expect(isAdminRole("president")).toBe(false);
+      expect(isAdminRole(null)).toBe(false);
+    });
+
+    it("hasAnyRole checks membership in allowed list", () => {
+      expect(hasAnyRole("treasurer", ["treasurer", "president"])).toBe(true);
+      expect(hasAnyRole("learner", ["treasurer", "president"])).toBe(false);
+      expect(hasAnyRole("unknown", ["treasurer"])).toBe(false);
+    });
   });
 
   describe("normalizeRole and getRoleName", () => {
@@ -51,6 +77,25 @@ describe("Roles Utils", () => {
     it("checks specific paths for governance roles", () => {
       expect(canAccessAdminRoute("president", "/dashboard/admin/sessions")).toBe(true);
       expect(canAccessAdminRoute("tutor", "/dashboard/admin/sessions")).toBe(false);
+    });
+
+    it("restricts super_admin-only routes", () => {
+      expect(canAccessAdminRoute("super_admin", "/dashboard/admin/messages")).toBe(
+        true,
+      );
+      expect(canAccessAdminRoute("president", "/dashboard/admin/messages")).toBe(
+        false,
+      );
+    });
+
+    it("allows finance roles on reports route", () => {
+      expect(canAccessAdminRoute("treasurer", "/dashboard/admin/reports")).toBe(
+        true,
+      );
+      expect(canAccessAdminRoute("auditor", "/dashboard/admin/reports")).toBe(
+        true,
+      );
+      expect(canAccessAdminRoute("tutor", "/dashboard/admin/reports")).toBe(false);
     });
 
     it("returns false for unknown paths", () => {
