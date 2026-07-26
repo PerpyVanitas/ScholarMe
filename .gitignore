@@ -33,7 +33,7 @@ extract_logs.*
 fix-*.js
 fix_*.js
 refactor-*.js
-test_update.ts
+test-*.ts
 run_migration.mjs
 
 # Cleanup ignores
@@ -42,7 +42,7 @@ package-lock.json
 lib/demo.ts
 scratch/
 .idea/
-test-update.js
+test-*.js
 audit_results.md
 console_logs.txt
 temp.md
