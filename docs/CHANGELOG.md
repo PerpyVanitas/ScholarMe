@@ -5,7 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2026-07-26] — Accessibility: Color Contrast Fix (WCAG 2 AA)
+
+### Fixed
+- **`app/page.tsx` CTA button color contrast**: The primary CTA button ("Start Learning Free" / "Go to Dashboard") used `bg-amber-900` (`#78350f`) with `text-white`, producing a contrast ratio of ~3.3:1 — below the WCAG 2 AA minimum of 4.5:1 for normal text. Replaced with `bg-amber-950` (`#451a03`), which yields ~7.5:1. Dark-mode styling (`dark:bg-[#ffd700] dark:text-[#111111]`) was already compliant and unchanged. Detected via `axe-core 4.12.1`.
+
+---
+
 ## [2026-07-26] — Local Environment Recovery (NTFS Corruption Resolved)
+
 
 ### Resolved
 - **NTFS filesystem corruption fixed**: The `locales_corrupt` directory inside `node_modules/.pnpm/zod@4.4.3/node_modules/zod/v4/` was a physically corrupted NTFS entry that could not be removed by any software-level command. Resolved by:
