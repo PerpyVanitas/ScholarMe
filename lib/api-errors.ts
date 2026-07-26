@@ -707,7 +707,11 @@ export function mapSupabaseErrorToCode(errorMessage: string): {
   // BUS-001: Business Logic - Scheduling
   // ============================================
 
-  if (lowerMessage.includes("conflict") || lowerMessage.includes("unavailable")) {
+  if (
+    lowerMessage.includes("conflict") ||
+    (lowerMessage.includes("unavailable") &&
+      (lowerMessage.includes("slot") || lowerMessage.includes("time")))
+  ) {
     return {
       code: "BUS-001",
       message: "Scheduling conflict",
