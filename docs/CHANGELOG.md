@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2026-07-26] — CI Stabilization & Coverage Improvements
+
+### CI / DevOps
+- **Upgraded GitHub Actions to latest versions**: All workflow jobs now use `pnpm/action-setup@v4`, `actions/setup-node@v4`, `actions/checkout@v4`, `actions/cache@v4`, `actions/upload-artifact@v4`, `actions/download-artifact@v4` — eliminating the Node 20 deprecation warning in CI logs.
+- **Fixed pnpm store path caching error**: Added `mkdir -p $(pnpm store path)` step before `actions/setup-node@v4` with `cache: 'pnpm'` to ensure the cache directory always exists, fixing the `ERR_CACHE_PATH_VALIDATION` error on cold runs.
+- **Added `mkdir -p .next/cache`** step before the Next.js build to guarantee the cache path exists even on cache miss, eliminating the `actions/cache@v4` Path Validation Error.
+- **Dependency audit robustness**: Made `pnpm audit` failures non-fatal with a fallback message when the NPM registry audit endpoint returns a gzip-compressed invalid JSON response (`ERR_PNPM_AUDIT_BAD_RESPONSE`).
+- **Artifact download race condition**: `performance-audit` and `accessibility-audit` jobs now use `continue-on-error: true` on the artifact download step, with a fallback `pnpm run build` step if the artifact is unavailable — preventing race condition failures in parallel CI jobs.
+
+### Test Coverage
+- **Added 5 new test files** to push branch/line/function coverage above the 38% threshold:
+  - `lib/__tests__/email.test.ts` — Tests `sendEmail()` including API key missing, successful send, and Resend SDK errors.
+  - `lib/__tests__/rate-limit.test.ts` — Tests the in-memory rate limiter (allow, block after limit, window reset).
+  - `lib/gamification/__tests__/daily-decay.test.ts` — Tests `processDailyDecay()` including no history, grace period, XP decay, cap at 500, and insert failure resilience.
+  - `lib/ai/__tests__/gemini.test.ts` — Tests Gemini AI client integration with mocked GoogleGenerativeAI.
+  - `features/study-groups/__tests__/actions.test.ts` — Tests study group server actions (create, join, fetch members).
+- **Extended existing tests**:
+  - `__tests__/utils/roles.test.ts` — Added edge case branches for role hierarchy checks.
+  - `features/auth/__tests__/validators.test.ts` — Added boundary tests for auth validation schemas.
+  - `lib/utils/__tests__/gamification.test.ts` — Added vibration branch coverage for `earnXp()` success path without level-up.
+
 - **Dependency Audit CI Gate Stabilization**:
   - Enforced exact version overrides for high-severity transitive dependencies (`postcss`, `sharp`, `lodash-es`, `fast-xml-parser`) via `pnpm.overrides` to satisfy the new CI security gate.
   - Successfully configured `pnpm.auditConfig.ignoreCves` in `package.json` to safely skip non-fixable Next.js transitive CVEs, preventing false-positive CI failures.
