@@ -16,7 +16,7 @@ envExampleContent.split('\n').forEach(line => {
 
 // Basic grep for process.env usage
 try {
-  const output = child_process.execSync('git grep -ho ""process.env.[A-Z0-9_]*""', { encoding: 'utf8' });
+  const output = child_process.execSync('git grep -ho "process.env.[A-Z0-9_]*" -- "*.ts" "*.tsx" "*.js" "*.mjs"', { encoding: 'utf8' });
   const matches = output.match(/process\.env\.([A-Z0-9_]+)/g) || [];
   
   const foundKeys = new Set(matches.map(m => m.replace('process.env.', '')));
