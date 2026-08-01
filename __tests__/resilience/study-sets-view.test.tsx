@@ -17,6 +17,8 @@ global.fetch = vi.fn();
 describe("StudySets Resilience", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "log").mockImplementation(() => {});
   });
 
   afterEach(() => {
