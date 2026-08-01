@@ -61,7 +61,8 @@ export function PinConfirmationModal({
             2-Step Executive Authorization
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Confirming disbursement release of <strong className="text-foreground">{formatCurrency(amount)}</strong> for request <span className="font-semibold text-foreground">"{title}"</span>.
+            Confirming disbursement release of <strong className="text-foreground">{formatCurrency(amount)}</strong> for request <span className="font-semibold text-foreground">&quot;{title}&quot;</span>.
+
           </DialogDescription>
         </DialogHeader>
 
