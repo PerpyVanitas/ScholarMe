@@ -271,11 +271,32 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     setupRealtime();
 
+    const handleXpEarned = (event: Event) => {
+      const customEvent = event as CustomEvent<{ total_xp?: number; current_level?: number }>;
+      if (customEvent.detail?.total_xp !== undefined || customEvent.detail?.current_level !== undefined) {
+        setProfile((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            total_xp: customEvent.detail.total_xp ?? prev.total_xp,
+            current_level: customEvent.detail.current_level ?? prev.current_level,
+          };
+        });
+      }
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("xp_earned", handleXpEarned);
+    }
+
     return () => {
       controller.abort();
       authSubscription.unsubscribe();
       if (roleSubscription) {
         supabase.removeChannel(roleSubscription);
+      }
+      if (typeof window !== "undefined") {
+        window.removeEventListener("xp_earned", handleXpEarned);
       }
     };
   }, [loadUserData]);

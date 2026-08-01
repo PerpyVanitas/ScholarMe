@@ -5,7 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2026-07-27] — AI Tutor: Vertex AI as Primary Auth Strategy
+## [2026-08-01] — Gamification: XP and Leveling Engine Fixes
+
+### Fixed
+- **PostgreSQL Trigger (`supabase/migrations/20260801120000_fix_gamification_xp_levels.sql`)**:  
+  Re-defined `update_profile_level()` to use `SECURITY DEFINER` and `COALESCE(total_xp, 0)` so adding XP never evaluates to `NULL` (which previously corrupted user profiles and froze level progress permanently). Included a retroactive fix for existing NULL/out-of-sync profile rows.
+- **Android Leaderboard API (`app/api/v1/android/gamification/leaderboard/route.ts`)**:  
+  Fixed relation error by querying `public.profiles` (`id`, `full_name`, `avatar_url`, `total_xp`, `current_level`) with field name fallbacks for backward compatibility.
+- **Quiz Completion Endpoint (`app/dashboard/quizzes/study/[id]/page.tsx`)**:  
+  Replaced broken 404 endpoint `/api/v1/gamification/xp` with `earnXp("QUIZ_SUBMITTED", ...)`.
+- **Level Progress Calculations (`lib/utils/gamification.ts` & `learner-dashboard.tsx`)**:  
+  Added `calculateLevel()` and `getLevelProgress()` to accurately compute level thresholds and progress bar percentage aligned with the database formula (`Level = floor(0.1 * sqrt(total_xp)) + 1`).
+- **Real-Time Client Updates (`lib/user-context.tsx`)**:  
+  Added `xp_earned` custom window event listener in `UserProvider` to update `total_xp` and `current_level` in React state immediately without requiring a full page refresh.
+
 
 ### Fixed
 - **`lib/ai/gemini.ts` — `getAIClient()` auth priority corrected.**  

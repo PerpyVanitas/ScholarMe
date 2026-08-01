@@ -267,14 +267,8 @@ export default function StudyModePage({
       });
 
       // Earn XP for finishing a quiz
-      await fetch("/api/v1/gamification/xp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: 50,
-          reason: `Completed study set: ${studySet?.title}`,
-        }),
-      });
+      const { earnXp } = await import("@/lib/utils/gamification");
+      await earnXp("QUIZ_SUBMITTED", `Completed study set: ${studySet?.title || "Quiz"}`);
 
       if (correctCount / shuffledItems.length >= 0.8) {
         confetti({

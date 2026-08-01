@@ -3,6 +3,8 @@ import {
   getLevelTitle,
   getLevelColor,
   getNextLevelXp,
+  calculateLevel,
+  getLevelProgress,
   earnXp,
   triggerConfetti,
 } from "../gamification";
@@ -56,6 +58,29 @@ describe("Gamification Utils", () => {
       expect(getNextLevelXp(2)).toBe(400);
       expect(getNextLevelXp(5)).toBe(2500);
       expect(getNextLevelXp(10)).toBe(10000);
+    });
+  });
+
+  describe("calculateLevel", () => {
+    it("calculates the level accurately based on XP", () => {
+      expect(calculateLevel(0)).toBe(1);
+      expect(calculateLevel(50)).toBe(1);
+      expect(calculateLevel(100)).toBe(2);
+      expect(calculateLevel(399)).toBe(2);
+      expect(calculateLevel(400)).toBe(3);
+    });
+  });
+
+  describe("getLevelProgress", () => {
+    it("returns correct level progress metrics", () => {
+      const progress = getLevelProgress(250);
+      expect(progress.currentLevel).toBe(2);
+      expect(progress.currentLevelMinXp).toBe(100);
+      expect(progress.nextLevelMinXp).toBe(400);
+      expect(progress.xpInCurrentLevel).toBe(150);
+      expect(progress.xpForNextLevel).toBe(300);
+      expect(progress.xpRemaining).toBe(150);
+      expect(progress.progressPercent).toBe(50);
     });
   });
 

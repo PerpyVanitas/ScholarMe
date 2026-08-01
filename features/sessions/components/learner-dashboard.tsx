@@ -26,8 +26,8 @@ import { TutorOfTheMonth } from "./tutor-of-the-month";
 import { SmartTutorRecommendations } from "./smart-tutor-recommendations";
 import { WeeklyChallenges } from "@/features/gamification/components/weekly-challenges";
 import { DailyQuests } from "@/features/gamification/components/daily-quests";
-
 import { SessionCountdown } from "./session-countdown";
+import { getLevelProgress, getLevelTitle } from "@/lib/utils/gamification";
 
 interface LearnerDashboardProps {
   profile: Profile;
@@ -67,64 +67,66 @@ export function LearnerDashboard({
       </div>
 
       {/* Gamification Progress Card */}
-      <Card
-        className="border-primary/20 bg-primary/[0.02]"
-        data-tour-step="10"
-        data-tour-title="Your Level & Progress"
-        data-tour-description="Earn XP by completing sessions and daily quests to level up your profile!"
-        data-tour-side="bottom"
-      >
-        <CardContent className="p-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                <Trophy className="h-6 w-6 text-primary" />
-              </div>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold uppercase tracking-wider text-primary">
-                    Level {profile.current_level || 1}
-                  </span>
-                  <Badge variant="secondary" className="text-[10px] h-5">
-                    Rank:{" "}
-                    {profile.total_xp && profile.total_xp > 5000
-                      ? "Scholar"
-                      : "Learner"}
-                  </Badge>
+      {(() => {
+        const progress = getLevelProgress(profile.total_xp || 0);
+        return (
+          <Card
+            className="border-primary/20 bg-primary/[0.02]"
+            data-tour-step="10"
+            data-tour-title="Your Level & Progress"
+            data-tour-description="Earn XP by completing sessions and daily quests to level up your profile!"
+            data-tour-side="bottom"
+          >
+            <CardContent className="p-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                    <Trophy className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold uppercase tracking-wider text-primary">
+                        Level {progress.currentLevel}
+                      </span>
+                      <Badge variant="secondary" className="text-[10px] h-5">
+                        Rank: {getLevelTitle(progress.currentLevel)}
+                      </Badge>
+                    </div>
+                    <h2 className="text-xl font-bold text-foreground">
+                      Academy Progress
+                    </h2>
+                  </div>
                 </div>
-                <h2 className="text-xl font-bold text-foreground">
-                  Academy Progress
-                </h2>
+                <div className="flex flex-col sm:items-end">
+                  <div className="flex items-center gap-1 mb-1">
+                    <Flame className="h-4 w-4 text-orange-500 fill-orange-500" />
+                    <span className="text-sm font-bold text-orange-500">
+                      3 Day Streak
+                    </span>
+                  </div>
+                  <span className="text-sm font-medium text-foreground">
+                    {(profile.total_xp || 0).toLocaleString()} Total XP
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {progress.xpRemaining.toLocaleString()} XP to Level{" "}
+                    {progress.currentLevel + 1}
+                  </span>
+                </div>
               </div>
-            </div>
-            <div className="flex flex-col sm:items-end">
-              <div className="flex items-center gap-1 mb-1">
-                <Flame className="h-4 w-4 text-orange-500 fill-orange-500" />
-                <span className="text-sm font-bold text-orange-500">
-                  3 Day Streak
-                </span>
+              <div className="mt-4 space-y-2">
+                <Progress
+                  value={progress.progressPercent}
+                  className="h-2"
+                />
+                <div className="flex justify-between text-[10px] font-medium text-muted-foreground uppercase tracking-tighter">
+                  <span>Current: Level {progress.currentLevel}</span>
+                  <span>Next: Level {progress.currentLevel + 1}</span>
+                </div>
               </div>
-              <span className="text-sm font-medium text-foreground">
-                {profile.total_xp || 0} Total XP
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {1000 - ((profile.total_xp || 0) % 1000)} XP to Level{" "}
-                {(profile.current_level || 1) + 1}
-              </span>
-            </div>
-          </div>
-          <div className="mt-4 space-y-2">
-            <Progress
-              value={((profile.total_xp || 0) % 1000) / 10}
-              className="h-2"
-            />
-            <div className="flex justify-between text-[10px] font-medium text-muted-foreground uppercase tracking-tighter">
-              <span>Current: Level {profile.current_level || 1}</span>
-              <span>Next: Level {(profile.current_level || 1) + 1}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       <div
         className="grid grid-cols-1 gap-4 sm:grid-cols-3"

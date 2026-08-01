@@ -9,7 +9,6 @@ export function triggerConfetti() {
   const randomInRange = (min: number, max: number) =>
     Math.random() * (max - min) + min;
 
-  // Use ReturnType<typeof setInterval> instead of any
   const interval: ReturnType<typeof setInterval> = setInterval(function () {
     const timeLeft = animationEnd - Date.now();
 
@@ -50,12 +49,57 @@ export function getLevelColor(level: number): string {
 }
 
 /**
- * Returns the XP needed to reach the NEXT level from the current one.
+ * Calculates level from total XP using PostgreSQL DB formula:
+ * Level = floor(0.1 * sqrt(total_xp)) + 1
+ */
+export function calculateLevel(totalXp: number): number {
+  if (totalXp <= 0) return 1;
+  return Math.floor(0.1 * Math.sqrt(totalXp)) + 1;
+}
+
+/**
+ * Returns the total XP needed to reach the NEXT level from the current one.
  * Formula aligned with lib/gamification-utils.ts: level² × 100
- * (was previously (10*level)² which gave wildly different results)
  */
 export function getNextLevelXp(currentLevel: number): number {
   return Math.pow(currentLevel, 2) * 100;
+}
+
+export interface LevelProgress {
+  currentLevel: number;
+  currentLevelMinXp: number;
+  nextLevelMinXp: number;
+  xpInCurrentLevel: number;
+  xpForNextLevel: number;
+  xpRemaining: number;
+  progressPercent: number;
+}
+
+/**
+ * Calculates granular level progress metrics for UI progress bars and cards.
+ */
+export function getLevelProgress(totalXp: number): LevelProgress {
+  const safeXp = Math.max(0, totalXp || 0);
+  const currentLevel = calculateLevel(safeXp);
+  const currentLevelMinXp = Math.pow(currentLevel - 1, 2) * 100;
+  const nextLevelMinXp = Math.pow(currentLevel, 2) * 100;
+  const xpInCurrentLevel = safeXp - currentLevelMinXp;
+  const xpForNextLevel = nextLevelMinXp - currentLevelMinXp;
+  const xpRemaining = Math.max(0, nextLevelMinXp - safeXp);
+  const progressPercent = Math.min(
+    100,
+    Math.max(0, (xpInCurrentLevel / xpForNextLevel) * 100),
+  );
+
+  return {
+    currentLevel,
+    currentLevelMinXp,
+    nextLevelMinXp,
+    xpInCurrentLevel,
+    xpForNextLevel,
+    xpRemaining,
+    progressPercent,
+  };
 }
 
 export interface EarnXpResult {
@@ -71,7 +115,10 @@ export interface EarnXpResult {
  * @param action - Must be a key in XP_AWARDS constants (e.g. "SESSION_COMPLETED")
  * @param reason - Human-readable description shown in XP logs
  */
-export async function earnXp(action: keyof typeof XP_AWARDS, reason: string): Promise<EarnXpResult> {
+export async function earnXp(
+  action: keyof typeof XP_AWARDS,
+  reason: string,
+): Promise<EarnXpResult> {
   try {
     const res = await fetch("/api/v1/xp/earn", {
       method: "POST",
@@ -85,12 +132,21 @@ export async function earnXp(action: keyof typeof XP_AWARDS, reason: string): Pr
       return { success: false, error: data.error };
     }
 
-    // Trigger haptic feedback for success or level up
-    if (typeof window !== "undefined" && "vibrate" in navigator) {
-      if (data.current_level) {
-        navigator.vibrate([200, 100, 200, 100, 400]); // Long celebration vibration
-      } else {
-        navigator.vibrate([100, 50, 100]); // Short success vibration
+    if (data.success && typeof window !== "undefined") {
+      // Broadcast custom event so active UI components (UserContext, dashboards, etc.) update live
+      window.dispatchEvent(
+        new CustomEvent("xp_earned", {
+          detail: data,
+        }),
+      );
+
+      // Trigger haptic feedback for success or level up
+      if ("vibrate" in navigator) {
+        if (data.current_level) {
+          navigator.vibrate([200, 100, 200, 100, 400]); // Long celebration vibration
+        } else {
+          navigator.vibrate([100, 50, 100]); // Short success vibration
+        }
       }
     }
 
