@@ -48,9 +48,10 @@ import { UserDeleteDialog } from "./components/user-delete-dialog";
 import { UserLogsDialog } from "./components/user-logs-dialog";
 import { UserDesignationsDialog } from "./components/user-designations-dialog";
 import { UserIdCardDialog } from "./components/user-id-card-dialog";
-import { UserProfileDialog } from "./components/user-profile-dialog";
 import { BulkUserImportDialog } from "./components/bulk-user-import-dialog";
 import { UsersDataTable } from "./components/users-data-table";
+import { BatchActionsDialog } from "./components/batch-actions-dialog";
+
 
 function getUserRoleName(roles: unknown): string {
   if (Array.isArray(roles) && roles.length > 0) return roles[0].name;
@@ -88,6 +89,8 @@ function AdminUsersContent() {
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(
     new Set(),
   );
+  const [batchActionsOpen, setBatchActionsOpen] = useState(false);
+
 
   // Edit state
   const [editOpen, setEditOpen] = useState(false);
@@ -290,6 +293,17 @@ function AdminUsersContent() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {selectedUserIds.size > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setBatchActionsOpen(true)}
+              className="text-xs gap-1.5"
+            >
+              <Users className="h-4 w-4" />
+              Batch Actions ({selectedUserIds.size})
+            </Button>
+          )}
           <BulkIdExporter
             selectedUsers={profiles.filter((p) => selectedUserIds.has(p.id))}
             onClearSelection={() => setSelectedUserIds(new Set())}
@@ -320,6 +334,7 @@ function AdminUsersContent() {
           </Button>
         </div>
       </div>
+
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
@@ -482,13 +497,21 @@ function AdminUsersContent() {
               className="w-full rounded-md border border-input bg-muted p-3 text-xs font-mono resize-none focus:outline-none"
               onClick={(e) => (e.target as HTMLTextAreaElement).select()}
             />
-            <p className="text-xs text-muted-foreground">
-              Click the box above to select all, then copy manually.
-            </p>
           </div>
         </DialogContent>
       </Dialog>
+
+      <BatchActionsDialog
+        open={batchActionsOpen}
+        onOpenChange={setBatchActionsOpen}
+        selectedUserIds={Array.from(selectedUserIds)}
+        onBatchSuccess={() => {
+          setSelectedUserIds(new Set());
+          loadProfiles();
+        }}
+      />
     </div>
+
   );
 }
 

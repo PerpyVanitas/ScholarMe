@@ -19,6 +19,8 @@ import {
   ArrowRight,
   Trophy,
   Flame,
+  Video,
+  CalendarPlus,
 } from "lucide-react";
 import { SESSION_STATUS_COLORS } from "@/lib/constants";
 import type { Profile, Session } from "@/lib/types";
@@ -28,6 +30,9 @@ import { WeeklyChallenges } from "@/features/gamification/components/weekly-chal
 import { DailyQuests } from "@/features/gamification/components/daily-quests";
 import { SessionCountdown } from "./session-countdown";
 import { getLevelProgress, getLevelTitle } from "@/lib/utils/gamification";
+import { generateVirtualMeetingRoom } from "@/lib/utils/meeting-link";
+import { generateGoogleCalendarUrl } from "@/lib/utils/calendar-event";
+
 
 interface LearnerDashboardProps {
   profile: Profile;
@@ -238,9 +243,45 @@ export function LearnerDashboard({
                       >
                         {session.status}
                       </Badge>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-7 w-7 text-xs"
+                        asChild
+                        title="Join Virtual Meeting Room"
+                      >
+                        <a
+                          href={generateVirtualMeetingRoom(session.id, session.specializations?.name || "Tutoring").meetingUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <Video className="h-3.5 w-3.5 text-amber-500" />
+                        </a>
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-7 w-7 text-xs"
+                        asChild
+                        title="Add to Google Calendar"
+                      >
+                        <a
+                          href={generateGoogleCalendarUrl({
+                            title: `Tutoring: ${session.specializations?.name || "Peer Session"}`,
+                            description: `ScholarMe Peer Learning Session with ${session.tutors?.profiles?.full_name || "Tutor"}`,
+                            location: "ScholarMe Virtual Meeting",
+                            startTime: session.scheduled_date,
+                          })}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <CalendarPlus className="h-3.5 w-3.5 text-blue-500" />
+                        </a>
+                      </Button>
                     </div>
                   </div>
                 ))}
+
               </div>
             )}
           </CardContent>

@@ -27,9 +27,10 @@ import { OnboardingTour } from "@/features/onboarding/components/onboarding-tour
 import { MobileFab } from "@/components/mobile-fab";
 import { PageTutorialButton } from "@/components/page-tutorial-button";
 import { AnalyticsPageTracker } from "@/components/analytics-page-tracker";
-import { ChatHeadsContainer } from "@/features/messaging/components/chat-heads-container";
-
 import { ContextualHelpButton } from "@/components/contextual-help-button";
+import { SuperAdminBanner } from "@/components/admin/super-admin-banner";
+import { CommandPalette } from "@/components/ui/command-palette";
+
 
 import {
   Dialog,
@@ -83,6 +84,8 @@ function DashboardLayoutContent({
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
+      {role === "super_admin" && <SuperAdminBanner />}
+      <CommandPalette />
       <ThemeApplicator
         profileThemeColor={profile?.profile_theme_color || undefined}
       />
@@ -92,6 +95,7 @@ function DashboardLayoutContent({
         notificationCount={notificationCount}
       />
       <SidebarInset>
+
         <header className="flex h-14 items-center gap-2 border-b border-border/60 px-4">
           <div
             data-tour-step="0"
