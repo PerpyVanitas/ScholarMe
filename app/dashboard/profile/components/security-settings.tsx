@@ -112,16 +112,26 @@ export function SecuritySettings() {
       return;
     }
     setChangingPassword(true);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) {
-      toast.error(error.message || "Failed to change password");
-    } else {
-      toast.success("Password changed successfully");
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
+    try {
+      const res = await fetch("/api/v1/account/password", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Failed to change password");
+      } else {
+        toast.success("Password changed successfully");
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      }
+    } catch {
+      toast.error("Network error while changing password");
+    } finally {
+      setChangingPassword(false);
     }
-    setChangingPassword(false);
   };
 
   const handleDeleteAccount = async () => {
