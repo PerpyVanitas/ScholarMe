@@ -8,13 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2026-08-02] — System-Wide Audit & Strategic Hardening
 
 ### Added
-- **Security Sanitizer Utility (`lib/utils/sanitizer.ts`)**: Added HTML/Markdown XSS sanitizer stripping `<script>`, `javascript:`, and dangerous element vectors before rendering user markdown in forums and tutor bios.
-- **System Health Check API (`app/api/v1/health/route.ts`)**: Added comprehensive health telemetry endpoint returning database latency, environment variable status, and HTTP 200/503 health status.
+- **Browser Timezone Converter Utility (`lib/utils/timezone.ts`)**: Added local browser timezone detection (`getLocalTimezone`) and slot conversion formatting for global session scheduling with unit test suite (`timezone.test.ts`).
+- **Super Admin Diagnostic Role Switcher Banner (`components/admin/super-admin-banner.tsx`)**: Created persistent floating diagnostic banner allowing Super Admins to simulate client views for Learner, Tutor, Committee Head, and Treasurer roles.
+- **Global Command Palette (`components/ui/command-palette.tsx`)**: Added `Cmd/Ctrl + K` global command palette enabling instant keyboard navigation across pages, tools, and admin features.
+- **Split ESAS 90-Hour Target & Exemption Meter (`components/dashboard/esas-progress-meter.tsx`)**: Implemented visual progress breakdown distinguishing Tutoring Hours vs Committee Service Hours against the 90-hr requirement, with automated Committee Head exemption badges.
+- **2-Step Financial PIN Authorization Modal (`features/finance/components/pin-confirmation-modal.tsx`)**: Created 2-step PIN signature confirmation modal for President/Treasurer releasing financial disbursements >₱5,000.
+- **Version-Controlled AI Prompt Modules (`lib/ai/prompts/index.ts`)**: Externalized AI system prompts for Vertex AI, Gemini, Quiz Generator, Flashcard Generator, and RAG search into a version-controlled module with unit tests (`index.test.ts`).
+- **Database Composite Indexes Migration (`supabase/migrations/20260802000000_audit_indexing_and_enums.sql`)**: Added database composite indexes for query hotspots (`tutor_availability`, `sessions`, `attendance_logs`, `audit_logs`).
+- **Philippine Peso Currency Formatting System-Wide (`lib/utils.ts` & `features/finance/utils.ts`)**: Integrated `formatCurrency` helper formatting monetary amounts with `en-PH` locale and `₱` (PHP) symbol.
+- **Security Sanitizer Utility (`lib/utils/sanitizer.ts`)**: Added HTML/Markdown XSS sanitizer stripping `<script>`, `javascript:`, and dangerous element vectors before rendering user markdown.
+- **System Health Check API (`app/api/v1/health/route.ts`)**: Added health telemetry endpoint returning database latency, environment variable status, and HTTP 200/503 status.
 - **Disaster Recovery Operational Runbook (`docs/runbooks/disaster-recovery.md`)**: Documented point-in-time recovery (PITR) procedures, emergency secret rotation, and incident response SLAs.
 - **Database Schema Sync Script (`scripts/check-schema-sync.sh`)**: Added verification script checking database migration references against `docs/schema.md`.
 
 ### Refactored
 - **Availability Schedule Page (`app/dashboard/availability/page.tsx`)**: Decomposed monolithic 473-line page into 4 modular subcomponents (`TutorBioCard`, `AddSlotCard`, `WeeklyScheduleCard`, `CopyScheduleDialog`) to satisfy Rule 11 line limits.
+
 
 
 ## [2026-08-01] — Gamification: XP and Leveling Engine Fixes

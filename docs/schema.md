@@ -1,8 +1,10 @@
 # Database Schema
 
 This document is auto-generated from Supabase migrations.
+Migration file: 20260802000000_audit_indexing_and_enums.sql
 
 ## Table: analytics_logs
+
 
 | Column Definition |
 | --- |
@@ -975,3 +977,96 @@ This document is auto-generated from Supabase migrations.
   reason text NOT NULL,
   created_at timestamptz DEFAULT now() NOT NULL` |
 
+## Database Migrations Index
+
+- 20260221102743_baseline.sql
+- 20260221102927_baseline.sql
+- 20260221103147_baseline.sql
+- 20260221103233_baseline.sql
+- 20260221103318_baseline.sql
+- 20260221103349_baseline.sql
+- 20260221103438_baseline.sql
+- 20260307003914_baseline.sql
+- 20260307004007_baseline.sql
+- 20260307004332_baseline.sql
+- 20260307005433_add_profile_fields.sql
+- 20260307011357_fix_admin_role_assignment.sql
+- 20260307012111_ensure_admin_scholarme_role.sql
+- 20260521000000_hs_designations_policy_preflight.sql
+- 20260521001000_hs_designations.sql
+- 20260521002000_audit_fixes.sql
+- 20260522163024_clean.sql
+- 20260522163622_add_indexes.sql
+- 20260522163804_create_ratelimit_windows.sql
+- 20260522164000_hs_designations_restore_policy_preflight.sql
+- 20260522164100_advanced_analytics_rpc.sql
+- 20260522164200_card_issued_boolean.sql
+- 20260522164300_hall_of_fame_rpc.sql
+- 20260522164400_restore_hs_designation_policies.sql
+- 20260523000000_restore_bucket_public.sql
+- 20260523001000_xp_scaling_curve.sql
+- 20260705000000_chat_attachments.sql
+- 20260705001000_missing_schema_updates.sql
+- 20260705002000_onboarding.sql
+- 20260705003000_roles.sql
+- 20260705154000_finance_and_teamwork.sql
+- 20260705221100_finance_attachments.sql
+- 20260706000000_add_super_admin_designation.sql
+- 20260706001000_poll_fixes.sql
+- 20260706170000_fix_tutor_roles.sql
+- 20260706170300_feedback_system_and_rls_fix.sql
+- 20260706171500_tutor_statistics.sql
+- 20260706173000_id_number_2026_2027.sql
+- 20260706173500_tutor_analytics_trigger.sql
+- 20260706174500_patch_team_security.sql
+- 20260706180000_patch_finance_security.sql
+- 20260706183030_schema_cleanup.sql
+- 20260706195603_phase_21_library_and_waitlists.sql
+- 20260706220500_roles_rls.sql
+- 20260707000000_fix_poll_options_rls.sql
+- 20260707021300_gamification_streaks_quests.sql
+- 20260707021800_library_and_events.sql
+- 20260707023300_flashcard_sm2.sql
+- 20260707024000_multi_step_budget.sql
+- 20260707030000_profile_qol.sql
+- 20260707040000_gamification.sql
+- 20260707040001_forums.sql
+- 20260707042030_phase_22_qol_sprint.sql
+- 20260707050000_session_qol.sql
+- 20260707051000_announcements_and_rsvps.sql
+- 20260707060000_learner_experience_features.sql
+- 20260707070000_tutor_experience_features.sql
+- 20260707073000_tutor_experience_missing_features.sql
+- 20260707080000_tutor_peer_review_substitution.sql
+- 20260707090000_qol_phase_29.sql
+- 20260707090001_fix_admin_role_functions.sql
+- 20260712000000_role_expiration.sql
+- 20260713000000_finance_module.sql
+- 20260713000001_org_structure.sql
+- 20260714000000_messaging_community.sql
+- 20260714153000_increment_rate_limit.sql
+- 20260714153500_hash_existing_pins.sql
+- 20260715000000_study_and_customization.sql
+- 20260716000000_image_occlusion.sql
+- 20260716000001_gamification_architecture.sql
+- 20260716000002_geolocation.sql
+- 20260718000000_weekly_challenges.sql
+- 20260718000001_exec_sql.sql
+- 20260718000002_schema_cleanup_2.sql
+- 20260718000003_social_features.sql
+- 20260718000004_gamification_fixes.sql
+- 20260718000005_retire_exec_sql.sql
+- 20260718000006_rag_setup.sql
+- 20260719000000_feature_flags.sql
+- 20260719000001_phase13_features.sql
+- 20260720000000_forum_reports.sql
+- 20260720000001_tutor_indexes.sql
+- 20260721000000_fix_study_group_rls.sql
+- 20260722000000_resource_embeddings_rls.sql
+- 20260722140000_timesheets_2hr_auto_clockout.sql
+- 20260723000000_direction_doc_v1_schema.sql
+- 20260723010000_attendance_indexes.sql
+- 20260724000000_drop_unused_tables.sql
+- 20260724000001_cleanup_duplicate_indexes.sql
+- 20260801120000_fix_gamification_xp_levels.sql
+- 20260802000000_audit_indexing_and_enums.sql
