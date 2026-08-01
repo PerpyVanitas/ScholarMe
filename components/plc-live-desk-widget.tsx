@@ -5,15 +5,21 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, Users, Clock, QrCode, Sparkles, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+import { useUser } from "@/lib/user-context";
 
 export function PlcLiveDeskWidget() {
+  const { role } = useUser();
   const supabase = createClient();
   const [loading, setLoading] = useState(true);
   const [activeTutorsCount, setActiveTutorsCount] = useState(0);
   const [learnersCheckedInCount, setLearnersCheckedInCount] = useState(0);
   const [estWaitMinutes, setEstWaitMinutes] = useState(0);
+
+  const checkInHref =
+    role === "administrator" || role === "super_admin"
+      ? "/dashboard/admin/scanner"
+      : "/dashboard/timesheet";
 
   useEffect(() => {
     async function loadPlcState() {
@@ -108,7 +114,7 @@ export function PlcLiveDeskWidget() {
           </div>
 
           <Button asChild size="sm" variant="default" className="text-xs gap-1.5 shrink-0 hidden md:inline-flex">
-            <Link href="/dashboard/admin/users">
+            <Link href={checkInHref}>
               <QrCode className="h-3.5 w-3.5" /> Check In
             </Link>
           </Button>
