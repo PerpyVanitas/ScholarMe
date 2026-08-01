@@ -977,7 +977,18 @@ Migration file: 20260802000000_audit_indexing_and_enums.sql
   reason text NOT NULL,
   created_at timestamptz DEFAULT now() NOT NULL` |
 
+## Table: audit_logs
+
+| Column Definition |
+| --- |
+| `id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  actor_id uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
+  action text NOT NULL,
+  details jsonb,
+  created_at timestamptz DEFAULT now()` |
+
 ## Database Migrations Index
+
 
 - 20260221102743_baseline.sql
 - 20260221102927_baseline.sql
