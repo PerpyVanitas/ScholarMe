@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Building2, Users, Clock, QrCode } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@/lib/user-context";
 
