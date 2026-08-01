@@ -53,3 +53,10 @@ temp.md
 test-results/
 playwright-report/
 needs_schema.txt
+
+# Google Cloud / Vertex AI — service account key files
+# NEVER commit these. Use GOOGLE_APPLICATION_CREDENTIALS_JSON env var on Vercel instead.
+*-service-account*.json
+*-sa-key*.json
+project-*.json
+gcp-*.json

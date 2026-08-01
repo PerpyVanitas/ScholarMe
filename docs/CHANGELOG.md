@@ -5,7 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2026-07-27] — AI Tutor: Vertex AI as Primary Auth Strategy
+
+### Fixed
+- **`lib/ai/gemini.ts` — `getAIClient()` auth priority corrected.**  
+  Vertex AI is now the explicit primary: when `GOOGLE_CLOUD_PROJECT_ID` is set
+  the client is always created with `{ vertexai: true, project, location }`.
+  `google-auth-library` auto-discovers Application Default Credentials (ADC)
+  from the environment — including the credentials file written by
+  `gcloud auth application-default login` — so no extra env var is required.
+  `GEMINI_API_KEY` / `GOOGLE_GENERATIVE_AI_API_KEY` are kept as a fallback for
+  deployments where Vertex AI is not configured.
+- **Unit tests (`lib/ai/__tests__/gemini.test.ts`) updated** to reflect the new
+  priority order, with dedicated test cases for the API-key fallback path and
+  the "throws when unconfigured" case (9 / 9 passing).
+
 ## [2026-07-26] — Accessibility: Color Contrast Fix (WCAG 2 AA)
+
 
 ### Fixed
 - **`app/page.tsx` CTA button color contrast**: The primary CTA button ("Start Learning Free" / "Go to Dashboard") used `bg-amber-900` (`#78350f`) with `text-white`, producing a contrast ratio of ~3.3:1 — below the WCAG 2 AA minimum of 4.5:1 for normal text. Replaced with `bg-amber-950` (`#451a03`), which yields ~7.5:1. Dark-mode styling (`dark:bg-[#ffd700] dark:text-[#111111]`) was already compliant and unchanged. Detected via `axe-core 4.12.1`.

@@ -20,8 +20,11 @@ describe("Gemini utilities", () => {
   const originalEnv = { ...process.env };
 
   beforeEach(() => {
-    process.env.GOOGLE_CLOUD_PROJECT_ID = "test-project";
-    process.env.GOOGLE_CLOUD_LOCATION = "us-east1";
+    // Start each test with a clean slate — no AI config
+    delete process.env.GOOGLE_CLOUD_PROJECT_ID;
+    delete process.env.GOOGLE_CLOUD_LOCATION;
+    delete process.env.GEMINI_API_KEY;
+    delete process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   });
 
   afterEach(() => {
@@ -34,33 +37,79 @@ describe("Gemini utilities", () => {
     expect(GEMINI_TIMEOUT_MS).toBe(60_000);
   });
 
-  it("creates AI client when project is configured", () => {
+  // ── Vertex AI (primary) ────────────────────────────────────────────────────
+
+  it("creates a Vertex AI client when GOOGLE_CLOUD_PROJECT_ID is set", () => {
+    process.env.GOOGLE_CLOUD_PROJECT_ID = "test-project";
+    process.env.GOOGLE_CLOUD_LOCATION = "us-east1";
+
     const client = getAIClient();
 
     expect(client).toBeDefined();
-    expect((client as { config: { project: string } }).config.project).toBe(
-      "test-project",
-    );
+    expect((client as unknown as { config: { vertexai: boolean } }).config.vertexai).toBe(true);
+    expect((client as unknown as { config: { project: string } }).config.project).toBe("test-project");
+    expect((client as unknown as { config: { location: string } }).config.location).toBe("us-east1");
   });
 
-  it("uses default location when GOOGLE_CLOUD_LOCATION is unset", () => {
-    delete process.env.GOOGLE_CLOUD_LOCATION;
+  it("uses default location us-central1 when GOOGLE_CLOUD_LOCATION is unset", () => {
+    process.env.GOOGLE_CLOUD_PROJECT_ID = "test-project";
 
     const client = getAIClient();
 
-    expect((client as { config: { location: string } }).config.location).toBe(
-      "us-central1",
-    );
+    expect((client as unknown as { config: { location: string } }).config.location).toBe("us-central1");
   });
 
-  it("throws when GOOGLE_CLOUD_PROJECT_ID is missing", () => {
-    delete process.env.GOOGLE_CLOUD_PROJECT_ID;
+  it("sets GOOGLE_APPLICATION_CREDENTIALS to /tmp path when GOOGLE_APPLICATION_CREDENTIALS_JSON is provided", () => {
+    process.env.GOOGLE_CLOUD_PROJECT_ID = "test-project";
+    process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON = JSON.stringify({ type: "service_account" });
 
-    expect(() => getAIClient()).toThrow("GOOGLE_CLOUD_PROJECT_ID");
+    // The function should not throw and should set GOOGLE_APPLICATION_CREDENTIALS
+    // so google-auth-library can pick it up from the written /tmp file.
+    expect(() => getAIClient()).not.toThrow();
+    expect(process.env.GOOGLE_APPLICATION_CREDENTIALS).toBe("/tmp/gcp-sa-key.json");
+
+    delete process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+    delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
   });
+
+  // ── API key fallback ───────────────────────────────────────────────────────
+
+  it("falls back to GEMINI_API_KEY when GOOGLE_CLOUD_PROJECT_ID is absent", () => {
+    process.env.GEMINI_API_KEY = "test-api-key";
+
+    const client = getAIClient();
+
+    expect(client).toBeDefined();
+    expect((client as unknown as { config: { apiKey: string } }).config.apiKey).toBe("test-api-key");
+    // Must NOT set vertexai: true in fallback mode
+    expect((client as unknown as { config: { vertexai?: boolean } }).config.vertexai).toBeUndefined();
+  });
+
+  it("falls back to GOOGLE_GENERATIVE_AI_API_KEY when GEMINI_API_KEY is absent", () => {
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY = "legacy-api-key";
+
+    const client = getAIClient();
+
+    expect((client as unknown as { config: { apiKey: string } }).config.apiKey).toBe("legacy-api-key");
+  });
+
+  // ── Misconfiguration ───────────────────────────────────────────────────────
+
+  it("throws when neither Vertex AI nor an API key is configured", () => {
+    expect(() => getAIClient()).toThrow("AI service is not configured");
+  });
+
+  // ── logAndSanitizeAIError ──────────────────────────────────────────────────
 
   it("returns config message for misconfiguration errors", () => {
     const error = new Error("GEMINI_API_KEY is not set");
+    expect(logAndSanitizeAIError("chat", error)).toBe(
+      "AI service is not configured. Please contact support.",
+    );
+  });
+
+  it("returns config message for AI-not-configured errors", () => {
+    const error = new Error("AI service is not configured. Set GOOGLE_CLOUD_PROJECT_ID");
     expect(logAndSanitizeAIError("chat", error)).toBe(
       "AI service is not configured. Please contact support.",
     );

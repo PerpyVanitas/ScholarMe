@@ -1,25 +1,76 @@
 /**
  * Shared Gemini AI utilities.
  * - Lazy client instantiation with early misconfiguration detection
+ * - Auth strategy: Vertex AI is primary (uses GOOGLE_CLOUD_PROJECT_ID +
+ *   Application Default Credentials). Supports three auth modes:
+ *     1. GOOGLE_APPLICATION_CREDENTIALS_JSON  — inline service-account JSON
+ *        (recommended for Vercel / serverless deployments)
+ *     2. GOOGLE_APPLICATION_CREDENTIALS       — path to a key file (local / GCE)
+ *     3. gcloud ADC file (local development via `gcloud auth application-default login`)
+ *   Falls back to GEMINI_API_KEY / GOOGLE_GENERATIVE_AI_API_KEY when Vertex
+ *   AI is not configured.
  * - Standardized timeout handling
  * - Safe error sanitization (full error logged server-side, generic message to client)
  */
+import { writeFileSync } from "fs";
 import { GoogleGenAI } from "@google/genai";
 
 export const GEMINI_MODEL = "gemini-2.5-flash";
 
-/** Lazily create a GoogleGenAI client configured for Vertex AI. */
+/**
+ * Lazily create a GoogleGenAI client.
+ *
+ * Auth priority:
+ *  1. GOOGLE_CLOUD_PROJECT_ID  → Vertex AI (primary)
+ *     Credentials are resolved in this order:
+ *       a) GOOGLE_APPLICATION_CREDENTIALS_JSON  (inline JSON, ideal for Vercel)
+ *       b) GOOGLE_APPLICATION_CREDENTIALS       (file path, local / GCE)
+ *       c) Well-known gcloud ADC file           (local dev)
+ *  2. GEMINI_API_KEY or GOOGLE_GENERATIVE_AI_API_KEY → standard Gemini API (fallback)
+ *
+ * If neither is configured an error is thrown immediately so
+ * misconfiguration surfaces before the first AI request.
+ */
 export function getAIClient(): GoogleGenAI {
   const project = process.env.GOOGLE_CLOUD_PROJECT_ID;
-  const location = process.env.GOOGLE_CLOUD_LOCATION || "us-central1";
 
-  if (!project) {
-    throw new Error(
-      "GOOGLE_CLOUD_PROJECT_ID environment variable is not configured. " +
-        "Check your .env.local and deployment environment settings.",
-    );
+  if (project) {
+    // ── Serverless / Vercel: inline JSON credentials ────────────────────────
+    // Vercel env vars cannot be file paths, so we support passing the entire
+    // service-account JSON as a string in GOOGLE_APPLICATION_CREDENTIALS_JSON.
+    // We write it to /tmp (writable on all serverless platforms) and point
+    // GOOGLE_APPLICATION_CREDENTIALS at that file so google-auth-library
+    // picks it up automatically.
+    const credJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+    if (credJson && !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+      const tmpPath = "/tmp/gcp-sa-key.json";
+      try {
+        writeFileSync(tmpPath, credJson, { encoding: "utf8" });
+        process.env.GOOGLE_APPLICATION_CREDENTIALS = tmpPath;
+      } catch {
+        // Non-fatal — google-auth-library will fall through to the next strategy
+      }
+    }
+
+    const location = process.env.GOOGLE_CLOUD_LOCATION || "us-central1";
+    return new GoogleGenAI({ vertexai: true, project, location });
   }
-  return new GoogleGenAI({ vertexai: true, project, location });
+
+  // ── Fallback: standard Gemini API key ────────────────────────────────────
+  const apiKey =
+    process.env.GEMINI_API_KEY ||
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+
+  if (apiKey) {
+    return new GoogleGenAI({ apiKey });
+  }
+
+  throw new Error(
+    "AI service is not configured. Set GOOGLE_CLOUD_PROJECT_ID (+ run " +
+      "`gcloud auth application-default login` locally, or set " +
+      "GOOGLE_APPLICATION_CREDENTIALS_JSON on Vercel) for Vertex AI, " +
+      "or set GEMINI_API_KEY for the standard Gemini API.",
+  );
 }
 
 /**
@@ -28,7 +79,12 @@ export function getAIClient(): GoogleGenAI {
  */
 export function logAndSanitizeAIError(context: string, error: unknown): string {
   console.error(`[AI Error — ${context}]`, error);
-  if (error instanceof Error && (error.message.includes("GEMINI_API_KEY") || error.message.includes("GOOGLE_CLOUD_PROJECT_ID"))) {
+  if (
+    error instanceof Error &&
+    (error.message.includes("GEMINI_API_KEY") ||
+      error.message.includes("GOOGLE_CLOUD_PROJECT_ID") ||
+      error.message.includes("AI service is not configured"))
+  ) {
     return "AI service is not configured. Please contact support.";
   }
   return "AI generation failed. Please try again later.";
