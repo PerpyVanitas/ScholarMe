@@ -20,6 +20,9 @@ const AUTH_ROUTES = ["/auth/login", "/auth/sign-up"]
 /** Routes that should never trigger redirects (callbacks, errors, assets, etc.) */
 const EXCLUDED_ROUTES = ["/", "/auth/callback", "/auth/error", "/auth/setup-profile", "/auth/sign-up-success"]
 
+/** Maximum allowed session duration (7 days) before forced re-authentication */
+const MAX_SESSION_AGE_MS = 7 * 24 * 60 * 60 * 1000
+
 /**
  * Validates and refreshes the user session, then enforces route protection.
  * 
@@ -55,8 +58,17 @@ export async function updateSession(request: NextRequest) {
     const { data } = await supabase.auth.getUser()
     user = data.user
   } catch {
-    // Supabase unreachable -- skip auth guards, don't block request.
-    return supabaseResponse
+    user = null
+  }
+
+  // Enforce session max-age safety: if last sign-in exceeds MAX_SESSION_AGE_MS, force sign-out
+  if (user && user.last_sign_in_at) {
+    const lastSignIn = new Date(user.last_sign_in_at).getTime()
+    const now = Date.now()
+    if (now - lastSignIn > MAX_SESSION_AGE_MS) {
+      await supabase.auth.signOut()
+      user = null
+    }
   }
 
   const { pathname } = request.nextUrl
