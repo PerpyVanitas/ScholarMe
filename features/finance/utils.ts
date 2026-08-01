@@ -6,6 +6,20 @@ export function roundCurrency(value: number): number {
 }
 
 /**
+ * Formats numeric currency amounts as Philippine Peso (₱ / PHP).
+ */
+export function formatCurrency(amount: number | null | undefined): string {
+  if (amount === null || amount === undefined || isNaN(amount)) return "₱0.00";
+  return new Intl.NumberFormat("en-PH", {
+    style: "currency",
+    currency: "PHP",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+
+/**
  * Validates file signature (magic numbers) to ensure the uploaded file
  * actually matches the expected content type, not just extension.
  * Supports PDF, JPEG, and PNG.

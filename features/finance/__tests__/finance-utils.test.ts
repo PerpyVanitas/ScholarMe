@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { roundCurrency, isValidFileType } from "../utils";
+import { roundCurrency, isValidFileType, formatCurrency } from "../utils";
+
 
 describe("Finance Utils", () => {
   it("P2-4: Floating point precision sums correctly", () => {
@@ -53,4 +54,10 @@ describe("Finance Utils", () => {
     expect(nextMonth.getUTCMonth()).toBe(2); // March is 0-indexed as 2
     expect(nextMonth.getUTCDate()).toBe(29);
   });
+
+  it("P2-10: Formats amounts to Philippine Peso (₱ / PHP)", () => {
+    expect(formatCurrency(1500)).toContain("1,500.00");
+    expect(formatCurrency(1500)).toMatch(/₱|PHP/);
+  });
 });
+

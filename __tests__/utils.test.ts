@@ -57,3 +57,20 @@ describe("calculateLevel (XP Scaling Curve)", () => {
     expect(calculateLevel(10000)).toBe(11);
   });
 });
+
+import { formatCurrency } from "@/lib/utils";
+
+describe("formatCurrency (Philippine Peso ₱)", () => {
+  it("formats numbers to Philippine Peso currency format", () => {
+    const formatted = formatCurrency(5000);
+    expect(formatted).toContain("5,000.00");
+    expect(formatted).toMatch(/₱|PHP/);
+  });
+
+  it("handles 0 and null amounts gracefully", () => {
+    expect(formatCurrency(0)).toContain("0.00");
+    expect(formatCurrency(null)).toContain("0.00");
+    expect(formatCurrency(undefined)).toContain("0.00");
+  });
+});
+

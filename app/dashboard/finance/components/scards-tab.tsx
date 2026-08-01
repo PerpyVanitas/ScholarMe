@@ -49,9 +49,10 @@ export function ScardsTab({ canSubmit, canAudit, scards }: Props) {
       <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
         <tr><td style="border: 1px solid #ccc; padding: 10px;"><strong>Status</strong></td><td style="border: 1px solid #ccc; padding: 10px;">${report.status.toUpperCase()}</td></tr>
         <tr><td style="border: 1px solid #ccc; padding: 10px;"><strong>Date Submitted</strong></td><td style="border: 1px solid #ccc; padding: 10px;">${new Date(report.created_at).toLocaleDateString()}</td></tr>
-        <tr><td style="border: 1px solid #ccc; padding: 10px;"><strong>Total Receipts</strong></td><td style="border: 1px solid #ccc; padding: 10px;">P${report.receipts_total}</td></tr>
-        <tr><td style="border: 1px solid #ccc; padding: 10px;"><strong>Total Disbursements</strong></td><td style="border: 1px solid #ccc; padding: 10px;">P${report.disbursements_total}</td></tr>
-        <tr><td style="border: 1px solid #ccc; padding: 10px;"><strong>Final Balance</strong></td><td style="border: 1px solid #ccc; padding: 10px;"><strong>P${report.balance}</strong></td></tr>
+        <tr><td style="border: 1px solid #ccc; padding: 10px;"><strong>Total Receipts</strong></td><td style="border: 1px solid #ccc; padding: 10px;">₱${report.receipts_total}</td></tr>
+        <tr><td style="border: 1px solid #ccc; padding: 10px;"><strong>Total Disbursements</strong></td><td style="border: 1px solid #ccc; padding: 10px;">₱${report.disbursements_total}</td></tr>
+        <tr><td style="border: 1px solid #ccc; padding: 10px;"><strong>Final Balance</strong></td><td style="border: 1px solid #ccc; padding: 10px;"><strong>₱${report.balance}</strong></td></tr>
+
       </table>
       ${report.status === "cosigned" ? `<p style="margin-top: 30px;">Co-signed by Auditor on ${new Date(report.cosigned_at!).toLocaleDateString()}</p>` : ""}
       <p style="margin-top: ${report.status === "cosigned" ? "10px" : "30px"};">Certified by Finance Officer</p>
