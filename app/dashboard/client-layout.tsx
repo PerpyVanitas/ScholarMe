@@ -30,6 +30,8 @@ import { AnalyticsPageTracker } from "@/components/analytics-page-tracker";
 import { ContextualHelpButton } from "@/components/contextual-help-button";
 import { SuperAdminBanner } from "@/components/admin/super-admin-banner";
 import { CommandPalette } from "@/components/ui/command-palette";
+import { ChatHeadsContainer } from "@/features/messaging/components/chat-heads-container";
+
 
 
 import {

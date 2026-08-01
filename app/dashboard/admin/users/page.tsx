@@ -48,9 +48,11 @@ import { UserDeleteDialog } from "./components/user-delete-dialog";
 import { UserLogsDialog } from "./components/user-logs-dialog";
 import { UserDesignationsDialog } from "./components/user-designations-dialog";
 import { UserIdCardDialog } from "./components/user-id-card-dialog";
+import { UserProfileDialog } from "./components/user-profile-dialog";
 import { BulkUserImportDialog } from "./components/bulk-user-import-dialog";
 import { UsersDataTable } from "./components/users-data-table";
 import { BatchActionsDialog } from "./components/batch-actions-dialog";
+
 
 
 function getUserRoleName(roles: unknown): string {
