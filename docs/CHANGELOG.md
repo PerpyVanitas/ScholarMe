@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2026-08-02] — System-Wide Audit & Strategic Hardening
+
+### Added
+- **Security Sanitizer Utility (`lib/utils/sanitizer.ts`)**: Added HTML/Markdown XSS sanitizer stripping `<script>`, `javascript:`, and dangerous element vectors before rendering user markdown in forums and tutor bios.
+- **System Health Check API (`app/api/v1/health/route.ts`)**: Added comprehensive health telemetry endpoint returning database latency, environment variable status, and HTTP 200/503 health status.
+- **Disaster Recovery Operational Runbook (`docs/runbooks/disaster-recovery.md`)**: Documented point-in-time recovery (PITR) procedures, emergency secret rotation, and incident response SLAs.
+- **Database Schema Sync Script (`scripts/check-schema-sync.sh`)**: Added verification script checking database migration references against `docs/schema.md`.
+
+### Refactored
+- **Availability Schedule Page (`app/dashboard/availability/page.tsx`)**: Decomposed monolithic 473-line page into 4 modular subcomponents (`TutorBioCard`, `AddSlotCard`, `WeeklyScheduleCard`, `CopyScheduleDialog`) to satisfy Rule 11 line limits.
+
+
 ## [2026-08-01] — Gamification: XP and Leveling Engine Fixes
 
 ### Fixed

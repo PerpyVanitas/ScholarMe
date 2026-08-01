@@ -1,33 +1,44 @@
+/**
+ * System Health & Telemetry API Endpoint
+ * 
+ * Inspects database connectivity, environment variable readiness, and uptime metrics.
+ */
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import * as Sentry from "@sentry/nextjs";
-import { handleApiError } from "@/lib/utils/api-error";
 
 export async function GET() {
+  const startTime = Date.now();
+  let dbOk = false;
+  let dbLatency = 0;
+
   try {
     const supabase = await createClient();
-    // Simple query to verify DB connection
+    const dbStart = Date.now();
     const { error } = await supabase.from("profiles").select("id").limit(1);
-
-    if (error) {
-      // Log the real DB error server-side; never expose it to the client
-      Sentry.captureException(error, { tags: { route: "/api/v1/health", check: "db_connectivity" } });
-      console.error("[health] DB connectivity check failed:", error.message);
-      return NextResponse.json(
-        { status: "error", message: "Database connection failed" },
-        { status: 503 },
-      );
-    }
-
-    return NextResponse.json(
-      {
-        status: "ok",
-        timestamp: new Date().toISOString(),
-        build: process.env.VERCEL_GIT_COMMIT_SHA ?? "local",
-      },
-      { status: 200 },
-    );
-  } catch (error: unknown) {
-    return handleApiError(error);
+    dbLatency = Date.now() - dbStart;
+    dbOk = !error;
+  } catch {
+    dbOk = false;
   }
+
+  const envOk = Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+
+  const isHealthy = dbOk && envOk;
+  const status = isHealthy ? 200 : 503;
+
+  return NextResponse.json(
+    {
+      status: isHealthy ? "healthy" : "unhealthy",
+      timestamp: new Date().toISOString(),
+      latencyMs: Date.now() - startTime,
+      checks: {
+        database: { status: dbOk ? "ok" : "error", latencyMs: dbLatency },
+        environment: { status: envOk ? "ok" : "missing_vars" },
+      },
+    },
+    { status }
+  );
 }
