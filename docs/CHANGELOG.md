@@ -8,7 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2026-08-02] — System-Wide Audit & Strategic Hardening
 
 ### Added
+- **Continuous Fast QR & Barcode Scanner (`components/ui/qr-scanner-continuous.tsx`)**: Created continuous camera stream scanner with front/back camera flip toggle and scan counter for CFMR physical library checkout and event attendance.
+- **Batch User Operations & Role Manager (`app/dashboard/admin/users/components/batch-actions-dialog.tsx`)**: Built multi-select batch action modal for bulk role assignment, account suspension, and CSV export.
+- **AI Tutor Persistent Storage Engine (`hooks/use-ai-tutor-session.ts`)**: Built client-side local session hook with unit test suite (`use-ai-tutor-session.test.ts`) preserving conversation history across page reloads.
+- **Committee Task Delegation Board (`features/teamwork/components/committee-task-board.tsx`)**: Added interactive task board for Committee Heads and members to delegate, complete, and track committee duties.
 - **Browser Timezone Converter Utility (`lib/utils/timezone.ts`)**: Added local browser timezone detection (`getLocalTimezone`) and slot conversion formatting for global session scheduling with unit test suite (`timezone.test.ts`).
+
 - **Super Admin Diagnostic Role Switcher Banner (`components/admin/super-admin-banner.tsx`)**: Created persistent floating diagnostic banner allowing Super Admins to simulate client views for Learner, Tutor, Committee Head, and Treasurer roles.
 - **Global Command Palette (`components/ui/command-palette.tsx`)**: Added `Cmd/Ctrl + K` global command palette enabling instant keyboard navigation across pages, tools, and admin features.
 - **Split ESAS 90-Hour Target & Exemption Meter (`components/dashboard/esas-progress-meter.tsx`)**: Implemented visual progress breakdown distinguishing Tutoring Hours vs Committee Service Hours against the 90-hr requirement, with automated Committee Head exemption badges.
