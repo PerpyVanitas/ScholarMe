@@ -705,21 +705,21 @@ export default function HomePage() {
             {[
               {
                 title: "Community",
-                links: [
-                  "Honor Society",
-                  "CIT University",
-                  "Student Success Office",
-                  "Alumni Network",
+                items: [
+                  { label: "Honor Society", href: "/dashboard/journey" },
+                  { label: "CIT University", href: "https://www.cit.edu" },
+                  { label: "Student Success Office", href: "/dashboard/resources" },
+                  { label: "Alumni Network", href: "/dashboard/network/alumni" },
                 ],
               },
               {
                 title: "Platform",
-                links: [
-                  "Peer Tutors",
-                  "Session Booking",
-                  "Timesheets",
-                  "Leaderboard",
-                  "Voting",
+                items: [
+                  { label: "Peer Tutors", href: "/dashboard/network/tutors" },
+                  { label: "Session Booking", href: "/dashboard/sessions" },
+                  { label: "Timesheets", href: "/dashboard/timesheet" },
+                  { label: "Leaderboard", href: "/dashboard/leaderboard" },
+                  { label: "Voting", href: "/dashboard/voting" },
                 ],
               },
             ].map((col, i) => (
@@ -728,14 +728,25 @@ export default function HomePage() {
                   {col.title}
                 </h3>
                 <ul className="space-y-2.5">
-                  {col.links.map((link, j) => (
+                  {col.items.map((item, j) => (
                     <li key={j}>
-                      <a
-                        href="#"
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-200"
-                      >
-                        {link}
-                      </a>
+                      {item.href.startsWith("http") ? (
+                        <a
+                          href={item.href}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-200"
+                        >
+                          {item.label}
+                        </a>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-200"
+                        >
+                          {item.label}
+                        </Link>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -747,20 +758,20 @@ export default function HomePage() {
               </h3>
               <ul className="space-y-2.5">
                 <li>
-                  <a
-                    href="#"
+                  <Link
+                    href="/dashboard/wiki"
                     className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-200"
                   >
                     Help Center
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
-                    href="#"
+                  <Link
+                    href="/dashboard/messages"
                     className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-200"
                   >
                     Contact Us
-                  </a>
+                  </Link>
                 </li>
                 <li>
                   <TosLink className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-200 text-left" />
