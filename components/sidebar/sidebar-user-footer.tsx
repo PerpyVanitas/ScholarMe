@@ -74,13 +74,14 @@ export function SidebarUserFooter({ profile }: SidebarUserFooterProps) {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <form action={signOut}>
-                  <button type="submit" className="flex w-full items-center">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
-                  </button>
-                </form>
+              <DropdownMenuItem
+                onClick={async () => {
+                  await signOut();
+                }}
+                className="cursor-pointer text-destructive focus:text-destructive"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

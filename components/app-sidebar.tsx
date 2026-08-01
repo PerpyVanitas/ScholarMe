@@ -17,6 +17,7 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
@@ -360,21 +361,21 @@ export function AppSidebar({
                             asChild
                             isActive={pathname === favHref}
                             tooltip={favItem.title}
-                            className="group/favitem"
                           >
                             <Link href={favHref}>
                               <favItem.icon className="h-4 w-4 text-primary" />
                               <span className="font-medium">
                                 {favItem.title}
                               </span>
-                              <button
-                                onClick={(e) => toggleFavorite(e, favHref)}
-                                className="ml-auto opacity-0 group-hover/favitem:opacity-100 p-1 hover:bg-muted rounded text-muted-foreground"
-                              >
-                                <PinOff className="h-3 w-3" />
-                              </button>
                             </Link>
                           </SidebarMenuButton>
+                          <SidebarMenuAction
+                            showOnHover
+                            onClick={(e) => toggleFavorite(e, favHref)}
+                            title="Unpin from Favorites"
+                          >
+                            <PinOff className="h-3 w-3 text-primary" />
+                          </SidebarMenuAction>
                         </SidebarMenuItem>
                       );
                     })}
@@ -421,7 +422,7 @@ export function AppSidebar({
                             >
                               <SidebarMenuItem>
                                 <CollapsibleTrigger asChild>
-                                  <SidebarMenuButton tooltip={item.title}>
+                                  <SidebarMenuButton>
                                     <item.icon className="h-4 w-4" />
                                     <span>{item.title}</span>
                                     <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/submenu:rotate-90" />
@@ -430,7 +431,7 @@ export function AppSidebar({
                                 <CollapsibleContent>
                                   <SidebarMenuSub>
                                     {item.subItems.map((subItem: { title: string; href: string }) => (
-                                      <SidebarMenuSubItem key={subItem.title}>
+                                      <SidebarMenuSubItem key={subItem.title} className="relative group/menu-sub-item flex items-center">
                                         <SidebarMenuSubButton
                                           asChild
                                           isActive={pathname === subItem.href}
@@ -438,26 +439,26 @@ export function AppSidebar({
                                           <Link href={subItem.href}>
                                             <span>{subItem.title}</span>
                                           </Link>
-                                          <button
-                                            onClick={(e) =>
-                                              toggleFavorite(e, subItem.href)
-                                            }
-                                            className="ml-auto opacity-0 group-hover/menu-sub-item:opacity-100 p-0.5 hover:bg-muted rounded"
-                                            title={
-                                              favorites.includes(subItem.href)
-                                                ? "Unpin"
-                                                : "Pin to Favorites"
-                                            }
-                                          >
-                                            {favorites.includes(
-                                              subItem.href,
-                                            ) ? (
-                                              <PinOff className="h-3 w-3 text-primary" />
-                                            ) : (
-                                              <Pin className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                                            )}
-                                          </button>
                                         </SidebarMenuSubButton>
+                                        <button
+                                          onClick={(e) =>
+                                            toggleFavorite(e, subItem.href)
+                                          }
+                                          className="ml-auto opacity-0 group-hover/menu-sub-item:opacity-100 p-0.5 hover:bg-muted rounded text-muted-foreground"
+                                          title={
+                                            favorites.includes(subItem.href)
+                                              ? "Unpin"
+                                              : "Pin to Favorites"
+                                          }
+                                        >
+                                          {favorites.includes(
+                                            subItem.href,
+                                          ) ? (
+                                            <PinOff className="h-3 w-3 text-primary" />
+                                          ) : (
+                                            <Pin className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                                          )}
+                                        </button>
                                       </SidebarMenuSubItem>
                                     ))}
                                   </SidebarMenuSub>
@@ -486,23 +487,23 @@ export function AppSidebar({
                                         : notificationCount}
                                     </span>
                                   )}
-                                <button
-                                  onClick={(e) => toggleFavorite(e, item.href!)}
-                                  className="ml-auto opacity-0 group-hover/menu-button:opacity-100 p-1 hover:bg-muted rounded"
-                                  title={
-                                    favorites.includes(item.href!)
-                                      ? "Unpin"
-                                      : "Pin to Favorites"
-                                  }
-                                >
-                                  {favorites.includes(item.href!) ? (
-                                    <PinOff className="h-3 w-3 text-primary" />
-                                  ) : (
-                                    <Pin className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                                  )}
-                                </button>
                               </Link>
                             </SidebarMenuButton>
+                            <SidebarMenuAction
+                              showOnHover
+                              onClick={(e) => toggleFavorite(e, item.href!)}
+                              title={
+                                favorites.includes(item.href!)
+                                  ? "Unpin"
+                                  : "Pin to Favorites"
+                              }
+                            >
+                              {favorites.includes(item.href!) ? (
+                                <PinOff className="h-3 w-3 text-primary" />
+                              ) : (
+                                <Pin className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                              )}
+                            </SidebarMenuAction>
                           </SidebarMenuItem>
                         );
                       })}

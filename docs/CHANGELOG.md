@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Added `calculateLevel()` and `getLevelProgress()` to accurately compute level thresholds and progress bar percentage aligned with the database formula (`Level = floor(0.1 * sqrt(total_xp)) + 1`).
 - **Real-Time Client Updates (`lib/user-context.tsx`)**:  
   Added `xp_earned` custom window event listener in `UserProvider` to update `total_xp` and `current_level` in React state immediately without requiring a full page refresh.
+- **Sidebar & Admin Navigation (`components/app-sidebar.tsx` & `components/sidebar/sidebar-user-footer.tsx`)**:  
+  Resolved `React.Children.only expected to receive a single React element child` crash when clicking admin sidebar items or System Settings. Fixed invalid `asChild` nesting where `SidebarMenuButton` with `tooltip` (which returns a `<Tooltip>` provider component) was wrapped in `<CollapsibleTrigger asChild>`. Removed invalid nested `<button>` tags from inside `<Link>` components and refactored favorite actions to use `SidebarMenuAction`. Replaced `<DropdownMenuItem asChild>` form wrapper with clean `onClick` handler.
 
 
 ### Fixed
