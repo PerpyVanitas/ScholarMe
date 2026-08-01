@@ -76,8 +76,12 @@ export function getNavItems(role: UserRole, profile: Profile) {
     { title: "Mentorship Matching", href: "/dashboard/network/mentorship", icon: Users, id: "tour-nav-mentorship" },
     { title: "Community Hub", href: "/dashboard/forums", icon: MessageSquare },
     { title: "My Messages", href: "/dashboard/messages", icon: MessageSquare },
-    { title: "Voting", href: "/dashboard/voting", icon: Vote },
   ];
+
+  if (role !== "learner") {
+    connectItems.push({ title: "Voting", href: "/dashboard/voting", icon: Vote });
+  }
+
 
   const journeyItems = [
     { title: "My Journey", href: "/dashboard/journey", icon: Globe },

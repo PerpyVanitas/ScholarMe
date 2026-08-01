@@ -8,7 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2026-08-02] — System-Wide Audit & Strategic Hardening
 
 ### Added
+- **Auto-Generated Virtual Meeting Room Links (`lib/utils/meeting-link.ts`)**: Built Jitsi/Google Meet link generator with unit test suite (`meeting-link.test.ts`) for instant online tutoring sessions.
+- **1-Click Google & Outlook Calendar Add Helpers (`lib/utils/calendar-event.ts`)**: Added URL generators for Google Calendar and Outlook Web with unit test suite (`calendar-event.test.ts`).
+- **Mobile Image Cropper Modal (`components/ui/image-cropper-modal.tsx`)**: Created image cropper modal with 90° rotation controls for receipt upload verification.
+- **Learner Navigation Member-Only Scoping (`lib/navigation.ts`)**: Scoped sidebar navigation to hide member-only Voting tab from external `learner` accounts.
 - **Continuous Fast QR & Barcode Scanner (`components/ui/qr-scanner-continuous.tsx`)**: Created continuous camera stream scanner with front/back camera flip toggle and scan counter for CFMR physical library checkout and event attendance.
+
 - **Batch User Operations & Role Manager (`app/dashboard/admin/users/components/batch-actions-dialog.tsx`)**: Built multi-select batch action modal for bulk role assignment, account suspension, and CSV export.
 - **AI Tutor Persistent Storage Engine (`hooks/use-ai-tutor-session.ts`)**: Built client-side local session hook with unit test suite (`use-ai-tutor-session.test.ts`) preserving conversation history across page reloads.
 - **Committee Task Delegation Board (`features/teamwork/components/committee-task-board.tsx`)**: Added interactive task board for Committee Heads and members to delegate, complete, and track committee duties.
