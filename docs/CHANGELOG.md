@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Fixed hardcoded `/dashboard/admin/users` placeholder link on the "Check In" button. Route now dynamically directs learners and tutors to the Facility Attendance Timesheet (`/dashboard/timesheet`) and administrative users to the QR ID Card Check-In Scanner (`/dashboard/admin/scanner`).
 - **Profile Security Settings (`app/dashboard/profile/components/security-settings.tsx`)**:  
   Fixed broken "Change Password" handler which previously ignored the `currentPassword` field and updated passwords directly via client auth without validation. Updated to call `/api/v1/account/password`, which authenticates current password credentials via `signInWithPassword` before updating the user's password.
+- **Tutor of the Month Widget (`features/sessions/components/tutor-of-the-month.tsx`)**:  
+  Refactored component from hardcoded static placeholder values to query top rated tutors directly from the database `tutors` table with `profiles` and specializations.
 
 
 ### Fixed
