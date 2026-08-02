@@ -51,7 +51,7 @@ function DashboardLayoutContent({
   children: React.ReactNode;
   defaultOpen?: boolean;
 }) {
-  const { profile, role, loading, notificationCount } = useUser();
+  const { profile, role, effectiveRole, setSimulatedRole, loading, notificationCount } = useUser();
   const { showWarning, staySignedIn } = useInactivityTimeout();
 
   if (loading) {
@@ -92,11 +92,16 @@ function DashboardLayoutContent({
       />
       <AppSidebar
         profile={profile!}
-        role={role}
+        role={effectiveRole}
         notificationCount={notificationCount}
       />
       <SidebarInset>
-        {role === "super_admin" && <SuperAdminBanner currentRole={role} />}
+        {role === "super_admin" && (
+          <SuperAdminBanner
+            currentRole={role}
+            onSimulateRole={setSimulatedRole}
+          />
+        )}
 
         <header className="flex h-14 items-center gap-2 border-b border-border/60 px-4">
           <div

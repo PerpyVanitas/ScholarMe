@@ -18,9 +18,12 @@ import { toast } from "sonner";
 interface UserContextType {
   profile: Profile | null;
   role: UserRole;
+  effectiveRole: UserRole;
   loading: boolean;
   notificationCount: number;
   isAuthenticated: boolean;
+  simulatedRole: string;
+  setSimulatedRole: (role: string) => void;
   refreshProfile: (signal?: AbortSignal) => Promise<void>;
   refreshNotifications: () => Promise<void>;
 }
@@ -30,9 +33,12 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export function UserProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<UserRole>("learner");
+  const [simulatedRole, setSimulatedRole] = useState<string>("none");
   const [notificationCount, setNotificationCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const effectiveRole: UserRole = simulatedRole !== "none" ? (simulatedRole as UserRole) : role;
 
   const loadUserData = useCallback(async (signal?: AbortSignal) => {
     const supabase = createClient();
@@ -306,9 +312,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
       value={{
         profile,
         role,
+        effectiveRole,
         loading,
         notificationCount,
         isAuthenticated,
+        simulatedRole,
+        setSimulatedRole,
         refreshProfile: loadUserData,
         refreshNotifications,
       }}
