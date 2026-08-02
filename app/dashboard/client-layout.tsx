@@ -86,7 +86,7 @@ function DashboardLayoutContent({
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
-      {role === "super_admin" && <SuperAdminBanner />}
+      {role === "super_admin" && <SuperAdminBanner currentRole={role} />}
       <CommandPalette />
       <ThemeApplicator
         profileThemeColor={profile?.profile_theme_color || undefined}

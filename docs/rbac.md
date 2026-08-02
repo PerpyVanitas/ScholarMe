@@ -323,10 +323,14 @@ Legend: `✅ Full` · `👁 View Only` · `✏️ Own Only` · `🔒 No Access` 
 |---------|:-----------:|:-------------:|:---------:|:--------------:|:-------------------:|:--------------:|:-----:|:-------:|
 | View Finance Dashboard | ✅ | ✅ | ✅ | 🔒 | ✅ | 🔒 | 🔒 | 🔒 |
 | Submit Budget Request | ✅ | ✅ | ✅ | 🔒 | ✅ | 🔒 | 🔒 | 🔒 |
-| Approve Budget Request (up to threshold) | ✅ | ✅ | ✅ | 🔒 | ✅ | 🔒 | 🔒 | 🔒 |
-| Final approval on large budget requests | ✅ | 🔒 | ✅ | 🔒 | 🔒 | 🔒 | 🔒 | 🔒 |
-| Submit Petty Cash | ✅ | ✅ | ✅ | 🔒 | ✅ | 🔒 | 🔒 | 🔒 |
+| Request Supplemental Budget (>10% variance) | ✅ | ✅ | ✅ | 🔒 | ✅ | 🔒 | 🔒 | 🔒 |
+| Declare Conflict of Interest (Abstain & Escalate) | ✅ | ✅ | ✅ | 🔒 | ✅ | 🔒 | 🔒 | 🔒 |
+| Submit Petty Cash (max ₱300) | ✅ | ✅ | ✅ | 🔒 | ✅ | 🔒 | 🔒 | 🔒 |
 | Submit Liquidation | ✅ | ✅ | ✅ | 🔒 | ✅ | 🔒 | 🔒 | 🔒 |
+| Issue Compliance Flag (Yellow/Orange/Red) | 🔒 | 🔒 | 🔒 | 🔒 | Auditor Only | 🔒 | 🔒 | 🔒 |
+| Submit Confidential Whistleblower Report | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 🔒 |
+| Log Dual-Officer Revenue Collection | ✅ | ✅ | ✅ | 🔒 | Treasurer/CoF | 🔒 | 🔒 | 🔒 |
+| Committee on Investigation Case Management | ✅ | ✅ | ✅ | 🔒 | COI Chair | 🔒 | 🔒 | 🔒 |
 | AI OCR Receipt Extraction | ✅ | ✅ | ✅ | 🔒 | ✅ | 🔒 | 🔒 | 🔒 |
 | Create & Co-sign SCARDS | ✅ | ✅ | ✅ | 🔒 | ✅ | 🔒 | 🔒 | 🔒 |
 | Export SCARDS to PDF | ✅ | ✅ | ✅ | 🔒 | ✅ | 🔒 | 🔒 | 🔒 |
@@ -335,6 +339,7 @@ Legend: `✅ Full` · `👁 View Only` · `✏️ Own Only` · `🔒 No Access` 
 | Cash Register (Petty Cash register view) | ✅ | ✅ | ✅ | 🔒 | ✅ | 🔒 | 🔒 | 🔒 |
 
 > **Administrator note:** Admins can access finance dashboards and assist with submissions, but the **final approval on large expenditures is the President's exclusive authority**. This cannot be delegated to an admin.
+
 
 ---
 

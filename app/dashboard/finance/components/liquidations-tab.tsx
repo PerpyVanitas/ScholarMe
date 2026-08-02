@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Receipt, FileText, AlertTriangle, Clock, Sparkles } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { ExportFinanceCsv } from "@/features/finance/components/finance-export-csv";
+import { LostReceiptDialog } from "@/features/finance/components/lost-receipt-dialog";
 import { Liquidation, BudgetRequest } from "../types";
 import { submitLiquidation } from "@/features/finance/actions/finance-actions";
 import { toast } from "sonner";
@@ -83,11 +84,16 @@ export function LiquidationsTab({
     <div className="space-y-6">
       {canSubmit && (
         <Card>
-          <CardHeader>
-            <CardTitle>Submit Liquidation</CardTitle>
-            <CardDescription>
-              Liquidate approved budget requests.
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Submit Liquidation</CardTitle>
+              <CardDescription>
+                Liquidate approved budget requests within 3 to 7 days (Policy Section VIII).
+              </CardDescription>
+            </div>
+            {approvedRequests && (
+              <LostReceiptDialog approvedRequests={approvedRequests} />
+            )}
           </CardHeader>
           <CardContent>
             <form action={submitLiquidation} className="space-y-4 max-w-xl">

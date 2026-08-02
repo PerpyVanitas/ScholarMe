@@ -1081,3 +1081,5 @@ Migration file: 20260802000000_audit_indexing_and_enums.sql
 - 20260724000001_cleanup_duplicate_indexes.sql
 - 20260801120000_fix_gamification_xp_levels.sql
 - 20260802000000_audit_indexing_and_enums.sql
+- 20260803000000_finance_policy_system.sql
+

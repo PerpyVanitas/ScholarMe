@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { FileText, Pencil, Send, Download } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { ExportFinanceCsv } from "@/features/finance/components/finance-export-csv";
+import { AuditorChecklistModal } from "@/features/finance/components/auditor-checklist-modal";
 import { Scard } from "../types";
 import { toast } from "sonner";
 import {
@@ -272,15 +273,12 @@ export function ScardsTab({ canSubmit, canAudit, scards }: Props) {
                       </form>
                     )}
                     {canAudit && report.status === "auditor_review" && (
-                      <form
-                        action={async () => {
+                      <AuditorChecklistModal
+                        scardId={report.id}
+                        onCoSign={async () => {
                           await cosignScards(report.id);
                         }}
-                      >
-                        <Button size="sm" variant="outline">
-                          Co-sign Report
-                        </Button>
-                      </form>
+                      />
                     )}
                   </div>
                 </div>

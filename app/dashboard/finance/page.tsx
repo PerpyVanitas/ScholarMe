@@ -17,9 +17,25 @@ import { BudgetRequestsTab } from "./components/budget-requests-tab";
 import { PettyCashTab } from "./components/petty-cash-tab";
 import { LiquidationsTab } from "./components/liquidations-tab";
 import { ScardsTab } from "./components/scards-tab";
+import { ComplianceRegisterTab } from "./components/compliance-register-tab";
+import { WhistleblowerTab } from "./components/whistleblower-tab";
+import { RevenueCollectionsTab } from "./components/revenue-collections-tab";
+import { InvestigationsTab } from "./components/investigations-tab";
+
+import { EmergencyReimbursementDialog } from "@/features/finance/components/emergency-reimbursement-dialog";
+import { FinancialReportExporter } from "@/features/finance/components/financial-report-exporter";
 
 // Types
-import { BudgetRequest, PettyCash, Liquidation, Scard } from "./types";
+import {
+  BudgetRequest,
+  PettyCash,
+  Liquidation,
+  Scard,
+  ComplianceFlag,
+  WhistleblowerReport,
+  RevenueCollection,
+  InvestigationCase,
+} from "./types";
 import { FinanceVendor } from "@/lib/types";
 
 export default async function FinanceDashboard() {
@@ -50,21 +66,21 @@ export default async function FinanceDashboard() {
   const { data: budgetReqs } = await supabase
     .from("finance_budget_requests")
     .select(
-      "id, activity_title, amount, status, created_at, attachment_url, profiles(full_name)",
+      "id, activity_title, amount, status, created_at, attachment_url, profiles(full_name)"
     )
     .order("created_at", { ascending: false });
 
   const { data: pettyCash } = await supabase
     .from("finance_petty_cash")
     .select(
-      "id, amount, justification, status, created_at, attachment_url, profiles(full_name)",
+      "id, amount, justification, status, created_at, attachment_url, profiles(full_name)"
     )
     .order("created_at", { ascending: false });
 
   const { data: lateLiquidations } = await supabase
     .from("finance_liquidations")
     .select(
-      "id, submitted_at, finance_budget_requests(activity_title, amount), profiles(full_name)",
+      "id, submitted_at, finance_budget_requests(activity_title, amount), profiles(full_name)"
     )
     .eq("is_late", true)
     .order("submitted_at", { ascending: true });
@@ -78,15 +94,35 @@ export default async function FinanceDashboard() {
   const { data: allLiquidations } = await supabase
     .from("finance_liquidations")
     .select(
-      "id, submitted_at, is_late, receipt_urls, proof_of_payment_urls, finance_budget_requests(activity_title), profiles(full_name)",
+      "id, submitted_at, is_late, receipt_urls, proof_of_payment_urls, finance_budget_requests(activity_title), profiles(full_name)"
     )
     .order("submitted_at", { ascending: false });
 
   const { data: scards } = await supabase
     .from("finance_scards")
     .select(
-      "id, event_id, version, receipts_total, disbursements_total, balance, status, created_at, attachment_url, cosigned_by, cosigned_at, profiles(full_name)",
+      "id, event_id, version, receipts_total, disbursements_total, balance, status, created_at, attachment_url, cosigned_by, cosigned_at, profiles(full_name)"
     )
+    .order("created_at", { ascending: false });
+
+  const { data: flags } = await supabase
+    .from("finance_compliance_flags")
+    .select("*, profiles:officer_id(full_name)")
+    .order("date_issued", { ascending: false });
+
+  const { data: reports } = await supabase
+    .from("finance_whistleblower_reports")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  const { data: collections } = await supabase
+    .from("finance_revenue_collections")
+    .select("*, officer1:officer_1_id(full_name), officer2:officer_2_id(full_name)")
+    .order("date_collected", { ascending: false });
+
+  const { data: cases } = await supabase
+    .from("finance_investigations")
+    .select("*")
     .order("created_at", { ascending: false });
 
   const { data: configs } = await supabase
@@ -116,14 +152,25 @@ export default async function FinanceDashboard() {
 
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-6">
-      <div className="flex flex-col items-start gap-2">
-        <h1 className="text-3xl font-bold">Financial Management</h1>
-        <div className="flex items-center gap-2">
-          {canReview && (
-            <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
-              Finance Review Access
-            </span>
-          )}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col items-start gap-2">
+          <h1 className="text-3xl font-bold">Financial Management</h1>
+          <div className="flex items-center gap-2">
+            {canReview && (
+              <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
+                Finance Review Access
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          {canSubmit && <EmergencyReimbursementDialog />}
+          <FinancialReportExporter
+            budgetReqs={budgetReqs as BudgetRequest[] | null}
+            scards={scards as Scard[] | null}
+            liquidations={allLiquidations as Liquidation[] | null}
+          />
         </div>
       </div>
 
@@ -140,11 +187,15 @@ export default async function FinanceDashboard() {
       </div>
 
       <SyncTabs defaultValue="requests" className="w-full">
-        <TabsList className="mb-4">
+        <TabsList className="mb-4 flex flex-wrap gap-1 h-auto">
           <TabsTrigger value="requests">Budget Requests</TabsTrigger>
           <TabsTrigger value="petty_cash">Petty Cash</TabsTrigger>
           <TabsTrigger value="liquidations">Liquidations</TabsTrigger>
           <TabsTrigger value="scards">SCARDS & Audit</TabsTrigger>
+          <TabsTrigger value="compliance">Compliance Register</TabsTrigger>
+          <TabsTrigger value="whistleblower">Whistleblower Intake</TabsTrigger>
+          <TabsTrigger value="collections">Revenue Collections</TabsTrigger>
+          <TabsTrigger value="investigations">Investigations</TabsTrigger>
         </TabsList>
 
         <TabsContent value="requests" className="space-y-6">
@@ -180,6 +231,32 @@ export default async function FinanceDashboard() {
             canSubmit={canReview}
             canAudit={canAudit}
             scards={scards as Scard[] | null}
+          />
+        </TabsContent>
+
+        <TabsContent value="compliance" className="space-y-6">
+          <ComplianceRegisterTab
+            canAudit={canAudit}
+            flags={flags as ComplianceFlag[] | null}
+          />
+        </TabsContent>
+
+        <TabsContent value="whistleblower" className="space-y-6">
+          <WhistleblowerTab
+            reports={reports as WhistleblowerReport[] | null}
+          />
+        </TabsContent>
+
+        <TabsContent value="collections" className="space-y-6">
+          <RevenueCollectionsTab
+            canSubmit={canSubmit}
+            collections={collections as RevenueCollection[] | null}
+          />
+        </TabsContent>
+
+        <TabsContent value="investigations" className="space-y-6">
+          <InvestigationsTab
+            cases={cases as InvestigationCase[] | null}
           />
         </TabsContent>
       </SyncTabs>

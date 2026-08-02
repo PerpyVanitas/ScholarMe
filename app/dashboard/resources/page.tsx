@@ -37,7 +37,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { UserRole } from "@/lib/types";
-import { getRoleName } from "@/lib/utils/roles";
+import { getRoleName, hasAnyRole, TUTOR_ROLES } from "@/lib/utils/roles";
 import { ensureTutor } from "@/app/dashboard/profile/actions";
 import { RepoRow, ResourceRow, getTypeInfo } from "./types";
 import dynamic from "next/dynamic";
@@ -100,8 +100,7 @@ export default function ResourcesPage() {
     null,
   );
 
-  const canManage =
-    role === "tutor" || role === "administrator" || role === "super_admin";
+  const canManage = hasAnyRole(role, TUTOR_ROLES);
 
   const loadRepos = useCallback(async () => {
     const supabase = createClient();
@@ -123,7 +122,7 @@ export default function ResourcesPage() {
           profile as Parameters<typeof getRoleName>[0],
         ) as UserRole;
       }
-      if (userRole === "tutor") {
+      if (hasAnyRole(userRole, TUTOR_ROLES)) {
         await ensureTutor();
       }
     }

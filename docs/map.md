@@ -152,6 +152,19 @@ ScholarMe is divided into several primary domains, each governed by the access c
   - **Display**: Theme switching (Light/Dark/System) and Reduced Motion.
   - **Data & Privacy**: Toggles for Public Profile visibility and Analytics sharing. (Account deletion/export is handled securely under Profile Settings).
 
+- **Financial Management & Audit Subsystem (`/dashboard/finance`)**:
+  - **Budget Requests Tab**: Create budget requests, attach vendor preferences, view request statuses, request supplemental budget with >10% variance calculator.
+  - **Conflict of Interest Modal**: Mandatory approver declaration ("No Conflict" vs "Conflict Exists" with alternate escalation).
+  - **Petty Cash Tab**: Submit petty cash requests subject to database-enforced ₱300 cap and ₱1,500 revolving limit.
+  - **Liquidations Tab**: Upload receipts and proof of payment; view late liquidation counters.
+  - **SCARDS & Audit Tab**: Compile cash receipts and disbursements statements, request co-signature, lock to read-only state.
+  - **Compliance Register Tab**: Display active Yellow, Orange, and Red flags with 48-hour resolution countdowns.
+  - **Whistleblower Intake Tab**: Submit confidential or anonymous financial violation reports.
+  - **Revenue Collections Tab**: Dual-officer verified logging for organization income and bank deposit tracking.
+  - **Investigations Tab**: Case management for Committee on Investigation referrals and Executive Committee recommendations.
+  - **Workflow Progress Tracker Component**: 10-stage visual lifecycle tracker for financial transactions.
+
+
 ---
 
 ## 🚀 Institutional Journey & Capability Suite (v1 Direction Doc)

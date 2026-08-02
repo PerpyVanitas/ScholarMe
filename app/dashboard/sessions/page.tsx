@@ -30,6 +30,7 @@ import {
 import { toast } from "sonner";
 import { DEMO_USERS, getDemoUserFromCookie } from "@/scripts/demo";
 import type { Session, UserRole } from "@/lib/types";
+import { hasAnyRole, TUTOR_ROLES } from "@/lib/utils/roles";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SkeletonList } from "@/components/ui/skeleton-card";
 import { SessionSummaryModal } from "./components/session-summary-modal";
@@ -84,8 +85,8 @@ export default function SessionsPage() {
 
       setRole(userRole);
 
-      if (userRole === "tutor") {
-        // For tutor, find their tutor record first
+      if (hasAnyRole(userRole, TUTOR_ROLES)) {
+        // For tutor-eligible roles, find their tutor record first
         const { data: tutor } = await supabase
           .from("tutors")
           .select("id")
@@ -96,7 +97,7 @@ export default function SessionsPage() {
         if (signal.aborted) return;
 
         const tutorId =
-          tutor?.id || (userRole === "tutor" ? DEMO_USERS.tutor.tutorId : "");
+          tutor?.id || (hasAnyRole(userRole, TUTOR_ROLES) ? DEMO_USERS.tutor.tutorId : "");
         setCurrentTutorId(tutorId);
         const { data: tutorSessions } = await supabase
           .from("sessions")

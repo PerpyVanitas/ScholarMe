@@ -8,11 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 
 interface SuperAdminBannerProps {
-  currentRole: string;
+  currentRole?: string;
   onSimulateRole?: (role: string) => void;
 }
 
-export function SuperAdminBanner({ currentRole, onSimulateRole }: SuperAdminBannerProps) {
+export function SuperAdminBanner({ currentRole = "super_admin", onSimulateRole }: SuperAdminBannerProps) {
+
   const [simulatedRole, setSimulatedRole] = useState<string>("none");
   const [dismissed, setDismissed] = useState(false);
 

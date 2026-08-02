@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import { ProfileView } from "./components/profile-view";
 import { Metadata } from "next";
+import { getRoleName, hasAnyRole, TUTOR_ROLES } from "@/lib/utils/roles";
 
 export const metadata: Metadata = {
   title: "User Profile | ScholarMe",
@@ -47,10 +48,8 @@ export default async function UserProfilePage({
   }
 
   // Check privacy
-  const isTutor =
-    profile.roles?.name === "tutor" ||
-    profile.roles?.name === "super_admin" ||
-    profile.roles?.name === "administrator";
+  const userRole = getRoleName(profile);
+  const isTutor = hasAnyRole(userRole, TUTOR_ROLES);
   if (profile.is_private && !isTutor) {
     // If it's private and they aren't a tutor/admin, we might block access or show a limited view.
     // For now, let's just show a restricted view or a "This profile is private" message.
