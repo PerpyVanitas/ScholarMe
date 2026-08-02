@@ -32,15 +32,21 @@ export const GEMINI_MODEL = "gemini-2.0-flash";
  * misconfiguration surfaces before the first AI request.
  */
 export function getAIClient(): GoogleGenAI {
+  // ── Standard Gemini / Express API Key ───────────────────────────────────
+  const apiKey =
+    process.env.GEMINI_API_KEY ||
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+    process.env.GROQ_API_KEY ||
+    process.env.OPENAI_API_KEY;
+
+  if (apiKey) {
+    return new GoogleGenAI({ apiKey });
+  }
+
+  // ── Vertex AI (GCP Project Mode) ─────────────────────────────────────────
   const project = process.env.GOOGLE_CLOUD_PROJECT_ID;
 
   if (project) {
-    // ── Serverless / Vercel: inline JSON credentials ────────────────────────
-    // Vercel env vars cannot be file paths, so we support passing the entire
-    // service-account JSON as a string in GOOGLE_APPLICATION_CREDENTIALS_JSON.
-    // We write it to /tmp (writable on all serverless platforms) and point
-    // GOOGLE_APPLICATION_CREDENTIALS at that file so google-auth-library
-    // picks it up automatically.
     const credJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
     if (credJson && !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
       const tmpPath = "/tmp/gcp-sa-key.json";
@@ -54,17 +60,6 @@ export function getAIClient(): GoogleGenAI {
 
     const location = process.env.GOOGLE_CLOUD_LOCATION || "us-central1";
     return new GoogleGenAI({ vertexai: true, project, location });
-  }
-
-  // ── Fallback: standard Gemini API key ────────────────────────────────────
-  const apiKey =
-    process.env.GEMINI_API_KEY ||
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
-    process.env.GROQ_API_KEY ||
-    process.env.OPENAI_API_KEY;
-
-  if (apiKey) {
-    return new GoogleGenAI({ apiKey });
   }
 
   throw new Error(
