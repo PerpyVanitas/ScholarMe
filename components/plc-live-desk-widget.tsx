@@ -16,16 +16,28 @@ export function PlcLiveDeskWidget() {
   const [activeTutorsCount, setActiveTutorsCount] = useState(0);
   const [learnersCheckedInCount, setLearnersCheckedInCount] = useState(0);
   const [estWaitMinutes, setEstWaitMinutes] = useState(0);
-
-  const checkInHref =
-    role === "administrator" || role === "super_admin"
-      ? "/dashboard/admin/scanner"
-      : "/dashboard/timesheet";
+  const [isPeriodSet, setIsPeriodSet] = useState(false);
 
   useEffect(() => {
     async function loadPlcState() {
       try {
         setLoading(true);
+        // Query active collection period configuration
+        const { data: config } = await supabase
+          .from("semester_configs")
+          .select("start_date, end_date, is_active")
+          .eq("is_active", true)
+          .maybeSingle();
+
+        if (config && config.start_date && config.end_date) {
+          const nowTime = Date.now();
+          const start = new Date(config.start_date).getTime();
+          const end = new Date(config.end_date).getTime();
+          setIsPeriodSet(nowTime >= start && nowTime <= end);
+        } else {
+          setIsPeriodSet(false);
+        }
+
         // Query active unclosed attendance logs for today
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
@@ -114,11 +126,31 @@ export function PlcLiveDeskWidget() {
             </div>
           </div>
 
-          <Button asChild size="sm" variant="default" className="text-xs gap-1.5 shrink-0 hidden md:inline-flex">
-            <Link href={checkInHref}>
-              <QrCode className="h-3.5 w-3.5" /> Check In
-            </Link>
-          </Button>
+          {isPeriodSet ? (
+            <Button asChild size="sm" variant="default" className="text-xs gap-1.5 shrink-0">
+              <Link href="/dashboard/timesheet">
+                <Clock className="h-3.5 w-3.5" /> Check In / Timesheet
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled
+              className="text-xs gap-1.5 shrink-0 opacity-60 cursor-not-allowed"
+              title="Check-in is unavailable because the semester collection period is not set or currently closed."
+            >
+              <Clock className="h-3.5 w-3.5" /> Check In (Period Not Set)
+            </Button>
+          )}
+
+          {(role === "administrator" || role === "super_admin") && (
+            <Button asChild size="sm" variant="outline" className="text-xs gap-1.5 shrink-0 hidden lg:inline-flex">
+              <Link href="/dashboard/admin/scanner">
+                <QrCode className="h-3.5 w-3.5" /> Kiosk Scanner
+              </Link>
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
