@@ -86,7 +86,6 @@ function DashboardLayoutContent({
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
-      {role === "super_admin" && <SuperAdminBanner currentRole={role} />}
       <CommandPalette />
       <ThemeApplicator
         profileThemeColor={profile?.profile_theme_color || undefined}
@@ -97,6 +96,7 @@ function DashboardLayoutContent({
         notificationCount={notificationCount}
       />
       <SidebarInset>
+        {role === "super_admin" && <SuperAdminBanner currentRole={role} />}
 
         <header className="flex h-14 items-center gap-2 border-b border-border/60 px-4">
           <div

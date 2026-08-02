@@ -15,7 +15,7 @@
 import { writeFileSync } from "fs";
 import { GoogleGenAI } from "@google/genai";
 
-export const GEMINI_MODEL = "gemini-2.5-flash";
+export const GEMINI_MODEL = "gemini-2.0-flash";
 
 /**
  * Lazily create a GoogleGenAI client.
@@ -26,7 +26,7 @@ export const GEMINI_MODEL = "gemini-2.5-flash";
  *       a) GOOGLE_APPLICATION_CREDENTIALS_JSON  (inline JSON, ideal for Vercel)
  *       b) GOOGLE_APPLICATION_CREDENTIALS       (file path, local / GCE)
  *       c) Well-known gcloud ADC file           (local dev)
- *  2. GEMINI_API_KEY or GOOGLE_GENERATIVE_AI_API_KEY → standard Gemini API (fallback)
+ *  2. GEMINI_API_KEY, GOOGLE_GENERATIVE_AI_API_KEY, GROQ_API_KEY, or OPENAI_API_KEY → Gemini / LLM API key
  *
  * If neither is configured an error is thrown immediately so
  * misconfiguration surfaces before the first AI request.
@@ -59,7 +59,9 @@ export function getAIClient(): GoogleGenAI {
   // ── Fallback: standard Gemini API key ────────────────────────────────────
   const apiKey =
     process.env.GEMINI_API_KEY ||
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+    process.env.GROQ_API_KEY ||
+    process.env.OPENAI_API_KEY;
 
   if (apiKey) {
     return new GoogleGenAI({ apiKey });

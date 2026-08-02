@@ -196,12 +196,14 @@ export function WebLLMChat({
           body: JSON.stringify(reqBody),
         });
 
+        let replyText = "";
         if (!response.ok) {
-          throw new Error(`Server AI Error (${response.status})`);
+          const errData = await response.json().catch(() => null);
+          replyText = errData?.error || errData?.message || `AI Service currently unavailable (${response.status}). Please try again later.`;
+        } else {
+          const data = await response.json();
+          replyText = data.choices?.[0]?.message?.content || "No response generated.";
         }
-
-        const data = await response.json();
-        const replyText = data.choices?.[0]?.message?.content || "No response generated.";
 
         setMessages((prev) => {
           const updated = [...prev];
