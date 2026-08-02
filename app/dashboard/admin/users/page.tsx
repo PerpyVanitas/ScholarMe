@@ -67,7 +67,7 @@ function AdminUsersContent() {
   const searchParams = useSearchParams();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [roleFilter, setRoleFilter] = useState("all");
   const { role } = useUser();
 

@@ -12,6 +12,7 @@ import {
   Users,
   ShieldAlert,
   Search,
+  Loader2,
 } from "lucide-react";
 import { useUser } from "@/lib/user-context";
 import {
@@ -21,7 +22,15 @@ import {
   hasAnyRole,
 } from "@/lib/utils/roles";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { getAvatarUrl } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 import {
   CommandDialog,
@@ -34,6 +43,45 @@ import {
   CommandShortcut,
 } from "@/components/ui/command";
 
+type SearchUser = {
+  id: string;
+  full_name: string;
+  avatar_url: string | null;
+  email?: string;
+  degree_program?: string | null;
+  year_level?: string | null;
+  membership_number?: string | null;
+  total_xp?: number | null;
+  created_at?: string;
+  roles?: unknown;
+  bio?: string | null;
+};
+
+const ROLE_COLORS: Record<string, string> = {
+  super_admin: "bg-red-500/10 text-red-500 border-red-500/30",
+  president: "bg-purple-500/10 text-purple-500 border-purple-500/30",
+  administrator: "bg-warning/10 text-warning-foreground border-warning/30",
+  treasurer: "bg-yellow-500/10 text-yellow-500 border-yellow-500/30",
+  auditor: "bg-orange-500/10 text-orange-500 border-orange-500/30",
+  finance_manager: "bg-emerald-500/10 text-emerald-500 border-emerald-500/30",
+  committee_head: "bg-blue-500/10 text-blue-500 border-blue-500/30",
+  faculty_adviser: "bg-pink-500/10 text-pink-500 border-pink-500/30",
+  tutor: "bg-primary/10 text-primary border-primary/30",
+  learner: "bg-success/10 text-success border-success/30",
+};
+
+function getRoleName(roles: unknown): string {
+  if (Array.isArray(roles) && roles.length > 0) return roles[0].name;
+  if (roles && typeof roles === "object" && !Array.isArray(roles))
+    return (roles as Record<string, string>).name ?? "learner";
+  return "learner";
+}
+
+function getInitials(name: string | null | undefined) {
+  if (!name) return "?";
+  return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+}
+
 export function CommandMenu() {
   const [open, setOpen] = React.useState(false);
   const router = useRouter();
@@ -43,10 +91,13 @@ export function CommandMenu() {
   const showTeam = hasAnyRole(role, TEAMWORK_ROLES);
 
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [users, setUsers] = React.useState<
-    { id: string; full_name: string; avatar_url: string | null }[]
-  >([]);
+  const [users, setUsers] = React.useState<SearchUser[]>([]);
   const [isSearchingUsers, setIsSearchingUsers] = React.useState(false);
+  const showEmpty = !isSearchingUsers && searchQuery.trim().length >= 2 && users.length === 0;
+
+  // Profile quick-view modal
+  const [profileUser, setProfileUser] = React.useState<SearchUser | null>(null);
+  const [profileOpen, setProfileOpen] = React.useState(false);
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -73,12 +124,12 @@ export function CommandMenu() {
 
       const { data } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url")
+        .select("id, full_name, avatar_url, email, degree_program, year_level, membership_number, total_xp, created_at, roles:role_id(name), bio")
         .ilike("full_name", `%${searchQuery}%`)
-        .limit(5);
+        .limit(6);
 
       if (data) {
-        setUsers(data);
+        setUsers(data as SearchUser[]);
       }
       setIsSearchingUsers(false);
     };
@@ -91,6 +142,12 @@ export function CommandMenu() {
     setOpen(false);
     command();
   }, []);
+
+  function openProfile(user: SearchUser) {
+    setOpen(false);
+    setProfileUser(user);
+    setProfileOpen(true);
+  }
 
   return (
     <>
@@ -112,7 +169,13 @@ export function CommandMenu() {
           onValueChange={setSearchQuery}
         />
         <CommandList>
-          <CommandEmpty>No results found.</CommandEmpty>
+          {isSearchingUsers && (
+            <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Searching users...
+            </div>
+          )}
+          {showEmpty && <CommandEmpty>No results found.</CommandEmpty>}
           <CommandGroup heading="Suggestions">
             <CommandItem
               onSelect={() => runCommand(() => router.push("/dashboard/home"))}
@@ -154,11 +217,7 @@ export function CommandMenu() {
                 {users.map((user) => (
                   <CommandItem
                     key={user.id}
-                    onSelect={() =>
-                      runCommand(() =>
-                        router.push(`/dashboard/users/${user.id}`),
-                      )
-                    }
+                    onSelect={() => openProfile(user)}
                   >
                     <Avatar className="h-6 w-6 mr-2">
                       <AvatarImage src={getAvatarUrl(user.avatar_url)} />
@@ -167,6 +226,9 @@ export function CommandMenu() {
                       </AvatarFallback>
                     </Avatar>
                     <span>{user.full_name}</span>
+                    <span className="ml-auto text-xs text-muted-foreground">
+                      {getRoleName(user.roles).replace(/_/g, " ")}
+                    </span>
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -232,6 +294,82 @@ export function CommandMenu() {
           </CommandGroup>
         </CommandList>
       </CommandDialog>
+
+      {/* User Quick-View Profile Modal */}
+      {profileUser && (
+        <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>User Profile</DialogTitle>
+              <DialogDescription>
+                Viewing profile for {profileUser.full_name}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-6 py-2">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-16 w-16 border">
+                  <AvatarImage src={getAvatarUrl(profileUser.avatar_url)} />
+                  <AvatarFallback className="text-lg bg-primary/10 text-primary">
+                    {getInitials(profileUser.full_name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col gap-1">
+                  <h3 className="text-xl font-bold">{profileUser.full_name || "Unnamed User"}</h3>
+                  {profileUser.email && (
+                    <p className="text-sm text-muted-foreground">{profileUser.email}</p>
+                  )}
+                  <Badge
+                    variant="outline"
+                    className={ROLE_COLORS[getRoleName(profileUser.roles)] || ROLE_COLORS.learner}
+                  >
+                    {getRoleName(profileUser.roles).replace(/_/g, " ")}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1 p-3 border rounded-md">
+                  <span className="text-xs text-muted-foreground font-medium uppercase">Program</span>
+                  <span className="text-sm font-medium">{profileUser.degree_program || "Not specified"}</span>
+                </div>
+                <div className="flex flex-col gap-1 p-3 border rounded-md">
+                  <span className="text-xs text-muted-foreground font-medium uppercase">Year Level</span>
+                  <span className="text-sm font-medium">{profileUser.year_level || "Not specified"}</span>
+                </div>
+                <div className="flex flex-col gap-1 p-3 border rounded-md">
+                  <span className="text-xs text-muted-foreground font-medium uppercase">Member #</span>
+                  <span className="text-sm font-mono">{profileUser.membership_number || "PENDING"}</span>
+                </div>
+                <div className="flex flex-col gap-1 p-3 border rounded-md">
+                  <span className="text-xs text-muted-foreground font-medium uppercase">Total XP</span>
+                  <span className="text-sm font-bold text-amber-500">{profileUser.total_xp ?? 0} XP</span>
+                </div>
+              </div>
+
+              {profileUser.bio && (
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm font-semibold">Biography</span>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap p-3 bg-muted/50 rounded-md">
+                    {profileUser.bio}
+                  </p>
+                </div>
+              )}
+
+              {showAdmin && (
+                <button
+                  onClick={() => {
+                    setProfileOpen(false);
+                    router.push(`/dashboard/admin/users?search=${encodeURIComponent(profileUser.full_name)}`);
+                  }}
+                  className="text-xs text-primary underline underline-offset-2 self-start hover:opacity-80"
+                >
+                  View in User Management →
+                </button>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }

@@ -38,39 +38,52 @@ export function PlcLiveDeskWidget() {
           setIsPeriodSet(false);
         }
 
-        // Query active unclosed attendance logs for today
+        // Query active unclosed attendance logs AND timesheets for today
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
 
-        const { data: logs } = await supabase
-          .from("attendance_logs")
-          .select("user_id, profiles:user_id(roles:role_id(name))")
-          .gte("clock_in", todayStart.toISOString())
-          .is("clock_out", null);
+        const [{ data: logs }, { data: timesheetLogs }] = await Promise.all([
+          supabase
+            .from("attendance_logs")
+            .select("user_id, profiles:user_id(roles:role_id(name))")
+            .gte("clock_in", todayStart.toISOString())
+            .is("clock_out", null),
+          supabase
+            .from("timesheets")
+            .select("user_id, profiles:user_id(roles:role_id(name))")
+            .gte("clock_in", todayStart.toISOString())
+            .is("clock_out", null),
+        ]);
 
-        if (logs) {
-          let tutorCount = 0;
-          let learnerCount = 0;
+        const combinedLogs = [...(logs || []), ...(timesheetLogs || [])];
+        const userMap = new Map<string, string | undefined>();
 
-          logs.forEach((log) => {
-            const roleName = (log.profiles as unknown as { roles?: { name?: string } })?.roles?.name;
-            if (roleName === "tutor" || roleName === "administrator" || roleName === "super_admin") {
-              tutorCount += 1;
-            } else {
-              learnerCount += 1;
-            }
-          });
+        combinedLogs.forEach((log) => {
+          if (!log.user_id) return;
+          const roleName = (log.profiles as unknown as { roles?: { name?: string } })?.roles?.name;
+          userMap.set(log.user_id, roleName);
+        });
 
-          setActiveTutorsCount(tutorCount);
-          setLearnersCheckedInCount(learnerCount);
+        let tutorCount = 0;
+        let learnerCount = 0;
 
-          // Dynamic wait calculation: 15 mins per waiting learner per tutor ratio
-          if (tutorCount === 0) {
-            setEstWaitMinutes(learnerCount > 0 ? 30 : 0);
+        userMap.forEach((roleName) => {
+          if (roleName === "tutor" || roleName === "administrator" || roleName === "super_admin") {
+            tutorCount += 1;
           } else {
-            const ratio = Math.ceil(learnerCount / tutorCount);
-            setEstWaitMinutes(Math.max(0, ratio * 10));
+            learnerCount += 1;
           }
+        });
+
+        setActiveTutorsCount(tutorCount);
+        setLearnersCheckedInCount(learnerCount);
+
+        // Dynamic wait calculation: 10 mins per waiting learner per tutor ratio
+        if (tutorCount === 0) {
+          setEstWaitMinutes(learnerCount > 0 ? 30 : 0);
+        } else {
+          const ratio = Math.ceil(learnerCount / tutorCount);
+          setEstWaitMinutes(Math.max(0, ratio * 10));
         }
       } catch (err) {
         console.error("Error loading PLC live desk state:", err);
@@ -80,6 +93,8 @@ export function PlcLiveDeskWidget() {
     }
 
     loadPlcState();
+    const interval = setInterval(loadPlcState, 10000);
+    return () => clearInterval(interval);
   }, [supabase]);
 
   if (loading) return null;
