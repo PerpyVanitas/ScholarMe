@@ -20,6 +20,7 @@ interface RateLimitResult {
   success: boolean;
   remaining: number;
   reset: number; // Unix ms timestamp when window resets
+  error?: boolean; // true when rate limit check itself failed (infra error)
 }
 
 export function rateLimit({ interval, limit }: RateLimitOptions) {
@@ -29,15 +30,16 @@ export function rateLimit({ interval, limit }: RateLimitOptions) {
       const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
       if (!supabaseUrl || !supabaseKey) {
-        // Fail closed: if env vars are missing, block requests rather than allow them
-        // This prevents a misconfigured environment from bypassing rate limiting entirely
+        // Fail open for AI: if env vars are missing we can't check limits but shouldn't block users.
+        // Log loudly so infra team notices.
         console.error(
-          "[RateLimit] NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set — rate limiter blocking all requests.",
+          "[RateLimit] NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set — rate limiter disabled.",
         );
         return {
-          success: false,
-          remaining: 0,
+          success: true,
+          remaining: limit,
           reset: Date.now() + interval,
+          error: true,
         };
       }
 
@@ -53,11 +55,13 @@ export function rateLimit({ interval, limit }: RateLimitOptions) {
 
       if (error || !data || data.length === 0) {
         console.error("[RateLimit] Error calling RPC:", error);
-        // Fail closed on database error
+        // Fail open on RPC error: don't punish the user for our infra problems.
+        // Mark error: true so callers can decide how to handle it.
         return {
-          success: false,
-          remaining: 0,
+          success: true,
+          remaining: limit,
           reset: now + interval,
+          error: true,
         };
       }
 
