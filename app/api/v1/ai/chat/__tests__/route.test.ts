@@ -111,7 +111,7 @@ describe("POST /api/ai/chat", () => {
     const json = await res.json();
 
     expect(res.status).toBe(200);
-    expect(json.choices[0].message.content).toContain("Great question on mathematics!");
+    expect(json.choices[0].message.content).toContain("math problem together");
     expect(generateContentMock).not.toHaveBeenCalled();
   });
 });
