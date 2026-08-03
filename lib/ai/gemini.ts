@@ -35,9 +35,8 @@ export function isValidApiKey(key?: string | null): boolean {
   if (!key || typeof key !== "string") return false;
   const trimmed = key.trim();
   if (trimmed.length < 10) return false;
-  // Tokens starting with AQ. (OAuth tokens), YOUR_, or containing spaces/placeholders are invalid API keys for standard Gemini REST API
+  // Ignore placeholders or keys with spaces
   if (
-    trimmed.startsWith("AQ.") ||
     trimmed.startsWith("YOUR_") ||
     trimmed.includes(" ") ||
     trimmed === "placeholder"

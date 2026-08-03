@@ -175,6 +175,9 @@ export async function POST(req: Request) {
         errStr.includes("not valid") ||
         errStr.includes("403") ||
         errStr.includes("401") ||
+        errStr.includes("429") ||
+        errStr.includes("RESOURCE_EXHAUSTED") ||
+        errStr.includes("prepayment credits") ||
         errStr.includes("ACCESS_TOKEN_SCOPE")
       ) {
         return getSimulatedResponse();
