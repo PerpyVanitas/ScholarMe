@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+- **Sidebar Navigation Deduplication (`lib/navigation.ts`, `__tests__/unit/navigation.test.ts`)**:
+  - Removed duplicate `Settings` link from the `Home` sidebar group so `Settings` is uniquely accessed from the user profile popover at the bottom of the sidebar.
+
+## [2026-08-03] — Google Cloud Agent Platform API Key Validation & LLM Fallback Fixes
+
+### Fixed
+- **API Key Format Validation (`lib/ai/gemini.ts`)**:
+  - Updated `isValidApiKey()` to support Google Cloud Agent Platform API keys prefixed with `AQ.`.
+- **LLM Error Handling & Fallback (`app/api/v1/ai/chat/route.ts`)**:
+  - Added seamless fallback to Kuya Nicolai Socratic Peer Study Buddy response when LLM provider returns quota exhaustion (`429 RESOURCE_EXHAUSTED` / prepayment credit depleted) or permission errors (`403` / `401`), ensuring the chat UI always provides helpful responses.
+
 ## [2026-08-03] — Digital ID Card, Profile Themes, Dynamic Streaks & XP Database Consistency Fixes
 
 ### Fixed

@@ -40,9 +40,7 @@ describe("Navigation & Information Architecture Audit", () => {
     expect(profileItem?.href).toBe("/dashboard/profile");
 
     const settingsItem = homeGroup?.items.find((i) => i.title === "Settings");
-    expect(settingsItem).toBeDefined();
-    expect(settingsItem?.icon).toBe(Settings);
-    expect(settingsItem?.href).toBe("/dashboard/settings");
+    expect(settingsItem).toBeUndefined();
   });
 
   it("uses distinct icons for Events Calendar (CalendarDays) and Tutoring Sessions (Calendar)", () => {

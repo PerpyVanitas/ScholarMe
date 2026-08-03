@@ -57,7 +57,6 @@ export function getNavItems(role: UserRole, profile: Profile) {
   const homeItems = [
     { title: "Dashboard", href: "/dashboard/home", icon: LayoutDashboard },
     { title: "Profile", href: "/dashboard/profile", icon: User },
-    { title: "Settings", href: "/dashboard/settings", icon: Settings },
     { title: "Notifications", href: "/dashboard/notifications", icon: Bell },
   ];
 
