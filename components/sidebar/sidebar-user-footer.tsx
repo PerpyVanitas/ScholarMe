@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings, LogOut, Globe, ChevronsUpDown } from "lucide-react";
+import { Settings, User, LogOut, ChevronsUpDown } from "lucide-react";
 import { signOut } from "@/app/auth/actions";
 import { getAvatarUrl } from "@/lib/utils";
 import { TosLink, PrivacyLink } from "@/components/legal-modals";
@@ -62,15 +62,15 @@ export function SidebarUserFooter({ profile }: SidebarUserFooterProps) {
             <DropdownMenuContent align="start" side="top" className="w-56">
               <DropdownMenuItem asChild>
                 <Link href="/dashboard/profile">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Profile Settings
+                  <User className="mr-2 h-4 w-4" />
+                  My Profile
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href="/dashboard/settings">
-                  <Globe className="mr-2 h-4 w-4" />
-                  Site Settings
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />

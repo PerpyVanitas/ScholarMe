@@ -13,23 +13,25 @@ import {
 import {
   Users,
   Calendar,
+  CalendarDays,
   BookOpen,
   Bell,
   Settings,
+  User,
   LayoutDashboard,
   Trophy,
   ShieldAlert,
   FileText,
   Bug,
   BarChart,
-  Camera,
+  QrCode,
   Bot,
   Globe,
   Network,
   Layers,
   MessageSquare,
+  Mail,
   Vote,
-  Timer,
   Clock,
   ShieldCheck,
   Receipt,
@@ -54,7 +56,8 @@ export interface SidebarNavGroup {
 export function getNavItems(role: UserRole, profile: Profile) {
   const homeItems = [
     { title: "Dashboard", href: "/dashboard/home", icon: LayoutDashboard },
-    { title: "Profile", href: "/dashboard/profile", icon: Settings },
+    { title: "Profile", href: "/dashboard/profile", icon: User },
+    { title: "Settings", href: "/dashboard/settings", icon: Settings },
     { title: "Notifications", href: "/dashboard/notifications", icon: Bell },
   ];
 
@@ -65,9 +68,13 @@ export function getNavItems(role: UserRole, profile: Profile) {
     { title: "Institutional Wiki", href: "/dashboard/wiki", icon: FileText, id: "tour-nav-wiki" },
   ];
 
-  const growItems = [
+  const scheduleItems = [
     { title: "Tutoring Sessions", href: "/dashboard/sessions", icon: Calendar },
-    { title: "Events Calendar", href: "/dashboard/calendar", icon: Calendar },
+    { title: "Events Calendar", href: "/dashboard/calendar", icon: CalendarDays },
+  ];
+
+  const growItems = [
+    { title: "My Journey", href: "/dashboard/journey", icon: Globe },
     { title: "Leaderboard", href: "/dashboard/leaderboard", icon: Trophy },
   ];
 
@@ -75,17 +82,12 @@ export function getNavItems(role: UserRole, profile: Profile) {
     { title: "People & Network", href: "/dashboard/network", icon: Network },
     { title: "Mentorship Matching", href: "/dashboard/network/mentorship", icon: Users, id: "tour-nav-mentorship" },
     { title: "Community Hub", href: "/dashboard/forums", icon: MessageSquare },
-    { title: "My Messages", href: "/dashboard/messages", icon: MessageSquare },
+    { title: "My Messages", href: "/dashboard/messages", icon: Mail },
   ];
 
   if (role !== "learner") {
     connectItems.push({ title: "Voting", href: "/dashboard/voting", icon: Vote });
   }
-
-
-  const journeyItems = [
-    { title: "My Journey", href: "/dashboard/journey", icon: Globe },
-  ];
 
   const usersItems = [];
   const academicItems = [];
@@ -104,7 +106,7 @@ export function getNavItems(role: UserRole, profile: Profile) {
 
   if (hasAnyRole(role, TUTOR_ROLES)) {
     academicItems.push(
-      { title: "My Timesheet", href: "/dashboard/timesheet", icon: Timer },
+      { title: "My Timesheet", href: "/dashboard/timesheet", icon: Clock },
       { title: "Availability", href: "/dashboard/availability", icon: Clock },
       { title: "Peer Reviews", href: "/dashboard/tutors/reviews", icon: ShieldCheck }
     );
@@ -130,7 +132,7 @@ export function getNavItems(role: UserRole, profile: Profile) {
   }
   if (hasAnyRole(role, COMMITTEE_LEADERSHIP) || hasAnyRole(role, EXECUTIVE_ROLES) || hasAnyRole(role, ADMIN_ROLES)) {
     financeItems.push(
-      { title: "QR Scanner", href: "/dashboard/admin/scanner", icon: Camera },
+      { title: "QR Scanner", href: "/dashboard/admin/scanner", icon: QrCode },
       { title: "Data Export", href: "/dashboard/admin/export", icon: FileSpreadsheet }
     );
   }
@@ -156,7 +158,7 @@ export function getNavItems(role: UserRole, profile: Profile) {
   const adminCategories = [];
   if (usersItems.length > 0) adminCategories.push({ title: "Users & Access", icon: Users, subItems: usersItems });
   if (academicItems.length > 0) adminCategories.push({ title: "Academic & Tutoring", icon: BookOpen, subItems: academicItems });
-  if (financeItems.length > 0) adminCategories.push({ title: "Financial & Operations", icon: Receipt, subItems: financeItems });
+  if (financeItems.length > 0) adminCategories.push({ title: "Operations & Reporting", icon: Receipt, subItems: financeItems });
   if (systemItems.length > 0) adminCategories.push({ title: "System Settings", icon: Settings, subItems: systemItems });
 
   if (adminCategories.length > 0) {
@@ -166,9 +168,9 @@ export function getNavItems(role: UserRole, profile: Profile) {
   const learnerGroups: SidebarNavGroup[] = [
     { label: "Home", items: homeItems },
     { label: "Learn", items: learnItems },
+    { label: "Schedule", items: scheduleItems },
     { label: "Grow", items: growItems },
     { label: "Connect", items: connectItems },
-    { label: "My Journey", items: journeyItems },
   ];
 
   return { learnerGroups, managementGroups, hasManagement: managementGroups.length > 0, hasTutorTools: hasAnyRole(role, TUTOR_ROLES) };

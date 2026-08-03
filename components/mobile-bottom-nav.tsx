@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, BookOpen, Calendar, Bell, User } from "lucide-react";
+import { LayoutDashboard, BookOpen, Calendar, Bell, User, Wallet } from "lucide-react";
 import { useUser } from "@/lib/user-context";
 import { cn } from "@/lib/utils";
 import { canAccessFinance } from "@/lib/utils/roles";
@@ -14,7 +14,7 @@ export function MobileBottomNav() {
   const NAV_ITEMS = [
     { title: "Home", href: "/dashboard/home", icon: LayoutDashboard },
     ...(canAccessFinance(role)
-      ? [{ title: "Finance", href: "/dashboard/finance", icon: BookOpen }]
+      ? [{ title: "Finance", href: "/dashboard/finance", icon: Wallet }]
       : [{ title: "Study", href: "/dashboard/resources", icon: BookOpen }]),
     { title: "Sessions", href: "/dashboard/sessions", icon: Calendar },
     {

@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2026-08-03] — Navigation & Information Architecture Audit
+
+### Fixed
+- **Profile Icon Mismatch (`lib/navigation.ts`, `components/sidebar/sidebar-user-footer.tsx`)**: Replaced `Settings` icon on `Profile` with `User` icon. Added dedicated `Settings` entry pointing to `/dashboard/settings` with `Settings` icon. Updated sidebar user footer dropdown so `/dashboard/profile` displays as "My Profile" with `User` icon, and `/dashboard/settings` displays as "Settings" with `Settings` icon.
+- **Icon Reuse Collisions (`lib/navigation.ts`, `components/mobile-bottom-nav.tsx`)**:
+  - `Events Calendar` icon changed from `Calendar` to `CalendarDays` (differentiating from `Tutoring Sessions`).
+  - `My Messages` icon changed from `MessageSquare` to `Mail` (differentiating from `Community Hub`).
+  - Mobile bottom nav `Finance` icon changed from `BookOpen` to `Wallet` (differentiating from `Study`).
+  - `QR Scanner` icon updated to `QrCode` (differentiating from generic `Camera`).
+  - `My Timesheet` icon aligned to `Clock` (matching `Payroll & Timesheets`).
+
+### Changed
+- **Information Architecture & Section Consolidation (`lib/navigation.ts`)**:
+  - Merged single-item `My Journey` section into `Grow` section alongside `Leaderboard`.
+  - Created dedicated `Schedule` section containing `Tutoring Sessions` and `Events Calendar`.
+  - Renamed admin category `Financial & Operations` to `Operations & Reporting` to properly fit `Reports Hub`, `QR Scanner`, `Payroll & Timesheets`, and financial tools.
+
+### Added
+- **Navigation Unit Test Suite (`__tests__/unit/navigation.test.ts`)**: Added comprehensive test suite verifying icon uniqueness, section consolidation, route mappings, and admin category labels.
+
+
 ## [2026-08-03] — A11y Fix & Landing Page Copy Enrichment
 
 ### Fixed

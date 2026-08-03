@@ -28,24 +28,28 @@ backend/target/
 # Debug and Development Scripts
 fetch_*.mjs
 scratch_*.mjs
-scratch.*
+scratch*
+scratch_*
 extract_logs.*
 fix-*.js
 fix_*.js
 refactor-*.js
 test-*.ts
+test-*.js
 run_migration.mjs
 
-# Cleanup ignores
+# Cleanup & IDE ignores
+.idea/
+.vscode/
 android/gradle-output.txt
 package-lock.json
 lib/demo.ts
 scratch/
-.idea/
-test-*.js
 audit_results.md
 console_logs.txt
 temp.md
+effect_report.txt
+*.log
 
 # Playwright
 .playwright-report/
@@ -64,4 +68,5 @@ gcp-*.json
 # Local workspace reference & agent cache
 PRIMER*
 .gemini/
+
 
