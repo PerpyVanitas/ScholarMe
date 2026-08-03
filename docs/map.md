@@ -199,3 +199,28 @@ ScholarMe is divided into several primary domains, each governed by the access c
 
 - **Contextual Help System**:
   - **Header Help Button (`ContextualHelpButton`)**: Surfaces per-screen purpose, capability mapping, primary actions, and related institutional wiki links configured in `lib/config/contextual-help-config.ts`.
+
+---
+
+## 🔍 Global User Search & Blocking (⌘K Command Palette)
+
+- **User Search (`components/command-menu.tsx`, `GET /api/v1/users/search`)**:
+  - **Access**: All authenticated users. Triggered via `Cmd/Ctrl + K`.
+  - **Role-Based Visibility**:
+    - **Learners**: Can only find users with the `tutor` role. Fellow learners and higher-ranked officers are hidden.
+    - **Tutor and above**: Can search all users regardless of role.
+  - **Block Filtering**: Blocked users (both directions — if A blocks B, neither appears in the other's search) are excluded from results server-side.
+  - **Performance**: Results returned in ≤ 500ms via 300ms debounce + GIN trigram index on `profiles.full_name`.
+  - **Loading State**: Spinner shown while fetch is in-flight. "No results found" only shown after fetch completes with empty results.
+
+- **User Profile Quick-View (inline modal)**:
+  - **Trigger**: Clicking any user in ⌘K search results.
+  - **Displays**: Avatar, full name, email, role badge, degree program, year level, membership number, XP, bio.
+  - **Admin Deep-Link**: Admins see a "View in User Management →" link that navigates to `/dashboard/admin/users?search=<name>` with the search pre-filled.
+
+- **User Blocking (`POST /api/v1/users/block`, `DELETE /api/v1/users/block`)**:
+  - **Trigger**: "Block User" button in the user profile quick-view modal.
+  - **Confirmation**: `AlertDialog` explains consequences before committing.
+  - **Effect**: Blocked user disappears from the blocker's search results immediately. The block is bidirectional in search — neither party can find the other.
+  - **Unblock**: Available via `DELETE /api/v1/users/block` (future UI: profile settings).
+  - **Self-block**: Prevented at the API level (`no_self_block` DB constraint + 400 response).

@@ -5,7 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2026-08-03] — AI Chat Fix, RBAC User Search & User Blocking System
+
+### Fixed
+- **AI Chat 429 Error (`lib/rate-limit.ts`, `supabase/migrations/20260803010000_*`)**: Root cause identified: `ratelimit_windows` table was mistakenly dropped in `20260724000000_drop_unused_tables.sql`. The `increment_rate_limit()` RPC function silently failed, causing the rate limiter to fail-closed and block all AI requests with a fake 429. Table restored via migration. Rate limiter updated to **fail-open** (allow requests) on infrastructure errors so DB outages don't block users from AI chat.
+- **Command Palette 404 on User Click (`components/command-menu.tsx`)**: Command palette was routing users to `/dashboard/users/[id]` which doesn't exist as a Next.js route. Replaced with an inline profile modal that opens directly without any navigation.
+- **Command Palette Flaky "No Results" Flash (`components/command-menu.tsx`)**: `CommandEmpty` was rendered unconditionally while the search fetch was still in-flight, causing a misleading "No results found." flash. Now gated behind `!isSearchingUsers && results.length === 0`.
+- **Duplicate Migration Error (20260803000000)**: Migration was already applied to production via direct API call. Duplicate file deleted from source to prevent `supabase db push` from throwing unique constraint violation on `schema_migrations`.
+
+### Added
+- **RBAC User Search API (`app/api/v1/users/search/route.ts`)**: Server-side search endpoint enforcing role-based visibility rules: Learners can only find users with the `tutor` role; Tutor and above can search all users. Results are block-filtered server-side (both directions). GIN trigram index (`pg_trgm`) on `profiles.full_name` ensures sub-100ms ILIKE — comfortably within the 500ms SLA. Rate-limited via existing `aiRateLimiter` patterns. Test suite at `__tests__/route.test.ts`.
+- **User Blocking System (`app/api/v1/users/block/route.ts`, `supabase/migrations/20260803010000_user_blocks_and_search_index.sql`)**: POST to block, DELETE to unblock. Backed by `user_blocks` table with RLS (users can only manage their own blocks). Duplicate block attempts (already-blocked) return 200 silently. Both search directions are excluded (if A blocks B, neither sees the other in search). Test suite at `__tests__/route.test.ts`.
+- **Command Palette Inline User Profile Modal (`components/command-menu.tsx`)**: Clicking a user in ⌘K search now opens an in-place profile modal showing avatar, name, email, role badge, degree program, year level, membership number, XP, and bio. Admins get a "View in User Management →" deep link. All users see a **Block User** button with confirmation dialog. Blocked users disappear from the results list immediately on confirm.
+- **Search Spinner (`components/command-menu.tsx`)**: A `Loader2` spinner is shown while the debounced API fetch is in-flight, replacing the misleading empty-state flash.
+- **Block Confirmation Alert Dialog (`components/command-menu.tsx`)**: Clicking "Block User" shows an `AlertDialog` explaining the consequences before committing the block.
+- **pg_trgm Extension + GIN Index**: `CREATE EXTENSION IF NOT EXISTS pg_trgm` and `CREATE INDEX idx_profiles_full_name_trgm USING GIN (full_name gin_trgm_ops)` applied to production, enabling fast fuzzy ILIKE at scale.
+- **Admin Users Page Deep-Link from Command Palette**: Navigating to admin users from a profile modal pre-fills the search filter via `?search=<name>` query param, which is now seeded into the component's search state on mount.
+
+### Database Changes
+- New table: `public.user_blocks` — composite PK `(blocker_id, blocked_id)`, `no_self_block` constraint, RLS-protected (SELECT/INSERT/DELETE scoped to `blocker_id = auth.uid()`)
+- New index: `idx_profiles_full_name_trgm` — GIN trigram index for fast ILIKE user search
+- New index: `idx_user_blocks_blocked_id` — for fast reverse-block lookups
+- Extension: `pg_trgm` enabled
+
+---
+
 ## [2026-08-02] — System-Wide Audit & Strategic Hardening
+
 
 ### Added
 - **Global Test Coverage Elevation to ≥ 70% (`vitest.config.ts`)**: Expanded automated test suites across finance actions, profile actions, tutors API DB, profiles API DB, and user context. Updated `vitest.config.ts` coverage thresholds to 70% lines, 70% statements, and 70% functions per Rule 4, achieving 74.15% line coverage.

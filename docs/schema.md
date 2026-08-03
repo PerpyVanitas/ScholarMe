@@ -1,7 +1,33 @@
 # Database Schema
 
 This document is auto-generated from Supabase migrations.
-Migration file: 20260802000000_audit_indexing_and_enums.sql
+Last updated: 2026-08-03 (latest migration: 20260803010000_user_blocks_and_search_index.sql)
+
+## Table: ratelimit_windows
+
+| Column Definition |
+| --- |
+| `identifier TEXT PRIMARY KEY,
+  timestamps BIGINT[] NOT NULL DEFAULT '{}'` |
+
+> Used by the `increment_rate_limit()` RPC function to enforce per-user sliding-window rate limits on AI endpoints. Do NOT drop this table.
+
+## Table: user_blocks
+
+| Column Definition |
+| --- |
+| `blocker_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  blocked_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (blocker_id, blocked_id),
+  CONSTRAINT no_self_block CHECK (blocker_id <> blocked_id)` |
+
+**RLS Policies:**
+- `SELECT`: `blocker_id = auth.uid()` (users see only their own blocks)
+- `INSERT`: `blocker_id = auth.uid()`
+- `DELETE`: `blocker_id = auth.uid()`
+
+**Indexes:** `idx_user_blocks_blocked_id` on `blocked_id` for reverse-block lookups.
 
 ## Table: analytics_logs
 
