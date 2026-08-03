@@ -9,19 +9,21 @@ import { Building2, Users, Clock, QrCode } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@/lib/user-context";
 
+import { Skeleton } from "@/components/ui/skeleton";
+
 export function PlcLiveDeskWidget() {
   const { role } = useUser();
   const supabase = createClient();
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [activeTutorsCount, setActiveTutorsCount] = useState(0);
   const [learnersCheckedInCount, setLearnersCheckedInCount] = useState(0);
   const [estWaitMinutes, setEstWaitMinutes] = useState(0);
   const [isPeriodSet, setIsPeriodSet] = useState(false);
 
   useEffect(() => {
-    async function loadPlcState() {
+    async function loadPlcState(isFirstLoad = false) {
       try {
-        setLoading(true);
+        if (isFirstLoad) setInitialLoading(true);
         // Query active collection period configuration
         const { data: config } = await supabase
           .from("semester_configs")
@@ -88,16 +90,32 @@ export function PlcLiveDeskWidget() {
       } catch (err) {
         console.error("Error loading PLC live desk state:", err);
       } finally {
-        setLoading(false);
+        if (isFirstLoad) setInitialLoading(false);
       }
     }
 
-    loadPlcState();
-    const interval = setInterval(loadPlcState, 10000);
+    loadPlcState(true);
+    const interval = setInterval(() => loadPlcState(false), 10000);
     return () => clearInterval(interval);
   }, [supabase]);
 
-  if (loading) return null;
+  if (initialLoading) {
+    return (
+      <Card className="border-primary/20 bg-card shadow-sm overflow-hidden h-[84px] p-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-11 w-11 rounded-xl" />
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-3 w-64" />
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-8 w-24 rounded-md" />
+          <Skeleton className="h-8 w-32 rounded-md" />
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-primary/20 bg-gradient-to-r from-primary/10 via-card to-card shadow-sm overflow-hidden">

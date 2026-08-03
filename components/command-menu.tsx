@@ -221,7 +221,11 @@ export function CommandMenu() {
         </kbd>
       </button>
 
-      <CommandDialog open={open} onOpenChange={setOpen}>
+      <CommandDialog
+        open={open}
+        onOpenChange={setOpen}
+        shouldFilter={searchQuery.trim().length < 2}
+      >
         <CommandInput
           placeholder="Type a command or search users..."
           value={searchQuery}
@@ -242,6 +246,7 @@ export function CommandMenu() {
                 {users.map((user) => (
                   <CommandItem
                     key={user.id}
+                    value={`${user.full_name} ${user.email || ""} ${user.membership_number || ""} ${user.id}`}
                     onSelect={() => openProfile(user)}
                     className="flex items-center gap-2"
                   >
