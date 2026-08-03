@@ -19,9 +19,12 @@ import {
   ShieldCheck, 
   Moon, 
   Sun,
-  Laptop
+  Laptop,
+  Bot,
+  Zap,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export default function SiteSettingsPage() {
   const { theme, setTheme } = useTheme();
@@ -38,6 +41,8 @@ export default function SiteSettingsPage() {
     publicProfile: true,
   });
 
+  const [aiMode, setAiMode] = useState<"server" | "local">("server");
+
   // Load from local storage on mount
   useEffect(() => {
     setMounted(true);
@@ -48,6 +53,10 @@ export default function SiteSettingsPage() {
       } catch (e) {
         // ignore parse error
       }
+    }
+    const savedAiMode = localStorage.getItem("scholarme_ai_mode");
+    if (savedAiMode === "local" || savedAiMode === "server") {
+      setAiMode(savedAiMode);
     }
   }, []);
 
@@ -62,6 +71,12 @@ export default function SiteSettingsPage() {
     } else if (key === "reducedMotion") {
       toast.success(value ? "Reduced motion enabled" : "Reduced motion disabled");
     }
+  };
+
+  const updateAiMode = (mode: "server" | "local") => {
+    setAiMode(mode);
+    localStorage.setItem("scholarme_ai_mode", mode);
+    toast.success(mode === "local" ? "AI Tutor set to Private Local" : "AI Tutor set to Fast Server AI");
   };
 
   if (!mounted) return null; // Avoid hydration mismatch for theme
@@ -79,10 +94,11 @@ export default function SiteSettingsPage() {
       <Separator />
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="mb-6 grid w-full grid-cols-3 max-w-[400px]">
+        <TabsList className="mb-6 grid w-full grid-cols-4 max-w-[520px]">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="display">Display</TabsTrigger>
           <TabsTrigger value="privacy">Privacy</TabsTrigger>
+          <TabsTrigger value="ai">AI Tutor</TabsTrigger>
         </TabsList>
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -256,6 +272,62 @@ export default function SiteSettingsPage() {
                  Note: Account deletion and data exports are available in <strong>Profile Settings &rarr; Security</strong>.
                </p>
             </div>
+          </CardContent>
+        </Card>
+        </TabsContent>
+
+        {/* AI Tutor Card */}
+        <TabsContent value="ai" className="mt-0">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bot className="h-5 w-5" />
+              AI Tutor Mode
+            </CardTitle>
+            <CardDescription>Choose how Kuya Nicolai processes your messages.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RadioGroup
+              value={aiMode}
+              onValueChange={(v) => updateAiMode(v as "server" | "local")}
+              className="space-y-4"
+            >
+              <label
+                htmlFor="ai-server"
+                className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                  aiMode === "server" ? "border-primary bg-primary/5" : "border-muted hover:border-muted-foreground/40"
+                }`}
+              >
+                <RadioGroupItem value="server" id="ai-server" className="mt-1" />
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 font-semibold text-sm">
+                    <Zap className="h-4 w-4 text-primary" />
+                    Fast Server AI
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Powered by Google Gemini on our servers. Instant responses, no download required. Recommended for most users.
+                  </p>
+                </div>
+              </label>
+
+              <label
+                htmlFor="ai-local"
+                className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                  aiMode === "local" ? "border-primary bg-primary/5" : "border-muted hover:border-muted-foreground/40"
+                }`}
+              >
+                <RadioGroupItem value="local" id="ai-local" className="mt-1" />
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 font-semibold text-sm">
+                    <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                    Private Local
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Runs a small language model (~1GB) directly in your browser using WebGPU. 100% offline and private — nothing is sent to a server. Requires a one-time download.
+                  </p>
+                </div>
+              </label>
+            </RadioGroup>
           </CardContent>
         </Card>
         </TabsContent>
