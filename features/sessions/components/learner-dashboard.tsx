@@ -34,6 +34,9 @@ import { generateVirtualMeetingRoom } from "@/lib/utils/meeting-link";
 import { generateGoogleCalendarUrl } from "@/lib/utils/calendar-event";
 
 
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+
 interface LearnerDashboardProps {
   profile: Profile;
   upcomingSessions: Session[];
@@ -50,6 +53,24 @@ export function LearnerDashboard({
   stats,
 }: LearnerDashboardProps) {
   const nextSession = upcomingSessions.length > 0 ? upcomingSessions[0] : null;
+  const [streakCount, setStreakCount] = useState<number>(1);
+
+  useEffect(() => {
+    async function fetchStreak() {
+      if (!profile?.id) return;
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("user_streaks")
+        .select("current_streak")
+        .eq("user_id", profile.id)
+        .maybeSingle();
+
+      if (data?.current_streak !== undefined) {
+        setStreakCount(data.current_streak);
+      }
+    }
+    fetchStreak();
+  }, [profile?.id]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -106,7 +127,7 @@ export function LearnerDashboard({
                   <div className="flex items-center gap-1 mb-1">
                     <Flame className="h-4 w-4 text-orange-500 fill-orange-500" />
                     <span className="text-sm font-bold text-orange-500">
-                      3 Day Streak
+                      {streakCount} Day Streak
                     </span>
                   </div>
                   <span className="text-sm font-medium text-foreground">

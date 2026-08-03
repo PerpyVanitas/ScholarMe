@@ -138,11 +138,29 @@ Last updated: 2026-08-03 (latest migration: 20260803010000_user_blocks_and_searc
 | --- |
 | `id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT NOT NULL,
+| `id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
     description TEXT,
     start_date TIMESTAMP WITH TIME ZONE NOT NULL,
     end_date TIMESTAMP WITH TIME ZONE NOT NULL,
     status TEXT NOT NULL DEFAULT 'upcoming' CHECK (status IN ('upcoming', 'active', 'completed')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()` |
+
+### Table: event_attendance
+
+| Column Definition |
+| --- |
+| `id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id UUID REFERENCES public.facility_events(id) ON DELETE CASCADE NOT NULL,
+    profile_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+    check_in_time TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    check_out_time TIMESTAMP WITH TIME ZONE,
+    duration_minutes INTEGER,
+    xp_awarded INTEGER DEFAULT 0 NOT NULL,
+    status TEXT DEFAULT 'checked_in' NOT NULL CHECK (status IN ('checked_in', 'completed')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    UNIQUE(event_id, profile_id)` |
 
 ## Table: event_rsvps
 

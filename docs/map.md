@@ -70,6 +70,11 @@ ScholarMe is divided into several primary domains, each governed by the access c
   - **Substitute**: A tutor can send a transfer request to another tutor if they cannot make a confirmed session. The receiving tutor can view the request in their dashboard and choose to accept (taking ownership) or decline it.
   - **Reschedule**: Propose a new time to the learner instead of forcing a change.
 - **Peer Reviews**: Lead Tutors and Committee Heads can write 1-5 star evaluations for junior tutors. Regular tutors can only read their own reviews.
+- **Events & QR Attendance System**:
+  - **Miniature Home Dashboard Calendar**: Interactive mini calendar widget embedded right on the Home Dashboard (`/dashboard/home`) displaying events for the selected day, live ongoing banner alerts, and aggregate participant counts ("14 Joined") without exposing individual names to protect user privacy.
+  - **Event Details Modal**: Opens upon clicking any event in the mini calendar or full calendar. Shows event overview, time range, mandatory badge, and aggregate participant metrics.
+  - **QR Attendance Check-In / Check-Out**: During ongoing events, attendees or event organizers can scan event QR codes or member ID QR cards to check in and check out.
+  - **Duration & XP Calculation**: Tracks exact arrival and departure times, computes stay duration in minutes, and awards participation XP (base 50 XP + 1 XP/min, capped at 200 XP per event).
 
 ---
 

@@ -367,6 +367,7 @@ export interface FacilityEvent {
   updated_at: string;
   organizer?: Profile;
   event_rsvps?: EventRsvp[];
+  event_attendance?: EventAttendance[];
 }
 
 export type RsvpStatus = "going" | "maybe" | "not_going";
@@ -380,6 +381,22 @@ export interface EventRsvp {
   updated_at: string;
   profiles?: Profile;
   facility_events?: FacilityEvent;
+}
+
+export type EventAttendanceStatus = "checked_in" | "completed";
+
+export interface EventAttendance {
+  id: string;
+  event_id: string;
+  profile_id: string;
+  check_in_time: string;
+  check_out_time: string | null;
+  duration_minutes: number | null;
+  xp_awarded: number;
+  status: EventAttendanceStatus;
+  created_at: string;
+  updated_at: string;
+  profiles?: Profile;
 }
 
 export interface PhysicalResource {

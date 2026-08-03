@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2026-08-03] — Digital ID Card, Profile Themes, Dynamic Streaks & XP Database Consistency Fixes
+
+### Fixed
+- **Digital ID Card Details & Fallbacks (`features/auth/components/qr-id-card.tsx`, `lib/user-context.tsx`)**:
+  - Fixed Honor Society Code display falling back to `HS-PENDING` by checking `profile.unique_id_number || profile.membership_number`.
+  - Fixed Program display on ID card falling back to `"TUTORING SYSTEM"` by defaulting to `"BS Information Technology"` when `profile.degree_program` is unset.
+  - Included `unique_id_number`, `profile_theme_color`, and `hs_designations` in `UserProvider` profile query (`lib/user-context.tsx`).
+- **Profile Themes (Skill Tree) & Instant Application (`app/dashboard/profile/components/skill-tree.tsx`)**:
+  - Integrated `useUser()` context in `SkillTree` to recognize `administrator` and `super_admin` roles correctly (`isSuperAdmin`).
+  - Allowed free/admin-unlocked themes to equip directly without prompting for XP deduction or failing on XP check.
+  - Added `await refreshProfile()` call on theme equip to instantly trigger `ThemeApplicator` without requiring full page reload.
+- **Streak Synchronization (`features/sessions/components/learner-dashboard.tsx`)**:
+  - Fixed streak count mismatch between Header (`StreakIndicator`) and Learner Dashboard card by replacing hardcoded `3 Day Streak` text with dynamic `streakCount` fetched from `user_streaks`.
+- **XP Earn API Database Consistency (`app/api/v1/xp/earn/route.ts`)**:
+  - Added explicit database update to `profiles.total_xp` and `profiles.current_level` upon earning XP to guarantee total XP is updated synchronously regardless of DB trigger execution timing.
+
+## [2026-08-03] — Event QR Attendance System, Duration XP & Miniature Dashboard Calendar
+
+### Added
+- **Event Attendance Database Schema (`supabase/migrations/20260803020000_event_attendance_and_xp.sql`)**: Created `event_attendance` table with check-in timestamp, check-out timestamp, stay duration in minutes, status tracking (`checked_in`, `completed`), and XP rewards. RLS enabled with composite uniqueness on `(event_id, profile_id)`.
+- **Event Attendance API Endpoint (`app/api/v1/events/[id]/attendance/route.ts`)**: Endpoint supporting check-in and check-out actions. Calculates stay duration in minutes and awards XP (base 50 XP + 1 XP/min, capped at 200 XP per event). GET endpoint returns aggregate metrics (`joinedCount`, `checkedInCount`) without disclosing individual participant names for privacy protection. Unit test suite colocated at `__tests__/route.test.ts`.
+- **Miniature Dashboard Event Calendar (`features/events/components/mini-event-calendar.tsx`, `app/dashboard/home/page.tsx`)**: Compact event calendar widget embedded directly on the main Home Dashboard. Features date picker with event markers, live ongoing event banner alert ("ONGOING NOW"), and general participant counts ("14 Joined") without exposing user identities.
+- **Event Detail & Attendance Modal (`features/events/components/event-detail-modal.tsx`)**: Interactive detail dialog showing event summary, mandatory badges, stay duration, XP earned, camera QR scanner (`ContinuousQrScanner`), and member ID QR generator.
+- **Event System Unit Test Suite (`__tests__/unit/event-attendance-system.test.ts`)**: Automated test suite verifying stay duration calculation, XP formulas, and ongoing event status checks.
+
+
 ## [2026-08-03] — Navigation & Information Architecture Audit
 
 ### Fixed

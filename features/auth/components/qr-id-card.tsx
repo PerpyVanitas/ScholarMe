@@ -233,7 +233,7 @@ export function QrIdCard({
             </h2>
             <div className="inline-block bg-black/40 px-3 py-0.5 rounded border border-primary/20">
               <span className="font-mono text-xs font-bold tracking-wider text-primary">
-                {profile.unique_id_number || "HS-PENDING"}
+                {profile.unique_id_number || profile.membership_number || "HS-PENDING"}
               </span>
             </div>
           </div>
@@ -242,7 +242,7 @@ export function QrIdCard({
           <div className="flex justify-between items-start border-b border-white/5 pb-1 gap-2">
             <span className="text-zinc-400 font-medium shrink-0">PROGRAM:</span>
             <span className="font-bold text-zinc-100 uppercase tracking-tight text-right text-[8.5px] leading-tight">
-              {profile.degree_program || "TUTORING SYSTEM"}
+              {profile.degree_program || "BS Information Technology"}
             </span>
           </div>
           <div className="flex justify-between items-center border-b border-white/5 pb-1">
@@ -378,7 +378,7 @@ export function QrIdCard({
             </h2>
             <div className="inline-block bg-black/40 px-3 py-0.5 rounded border border-primary/20">
               <span className="font-mono text-xs font-bold tracking-wider text-primary">
-                {profile.unique_id_number || "HS-PENDING"}
+                {profile.unique_id_number || profile.membership_number || "HS-PENDING"}
               </span>
             </div>
           </div>
@@ -387,7 +387,7 @@ export function QrIdCard({
           <div className="flex justify-between items-start border-b border-white/5 pb-1 gap-2">
             <span className="text-zinc-400 font-medium shrink-0">PROGRAM:</span>
             <span className="font-bold text-zinc-100 uppercase tracking-tight text-right text-[8.5px] leading-tight">
-              {profile.degree_program || "TUTORING SYSTEM"}
+              {profile.degree_program || "BS Information Technology"}
             </span>
           </div>
           <div className="flex justify-between items-center border-b border-white/5 pb-1">
@@ -595,7 +595,7 @@ export function QrIdCard({
               {displayName}
             </h3>
             <p className="text-xs text-muted-foreground font-mono">
-              {profile.unique_id_number || "ID Pending"}
+              {profile.unique_id_number || profile.membership_number || "ID Pending"}
             </p>
           </div>
 

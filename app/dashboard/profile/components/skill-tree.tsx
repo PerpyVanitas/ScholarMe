@@ -17,6 +17,9 @@ import type { Profile } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
+import { useUser } from "@/lib/user-context";
+import { hasAnyRole } from "@/lib/utils/roles";
+
 interface SkillTreeProps {
   profile: Profile;
 }
@@ -56,6 +59,7 @@ const THEMES = [
 
 export function SkillTree({ profile }: SkillTreeProps) {
   const router = useRouter();
+  const { role, refreshProfile } = useUser();
   const [loading, setLoading] = useState(false);
   const xp = profile.total_xp || 0;
 
@@ -64,7 +68,9 @@ export function SkillTree({ profile }: SkillTreeProps) {
     : profile.roles
       ? [profile.roles]
       : [];
-  const isSuperAdmin = rolesArray.some((r: { name?: string }) => r?.name === "super_admin");
+  const isSuperAdmin =
+    rolesArray.some((r: { name?: string }) => r?.name === "super_admin") ||
+    hasAnyRole(role, ["administrator", "super_admin"]);
 
   async function unlockTheme(theme: (typeof THEMES)[0]) {
     if (!isSuperAdmin && xp < theme.cost) {
@@ -106,6 +112,7 @@ export function SkillTree({ profile }: SkillTreeProps) {
       } else {
         toast.success(`Theme "${theme.name}" equipped!`);
       }
+      await refreshProfile();
       router.refresh();
     }
     setLoading(false);
@@ -169,7 +176,7 @@ export function SkillTree({ profile }: SkillTreeProps) {
                       Equipped
                     </Button>
                   ) : canAfford ? (
-                    theme.cost > 0 ? (
+                    theme.cost > 0 && !isSuperAdmin ? (
                       <ConfirmDialog
                         title={`Equip ${theme.name}?`}
                         description={`This will deduct ${theme.cost.toLocaleString()} XP from your account. Proceed?`}
@@ -194,7 +201,7 @@ export function SkillTree({ profile }: SkillTreeProps) {
                         disabled={loading}
                       >
                         <Paintbrush className="h-4 w-4 mr-2 shrink-0" /> Equip
-                        (Free)
+                        {isSuperAdmin ? " (Admin)" : theme.cost === 0 ? " (Free)" : ""}
                       </Button>
                     )
                   ) : (

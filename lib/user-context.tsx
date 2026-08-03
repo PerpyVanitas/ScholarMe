@@ -51,7 +51,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const { data: p } = await supabase
         .from("profiles")
         .select(
-          "id, email, full_name, first_name, last_name, avatar_url, phone_number, birthdate, date_of_birth, membership_number, degree_program, year_level, total_xp, current_level, role_id, role_expires_at, created_at, roles(id, name)",
+          "id, email, full_name, first_name, last_name, avatar_url, phone_number, birthdate, date_of_birth, membership_number, degree_program, year_level, total_xp, current_level, profile_theme_color, unique_id_number, role_id, role_expires_at, created_at, roles(id, name), hs_designations(id, designation, position, academic_year, is_current)",
         )
         .eq("id", user.id)
         .maybeSingle();

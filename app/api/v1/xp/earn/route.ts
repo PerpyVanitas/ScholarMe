@@ -46,8 +46,21 @@ export async function POST(req: Request) {
       return handleApiError(error);
     }
 
-    // Since trigger_update_profile_level updates the profile automatically,
-    // we just fetch the updated profile level/xp to return to the client.
+    // Explicitly update profiles table to ensure total_xp and current_level are updated even if DB trigger execution is delayed
+    const { data: currentProfile } = await supabase
+      .from("profiles")
+      .select("total_xp")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const updatedXp = Math.max(0, (currentProfile?.total_xp || 0) + amount);
+    const updatedLevel = Math.floor(0.1 * Math.sqrt(updatedXp)) + 1;
+
+    await supabase
+      .from("profiles")
+      .update({ total_xp: updatedXp, current_level: updatedLevel })
+      .eq("id", user.id);
+
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("total_xp, current_level")
@@ -56,8 +69,12 @@ export async function POST(req: Request) {
 
     if (profileError) {
       console.error("[XP] Failed to fetch updated profile after XP insert:", profileError.message);
-      // Still return success — the XP was inserted, we just can't confirm the new total
-      return NextResponse.json({ success: true, xp_earned: amount });
+      return NextResponse.json({
+        success: true,
+        xp_earned: amount,
+        total_xp: updatedXp,
+        current_level: updatedLevel,
+      });
     }
 
     return NextResponse.json({ 

@@ -8,6 +8,7 @@ import { GlobalAnnouncementBoard } from "@/features/announcements/components/glo
 import { WeeklyDigestBanner } from "@/components/weekly-digest-banner";
 import { MilestoneNotifier } from "@/components/milestone-notifier";
 import { PlcLiveDeskWidget } from "@/components/plc-live-desk-widget";
+import { MiniEventCalendar } from "@/features/events/components/mini-event-calendar";
 import { useUser } from "@/lib/user-context";
 
 export default function DashboardHomePage() {
@@ -21,6 +22,7 @@ export default function DashboardHomePage() {
           {profile && <MilestoneNotifier profile={profile} />}
           {profile && <WeeklyDigestBanner profile={profile} />}
           <PlcLiveDeskWidget />
+          <MiniEventCalendar />
           <WelcomeCarousel />
           <GlobalAnnouncementBoard />
           <DashboardView />
