@@ -2,7 +2,7 @@
 
 > This document is the **authoritative access control reference** for ScholarMe.  
 > When implementing route guards, sidebar items, or API permissions, **this file wins**.  
-> Last updated: 2026-07-13
+> Last updated: 2026-08-03
 
 ---
 

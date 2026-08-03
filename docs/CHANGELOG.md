@@ -8,6 +8,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Sidebar Navigation Deduplication (`lib/navigation.ts`, `__tests__/unit/navigation.test.ts`)**:
   - Removed duplicate `Settings` link from the `Home` sidebar group so `Settings` is uniquely accessed from the user profile popover at the bottom of the sidebar.
 
+## [2026-08-03] — AI Tutor Persona & History, Private Local Progress, Settings AI Mode & Dashboard UX Refinements
+
+### Added
+- **AI Tutor Persona & Socratic Guidelines (`app/api/v1/ai/chat/route.ts`)**:
+  - Overhauled system prompt for Kuya Nicolai persona with explicit conversational rules: natural tone, no robotic preambles, Socratic teaching method, and self-referencing as "Nicolai" in chat.
+  - Added structured handling for ambiguous user requests by presenting 2–4 numbered option choices.
+  - Implemented full conversation history normalization (alternating `user` / `model` turns) for multi-turn conversational context.
+  - Tuned generation parameters (`temperature: 0.85`, `topP: 0.95`, `topK: 40`, `maxOutputTokens: 2048`).
+- **Private Local Model Live Download Progress (`features/tutors/components/webllm-chat.tsx`)**:
+  - Added inline download progress bar below header in `WebLLMChat` displaying real-time loading percentage and status text during local WebLLM engine initialization.
+  - Added persistent green ready badge (*"Local model ready — 100% private & offline"*) when WebGPU initialization completes.
+  - Added smooth auto-scroll to bottom using `messagesEndRef` scroll anchor on message update and stream completion.
+- **Settings AI Tutor Mode Selector (`app/dashboard/settings/page.tsx`)**:
+  - Added dedicated **AI Tutor** tab in Site Settings with selection between **Fast Server AI** (Gemini) and **Private Local** (WebGPU local model).
+  - Choice is persisted to `localStorage` under `scholarme_ai_mode` and automatically loaded by the AI Tutor chat component.
+
+### Changed
+- **Profile Themes (Skill Tree) UX (`app/dashboard/profile/components/skill-tree.tsx`)**:
+  - Connected `SkillTree` to `useUser()` context profile to ensure equipped state (`isEquipped`) and badge update instantly upon equipping without requiring a full page refresh.
+  - Added distinct one-line descriptions to each theme option (Classic Scholar, Emerald Scholar, Arcane Void, Crimson Dawn, Golden Prestige) detailing color palette identity.
+  - Added subtle active primary border and background tint to highlight the currently equipped theme card.
+- **Onboarding Tour Streamlined Skip (`features/onboarding/components/onboarding-tour.tsx`)**:
+  - Removed the confirmation dialog on tour close, allowing users to instantly skip the onboarding tour by clicking the 'X' dismiss button.
+- **Header Icon Cleanup (`app/dashboard/client-layout.tsx`)**:
+  - Removed duplicate `ContextualHelpButton` from the top navigation bar, leaving a clean single `PageTutorialButton` question mark icon.
+- **Home Dashboard Layout Reordering (`app/dashboard/home/page.tsx`, `features/sessions/components/learner-dashboard.tsx`, `features/tutors/components/tutor-dashboard.tsx`)**:
+  - Reordered home page sections for optimal UX:
+    1. **Welcome Heading & Weekly Status Subtitle**: Compact welcome greeting at top with inline weekly digest status line replacing the full-width card.
+    2. **PLC Live Desk Activity Widget**: Positioned immediately below greeting for maximum visibility of physical desk headcount and drop-in wait times.
+    3. **Global Announcements Board**.
+    4. **Events & Campus Calendar** (unmodified calendar dimensions).
+    5. **Role-Specific Dashboard Widgets**.
+  - Removed redundant duplicate "Welcome back" headers inside `LearnerDashboard` and `TutorDashboard` to eliminate visual repetition.
+
 ## [2026-08-03] — Google Cloud Agent Platform API Key Validation & LLM Fallback Fixes
 
 ### Fixed

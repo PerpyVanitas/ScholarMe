@@ -2,7 +2,7 @@
 
 > This document tracks all verified features and user interactions across the ScholarMe platform.  
 > It must be reviewed at the end of every development cycle to ensure no features have been orphaned or broken by new updates.  
-> Last updated: 2026-08-02
+> Last updated: 2026-08-03
 
 
 ---
@@ -46,7 +46,15 @@ ScholarMe is divided into several primary domains, each governed by the access c
   - **Typing Mode**: Forces learners to type the exact answer.
   - **TTS**: Native browser Text-to-Speech reads questions and answers.
 - **Exporting**: Users can export any study set to an Anki/Quizlet compatible CSV format.
-- **AI Tutor (WebLLM)**: An omnipresent chat interface where users can ask academic questions to a locally running AI model.
+- **AI Tutor (Kuya Nicolai)**:
+  - **Persona & Pedagogy**: Acts as "Nicolai", a supportive peer tutor from CIT-U's Honor Society, using the Socratic method to guide students step-by-step.
+  - **Ambiguity Resolution**: When user instructions are ambiguous or multi-faceted, Nicolai responds with 2–4 numbered options for the user to choose from.
+  - **Chat Memory & History**: Full multi-turn conversation context is passed to the LLM backend for natural, continuous dialogue.
+  - **Dual Engine Architecture**:
+    - **Fast Server AI**: Server-side Gemini API execution for instant response.
+    - **Private Local**: In-browser WebGPU execution (`WebWorkerMLCEngine`) with a live inline progress bar (~1GB model download) and green offline badge.
+  - **Engine Mode Preference**: Users configure their default AI Tutor engine (Server vs. Local) in **Settings → AI Tutor** tab, stored in `localStorage`.
+  - **Auto-Scroll & Clean Interface**: Clean chat card with name-only header ("Kuya Nicolai"), smooth auto-scroll on response stream completion, attachment preview (photos/documents), and no clutter.
 
 ---
 

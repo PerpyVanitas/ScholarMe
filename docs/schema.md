@@ -1,7 +1,7 @@
 # Database Schema
 
 This document is auto-generated from Supabase migrations.
-Last updated: 2026-08-03 (latest migration: 20260803010000_user_blocks_and_search_index.sql)
+Last updated: 2026-08-03 (latest migration: 20260803020000_event_attendance_and_xp.sql)
 
 ## Table: ratelimit_windows
 
