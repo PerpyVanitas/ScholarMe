@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
-import { hasAnyRole, TUTOR_ROLES } from "@/lib/utils/roles";
+import { hasAnyRole, isKnownRole, TUTOR_ROLES } from "@/lib/utils/roles";
 import type { UserRole } from "@/lib/types";
 
 const QuerySchema = z.object({
@@ -45,9 +45,15 @@ export async function GET(req: Request) {
     .maybeSingle();
 
   const callerRoleRaw = callerProfile?.roles;
-  const callerRole: UserRole = Array.isArray(callerRoleRaw)
-    ? ((callerRoleRaw[0]?.name ?? "learner") as UserRole)
-    : (((callerRoleRaw as { name?: string })?.name ?? "learner") as UserRole);
+  const rawRoleName: string = Array.isArray(callerRoleRaw)
+    ? (callerRoleRaw[0]?.name ?? "learner")
+    : callerRoleRaw !== null &&
+        callerRoleRaw !== undefined &&
+        typeof callerRoleRaw === "object" &&
+        "name" in callerRoleRaw
+      ? ((callerRoleRaw as { name?: string }).name ?? "learner")
+      : "learner";
+  const callerRole: UserRole = isKnownRole(rawRoleName) ? rawRoleName : "learner";
 
   const isTutorOrAbove = hasAnyRole(callerRole, TUTOR_ROLES);
 
