@@ -24,6 +24,11 @@ CREATE INDEX IF NOT EXISTS idx_user_blocks_blocked_id
 -- 5. RLS: users can only manage and view their own blocks
 ALTER TABLE public.user_blocks ENABLE ROW LEVEL SECURITY;
 
+-- Drop first so re-running the migration is idempotent
+DROP POLICY IF EXISTS "Users can see their own blocks"   ON public.user_blocks;
+DROP POLICY IF EXISTS "Users can insert their own blocks" ON public.user_blocks;
+DROP POLICY IF EXISTS "Users can delete their own blocks" ON public.user_blocks;
+
 CREATE POLICY "Users can see their own blocks"
   ON public.user_blocks FOR SELECT
   USING (auth.uid() = blocker_id);
