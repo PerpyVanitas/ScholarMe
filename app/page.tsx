@@ -559,22 +559,26 @@ export default function HomePage() {
 
               <div className="space-y-4 text-base text-muted-foreground leading-relaxed">
                 <p>
-                  Driven by a commitment to <strong className="text-foreground font-semibold">Excellence in Academics, Leadership, and Social Responsibility</strong>, the Honor Society is a top academic organization that transforms this three-part mission into action from its main hub in the <strong className="text-foreground font-semibold">Peer Learning Center</strong> — a collaborative environment designed for outspoken, responsible individuals looking to maximize their potential both inside and outside the classroom.
+                  The <strong className="text-foreground font-semibold">CIT-University Honor Society (HonSoc)</strong> is a values-driven student organization, commissioned by the University administration, committed to excellence in academics, leadership, and social responsibility. Guided by its vision to <strong className="text-foreground font-semibold">cultivate globally competitive individuals</strong> and its mission to empower student success through service and mentorship, HonSoc serves as the bridge between students and the university — promoting academic distinction, community involvement, and holistic development.
                 </p>
+                <p>
+                  At its heart is the <strong className="text-foreground font-semibold">Peer Learning Center (PLC)</strong> — exclusively open to Honor Society members. More than just a study space, the PLC is a vibrant, air-conditioned haven for learning, collaboration, and connection. Whether you&apos;re reviewing solo, tackling group projects, or joining fun academic activities with fellow scholars, this space is designed to meet your every academic need.
+                </p>
+                {/* ── Three pillars mini-cards (p, not h4 — maintains heading order h2→h3 in pillars section) ── */}
                 <div className="grid sm:grid-cols-3 gap-4 pt-2">
                   <div className="p-4 rounded-xl border border-border/40 bg-card/60">
                     <GraduationCap className="h-5 w-5 text-amber-500 mb-2" />
-                    <h4 className="font-bold text-sm text-foreground mb-1">In Academics</h4>
-                    <p className="text-xs text-muted-foreground">Equips students to meet university standards by managing the campus institutional tutoring facility.</p>
+                    <p className="font-bold text-sm text-foreground mb-1">In Academics</p>
+                    <p className="text-xs text-muted-foreground">Equips students to meet university standards by managing the campus institutional tutoring facility at the PLC.</p>
                   </div>
                   <div className="p-4 rounded-xl border border-border/40 bg-card/60">
                     <Crown className="h-5 w-5 text-purple-500 mb-2" />
-                    <h4 className="font-bold text-sm text-foreground mb-1">In Leadership</h4>
+                    <p className="font-bold text-sm text-foreground mb-1">In Leadership</p>
                     <p className="text-xs text-muted-foreground">Serves as a vital communication medium between student body and administration while cultivating talent.</p>
                   </div>
                   <div className="p-4 rounded-xl border border-border/40 bg-card/60">
                     <Heart className="h-5 w-5 text-emerald-500 mb-2" />
-                    <h4 className="font-bold text-sm text-foreground mb-1">Social Responsibility</h4>
+                    <p className="font-bold text-sm text-foreground mb-1">Social Responsibility</p>
                     <p className="text-xs text-muted-foreground">Empowers members to lead and engage in campus events, community extensions, and outreach programs.</p>
                   </div>
                 </div>

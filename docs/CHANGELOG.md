@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2026-08-03] — A11y Fix & Landing Page Copy Enrichment
+
+### Fixed
+- **WCAG Heading-Order Violation (`app/page.tsx`)**: axe-core reported a `heading-order` violation (h2 → h4 jump) in the About section mini-cards ("In Academics", "In Leadership", "Social Responsibility"). The three `<h4>` elements were demoted to `<p>` tags with identical Tailwind bold styling — zero visual change, correct semantic hierarchy. Verified clean with `axe-core 4.12.1` (0 violations).
+
+### Changed
+- **Landing Page About Section Copy (`app/page.tsx`)**: Enriched with authentic HonSoc language sourced from the 25-26 Primer. Now includes: the official HonSoc definition (values-driven, commissioned by University administration), the vision (cultivate globally competitive individuals), the mission (empower student success through service and mentorship), and a dedicated paragraph on the Peer Learning Center as an air-conditioned, member-exclusive haven for learning and collaboration. No officer or council names included (those sections of the Primer are outdated).
+
+---
+
 ## [2026-08-03] — AI Chat Fix, RBAC User Search & User Blocking System
 
 ### Fixed
