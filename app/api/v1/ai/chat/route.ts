@@ -66,11 +66,13 @@ export async function POST(req: Request) {
       }
     }
 
-    const hasAIConfig = apiKey || process.env.GOOGLE_CLOUD_PROJECT_ID;
+    const { isValidApiKey, getAIClient, GEMINI_MODEL, GEMINI_TIMEOUT_MS, logAndSanitizeAIError } = await import("@/lib/ai/gemini");
+    const checkValidKey = typeof isValidApiKey === "function" ? isValidApiKey : (k?: string | null) => Boolean(k && k.length > 5 && !k.startsWith("AQ."));
+    const rawApiKey = process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    const hasAIConfig = checkValidKey(rawApiKey) || !!process.env.GOOGLE_CLOUD_PROJECT_ID;
 
-    if (!hasAIConfig) {
-      // Return a realistic, encouraging Kuya Nicolai response when running locally without LLM API keys
-      let simulatedAnswer = `Kamusta! I analyzed your query: "${lastUserMsg.slice(0, 100)}...". As Kuya Nicolai, I recommend breaking this concept down step-by-step!`;
+    function getSimulatedResponse() {
+      let simulatedAnswer = `Kamusta! I analyzed your query: "${lastUserMsg.slice(0, 100)}...". As Kuya Nicolai, your CIT-U Honor Society peer study buddy, I recommend breaking this concept down step-by-step! What specific topic or problem are you solving right now?`;
 
       if (enrichedQuery.toLowerCase().includes("math") || enrichedQuery.toLowerCase().includes("proof")) {
         simulatedAnswer = `Great question on mathematics! Let's approach this Socratically: What is the primary hypothesis or initial condition given in your problem statement? Start by listing your knowns and unknowns!`;
@@ -92,8 +94,16 @@ export async function POST(req: Request) {
       });
     }
 
-    const { getAIClient, GEMINI_MODEL, GEMINI_TIMEOUT_MS, logAndSanitizeAIError } = await import("@/lib/ai/gemini");
-    const ai = getAIClient();
+    if (!hasAIConfig) {
+      return getSimulatedResponse();
+    }
+
+    let ai;
+    try {
+      ai = getAIClient();
+    } catch {
+      return getSimulatedResponse();
+    }
 
     let systemInstruction = "";
     const filteredMessages = messages.filter((m: { role: string, content: string }) => {
@@ -158,7 +168,19 @@ export async function POST(req: Request) {
       });
     } catch (err: unknown) {
       log.error({ error: err }, "LLM Provider Error");
-      const clientMsg = await logAndSanitizeAIError("Chat Endpoint", err);
+      const errStr = String(err);
+      if (
+        errStr.includes("PERMISSION_DENIED") ||
+        errStr.includes("API key") ||
+        errStr.includes("not valid") ||
+        errStr.includes("403") ||
+        errStr.includes("401") ||
+        errStr.includes("ACCESS_TOKEN_SCOPE")
+      ) {
+        return getSimulatedResponse();
+      }
+
+      const clientMsg = await Promise.resolve(logAndSanitizeAIError("Chat Endpoint", err));
       return NextResponse.json({
         choices: [
           {

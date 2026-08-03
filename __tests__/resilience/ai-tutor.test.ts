@@ -20,6 +20,7 @@ vi.mock('@/lib/rate-limit', () => ({
 // Mock the AI client
 const mockGenerateContent = vi.fn();
 vi.mock('@/lib/ai/gemini', () => ({
+  isValidApiKey: vi.fn((key) => Boolean(key && key.length > 5)),
   getAIClient: vi.fn(() => ({
     models: {
       generateContent: mockGenerateContent,
@@ -27,7 +28,7 @@ vi.mock('@/lib/ai/gemini', () => ({
   })),
   GEMINI_MODEL: 'gemini-1.5-pro',
   GEMINI_TIMEOUT_MS: 30000,
-  logAndSanitizeAIError: vi.fn().mockResolvedValue('Simulated AI Error Message'),
+  logAndSanitizeAIError: vi.fn().mockReturnValue('Simulated AI Error Message'),
 }));
 
 describe('AI Tutor Resilience', () => {

@@ -31,13 +31,31 @@ export const GEMINI_MODEL = "gemini-2.0-flash";
  * If neither is configured an error is thrown immediately so
  * misconfiguration surfaces before the first AI request.
  */
+export function isValidApiKey(key?: string | null): boolean {
+  if (!key || typeof key !== "string") return false;
+  const trimmed = key.trim();
+  if (trimmed.length < 10) return false;
+  // Tokens starting with AQ. (OAuth tokens), YOUR_, or containing spaces/placeholders are invalid API keys for standard Gemini REST API
+  if (
+    trimmed.startsWith("AQ.") ||
+    trimmed.startsWith("YOUR_") ||
+    trimmed.includes(" ") ||
+    trimmed === "placeholder"
+  ) {
+    return false;
+  }
+  return true;
+}
+
 export function getAIClient(): GoogleGenAI {
   // ── Standard Gemini / Express API Key ───────────────────────────────────
-  const apiKey =
+  const rawApiKey =
     process.env.GEMINI_API_KEY ||
     process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
     process.env.GROQ_API_KEY ||
     process.env.OPENAI_API_KEY;
+
+  const apiKey = isValidApiKey(rawApiKey) ? rawApiKey!.trim() : undefined;
 
   if (apiKey) {
     return new GoogleGenAI({ apiKey });

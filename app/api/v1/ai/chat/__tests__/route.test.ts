@@ -20,6 +20,7 @@ vi.mock("@/lib/rate-limit", () => ({
 // Mock AI client
 const generateContentMock = vi.fn();
 vi.mock("@/lib/ai/gemini", () => ({
+  isValidApiKey: vi.fn((key) => Boolean(key && key.length > 5 && !key.startsWith("AQ."))),
   getAIClient: vi.fn(() => ({
     models: {
       generateContent: generateContentMock,
