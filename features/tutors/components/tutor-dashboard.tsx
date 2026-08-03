@@ -551,16 +551,7 @@ export function TutorDashboard({
         </Card>
       )}
 
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Welcome back, {profile?.full_name || "Tutor"}
-          </h1>
-          <p className="text-muted-foreground">
-            Manage your sessions, resources, and availability.
-          </p>
-        </div>
-
+      <div className="flex flex-col sm:flex-row sm:items-end justify-end gap-4">
         <div className="flex gap-2">
           {isEditingLayout ? (
             <>

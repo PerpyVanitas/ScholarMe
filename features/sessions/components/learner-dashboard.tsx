@@ -74,14 +74,6 @@ export function LearnerDashboard({
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Welcome back, {profile?.full_name || "Learner"}
-        </h1>
-        <p className="text-muted-foreground">
-          Here is an overview of your tutoring journey.
-        </p>
-      </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
