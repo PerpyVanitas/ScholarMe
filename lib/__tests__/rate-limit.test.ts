@@ -21,39 +21,42 @@ describe("rateLimit", () => {
     process.env = { ...originalEnv };
   });
 
-  it("blocks requests when Supabase env vars are missing", async () => {
+  it("fails open (allows requests with error flag) when Supabase env vars are missing", async () => {
     delete process.env.NEXT_PUBLIC_SUPABASE_URL;
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const limiter = rateLimit({ interval: 60_000, limit: 5 });
     const result = await limiter.check("user-1");
 
-    expect(result.success).toBe(false);
-    expect(result.remaining).toBe(0);
+    expect(result.success).toBe(true);
+    expect(result.error).toBe(true);
+    expect(result.remaining).toBe(5);
     expect(mockRpc).not.toHaveBeenCalled();
     consoleSpy.mockRestore();
   });
 
-  it("blocks requests when RPC returns an error", async () => {
+  it("fails open (allows requests with error flag) when RPC returns an error", async () => {
     mockRpc.mockResolvedValue({ data: null, error: { message: "rpc failed" } });
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const limiter = rateLimit({ interval: 60_000, limit: 5 });
     const result = await limiter.check("user-1");
 
-    expect(result.success).toBe(false);
-    expect(result.remaining).toBe(0);
+    expect(result.success).toBe(true);
+    expect(result.error).toBe(true);
+    expect(result.remaining).toBe(5);
     consoleSpy.mockRestore();
   });
 
-  it("blocks requests when RPC returns empty data", async () => {
+  it("fails open (allows requests with error flag) when RPC returns empty data", async () => {
     mockRpc.mockResolvedValue({ data: [], error: null });
 
     const limiter = rateLimit({ interval: 60_000, limit: 5 });
     const result = await limiter.check("user-1");
 
-    expect(result.success).toBe(false);
-    expect(result.remaining).toBe(0);
+    expect(result.success).toBe(true);
+    expect(result.error).toBe(true);
+    expect(result.remaining).toBe(5);
   });
 
   it("returns success when within rate limit", async () => {

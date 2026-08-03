@@ -52,7 +52,7 @@ describe("POST /api/v1/users/block", () => {
 
   it("returns 401 when unauthenticated", async () => {
     mockGetUser.mockResolvedValue({ data: { user: null } });
-    const res = await POST(makePostRequest({ blocked_id: "00000000-0000-0000-0000-000000000001" }));
+    const res = await POST(makePostRequest({ blocked_id: "123e4567-e89b-12d3-a456-426614174000" }));
     expect(res.status).toBe(401);
   });
 
@@ -63,7 +63,7 @@ describe("POST /api/v1/users/block", () => {
   });
 
   it("returns 400 when trying to block yourself", async () => {
-    const uid = "00000000-0000-0000-0000-000000000001";
+    const uid = "123e4567-e89b-12d3-a456-426614174000";
     mockGetUser.mockResolvedValue({ data: { user: { id: uid } } });
     const res = await POST(makePostRequest({ blocked_id: uid }));
     expect(res.status).toBe(400);
@@ -73,11 +73,11 @@ describe("POST /api/v1/users/block", () => {
 
   it("returns 200 on successful block", async () => {
     mockGetUser.mockResolvedValue({
-      data: { user: { id: "00000000-0000-0000-0000-000000000001" } },
+      data: { user: { id: "123e4567-e89b-12d3-a456-426614174000" } },
     });
     mockInsert.mockResolvedValue({ error: null });
     const res = await POST(
-      makePostRequest({ blocked_id: "00000000-0000-0000-0000-000000000002" }),
+      makePostRequest({ blocked_id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11" }),
     );
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -86,23 +86,23 @@ describe("POST /api/v1/users/block", () => {
 
   it("treats duplicate block (already blocked) as success", async () => {
     mockGetUser.mockResolvedValue({
-      data: { user: { id: "00000000-0000-0000-0000-000000000001" } },
+      data: { user: { id: "123e4567-e89b-12d3-a456-426614174000" } },
     });
     // 23505 = unique constraint violation (already blocked)
     mockInsert.mockResolvedValue({ error: { code: "23505" } });
     const res = await POST(
-      makePostRequest({ blocked_id: "00000000-0000-0000-0000-000000000002" }),
+      makePostRequest({ blocked_id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11" }),
     );
     expect(res.status).toBe(200);
   });
 
   it("returns 500 on unexpected DB error", async () => {
     mockGetUser.mockResolvedValue({
-      data: { user: { id: "00000000-0000-0000-0000-000000000001" } },
+      data: { user: { id: "123e4567-e89b-12d3-a456-426614174000" } },
     });
     mockInsert.mockResolvedValue({ error: { code: "99999", message: "DB down" } });
     const res = await POST(
-      makePostRequest({ blocked_id: "00000000-0000-0000-0000-000000000002" }),
+      makePostRequest({ blocked_id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11" }),
     );
     expect(res.status).toBe(500);
   });
@@ -113,17 +113,17 @@ describe("DELETE /api/v1/users/block", () => {
 
   it("returns 401 when unauthenticated", async () => {
     mockGetUser.mockResolvedValue({ data: { user: null } });
-    const res = await DELETE(makeDeleteRequest({ blocked_id: "00000000-0000-0000-0000-000000000001" }));
+    const res = await DELETE(makeDeleteRequest({ blocked_id: "123e4567-e89b-12d3-a456-426614174000" }));
     expect(res.status).toBe(401);
   });
 
   it("returns 200 on successful unblock", async () => {
     mockGetUser.mockResolvedValue({
-      data: { user: { id: "00000000-0000-0000-0000-000000000001" } },
+      data: { user: { id: "123e4567-e89b-12d3-a456-426614174000" } },
     });
     mockDelete.mockResolvedValue({ error: null });
     const res = await DELETE(
-      makeDeleteRequest({ blocked_id: "00000000-0000-0000-0000-000000000002" }),
+      makeDeleteRequest({ blocked_id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11" }),
     );
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -132,11 +132,11 @@ describe("DELETE /api/v1/users/block", () => {
 
   it("returns 500 on DB error during unblock", async () => {
     mockGetUser.mockResolvedValue({
-      data: { user: { id: "00000000-0000-0000-0000-000000000001" } },
+      data: { user: { id: "123e4567-e89b-12d3-a456-426614174000" } },
     });
     mockDelete.mockResolvedValue({ error: { message: "constraint error" } });
     const res = await DELETE(
-      makeDeleteRequest({ blocked_id: "00000000-0000-0000-0000-000000000002" }),
+      makeDeleteRequest({ blocked_id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11" }),
     );
     expect(res.status).toBe(500);
   });
