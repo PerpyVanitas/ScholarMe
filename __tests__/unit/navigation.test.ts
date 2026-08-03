@@ -25,7 +25,6 @@ const mockProfile: Profile = {
   avatar_url: null,
   bio: null,
   created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
 };
 
 describe("Navigation & Information Architecture Audit", () => {
