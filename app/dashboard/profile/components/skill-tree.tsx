@@ -9,7 +9,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Lock, Paintbrush, Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -30,37 +29,46 @@ const THEMES = [
     name: "Classic Scholar",
     cost: 0,
     color: "hsl(221.2 83.2% 53.3%)",
+    description: "The default blue accent. Clean, focused, and timeless.",
   },
   {
     id: "emerald",
     name: "Emerald Scholar",
     cost: 1000,
     color: "hsl(142.1 76.2% 36.3%)",
+    description: "Fresh green accents. Calm and growth-oriented.",
   },
   {
     id: "violet",
     name: "Arcane Void",
     cost: 2500,
     color: "hsl(262.1 83.3% 57.8%)",
+    description: "Deep violet hues. Mysterious and creative.",
   },
   {
     id: "rose",
     name: "Crimson Dawn",
     cost: 5000,
     color: "hsl(346.8 77.2% 49.8%)",
+    description: "Bold red accents. Passionate and driven.",
   },
   {
     id: "amber",
     name: "Golden Prestige",
     cost: 10000,
     color: "hsl(37.7 92.1% 50.2%)",
+    description: "Warm amber gold. Reserved for the most dedicated scholars.",
   },
 ];
 
-export function SkillTree({ profile }: SkillTreeProps) {
+export function SkillTree({ profile: propProfile }: SkillTreeProps) {
   const router = useRouter();
-  const { role, refreshProfile } = useUser();
+  // Use context profile so equipped state updates immediately after equipping
+  const { role, refreshProfile, profile: contextProfile } = useUser();
   const [loading, setLoading] = useState(false);
+
+  // Prefer context profile (live) but fall back to prop for initial render
+  const profile = contextProfile ?? propProfile;
   const xp = profile.total_xp || 0;
 
   const rolesArray = Array.isArray(profile.roles)
@@ -112,6 +120,7 @@ export function SkillTree({ profile }: SkillTreeProps) {
       } else {
         toast.success(`Theme "${theme.name}" equipped!`);
       }
+      // Refresh context first so the Equipped badge updates immediately
       await refreshProfile();
       router.refresh();
     }
@@ -135,30 +144,29 @@ export function SkillTree({ profile }: SkillTreeProps) {
       <CardContent>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {THEMES.map((theme) => {
-            const isEquipped =
-              profile.profile_theme_color === theme.id ||
-              (!profile.profile_theme_color && theme.id === "default");
+            const currentTheme = profile.profile_theme_color || "default";
+            const isEquipped = currentTheme === theme.id;
             const canAfford = isSuperAdmin || xp >= theme.cost;
             return (
               <div
                 key={theme.id}
-                className="relative flex flex-col gap-3 rounded-lg border p-4 shadow-sm transition-all hover:border-primary/50"
+                className={`relative flex flex-col gap-3 rounded-lg border p-4 shadow-sm transition-all ${
+                  isEquipped
+                    ? "border-primary/60 bg-primary/5"
+                    : "hover:border-primary/50"
+                }`}
               >
                 <div className="flex items-center gap-3">
                   <div
-                    className="h-8 w-8 rounded-full border shadow-inner"
+                    className="h-8 w-8 rounded-full border shadow-inner shrink-0"
                     style={{ backgroundColor: theme.color }}
                   />
-                  <div className="flex flex-col">
+                  <div className="flex flex-col min-w-0">
                     <span className="font-semibold text-sm">{theme.name}</span>
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
                       {theme.cost > 0 ? (
                         <>
-                          {isSuperAdmin ? (
-                            <Zap className="h-3 w-3 text-orange-500 fill-orange-500" />
-                          ) : (
-                            <Zap className="h-3 w-3 text-orange-500 fill-orange-500" />
-                          )}{" "}
+                          <Zap className="h-3 w-3 text-orange-500 fill-orange-500" />{" "}
                           {isSuperAdmin
                             ? "Unlocked (Admin)"
                             : `${theme.cost.toLocaleString()} XP`}
@@ -170,10 +178,15 @@ export function SkillTree({ profile }: SkillTreeProps) {
                   </div>
                 </div>
 
-                <div className="mt-auto pt-4">
+                {/* Theme description so users know how themes differ */}
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  {theme.description}
+                </p>
+
+                <div className="mt-auto pt-2">
                   {isEquipped ? (
                     <Button variant="secondary" className="w-full" disabled>
-                      Equipped
+                      ✓ Equipped
                     </Button>
                   ) : canAfford ? (
                     theme.cost > 0 && !isSuperAdmin ? (

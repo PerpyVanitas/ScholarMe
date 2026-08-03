@@ -27,7 +27,6 @@ import { OnboardingTour } from "@/features/onboarding/components/onboarding-tour
 import { MobileFab } from "@/components/mobile-fab";
 import { PageTutorialButton } from "@/components/page-tutorial-button";
 import { AnalyticsPageTracker } from "@/components/analytics-page-tracker";
-import { ContextualHelpButton } from "@/components/contextual-help-button";
 import { SuperAdminBanner } from "@/components/admin/super-admin-banner";
 import { ChatHeadsContainer } from "@/features/messaging/components/chat-heads-container";
 
@@ -153,7 +152,6 @@ function DashboardLayoutContent({
             >
               <FeedbackButton />
             </div>
-            <ContextualHelpButton />
             <PageTutorialButton />
             <div
               data-tour-step="4"

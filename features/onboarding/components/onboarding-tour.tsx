@@ -19,8 +19,6 @@ import {
 export function OnboardingTour() {
   const { profile } = useUser();
   const [mounted, setMounted] = useState(false);
-  const [showSkipConfirm, setShowSkipConfirm] = useState(false);
-  const [tourInstance, setTourInstance] = useState<unknown>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -80,13 +78,9 @@ export function OnboardingTour() {
         animate: true,
         steps,
         onDestroyStarted: () => {
-          if (!tour.hasNextStep()) {
-            localStorage.setItem("hasSeenOnboardingTour", "true");
-            tour.destroy();
-          } else {
-            setTourInstance(tour);
-            setShowSkipConfirm(true);
-          }
+          // Skip immediately — no confirmation needed
+          localStorage.setItem("hasSeenOnboardingTour", "true");
+          tour.destroy();
         },
       });
 
@@ -169,32 +163,5 @@ export function OnboardingTour() {
 
   if (!mounted) return null;
 
-  return (
-    <AlertDialog open={showSkipConfirm} onOpenChange={setShowSkipConfirm}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Skip Tour?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Are you sure you want to skip the onboarding tour? You can always
-            find help in the documentation.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => setShowSkipConfirm(false)}>
-            Continue Tour
-          </AlertDialogCancel>
-          <AlertDialogAction
-            onClick={() => {
-              localStorage.setItem("hasSeenOnboardingTour", "true");
-              // @ts-expect-error: Strict unknown type check
-              tourInstance?.destroy();
-              setShowSkipConfirm(false);
-            }}
-          >
-            Skip
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
+  return null;
 }
