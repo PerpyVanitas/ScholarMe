@@ -18,7 +18,7 @@ const mockProfile: Profile = {
   id: "test-user-id",
   email: "test@example.com",
   full_name: "Test User",
-  role: "learner",
+  role_id: "learner-role-id",
   membership_number: "HS-2026-001",
   degree_program: "BS Computer Science",
   year_level: 3,
