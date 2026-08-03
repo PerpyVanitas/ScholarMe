@@ -28,7 +28,7 @@ import { updateEventRsvp } from "@/features/events/api/actions";
 import { ContinuousQrScanner } from "@/components/ui/qr-scanner-continuous";
 import { triggerConfetti } from "@/lib/utils/gamification";
 import { toast } from "sonner";
-import QRCode from "react-qr-code";
+import { QRCodeSVG } from "qrcode.react";
 
 interface EventDetailModalProps {
   event: FacilityEvent | null;
@@ -327,7 +327,7 @@ export function EventDetailModal({
                 </div>
               ) : showUserQr ? (
                 <div className="flex flex-col items-center gap-3 bg-white p-4 rounded-xl text-slate-900 border">
-                  <QRCode value={userQrPayload} size={160} />
+                  <QRCodeSVG value={userQrPayload} size={160} />
                   <p className="text-xs font-medium text-slate-600 text-center">
                     Show this QR code at the desk or scanner to record attendance
                   </p>
