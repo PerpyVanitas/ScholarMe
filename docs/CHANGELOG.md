@@ -9,9 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **WCAG Heading-Order Violation (`app/page.tsx`)**: axe-core reported a `heading-order` violation (h2 → h4 jump) in the About section mini-cards ("In Academics", "In Leadership", "Social Responsibility"). The three `<h4>` elements were demoted to `<p>` tags with identical Tailwind bold styling — zero visual change, correct semantic hierarchy. Verified clean with `axe-core 4.12.1` (0 violations).
+- **Resilience Test Worker Teardown Error (`__tests__/resilience/*`)**: Fixed hanging fetch promises in `study-sets-view`, `flashcards-study-view`, `quizzes-study-view`, and `leaderboard-view` tests by listening to `AbortSignal` `abort` events and rejecting cleanly with `AbortError`. Resolves the `EnvironmentTeardownError` during Vitest worker shutdown.
 
 ### Changed
 - **Landing Page About Section Copy (`app/page.tsx`)**: Enriched with authentic HonSoc language sourced from the 25-26 Primer. Now includes: the official HonSoc definition (values-driven, commissioned by University administration), the vision (cultivate globally competitive individuals), the mission (empower student success through service and mentorship), and a dedicated paragraph on the Peer Learning Center as an air-conditioned, member-exclusive haven for learning and collaboration. No officer or council names included (those sections of the Primer are outdated).
+- **Git Ignore (`.gitignore`)**: Added `PRIMER*` and `.gemini/` to ignore local reference files and prevent dirty working tree state.
 
 ---
 

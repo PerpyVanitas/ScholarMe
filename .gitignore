@@ -60,3 +60,8 @@ needs_schema.txt
 *-sa-key*.json
 project-*.json
 gcp-*.json
+
+# Local workspace reference & agent cache
+PRIMER*
+.gemini/
+

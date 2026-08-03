@@ -27,13 +27,34 @@ describe("StudySets Resilience", () => {
 
   it("aborts fetch requests on unmount", async () => {
     (global.fetch as ReturnType<typeof vi.fn>).mockImplementation(
-      () => new Promise(resolve => setTimeout(resolve, 100))
+      (_url, options) =>
+        new Promise((resolve, reject) => {
+          const timer = setTimeout(
+            () => resolve({ ok: true, json: async () => ({ data: [] }) }),
+            100
+          );
+          if (options?.signal) {
+            if (options.signal.aborted) {
+              clearTimeout(timer);
+              const err = new Error("aborted");
+              err.name = "AbortError";
+              reject(err);
+            } else {
+              options.signal.addEventListener("abort", () => {
+                clearTimeout(timer);
+                const err = new Error("aborted");
+                err.name = "AbortError";
+                reject(err);
+              });
+            }
+          }
+        })
     );
 
     const { unmount } = render(<StudySetsPage />);
 
     await act(async () => {
-      await new Promise(r => setTimeout(r, 10));
+      await new Promise((r) => setTimeout(r, 10));
     });
 
     unmount();
@@ -42,7 +63,11 @@ describe("StudySets Resilience", () => {
     const fetchArgs = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
     expect(fetchArgs[1]).toBeDefined();
     expect(fetchArgs[1].signal).toBeInstanceOf(AbortSignal);
-    
+
     expect(fetchArgs[1].signal.aborted).toBe(true);
+
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 10));
+    });
   });
 });
