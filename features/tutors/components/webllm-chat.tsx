@@ -53,12 +53,13 @@ export function WebLLMChat({
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "system",
-      content: `You are Kuya Nicolai, the friendly, supportive mascot of the Honor Society. You act as an AI peer study buddy. Guide the student using the Socratic method.\n\nContext:\n${initialContext}`,
+      // Only pass study context here — the full persona & behavior lives in the server route
+      content: initialContext ? `Context:\n${initialContext}` : "",
     },
     {
       role: "assistant",
       content:
-        "Hello! I am Kuya Nicolai, your peer study buddy from the Honor Society. Ask me anything, or upload a photo of your study material!",
+        "Hey! I'm Kuya Nicolai, your peer study buddy from the Honor Society. Ask me anything — whether it's a tricky concept, a homework problem, or you just want to quiz yourself. You can also upload a photo of your notes or study material!",
     },
   ]);
 
@@ -325,6 +326,31 @@ export function WebLLMChat({
           </Button>
         </div>
       </CardHeader>
+
+      {/* Local WebLLM download progress bar — shown inline below header */}
+      {engineMode === "local" && isLoading && initProgress && (
+        <div className="px-4 py-2 border-b bg-muted/20 space-y-1">
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <Loader2 className="h-3 w-3 animate-spin text-primary" />
+              Downloading local model...
+            </span>
+            <span className="font-medium text-primary tabular-nums">
+              {Math.round(initProgress.progress * 100)}%
+            </span>
+          </div>
+          <Progress value={initProgress.progress * 100} className="h-1.5" />
+          <p className="text-[10px] text-muted-foreground truncate">{initProgress.text}</p>
+        </div>
+      )}
+
+      {/* Ready badge when local model loaded */}
+      {engineMode === "local" && isReady && (
+        <div className="px-4 py-1.5 border-b bg-emerald-500/10 flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400">
+          <ShieldCheck className="h-3 w-3" />
+          Local model ready — processing is 100% private & offline
+        </div>
+      )}
 
       <CardContent className="flex-1 p-0 overflow-hidden relative bg-muted/10">
         {/* Local Engine Download Overlay if local mode chosen & not ready */}
