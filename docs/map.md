@@ -224,3 +224,22 @@ ScholarMe is divided into several primary domains, each governed by the access c
   - **Effect**: Blocked user disappears from the blocker's search results immediately. The block is bidirectional in search — neither party can find the other.
   - **Unblock**: Available via `DELETE /api/v1/users/block` (future UI: profile settings).
   - **Self-block**: Prevented at the API level (`no_self_block` DB constraint + 400 response).
+
+---
+
+## 🌐 Public Honor Society Landing Page (`app/page.tsx`)
+
+- **Hero & Mission Punchline**:
+  - Highlights the 3 pillars: Excellence in Academics, Leadership, and Social Responsibility.
+  - Features tagline: *"Driven by Excellence in Academics, Leadership, and Social Responsibility, the Honor Society is a collaborative community of responsible student leaders dedicated to making an impact inside and outside the classroom."*
+
+- **3 Pillars Breakdown**:
+  - Interactive cards highlighting **Academics** (managing institutional tutoring facility), **Leadership** (liaison between students & administration), and **Social Responsibility** (community outreach & extension programs).
+
+- **Real Data Statistics**:
+  - Highlights **400+ Tutors Over 4 Years**, 4 Years of Impact, 1,200+ Mentoring Hours, and 98% Satisfaction Rate.
+
+- **Authentic Community Photo Gallery**:
+  - Showcases 5 real CIT-U Honor Society photographs (leadership attire, collaborative group hearts, Friyay Game Nights, board game strategy sessions).
+  - Includes interactive **Photo Lightbox Modal** for full-screen image previews.
+

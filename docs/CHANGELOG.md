@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Block Confirmation Alert Dialog (`components/command-menu.tsx`)**: Clicking "Block User" shows an `AlertDialog` explaining the consequences before committing the block.
 - **pg_trgm Extension + GIN Index**: `CREATE EXTENSION IF NOT EXISTS pg_trgm` and `CREATE INDEX idx_profiles_full_name_trgm USING GIN (full_name gin_trgm_ops)` applied to production, enabling fast fuzzy ILIKE at scale.
 - **Admin Users Page Deep-Link from Command Palette**: Navigating to admin users from a profile modal pre-fills the search filter via `?search=<name>` query param, which is now seeded into the component's search state on mount.
+- **Honor Society Landing Page Revamp (`app/page.tsx`, `app/landing-data.ts`)**: Redesigned landing page with authentic CIT-U Honor Society imagery, 3-Pillar structure (Academics, Leadership, Social Responsibility), real historical stat of **400+ Tutors Over 4 Years**, interactive Core Mission banner callout, interactive photo gallery lightbox, and rich glassmorphism micro-animations.
 
 ### Database Changes
 - New table: `public.user_blocks` — composite PK `(blocker_id, blocked_id)`, `no_self_block` constraint, RLS-protected (SELECT/INSERT/DELETE scoped to `blocker_id = auth.uid()`)
