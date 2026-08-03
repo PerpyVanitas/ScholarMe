@@ -7,26 +7,20 @@ import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
   CardFooter,
 } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import {
-  User,
   Send,
   Download,
   Loader2,
   Paperclip,
-  Sparkles,
-  Zap,
   ShieldCheck,
   FileText,
-  ImageIcon,
   X,
+  Zap,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
@@ -47,19 +41,26 @@ export function WebLLMChat({
   initialContext = "",
   profileId,
 }: WebLLMChatProps) {
-  // Mode: "server" (Instant Server AI) vs "local" (WebLLM in-browser cache)
+  // Read engine mode from localStorage (set by Settings page)
   const [engineMode, setEngineMode] = useState<"server" | "local">("server");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("scholarme_ai_mode");
+    if (saved === "local" || saved === "server") {
+      setEngineMode(saved);
+    }
+  }, []);
 
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "system",
-      // Only pass study context here — the full persona & behavior lives in the server route
+      // Only pass study context — the full persona & behavior lives in the server route
       content: initialContext ? `Context:\n${initialContext}` : "",
     },
     {
       role: "assistant",
       content:
-        "Hey! I'm Kuya Nicolai, your peer study buddy from the Honor Society. Ask me anything — whether it's a tricky concept, a homework problem, or you just want to quiz yourself. You can also upload a photo of your notes or study material!",
+        "Hey! I'm Nicolai, your peer study buddy from the Honor Society. Ask me anything — whether it's a tricky concept, a homework problem, or you just want to quiz yourself. You can also upload a photo of your notes or study material!",
     },
   ]);
 
@@ -69,7 +70,7 @@ export function WebLLMChat({
   const [attachment, setAttachment] = useState<File | null>(null);
   const [attachmentPreview, setAttachmentPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { engine, isLoading, isReady, initProgress, initializeEngine } =
     useWebLLM({
@@ -80,10 +81,11 @@ export function WebLLMChat({
     });
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isGenerating]);
+
+  // Suppress unused var
+  void profileId;
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -122,7 +124,7 @@ export function WebLLMChat({
     const userText = textToSend.trim();
     const currentAttachment = attachment;
     const currentPreview = attachmentPreview;
-    
+
     setInput("");
     clearAttachment();
     setIsGenerating(true);
@@ -156,7 +158,7 @@ export function WebLLMChat({
         try {
           base64ImageContent = await fileToBase64(currentAttachment);
         } catch {
-          console.error("Failed to read image as base64");
+          // ignore
         }
       } else {
         try {
@@ -168,7 +170,6 @@ export function WebLLMChat({
     }
 
     try {
-      // Server AI Mode Execution (Instant & Responsive)
       if (engineMode === "server") {
         setMessages((prev) => [
           ...prev,
@@ -182,9 +183,9 @@ export function WebLLMChat({
         const reqBody = {
           messages: messages.concat([{ role: "user", content: userText }]),
           attachments: currentAttachment
-            ? [{ 
-                name: currentAttachment.name, 
-                type: currentAttachment.type, 
+            ? [{
+                name: currentAttachment.name,
+                type: currentAttachment.type,
                 content: attachmentTextContent,
                 base64: base64ImageContent || undefined
               }]
@@ -200,7 +201,7 @@ export function WebLLMChat({
         let replyText = "";
         if (!response.ok) {
           const errData = await response.json().catch(() => null);
-          replyText = errData?.error || errData?.message || `AI Service currently unavailable (${response.status}). Please try again later.`;
+          replyText = errData?.error || errData?.message || `AI service temporarily unavailable (${response.status}). Please try again.`;
         } else {
           const data = await response.json();
           replyText = data.choices?.[0]?.message?.content || "No response generated.";
@@ -212,9 +213,9 @@ export function WebLLMChat({
           return updated;
         });
       } else {
-        // Local WebLLM Execution
+        // Local WebLLM
         if (!isReady || !engine) {
-          toast.error("Local engine not initialized yet. Download model first or switch to Server AI.");
+          toast.error("Local engine not ready. Download it first or switch to Server AI in Settings.");
           setIsGenerating(false);
           return;
         }
@@ -247,7 +248,7 @@ export function WebLLMChat({
           }
         ).chat.completions.create({
           messages: updatedMessages,
-          temperature: 0.7,
+          temperature: 0.85,
           stream: true,
         });
 
@@ -263,8 +264,8 @@ export function WebLLMChat({
         }
       }
     } catch (err: unknown) {
-      console.error("AI Chat Error:", err);
       toast.error("Failed to generate AI response");
+      console.error("AI Chat Error:", err);
     } finally {
       setIsGenerating(false);
       isGeneratingRef.current = false;
@@ -276,58 +277,33 @@ export function WebLLMChat({
     sendMessageContent(input);
   };
 
-  const presetPrompts = [
-    "💡 Socratic Math Guidance",
-    "📝 Quiz Me on Data Structures",
-    "📷 Review My Study Notes",
-    "⚡ Honor Society Exam Prep",
-  ];
-
   return (
-    <Card className="flex flex-col h-[720px] w-full max-w-4xl mx-auto shadow-lg border-primary/20">
-      <CardHeader className="bg-card border-b p-4 flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Avatar className="h-9 w-9 ring-2 ring-primary/20">
-            <AvatarImage src="/kuya-nicolai.png" alt="Kuya Nicolai" />
-            <AvatarFallback>KN</AvatarFallback>
-          </Avatar>
-          <div>
-            <div className="font-bold flex items-center gap-2">
-              Kuya Nicolai AI
-              <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/20">
-                {engineMode === "server" ? "Instant Server AI" : "Local WebLLM"}
-              </Badge>
-            </div>
-            <p className="text-[11px] text-muted-foreground font-normal">
-              CIT-U Honor Society Socratic Peer Study Buddy
-            </p>
-          </div>
-        </CardTitle>
-
-        {/* Engine Mode Selector */}
-        <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-lg border text-xs">
-          <Button
-            type="button"
-            size="sm"
-            variant={engineMode === "server" ? "default" : "ghost"}
-            className="h-7 text-[11px] gap-1 px-2.5"
-            onClick={() => setEngineMode("server")}
-          >
-            <Zap className="h-3 w-3" /> Fast Server AI
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant={engineMode === "local" ? "default" : "ghost"}
-            className="h-7 text-[11px] gap-1 px-2.5"
-            onClick={() => setEngineMode("local")}
-          >
-            <ShieldCheck className="h-3 w-3" /> Private Local
-          </Button>
+    <Card className="flex flex-col h-[720px] w-full max-w-3xl mx-auto shadow-md border-border/60">
+      {/* ─── Header ─── */}
+      <div className="flex items-center gap-3 px-4 py-3 border-b bg-card">
+        <Avatar className="h-9 w-9 ring-2 ring-primary/20 shrink-0">
+          <AvatarImage src="/kuya-nicolai.png" alt="Kuya Nicolai" />
+          <AvatarFallback>KN</AvatarFallback>
+        </Avatar>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm leading-none">Kuya Nicolai</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            {engineMode === "local" ? (
+              <span className="flex items-center gap-1">
+                <ShieldCheck className="h-3 w-3 text-emerald-500" />
+                Private Local
+              </span>
+            ) : (
+              <span className="flex items-center gap-1">
+                <Zap className="h-3 w-3 text-primary" />
+                Server AI
+              </span>
+            )}
+          </p>
         </div>
-      </CardHeader>
+      </div>
 
-      {/* Local WebLLM download progress bar — shown inline below header */}
+      {/* ─── Local model download progress bar ─── */}
       {engineMode === "local" && isLoading && initProgress && (
         <div className="px-4 py-2 border-b bg-muted/20 space-y-1">
           <div className="flex items-center justify-between text-[11px] text-muted-foreground">
@@ -344,25 +320,26 @@ export function WebLLMChat({
         </div>
       )}
 
-      {/* Ready badge when local model loaded */}
+      {/* ─── Local model ready banner ─── */}
       {engineMode === "local" && isReady && (
         <div className="px-4 py-1.5 border-b bg-emerald-500/10 flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400">
           <ShieldCheck className="h-3 w-3" />
-          Local model ready — processing is 100% private & offline
+          Local model ready — 100% private & offline
         </div>
       )}
 
+      {/* ─── Message area ─── */}
       <CardContent className="flex-1 p-0 overflow-hidden relative bg-muted/10">
-        {/* Local Engine Download Overlay if local mode chosen & not ready */}
+        {/* Local Engine Download Overlay */}
         {engineMode === "local" && !isReady && (
           <div className="absolute inset-0 bg-background/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-8 text-center">
             <Avatar className="h-16 w-16 mb-3 animate-pulse ring-4 ring-primary/20">
               <AvatarImage src="/kuya-nicolai.png" alt="Kuya Nicolai" />
               <AvatarFallback>KN</AvatarFallback>
             </Avatar>
-            <h3 className="text-lg font-bold mb-1">Initialize Local WebLLM Engine</h3>
+            <h3 className="text-lg font-bold mb-1">Initialize Local Model</h3>
             <p className="text-muted-foreground text-xs mb-4 max-w-md">
-              Download small in-browser LLM weights (~1GB) for 100% offline private processing.
+              Download model weights (~1GB) for 100% offline private processing.
             </p>
             {initProgress ? (
               <div className="w-full max-w-md space-y-2">
@@ -375,16 +352,13 @@ export function WebLLMChat({
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                   Download Local Model
                 </Button>
-                <Button onClick={() => setEngineMode("server")} variant="outline" size="sm" className="text-xs">
-                  Switch to Fast Server AI
-                </Button>
               </div>
             )}
           </div>
         )}
 
-        <ScrollArea ref={scrollRef} className="h-full p-6">
-          <div className="flex flex-col gap-5">
+        <ScrollArea className="h-full p-5">
+          <div className="flex flex-col gap-4">
             {messages
               .filter((m) => m.role !== "system")
               .map((msg, index) => {
@@ -409,10 +383,10 @@ export function WebLLMChat({
                     </Avatar>
 
                     <div
-                      className={`flex flex-col gap-1.5 max-w-[80%] rounded-xl p-4 text-xs shadow-sm ${
+                      className={`flex flex-col gap-1.5 max-w-[78%] rounded-2xl px-4 py-3 text-sm shadow-sm ${
                         isUser
-                          ? "bg-primary text-primary-foreground [&_.prose]:text-inherit"
-                          : "bg-card border text-card-foreground"
+                          ? "bg-primary text-primary-foreground [&_.prose]:text-inherit rounded-tr-sm"
+                          : "bg-card border text-card-foreground rounded-tl-sm"
                       }`}
                     >
                       {msg.attachments && msg.attachments.length > 0 && (
@@ -432,7 +406,7 @@ export function WebLLMChat({
                       )}
 
                       {msg.content ? (
-                        <div className="prose dark:prose-invert text-xs leading-relaxed max-w-none">
+                        <div className="prose dark:prose-invert text-sm leading-relaxed max-w-none">
                           <ReactMarkdown>{msg.content}</ReactMarkdown>
                         </div>
                       ) : (
@@ -445,31 +419,15 @@ export function WebLLMChat({
                 );
               })}
           </div>
+          <div ref={messagesEndRef} />
         </ScrollArea>
       </CardContent>
 
-      {/* Preset Quick Prompts */}
-      <div className="px-4 py-2 border-t bg-card/60 flex items-center gap-2 overflow-x-auto text-xs">
-        <Sparkles className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-        {presetPrompts.map((p, i) => (
-          <Button
-            key={i}
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-6 text-[11px] shrink-0 rounded-full px-2.5 hover:bg-primary/10"
-            onClick={() => sendMessageContent(p.slice(2))}
-            disabled={isGenerating}
-          >
-            {p}
-          </Button>
-        ))}
-      </div>
-
+      {/* ─── Input footer ─── */}
       <CardFooter className="p-3 border-t bg-card flex flex-col gap-2">
-        {/* Attachment preview bar */}
+        {/* Attachment preview */}
         {attachment && (
-          <div className="w-full flex items-center justify-between p-2 rounded border bg-muted/40 text-xs">
+          <div className="w-full flex items-center justify-between p-2 rounded-lg border bg-muted/40 text-xs">
             <div className="flex items-center gap-2">
               {attachmentPreview ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -496,26 +454,36 @@ export function WebLLMChat({
 
           <Button
             type="button"
-            variant="outline"
+            variant="ghost"
             size="icon"
-            className="h-9 w-9 shrink-0"
+            className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
             onClick={() => fileInputRef.current?.click()}
             title="Attach photo or file"
           >
-            <Paperclip className="h-4 w-4 text-muted-foreground" />
+            <Paperclip className="h-4 w-4" />
           </Button>
 
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask Kuya Nicolai or upload study materials..."
-            className="flex-1 text-xs h-9"
+            placeholder="Message Kuya Nicolai..."
+            className="flex-1 text-sm h-9 rounded-full bg-muted/40 border-muted focus-visible:ring-primary/30"
             disabled={isGenerating || (engineMode === "local" && !isReady)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessageContent(input);
+              }
+            }}
           />
 
-          <Button type="submit" size="sm" className="h-9 gap-1.5 shrink-0" disabled={isGenerating || (!input.trim() && !attachment) || (engineMode === "local" && !isReady)}>
+          <Button
+            type="submit"
+            size="icon"
+            className="h-9 w-9 shrink-0 rounded-full"
+            disabled={isGenerating || (!input.trim() && !attachment) || (engineMode === "local" && !isReady)}
+          >
             {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            Send
           </Button>
         </form>
       </CardFooter>
