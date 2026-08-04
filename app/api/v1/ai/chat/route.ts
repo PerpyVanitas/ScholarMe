@@ -300,7 +300,7 @@ Whether you're working on Data Structures, Algorithms, or Modern Web Development
         ],
       });
     } catch (err: unknown) {
-      log.error({ error: err }, "LLM Provider Error");
+      log.error({ error: err, message: err instanceof Error ? err.message : String(err) }, "[ai-chat] LLM Provider Error — falling back to simulated response");
       const errStr = String(err);
       if (
         errStr.includes("PERMISSION_DENIED") ||

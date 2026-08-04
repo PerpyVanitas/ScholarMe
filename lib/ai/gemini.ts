@@ -33,7 +33,13 @@ export const GEMINI_MODEL = "gemini-2.0-flash";
  */
 export function isValidApiKey(key?: string | null): boolean {
   if (!key || typeof key !== "string") return false;
-  const trimmed = key.trim();
+  let trimmed = key.trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    trimmed = trimmed.slice(1, -1).trim();
+  }
   if (trimmed.length < 10) return false;
   // Ignore placeholders or keys with spaces
   if (
@@ -54,9 +60,14 @@ export function getAIClient(): GoogleGenAI {
     process.env.GROQ_API_KEY ||
     process.env.OPENAI_API_KEY;
 
-  const apiKey = isValidApiKey(rawApiKey) ? rawApiKey!.trim() : undefined;
-
+  let apiKey = isValidApiKey(rawApiKey) ? rawApiKey!.trim() : undefined;
   if (apiKey) {
+    if (
+      (apiKey.startsWith('"') && apiKey.endsWith('"')) ||
+      (apiKey.startsWith("'") && apiKey.endsWith("'"))
+    ) {
+      apiKey = apiKey.slice(1, -1).trim();
+    }
     return new GoogleGenAI({ apiKey });
   }
 
