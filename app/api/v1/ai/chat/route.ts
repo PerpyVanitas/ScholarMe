@@ -275,11 +275,11 @@ Whether you're working on Data Structures, Algorithms, or Modern Web Development
 
     const candidateModels = Array.from(new Set([
       GEMINI_MODEL,
-      "gemini-1.5-flash-001",
-      "gemini-1.5-flash-002",
-      "gemini-1.5-flash",
-      "gemini-1.5-pro-001",
-      "gemini-1.5-pro",
+      "gemini-3.6-flash",
+      "gemini-3.5-flash",
+      "gemini-3.5-flash-lite",
+      "gemini-3.1-pro-preview",
+      "gemini-3-flash-preview",
     ]));
 
     let result = null;
