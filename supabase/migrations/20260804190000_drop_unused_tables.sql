@@ -6,7 +6,6 @@ DROP TABLE IF EXISTS election_votes CASCADE;
 DROP TABLE IF EXISTS feature_flags CASCADE;
 DROP TABLE IF EXISTS finance_audit_findings CASCADE;
 DROP TABLE IF EXISTS physical_books CASCADE;
-DROP TABLE IF EXISTS ratelimit_windows CASCADE;
 DROP TABLE IF EXISTS tutor_peer_reviews CASCADE;
 DROP TABLE IF EXISTS user_quests CASCADE;
 DROP TABLE IF EXISTS user_uploads CASCADE;
