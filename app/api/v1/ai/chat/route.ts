@@ -275,7 +275,6 @@ Whether you're working on Data Structures, Algorithms, or Modern Web Development
 
     const candidateModels = Array.from(new Set([
       GEMINI_MODEL,
-      "gemini-3.6-flash",
       "gemini-3.5-flash",
       "gemini-3.5-flash-lite",
       "gemini-3.1-pro-preview",

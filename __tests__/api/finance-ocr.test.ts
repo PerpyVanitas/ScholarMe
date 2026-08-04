@@ -31,7 +31,7 @@ vi.mock("@/lib/ai/gemini", () => ({
       generateContent: generateContentMock,
     },
   })),
-  GEMINI_MODEL: "gemini-3.5-flash",
+  GEMINI_MODEL: "gemini-3.6-flash",
 }));
 
 describe("Finance OCR API", () => {

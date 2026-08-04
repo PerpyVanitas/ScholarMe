@@ -26,7 +26,7 @@ vi.mock("@/lib/ai/gemini", () => ({
       generateContent: generateContentMock,
     },
   })),
-  GEMINI_MODEL: "gemini-3.5-flash",
+  GEMINI_MODEL: "gemini-3.6-flash",
   GEMINI_TIMEOUT_MS: 60000,
   logAndSanitizeAIError: vi.fn(() => "An AI error occurred. Please try again."),
 }));
