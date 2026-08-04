@@ -77,9 +77,10 @@ describe("POST /api/ai/chat", () => {
     const res = await POST(req);
     const json = await res.json();
 
-    // The route catches the error and returns 200 with a fallback message in choices
+    // The route catches the error and returns 200 with degraded simulated response in choices
     expect(res.status).toBe(200);
-    expect(json.choices[0].message.content).toBe("An AI error occurred. Please try again.");
+    expect(json.degraded).toBe(true);
+    expect(json.choices[0].message.content).toBeDefined();
   });
 
   it("returns 400 for invalid request body", async () => {

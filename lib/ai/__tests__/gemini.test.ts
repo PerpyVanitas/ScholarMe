@@ -32,7 +32,7 @@ describe("Gemini utilities", () => {
   });
 
   it("exports expected constants", () => {
-    expect(GEMINI_MODEL).toBe("gemini-1.5-flash");
+    expect(GEMINI_MODEL).toBe("gemini-1.5-flash-001");
     expect(MAX_FILE_BYTES).toBe(20 * 1024 * 1024);
     expect(GEMINI_TIMEOUT_MS).toBe(60_000);
   });

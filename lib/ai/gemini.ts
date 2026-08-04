@@ -15,7 +15,7 @@
 import { writeFileSync } from "fs";
 import { GoogleGenAI } from "@google/genai";
 
-export const GEMINI_MODEL = "gemini-1.5-flash";
+export const GEMINI_MODEL = "gemini-1.5-flash-001";
 
 /**
  * Lazily create a GoogleGenAI client.

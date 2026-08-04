@@ -273,21 +273,49 @@ Whether you're working on Data Structures, Algorithms, or Modern Web Development
     const firstUserIdx = normalizedContents.findIndex((c) => c.role === "user");
     const safeContents = firstUserIdx >= 0 ? normalizedContents.slice(firstUserIdx) : normalizedContents;
 
-    try {
-      const result = await ai.models.generateContent({
-        model: GEMINI_MODEL,
-        contents: safeContents,
-        config: {
-          temperature: 0.85,
-          topP: 0.95,
-          topK: 40,
-          maxOutputTokens: 2048,
-          httpOptions: { timeout: GEMINI_TIMEOUT_MS },
-          systemInstruction: finalSystemInstruction,
-        }
-      });
+    const candidateModels = Array.from(new Set([
+      GEMINI_MODEL,
+      "gemini-1.5-flash-001",
+      "gemini-1.5-flash-002",
+      "gemini-1.5-flash",
+      "gemini-1.5-pro-001",
+      "gemini-1.5-pro",
+    ]));
 
-      const replyText = result.text || "No response generated.";
+    let result = null;
+    let lastErr: unknown = null;
+
+    for (const modelName of candidateModels) {
+      try {
+        result = await ai.models.generateContent({
+          model: modelName,
+          contents: safeContents,
+          config: {
+            temperature: 0.85,
+            topP: 0.95,
+            topK: 40,
+            maxOutputTokens: 2048,
+            httpOptions: { timeout: GEMINI_TIMEOUT_MS },
+            systemInstruction: finalSystemInstruction,
+          },
+        });
+        if (result && result.text) {
+          break;
+        }
+      } catch (mErr: unknown) {
+        lastErr = mErr;
+        log.warn({ model: modelName, err: String(mErr) }, "[ai-chat] Vertex AI candidate model failed, trying next candidate");
+        continue;
+      }
+    }
+
+    try {
+      if (!result || !result.text) {
+        if (lastErr) throw lastErr;
+        throw new Error("No response generated from AI models");
+      }
+
+      const replyText = result.text;
 
       return NextResponse.json({
         choices: [
@@ -301,31 +329,7 @@ Whether you're working on Data Structures, Algorithms, or Modern Web Development
       });
     } catch (err: unknown) {
       log.error({ error: err, message: err instanceof Error ? err.message : String(err) }, "[ai-chat] LLM Provider Error — falling back to simulated response");
-      const errStr = String(err);
-      if (
-        errStr.includes("PERMISSION_DENIED") ||
-        errStr.includes("API key") ||
-        errStr.includes("not valid") ||
-        errStr.includes("403") ||
-        errStr.includes("401") ||
-        errStr.includes("RESOURCE_EXHAUSTED") ||
-        errStr.includes("prepayment credits") ||
-        errStr.includes("ACCESS_TOKEN_SCOPE")
-      ) {
-        return getSimulatedResponse();
-      }
-
-      const clientMsg = await Promise.resolve(logAndSanitizeAIError("Chat Endpoint", err));
-      return NextResponse.json({
-        choices: [
-          {
-            message: {
-              role: "assistant",
-              content: clientMsg,
-            },
-          },
-        ],
-      });
+      return await getSimulatedResponse();
     }
   } catch (error) {
     log.error({ error }, "Server-side AI Error");
