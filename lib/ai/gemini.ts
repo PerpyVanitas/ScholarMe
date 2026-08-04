@@ -78,7 +78,7 @@ export function getAIClient(): GoogleGenAI {
       }
     }
 
-    const location = process.env.GOOGLE_CLOUD_LOCATION || "us-central1";
+    const location = process.env.GOOGLE_CLOUD_LOCATION || "global";
     return new GoogleGenAI({ vertexai: true, project, location });
   }
 
