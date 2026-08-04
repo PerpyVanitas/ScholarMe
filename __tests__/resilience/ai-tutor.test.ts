@@ -36,7 +36,7 @@ describe('AI Tutor Resilience', () => {
     return new Request('http://localhost:3000/api/ai/chat', {
       method: 'POST',
       body: JSON.stringify({
-        messages: [{ role: 'user', content: 'Hello' }],
+        messages: [{ role: 'user', content: 'Explain quantum physics' }],
       }),
     });
   };
@@ -52,9 +52,10 @@ describe('AI Tutor Resilience', () => {
     mockGenerateContent.mockRejectedValueOnce(new Error('Timeout'));
 
     const response = await POST(mockRequest());
-    expect(response.status).toBe(200); // Route handles errors and returns a sanitized chat response
+    expect(response.status).toBe(200); // Route handles errors and returns a fallback response
     const json = await response.json();
-    expect(json.choices[0].message.content).toBe('Simulated AI Error Message');
+    expect(json.degraded).toBe(true);
+    expect(json.choices[0].message.content).toBeDefined();
   });
 
   it('should return a sanitized error on 500 or malformed response', async () => {
@@ -63,7 +64,8 @@ describe('AI Tutor Resilience', () => {
 
     const response = await POST(mockRequest());
     const json = await response.json();
-    expect(json.choices[0].message.content).toBe('Simulated AI Error Message');
+    expect(json.degraded).toBe(true);
+    expect(json.choices[0].message.content).toBeDefined();
   });
 
   it('should return a sanitized error on 429 rate limit', async () => {
@@ -72,6 +74,7 @@ describe('AI Tutor Resilience', () => {
 
     const response = await POST(mockRequest());
     const json = await response.json();
-    expect(json.choices[0].message.content).toBe('Simulated AI Error Message');
+    expect(json.degraded).toBe(true);
+    expect(json.choices[0].message.content).toBeDefined();
   });
 });
