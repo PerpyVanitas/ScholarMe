@@ -55,6 +55,14 @@ export type ChatSession = {
   messages: Message[];
 };
 
+function generateSessionId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return `session_${crypto.randomUUID()}`;
+  }
+  // eslint-disable-next-line react-hooks/purity
+  return `session_${Date.now()}`;
+}
+
 interface WebLLMChatProps {
   initialContext?: string;
   profileId?: string;
@@ -117,7 +125,7 @@ export function WebLLMChat({
   };
 
   const startNewChat = () => {
-    const newId = `session_${Date.now()}`;
+    const newId = generateSessionId();
     const initialMsgs = getDefaultMessages();
     const newSession: ChatSession = {
       id: newId,
@@ -181,7 +189,7 @@ export function WebLLMChat({
   // Sync current active session messages into session list
   const syncCurrentMessagesToSessions = useCallback((updatedMessages: Message[]) => {
     if (!activeSessionId) {
-      const newId = `session_${Date.now()}`;
+      const newId = generateSessionId();
       const firstUserMsg = updatedMessages.find((m) => m.role === "user")?.content || "New Conversation";
       const title = firstUserMsg.slice(0, 36) + (firstUserMsg.length > 36 ? "..." : "");
       const newSession: ChatSession = {
