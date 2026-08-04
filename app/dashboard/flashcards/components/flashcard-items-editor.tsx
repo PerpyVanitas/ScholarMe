@@ -8,6 +8,7 @@ export interface StructuredFlashcardItem {
   question?: string;
   back?: string;
   answer?: string;
+  explanation?: string;
 }
 
 interface FlashcardItemsEditorProps {
@@ -85,6 +86,24 @@ export function FlashcardItemsEditor({
                   placeholder="Back text..."
                 />
               </div>
+
+              {item.explanation !== undefined && (
+                <div className="pt-2 border-t border-border/50">
+                  <Label className="text-xs text-muted-foreground mb-1 block">
+                    Explanation (Optional)
+                  </Label>
+                  <Textarea
+                    value={item.explanation || ""}
+                    onChange={(e) => {
+                      const newItems = [...structuredItems];
+                      newItems[i].explanation = e.target.value;
+                      setStructuredItems(newItems);
+                    }}
+                    className="min-h-[40px] text-xs resize-none bg-background border-none shadow-none px-0 focus-visible:ring-0 text-muted-foreground"
+                    placeholder="Explanation..."
+                  />
+                </div>
+              )}
             </div>
           </div>
         ))}

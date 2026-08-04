@@ -191,17 +191,18 @@ export function CreateQuizSheet({
 
       const { data } = await res.json();
 
-      const newContent = data
-        .map(
-          (item: { question?: string; answer?: string }) =>
-            `Q: ${item.question}\nA: ${item.answer}`,
-        )
-        .join("\n\n");
+      const newItems = data.map((item: { question?: string; answer?: string; options?: string[]; type?: string }) => ({
+        question: item.question || "",
+        answer: item.answer || "",
+        options: item.options || [],
+        type: item.type || derivedType === "mixed" ? "multiple_choice" : derivedType,
+        item_type: item.type || derivedType === "mixed" ? "multiple_choice" : derivedType,
+      }));
 
+      setStructuredItems((prev) => [...prev, ...newItems]);
       setFormData((prev) => ({
         ...prev,
         title: prev.title || aiPrompt,
-        content: prev.content ? prev.content + "\n\n" + newContent : newContent,
       }));
 
       toast.success("Questions generated successfully!");

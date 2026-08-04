@@ -13,6 +13,7 @@ export interface StructuredQuizItem {
   answer?: string;
   back?: string;
   correct_matches?: string[];
+  options?: string[];
   choices?: { text: string }[];
   accepted_answers?: string[];
   responses?: string[];
@@ -149,6 +150,31 @@ export function QuizItemsEditor({
                   placeholder="Answer text..."
                 />
               </div>
+
+              {(item.options && item.options.length > 0) && (
+                <div className="pt-2 border-t border-border/50">
+                  <Label className="text-xs text-muted-foreground mb-2 block">
+                    Multiple Choice Options
+                  </Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {item.options.map((opt, optIdx) => (
+                      <Input
+                        key={optIdx}
+                        value={opt}
+                        onChange={(e) => {
+                          const newItems = [...structuredItems];
+                          if (newItems[i].options) {
+                            newItems[i].options![optIdx] = e.target.value;
+                            setStructuredItems(newItems);
+                          }
+                        }}
+                        className="h-8 text-sm bg-background border-border/50 px-2"
+                        placeholder={`Option ${optIdx + 1}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="pt-2 border-t border-border/50 flex flex-col gap-2">
                 <Label className="text-xs text-muted-foreground block">

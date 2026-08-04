@@ -172,14 +172,18 @@ export function CreateFlashcardsSheet({
 
       const { data } = await res.json();
 
-      const newContent = data
-        .map((item: { question?: string; answer?: string }) => `Q: ${item.question}\nA: ${item.answer}`)
-        .join("\n\n");
+      const newItems = data.map((item: { question?: string; answer?: string; explanation?: string }) => ({
+        question: item.question || "",
+        answer: item.answer || "",
+        explanation: item.explanation || "",
+        type: "flashcard",
+        item_type: "flashcard",
+      }));
 
+      setStructuredItems((prev) => [...prev, ...newItems]);
       setFormData((prev) => ({
         ...prev,
         title: prev.title || aiPrompt || "Generated Flashcards",
-        content: prev.content ? prev.content + "\n\n" + newContent : newContent,
       }));
       toast.success("Questions generated successfully!");
       setCreationMethod("manual");

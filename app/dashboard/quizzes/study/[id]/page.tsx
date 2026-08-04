@@ -83,6 +83,7 @@ export default function StudyModePage({
   // Customization Modes
   const [showShuffleConfirm, setShowShuffleConfirm] = useState(false);
   const [isTypingMode, setIsTypingMode] = useState(false);
+  const [isRandomizeChoices, setIsRandomizeChoices] = useState(false);
 
   useEffect(() => {
     setNow(Date.now());
@@ -298,6 +299,14 @@ export default function StudyModePage({
   const progress =
     ((currentIndex + (showAnswer ? 1 : 0)) / shuffledItems.length) * 100;
 
+  // Dynamically shuffle options if randomize is on, and cache it for the current item
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const currentOptions = useMemo(() => {
+    if (!currentItem?.options || currentItem.options.length === 0) return [];
+    if (!isRandomizeChoices) return currentItem.options;
+    return [...currentItem.options].sort(() => Math.random() - 0.5);
+  }, [currentItem?.id, isRandomizeChoices, currentItem?.options]);
+
   if (isComplete) {
     const correctCount = Object.values(answers).filter((a) => a.correct).length;
     const score = Math.round((correctCount / shuffledItems.length) * 100);
@@ -397,6 +406,19 @@ export default function StudyModePage({
               onCheckedChange={setIsTypingMode}
             />
           </div>
+          <div className="flex items-center gap-2 mr-2">
+            <Label
+              htmlFor="randomize-choices"
+              className="text-xs text-muted-foreground"
+            >
+              Randomize Choices
+            </Label>
+            <Switch
+              id="randomize-choices"
+              checked={isRandomizeChoices}
+              onCheckedChange={setIsRandomizeChoices}
+            />
+          </div>
           <Button variant="outline" size="sm" onClick={requestShuffle}>
             <Shuffle className="mr-2 h-4 w-4" />
             Shuffle
@@ -475,13 +497,13 @@ export default function StudyModePage({
                     )}
                 </div>
               </RadioGroup>
-            ) : currentItem.options && currentItem.options.length > 0 ? (
+            ) : currentOptions.length > 0 ? (
               <RadioGroup
                 value={selectedAnswer}
                 onValueChange={handleAnswerSelect}
                 disabled={showAnswer}
               >
-                {currentItem.options.map((option, idx) => (
+                {currentOptions.map((option, idx) => (
                   <div
                     key={idx}
                     className={`flex items-center space-x-2 p-3 rounded-lg border hover:bg-muted/50 ${
