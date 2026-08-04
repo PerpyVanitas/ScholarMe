@@ -104,12 +104,9 @@ export async function POST(req: Request) {
 
     // Smart Multi-Turn Memory & Fallback Web Search Synthesis
     async function getSimulatedResponse() {
-      // Look back through conversation history to find the core topic if current message is short/generic
-      const allUserTexts = messages
-        .filter((m) => m.role === "user")
-        .map((m) => m.content.toLowerCase())
-        .join(" ");
+      log.warn({ userId: user?.id }, "[ai-chat] Serving simulated fallback response — AI credentials unconfigured or degraded");
 
+      // Look back through conversation history to find the core topic if current message is short/generic
       const isGenericFollowup =
         /no answer|just in general|tell me more|in general|explain|what about it/i.test(enrichedQuery);
 
@@ -120,6 +117,23 @@ export async function POST(req: Request) {
         if (priorUserMsgs.length > 0) {
           topicQuery = priorUserMsgs[priorUserMsgs.length - 1].content;
         }
+      }
+
+      const smallTalkPattern = /^(hi|hello|hey|how are you|how's it going|what's up|thanks|thank you|ok|okay|good morning|good afternoon|good evening)[\s!?.]*$/i;
+
+      if (smallTalkPattern.test(topicQuery.trim())) {
+        const simulatedAnswer = `Hey! I'm doing great, thanks for asking 😊 I'm here whenever you're ready to dive into a topic, work through a homework problem, or quiz yourself — what's on your mind?`;
+        return NextResponse.json({
+          degraded: true,
+          choices: [
+            {
+              message: {
+                role: "assistant",
+                content: simulatedAnswer,
+              },
+            },
+          ],
+        });
       }
 
       const queryLower = topicQuery.toLowerCase();
@@ -169,11 +183,12 @@ Whether you're working on Data Structures, Algorithms, or Modern Web Development
           const topResult = searchResults[0];
           simulatedAnswer = `### 🌐 Search Knowledge: ${topResult.title}\n\n${topResult.snippet}\n\n*Source: [${topResult.title}](${topResult.url})*\n\nIs there a specific detail about this topic you'd like to explore further?`;
         } else {
-          simulatedAnswer = `Hey! I'd love to help you explore **${topicQuery.slice(0, 50)}**.\n\nHere is a quick overview:\n- This is a key concept in its field.\n- We can dive into its foundational principles, historical background, or practical applications.\n\nWhat specific angle would you like to focus on first? 😊`;
+          simulatedAnswer = `I'm having a little trouble connecting right now — mind trying again in a moment? If this keeps happening, let an admin know.`;
         }
       }
 
       return NextResponse.json({
+        degraded: true,
         choices: [
           {
             message: {

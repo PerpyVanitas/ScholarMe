@@ -111,7 +111,30 @@ describe("POST /api/ai/chat", () => {
     const json = await res.json();
 
     expect(res.status).toBe(200);
+    expect(json.degraded).toBe(true);
     expect(json.choices[0].message.content).toContain("math problem together");
+    expect(generateContentMock).not.toHaveBeenCalled();
+  });
+
+  it("handles small-talk greetings in fallback mode cleanly", async () => {
+    delete process.env.GOOGLE_CLOUD_PROJECT_ID;
+    delete process.env.GEMINI_API_KEY;
+    delete process.env.GROQ_API_KEY;
+    delete process.env.OPENAI_API_KEY;
+
+    const req = new Request("http://localhost/api/ai/chat", {
+      method: "POST",
+      body: JSON.stringify({
+        messages: [{ role: "user", content: "How are you?" }],
+      }),
+    });
+
+    const res = await POST(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.degraded).toBe(true);
+    expect(json.choices[0].message.content).toContain("I'm doing great");
     expect(generateContentMock).not.toHaveBeenCalled();
   });
 });

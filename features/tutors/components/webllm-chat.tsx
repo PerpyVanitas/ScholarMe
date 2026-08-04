@@ -36,6 +36,7 @@ import {
   MessageSquare,
   Clock,
   Sparkles,
+  AlertCircle,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
@@ -77,6 +78,7 @@ export function WebLLMChat({
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [isDegradedMode, setIsDegradedMode] = useState(false);
 
   const getDefaultMessages = useCallback((): Message[] => [
     {
@@ -350,6 +352,11 @@ export function WebLLMChat({
           const data = await response.json();
           replyText =
             data.choices?.[0]?.message?.content || "No response generated.";
+          if (data.degraded) {
+            setIsDegradedMode(true);
+          } else {
+            setIsDegradedMode(false);
+          }
         }
 
         setMessages((prev) => {
@@ -549,10 +556,17 @@ export function WebLLMChat({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <p className="font-semibold text-sm leading-none">Kuya Nicolai</p>
-              <Badge variant="outline" className="text-[10px] gap-1 px-1.5 py-0 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">
-                <Globe className="h-2.5 w-2.5" />
-                Web Search Active
-              </Badge>
+              {isDegradedMode ? (
+                <Badge variant="outline" className="text-[10px] gap-1 px-1.5 py-0 text-amber-500 border-amber-500/30 bg-amber-500/10">
+                  <AlertCircle className="h-2.5 w-2.5" />
+                  Limited Mode
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-[10px] gap-1 px-1.5 py-0 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">
+                  <Globe className="h-2.5 w-2.5" />
+                  Web Search Active
+                </Badge>
+              )}
             </div>
             <p className="text-[11px] text-muted-foreground mt-0.5">
               {engineMode === "local" ? (
