@@ -305,16 +305,8 @@ Whether you're working on Data Structures, Algorithms, or Modern Web Development
       } catch (mErr: unknown) {
         lastErr = mErr;
         const errStr = String(mErr);
-        if (
-          errStr.includes("NOT_FOUND") ||
-          errStr.includes("404") ||
-          errStr.includes("was not found") ||
-          errStr.includes("does not have access")
-        ) {
-          log.warn({ model: modelName, err: errStr }, "[ai-chat] Vertex AI candidate model failed, trying next candidate");
-          continue;
-        }
-        throw mErr;
+        log.warn({ model: modelName, err: errStr }, "[ai-chat] Vertex AI candidate model failed, trying next candidate");
+        continue;
       }
     }
 
