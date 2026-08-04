@@ -51,12 +51,11 @@ describe("Gemini utilities", () => {
     expect((client as unknown as { config: { location: string } }).config.location).toBe("us-east1");
   });
 
-  it("uses default location us-central1 when GOOGLE_CLOUD_LOCATION is unset", () => {
+  it("uses default location global when GOOGLE_CLOUD_LOCATION is unset", () => {
     process.env.GOOGLE_CLOUD_PROJECT_ID = "test-project";
-
     const client = getAIClient();
 
-    expect((client as unknown as { config: { location: string } }).config.location).toBe("us-central1");
+    expect((client as unknown as { config: { location: string } }).config.location).toBe("global");
   });
 
   it("sets GOOGLE_APPLICATION_CREDENTIALS to /tmp path when GOOGLE_APPLICATION_CREDENTIALS_JSON is provided", () => {
