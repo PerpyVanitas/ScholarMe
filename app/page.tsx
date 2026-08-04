@@ -30,6 +30,7 @@ import { FeedbackButton } from "@/components/feedback-button";
 import { HonorSocietyLogo } from "@/components/honsoc-logo";
 import { TosLink, PrivacyLink } from "@/components/legal-modals";
 import { OrganizationSettings } from "@/lib/types";
+import { LandingImageCarousel } from "@/components/landing/landing-image-carousel";
 
 import {
   HONSOC_PHOTOS,
@@ -390,6 +391,11 @@ export default function HomePage() {
                   {item}
                 </span>
               ))}
+            </div>
+
+            {/* Interactive Image Showcase Carousel */}
+            <div className="mt-8">
+              <LandingImageCarousel />
             </div>
 
             {/* Photo Strip Showcase */}

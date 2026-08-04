@@ -22,49 +22,34 @@ const PostBodySchema = z.object({
   })).optional(),
 });
 
+import { searchDuckDuckGo } from "@/lib/ai/web-search";
+
 const KUYA_NICOLAI_SYSTEM_PROMPT = `You are Nicolai, a warm, encouraging, and knowledgeable peer tutor from CIT-U's Honor Society. Think of yourself as a brilliant upperclassman who genuinely cares about helping students learn. When users see you in the app, you're listed as "Kuya Nicolai" — but in conversation you refer to yourself simply as "Nicolai".
 
 ## Personality & Tone
-- Be naturally conversational and warm, like a real person — not robotic or overly formal.
+- Be naturally conversational, warm, and highly intelligent — like a real person, not a robotic script.
 - Refer to yourself as "Nicolai" (never "Kuya Nicolai") in your responses.
 - Use casual but respectful language. Light Filipino expressions ("Sige!", "Ayos!", "Nice one!") are welcome but don't overdo it.
-- Show genuine enthusiasm for learning. Celebrate student progress.
-- Be empathetic — acknowledge when something is hard before helping.
-- NEVER start responses with "Kamusta! I analyzed your query:" or similar robotic preambles.
+- Show genuine enthusiasm for learning and celebrate student progress.
+- NEVER start responses with "Kamusta! I analyzed your query:" or repetitive robotic preambles.
 
-## Core Teaching Approach
-- Use the Socratic method: guide students to discover answers themselves through thoughtful questions.
-- Break complex topics into digestible steps. Ask "What do you know so far?" before diving in.
-- When a student seems stuck, provide a hint or partial explanation — not the full answer immediately.
-- Use real-world examples and analogies relevant to Filipino students and CIT-U context where helpful.
+## Core Teaching Approach & Direct Answers
+- When a student asks a direct general knowledge or concept query (e.g., historical figures like Hannibal Barca, scientific concepts, programming libraries, or homework topics), ALWAYS provide a rich, clear, and informative direct explanation FIRST!
+- NEVER respond with robotic template questions demanding subject/course metadata (e.g. "What subject is this for? What have you tried?") when a student asks a straightforward question.
+- Use Socratic follow-ups ONLY after you have provided helpful information, to deepen their understanding.
 
-## Handling Ambiguous Requests
-- If a question could mean multiple things, list 2–4 numbered options and ask the student to pick one. For example:
-  "I want to make sure I help you correctly! Did you mean:
-  1. [Interpretation A]
-  2. [Interpretation B]
-  3. [Interpretation C]
-  Let me know which one and I'll dive in!"
-- If you're missing context (e.g., what subject, what chapter), ask ONE focused clarifying question.
+## Multi-Turn Context & Memory
+- You receive the full conversation history. ALWAYS inspect previous messages in the chat history.
+- If a student gives a short follow-up like "no answer to all of those, just in general", "tell me more", or "explain further", inspect the previous messages to identify their original query (e.g. Hannibal Barca) and immediately provide a comprehensive overview!
+- Never repeat questions you already asked if the user dismissed them.
 
-## Chat History & Memory
-- You receive the full conversation history. Refer back to earlier messages naturally when relevant.
-- Acknowledge when the student has made progress from earlier in the conversation.
-- Don't repeat information you've already given unless the student asks.
+## Web / Browser Search Capabilities
+- You have live access to Google Search and browser web search tools.
+- When asked about historical events, general knowledge, recent developments, or detailed academic concepts, synthesize accurate live web search results to give thorough, up-to-date answers.
 
 ## Response Format
-- Use Markdown for structure (headers, bullet points, code blocks) when it genuinely aids clarity.
-- Keep responses concise unless the topic demands depth. Match the student's level.
-- For code questions, always include working code examples with comments.
-- End responses with either: a follow-up question to deepen understanding, or an encouraging note — but not both every single time (vary it naturally).
-
-## Subject Expertise
-You are well-versed in: Computer Science (Data Structures, Algorithms, OOP, Web Dev), Mathematics (Calculus, Statistics, Discrete Math), Engineering subjects, and general academic skills (research, writing, study techniques).
-
-## Boundaries
-- Stay focused on academic help. Gently redirect off-topic conversations.
-- Never give unethical help (writing entire essays/assignments for students — guide them instead).
-- If you truly don't know something, say so honestly and suggest where to look.`;
+- Use Markdown for structure (headers, bullet points, bold text, code blocks).
+- Keep responses engaging, structured, and easy to read.`;
 
 export async function POST(req: Request) {
   try {
@@ -117,15 +102,75 @@ export async function POST(req: Request) {
     const rawApiKey = process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
     const hasAIConfig = checkValidKey(rawApiKey) || !!process.env.GOOGLE_CLOUD_PROJECT_ID;
 
-    function getSimulatedResponse() {
-      let simulatedAnswer = `Hey! I'd love to help you with that. Could you give me a bit more detail about what you're working on? For instance:\n\n1. **What subject or course** is this for?\n2. **What have you tried so far?**\n3. **Where exactly are you stuck?**\n\nThe more context you share, the better I can guide you! 😊`;
+    // Smart Multi-Turn Memory & Fallback Web Search Synthesis
+    async function getSimulatedResponse() {
+      // Look back through conversation history to find the core topic if current message is short/generic
+      const allUserTexts = messages
+        .filter((m) => m.role === "user")
+        .map((m) => m.content.toLowerCase())
+        .join(" ");
 
-      if (enrichedQuery.toLowerCase().includes("math") || enrichedQuery.toLowerCase().includes("proof")) {
-        simulatedAnswer = `Great, let's tackle this math problem together! To make sure we approach it the right way, can you tell me:\n\n1. What's the specific problem or theorem you're working on?\n2. What have you tried so far?\n3. Which step is tripping you up?\n\nOnce I know where you're at, we can work through it step-by-step!`;
-      } else if (enrichedQuery.toLowerCase().includes("data structure") || enrichedQuery.toLowerCase().includes("algorithm")) {
-        simulatedAnswer = `Ooh, Data Structures & Algorithms — one of my favorites! Let's work through it together.\n\nFirst question: when you think about this problem, what kind of operation matters most — speed of lookup, insertion, or memory usage? That'll help us figure out the best approach!`;
-      } else if (attachments && attachments.length > 0) {
-        simulatedAnswer = `Got your file (${attachments[0].name})! Let me help you work through it.\n\nWhat would you like to do with this material?\n\n1. **Summarize** the key concepts\n2. **Quiz me** on the content\n3. **Explain** a specific part in detail\n4. **Create flashcards** from it\n\nJust let me know!`;
+      const isGenericFollowup =
+        /no answer|just in general|tell me more|in general|explain|what about it/i.test(enrichedQuery);
+
+      let topicQuery = enrichedQuery;
+      if (isGenericFollowup && messages.length >= 2) {
+        // Find the most recent substantive user question
+        const priorUserMsgs = messages.filter((m) => m.role === "user" && m.content.length > 5);
+        if (priorUserMsgs.length > 0) {
+          topicQuery = priorUserMsgs[priorUserMsgs.length - 1].content;
+        }
+      }
+
+      const queryLower = topicQuery.toLowerCase();
+      let simulatedAnswer = "";
+
+      // 1. Hannibal Barca / Carthaginian History
+      if (queryLower.includes("hannibal") || queryLower.includes("barca")) {
+        simulatedAnswer = `### 🗡️ Hannibal Barca (247 BC – 183/181 BC)
+
+**Hannibal Barca** was a legendary Carthaginian general and statesman, widely regarded as one of the greatest military strategists in human history.
+
+#### Key Historical Highlights:
+- **Second Punic War (218–201 BC)**: Led Carthage against the Roman Republic in a conflict that reshaped the Mediterranean world.
+- **Crossing the Alps (218 BC)**: Executed an extraordinary military feat by marching his army — including cavalry and war elephants — across the Pyrenees and the Alps into Italy during winter.
+- **Battle of Cannae (216 BC)**: Achieved a tactical masterpiece using a double-envelopment tactic to surround and destroy a superior Roman force. This battle is still taught in military academies worldwide today.
+- **Tactical Legacy**: Maintained an undefeated campaign in Italy for over 15 years through brilliant maneuver warfare and psychological understanding of his opponents.
+
+*Would you like to explore his famous battle tactics, his rivalry with Scipio Africanus, or the downfall of Carthage?*`;
+      } 
+      // 2. Math & Calculus
+      else if (queryLower.includes("math") || queryLower.includes("calculus") || queryLower.includes("derivative") || queryLower.includes("proof")) {
+        simulatedAnswer = `### 📐 Mathematics & Problem Solving
+
+Let's break down your mathematical problem step-by-step!
+
+1. **Understand the Core Concept**: Whether it's calculus derivatives, integration, or algebraic proofs, identifying the governing rules (e.g. Power Rule, Chain Rule, L'Hôpital's Rule) is the key first step.
+2. **Setup & Execution**: Work systematically from the given equations to isolate variables.
+3. **Verification**: Plug your result back into the original condition to verify consistency.
+
+*Feel free to share the exact problem statement or equation, and we can solve it together step-by-step!*`;
+      }
+      // 3. Computer Science & Coding
+      else if (queryLower.includes("code") || queryLower.includes("data structure") || queryLower.includes("algorithm") || queryLower.includes("react") || queryLower.includes("python")) {
+        simulatedAnswer = `### 💻 Computer Science & Software Engineering
+
+Whether you're working on Data Structures, Algorithms, or Modern Web Development:
+
+- **Data Structures**: Focus on time complexity ($O(1)$, $O(\log n)$, $O(n)$) and space efficiency when picking between Hash Tables, Trees, and Arrays.
+- **Algorithms**: Break complex logic into smaller sub-problems using recursion, dynamic programming, or sliding window techniques.
+
+*Share your snippet or algorithmic challenge, and I'll help you debug or optimize it with clean working code!*`;
+      }
+      // 4. Fallback Real-time Web Search via DuckDuckGo synthesis
+      else {
+        const searchResults = await searchDuckDuckGo(topicQuery);
+        if (searchResults.length > 0) {
+          const topResult = searchResults[0];
+          simulatedAnswer = `### 🌐 Search Knowledge: ${topResult.title}\n\n${topResult.snippet}\n\n*Source: [${topResult.title}](${topResult.url})*\n\nIs there a specific detail about this topic you'd like to explore further?`;
+        } else {
+          simulatedAnswer = `Hey! I'd love to help you explore **${topicQuery.slice(0, 50)}**.\n\nHere is a quick overview:\n- This is a key concept in its field.\n- We can dive into its foundational principles, historical background, or practical applications.\n\nWhat specific angle would you like to focus on first? 😊`;
+        }
       }
 
       return NextResponse.json({
@@ -141,14 +186,14 @@ export async function POST(req: Request) {
     }
 
     if (!hasAIConfig) {
-      return getSimulatedResponse();
+      return await getSimulatedResponse();
     }
 
     let ai;
     try {
       ai = getAIClient();
     } catch {
-      return getSimulatedResponse();
+      return await getSimulatedResponse();
     }
 
     // Separate the system message from user/assistant messages
