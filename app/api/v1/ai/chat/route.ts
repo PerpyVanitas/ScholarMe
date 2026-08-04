@@ -304,14 +304,29 @@ Whether you're working on Data Structures, Algorithms, or Modern Web Development
         }
       } catch (mErr: unknown) {
         lastErr = mErr;
-        log.warn({ model: modelName, err: String(mErr) }, "[ai-chat] Vertex AI candidate model failed, trying next candidate");
-        continue;
+        const errStr = String(mErr);
+        if (
+          errStr.includes("NOT_FOUND") ||
+          errStr.includes("404") ||
+          errStr.includes("was not found") ||
+          errStr.includes("does not have access")
+        ) {
+          log.warn({ model: modelName, err: errStr }, "[ai-chat] Vertex AI candidate model failed, trying next candidate");
+          continue;
+        }
+        throw mErr;
       }
     }
 
     try {
       if (!result || !result.text) {
-        if (lastErr) throw lastErr;
+        if (lastErr) {
+          const errStr = String(lastErr);
+          if (errStr.includes("404") || errStr.includes("was not found")) {
+            log.error("[ai-chat] ALL Vertex AI models returned 404 NOT_FOUND. This means your Service Account is missing the 'Vertex AI User' (roles/aiplatform.user) IAM role in Google Cloud, OR the Vertex AI API (aiplatform.googleapis.com) is not fully enabled for this project.");
+          }
+          throw lastErr;
+        }
         throw new Error("No response generated from AI models");
       }
 
