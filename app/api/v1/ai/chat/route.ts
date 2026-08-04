@@ -143,7 +143,7 @@ export async function POST(req: Request) {
       else if (queryLower.includes("math") || queryLower.includes("calculus") || queryLower.includes("derivative") || queryLower.includes("proof")) {
         simulatedAnswer = `### 📐 Mathematics & Problem Solving
 
-Let's break down your mathematical problem step-by-step!
+Let's tackle this math problem together step-by-step!
 
 1. **Understand the Core Concept**: Whether it's calculus derivatives, integration, or algebraic proofs, identifying the governing rules (e.g. Power Rule, Chain Rule, L'Hôpital's Rule) is the key first step.
 2. **Setup & Execution**: Work systematically from the given equations to isolate variables.
