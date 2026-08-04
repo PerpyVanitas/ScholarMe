@@ -556,31 +556,21 @@ export function WebLLMChat({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <p className="font-semibold text-sm leading-none">Kuya Nicolai</p>
-              {isDegradedMode ? (
+              {isDegradedMode && (
                 <Badge variant="outline" className="text-[10px] gap-1 px-1.5 py-0 text-amber-500 border-amber-500/30 bg-amber-500/10">
                   <AlertCircle className="h-2.5 w-2.5" />
                   Limited Mode
                 </Badge>
-              ) : (
-                <Badge variant="outline" className="text-[10px] gap-1 px-1.5 py-0 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">
-                  <Globe className="h-2.5 w-2.5" />
-                  Web Search Active
-                </Badge>
               )}
             </div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              {engineMode === "local" ? (
+            {engineMode === "local" && (
+              <p className="text-[11px] text-muted-foreground mt-0.5">
                 <span className="flex items-center gap-1">
                   <ShieldCheck className="h-3 w-3 text-emerald-500" />
                   Private Local Engine
                 </span>
-              ) : (
-                <span className="flex items-center gap-1">
-                  <Zap className="h-3 w-3 text-primary" />
-                  Server AI Engine
-                </span>
-              )}
-            </p>
+              </p>
+            )}
           </div>
         </div>
 
