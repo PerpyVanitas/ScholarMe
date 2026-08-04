@@ -12,7 +12,7 @@
  * - Standardized timeout handling
  * - Safe error sanitization (full error logged server-side, generic message to client)
  */
-import { writeFileSync } from "fs";
+import { writeFileSync, existsSync } from "fs";
 import { GoogleGenAI } from "@google/genai";
 
 export const GEMINI_MODEL = "gemini-1.5-flash-001";
@@ -58,13 +58,23 @@ export function getAIClient(): GoogleGenAI {
 
   if (project) {
     const credJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
-    if (credJson && !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    if (credJson) {
+      let rawJson = credJson.trim();
+      if (
+        (rawJson.startsWith("'") && rawJson.endsWith("'")) ||
+        (rawJson.startsWith('"') && rawJson.endsWith('"'))
+      ) {
+        rawJson = rawJson.slice(1, -1).trim();
+      }
+
       const tmpPath = "/tmp/gcp-sa-key.json";
       try {
-        writeFileSync(tmpPath, credJson, { encoding: "utf8" });
+        if (!existsSync(tmpPath)) {
+          writeFileSync(tmpPath, rawJson, { encoding: "utf8" });
+        }
         process.env.GOOGLE_APPLICATION_CREDENTIALS = tmpPath;
-      } catch {
-        // Non-fatal — google-auth-library will fall through to the next strategy
+      } catch (err) {
+        console.error("[gemini] Error writing GOOGLE_APPLICATION_CREDENTIALS_JSON:", err);
       }
     }
 
