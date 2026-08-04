@@ -53,25 +53,7 @@ export function isValidApiKey(key?: string | null): boolean {
 }
 
 export function getAIClient(): GoogleGenAI {
-  // ── Standard Gemini / Express API Key ───────────────────────────────────
-  const rawApiKey =
-    process.env.GEMINI_API_KEY ||
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
-    process.env.GROQ_API_KEY ||
-    process.env.OPENAI_API_KEY;
-
-  let apiKey = isValidApiKey(rawApiKey) ? rawApiKey!.trim() : undefined;
-  if (apiKey) {
-    if (
-      (apiKey.startsWith('"') && apiKey.endsWith('"')) ||
-      (apiKey.startsWith("'") && apiKey.endsWith("'"))
-    ) {
-      apiKey = apiKey.slice(1, -1).trim();
-    }
-    return new GoogleGenAI({ apiKey });
-  }
-
-  // ── Vertex AI (GCP Project Mode) ─────────────────────────────────────────
+  // ── Vertex AI (GCP Project Mode - Primary Auth Strategy) ────────────────
   const project = process.env.GOOGLE_CLOUD_PROJECT_ID;
 
   if (project) {
@@ -90,11 +72,26 @@ export function getAIClient(): GoogleGenAI {
     return new GoogleGenAI({ vertexai: true, project, location });
   }
 
+  // ── Fallback API Key Auth ──────────────────────────────────────────
+  const rawApiKey =
+    process.env.GEMINI_API_KEY ||
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+    process.env.GROQ_API_KEY ||
+    process.env.OPENAI_API_KEY;
+
+  let apiKey = isValidApiKey(rawApiKey) ? rawApiKey!.trim() : undefined;
+  if (apiKey) {
+    if (
+      (apiKey.startsWith('"') && apiKey.endsWith('"')) ||
+      (apiKey.startsWith("'") && apiKey.endsWith("'"))
+    ) {
+      apiKey = apiKey.slice(1, -1).trim();
+    }
+    return new GoogleGenAI({ apiKey });
+  }
+
   throw new Error(
-    "AI service is not configured. Set GOOGLE_CLOUD_PROJECT_ID (+ run " +
-      "`gcloud auth application-default login` locally, or set " +
-      "GOOGLE_APPLICATION_CREDENTIALS_JSON on Vercel) for Vertex AI, " +
-      "or set GEMINI_API_KEY for the standard Gemini API.",
+    "AI service is not configured. Vertex AI requires GOOGLE_CLOUD_PROJECT_ID and GOOGLE_APPLICATION_CREDENTIALS_JSON on Vercel.",
   );
 }
 
@@ -108,6 +105,7 @@ export function logAndSanitizeAIError(context: string, error: unknown): string {
     error instanceof Error &&
     (error.message.includes("GEMINI_API_KEY") ||
       error.message.includes("GOOGLE_CLOUD_PROJECT_ID") ||
+      error.message.includes("Vertex AI") ||
       error.message.includes("AI service is not configured"))
   ) {
     return "AI service is not configured. Please contact support.";
