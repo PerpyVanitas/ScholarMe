@@ -143,7 +143,15 @@ export async function POST(req: Request) {
       answer = "No matching institutional policy or SOP document was found for your search term. Try searching for terms like 'PLC', 'Honor Code', 'Tutor SOP', or 'Handoff'.";
     }
 
-    return NextResponse.json({ answer, citations });
+    return NextResponse.json(
+      { answer, citations },
+      {
+        headers: {
+          "Cache-Control":
+            "public, max-age=300, s-maxage=600, stale-while-revalidate=1200",
+        },
+      },
+    );
   } catch (err: unknown) {
     console.error("Wiki search error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

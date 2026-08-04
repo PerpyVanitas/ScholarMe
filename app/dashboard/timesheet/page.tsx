@@ -32,6 +32,8 @@ import {
   Coffee,
   AlertCircle,
   X,
+  Award,
+  Printer,
 } from "lucide-react";
 import {
   Dialog,
@@ -130,6 +132,7 @@ export default function TimesheetPage() {
   const [correctionTime, setCorrectionTime] = useState("");
   const [correctionReason, setCorrectionReason] = useState("");
   const [correctionLoading, setCorrectionLoading] = useState(false);
+  const [certOpen, setCertOpen] = useState(false);
 
   // Sync timer to server clock_in rather than client boot
   const safeEntries = Array.isArray(entries) ? entries : [];
@@ -520,19 +523,40 @@ export default function TimesheetPage() {
             </div>
           </CardContent>
         </Card>
-        {/* Unified time card (#51) */}
+        {/* Unified time & goal progress card */}
         <Card className="border-border/60 sm:col-span-2">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10">
-              <Clock className="h-5 w-5 text-success" />
+          <CardContent className="flex flex-col gap-3 p-4 justify-between">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10">
+                  <Clock className="h-5 w-5 text-success" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-2xl font-bold text-foreground">
+                    {formatDuration(totalMinutes)}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    Total time logged ({(totalMinutes / 60).toFixed(1)}h)
+                  </span>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="text-sm font-semibold text-foreground">
+                  {Math.min(100, Math.round((totalMinutes / 5400) * 100))}%
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  Goal Progress (90.0h Target)
+                </span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-2xl font-bold text-foreground">
-                {formatDuration(totalMinutes)}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                Total time logged ({(totalMinutes / 60).toFixed(1)}h)
-              </span>
+            {/* Progress bar */}
+            <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full bg-success transition-all duration-300"
+                style={{
+                  width: `${Math.min(100, (totalMinutes / 5400) * 100)}%`,
+                }}
+              />
             </div>
           </CardContent>
         </Card>
@@ -564,7 +588,7 @@ export default function TimesheetPage() {
                   <SelectItem value="this_month">This Month</SelectItem>
                 </SelectContent>
               </Select>
-              {/* Export */}
+              {/* Export CSV */}
               <Button
                 variant="outline"
                 size="sm"
@@ -573,6 +597,16 @@ export default function TimesheetPage() {
               >
                 <Download className="h-3 w-3" />
                 Export CSV
+              </Button>
+              {/* Generate Certificate */}
+              <Button
+                variant="default"
+                size="sm"
+                className="h-8 gap-1.5 text-xs"
+                onClick={() => setCertOpen(true)}
+              >
+                <Award className="h-3 w-3" />
+                Certificate
               </Button>
             </div>
           </div>
@@ -754,6 +788,71 @@ export default function TimesheetPage() {
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : null}
               Submit Request
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Certificate Modal */}
+      <Dialog open={certOpen} onOpenChange={setCertOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary">
+              <Award className="h-5 w-5" /> Official Completion Certificate
+            </DialogTitle>
+            <DialogDescription>
+              Preview and print your verified Service Hour Completion Certificate.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="my-4 border-4 border-double border-primary/40 p-8 text-center bg-gradient-to-b from-primary/5 via-background to-primary/5 rounded-xl space-y-4">
+            <div className="uppercase tracking-widest text-xs font-bold text-primary">
+              ScholarMe Learning Platform
+            </div>
+            <h2 className="text-2xl font-serif font-bold text-foreground">
+              Certificate of Service Hours Completion
+            </h2>
+            <p className="text-sm text-muted-foreground italic">
+              This is to officially certify that
+            </p>
+            <div className="text-xl font-bold text-foreground border-b-2 border-primary/30 pb-1 max-w-xs mx-auto">
+              Verified Scholar
+            </div>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
+              has successfully logged and verified{" "}
+              <strong className="text-foreground font-mono">
+                {(totalMinutes / 60).toFixed(1)} Hours
+              </strong>{" "}
+              of academic service & tutoring during the collection period (
+              {hasConfig ? `${fmtDate(config.start_date!)} – ${fmtDate(config.end_date!)}` : "Current Term"}
+              ).
+            </p>
+
+            <div className="pt-6 flex justify-between items-end border-t border-border/40 text-xs text-muted-foreground">
+              <div className="text-left">
+                <p className="font-semibold text-foreground">Official Seal</p>
+                <p>ScholarMe Honor Society</p>
+              </div>
+              <div className="text-right">
+                <p className="font-semibold text-foreground border-b border-muted pb-1 mb-1">
+                  Program Lead Signature
+                </p>
+                <p>Academic Steering Committee</p>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCertOpen(false)}>
+              Close
+            </Button>
+            <Button
+              onClick={() => {
+                window.print();
+              }}
+              className="gap-2"
+            >
+              <Printer className="h-4 w-4" /> Print Certificate
             </Button>
           </DialogFooter>
         </DialogContent>

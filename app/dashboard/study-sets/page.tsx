@@ -10,6 +10,16 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import {
   Loader2,
@@ -80,6 +90,7 @@ function StudySetsContent() {
   const [loading, setLoading] = useState(true);
   const [createQuizOpen, setCreateQuizOpen] = useState(false);
   const [createFlashcardsOpen, setCreateFlashcardsOpen] = useState(false);
+  const [setToDeleteId, setSetToDeleteId] = useState<string | null>(null);
 
   const loadStudySets = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -360,7 +371,7 @@ function StudySetsContent() {
                           <Button
                             variant="outline"
                             size="icon"
-                            onClick={() => handleDelete(set.id)}
+                            onClick={() => setSetToDeleteId(set.id)}
                             className="text-destructive hover:text-destructive"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -395,6 +406,34 @@ function StudySetsContent() {
         onOpenChange={setCreateFlashcardsOpen}
         onSuccess={loadStudySets}
       />
+
+      <AlertDialog
+        open={!!setToDeleteId}
+        onOpenChange={(open) => !open && setSetToDeleteId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Study Set</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this study set? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (setToDeleteId) {
+                  handleDelete(setToDeleteId);
+                  setSetToDeleteId(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Study Set
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

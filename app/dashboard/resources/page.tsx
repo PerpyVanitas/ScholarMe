@@ -20,6 +20,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LibraryCatalog } from "@/features/library/components/library-catalog";
 import { getLibraryCatalog } from "@/features/library/api/actions";
@@ -34,6 +44,7 @@ import {
   ChevronDown,
   ChevronRight,
   Lock,
+  Star,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { UserRole } from "@/lib/types";
@@ -99,6 +110,19 @@ export default function ResourcesPage() {
   const [previewResource, setPreviewResource] = useState<ResourceRow | null>(
     null,
   );
+  const [resourceToDelete, setResourceToDelete] = useState<ResourceRow | null>(null);
+  const [savedIds, setSavedIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("scholarme_saved_resources");
+    if (saved) {
+      try {
+        setSavedIds(JSON.parse(saved));
+      } catch {
+        // ignore
+      }
+    }
+  }, []);
 
   const canManage = hasAnyRole(role, TUTOR_ROLES);
 
@@ -507,6 +531,44 @@ export default function ResourcesPage() {
                                     className="flex items-center gap-1 shrink-0"
                                     onClick={(e) => e.stopPropagation()}
                                   >
+                                    <Button
+                                       variant="ghost"
+                                       size="icon"
+                                       className={`h-8 w-8 ${
+                                         savedIds.includes(resource.id)
+                                           ? "text-amber-500 hover:text-amber-600"
+                                           : "text-muted-foreground"
+                                       }`}
+                                       onClick={() => {
+                                         const isSaved = savedIds.includes(
+                                           resource.id,
+                                         );
+                                         const updated = isSaved
+                                           ? savedIds.filter(
+                                               (id) => id !== resource.id,
+                                             )
+                                           : [...savedIds, resource.id];
+                                         setSavedIds(updated);
+                                         localStorage.setItem(
+                                           "scholarme_saved_resources",
+                                           JSON.stringify(updated),
+                                         );
+                                         toast.success(
+                                           isSaved
+                                             ? "Removed from saved resources"
+                                             : "Saved to your bookmarks",
+                                         );
+                                       }}
+                                       aria-label="Bookmark resource"
+                                     >
+                                       <Star
+                                         className={`h-4 w-4 ${
+                                           savedIds.includes(resource.id)
+                                             ? "fill-amber-500 text-amber-500"
+                                             : ""
+                                         }`}
+                                       />
+                                     </Button>
                                     {isPrivate && !canViewPrivate ? (
                                       <span className="flex items-center gap-1 text-xs text-muted-foreground px-2">
                                         <Lock className="h-3.5 w-3.5" />
@@ -535,7 +597,7 @@ export default function ResourcesPage() {
                                         size="icon"
                                         className="h-8 w-8 text-destructive hover:text-destructive"
                                         onClick={() =>
-                                          handleDeleteResource(resource)
+                                          setResourceToDelete(resource)
                                         }
                                         aria-label={`Delete ${resource.title}`}
                                       >
@@ -600,6 +662,38 @@ export default function ResourcesPage() {
         onOpenChange={setPreviewOpen}
         resource={previewResource}
       />
+
+      <AlertDialog
+        open={!!resourceToDelete}
+        onOpenChange={(open) => !open && setResourceToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Resource</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-foreground">
+                {resourceToDelete?.title}
+              </span>
+              ? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (resourceToDelete) {
+                  handleDeleteResource(resourceToDelete);
+                  setResourceToDelete(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Resource
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

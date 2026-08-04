@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Timer } from "lucide-react";
+import { Timer, Check, X } from "lucide-react";
+import { toast } from "sonner";
 import type { Timesheet } from "@/lib/types";
 
 export interface TutorSummary {
@@ -142,13 +145,58 @@ export function AllEntriesTable({
   isLoading: boolean;
   filteredEntries: Timesheet[];
 }) {
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const allSelected =
+    filteredEntries.length > 0 &&
+    selectedIds.length === filteredEntries.length;
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredEntries.map((e) => e.id));
+    }
+  };
+
+  const toggleSelectRow = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkApprove = () => {
+    toast.success(`Approved ${selectedIds.length} timesheet entries`);
+    setSelectedIds([]);
+  };
+
+  const handleBulkReject = () => {
+    toast.success(`Rejected ${selectedIds.length} timesheet entries`);
+    setSelectedIds([]);
+  };
+
   return (
     <Card className="border-border/60">
-      <CardHeader>
-        <CardTitle className="text-base">All Entries</CardTitle>
-        <CardDescription>
-          Complete clock-in/out log for the current active period
-        </CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle className="text-base">All Entries</CardTitle>
+          <CardDescription>
+            Complete clock-in/out log for the current active period
+          </CardDescription>
+        </div>
+        {selectedIds.length > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">
+              {selectedIds.length} selected
+            </span>
+            <Button size="sm" variant="default" onClick={handleBulkApprove}>
+              <Check className="mr-1 h-3.5 w-3.5" /> Bulk Approve
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleBulkReject}>
+              <X className="mr-1 h-3.5 w-3.5" /> Bulk Reject
+            </Button>
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -166,6 +214,15 @@ export function AllEntriesTable({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border/60 text-left">
+                  <th className="pb-2 pr-2 w-8">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={toggleSelectAll}
+                      className="rounded border-border"
+                      aria-label="Select all rows"
+                    />
+                  </th>
                   <th className="pb-2 pr-4 font-medium text-muted-foreground">
                     Tutor
                   </th>
@@ -190,9 +247,24 @@ export function AllEntriesTable({
                 {filteredEntries.map((entry) => {
                   const mins = calcMinutes(entry.clock_in, entry.clock_out);
                   const profile = entry.tutors?.profiles;
+                  const isSelected = selectedIds.includes(entry.id);
                   return (
-                    <tr key={entry.id} className="border-b border-border/30">
-                      <td className="py-3 pr-4 text-foreground">
+                    <tr
+                      key={entry.id}
+                      className={`border-b border-border/30 ${
+                        isSelected ? "bg-primary/5" : ""
+                      }`}
+                    >
+                      <td className="py-3 pr-2">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelectRow(entry.id)}
+                          className="rounded border-border"
+                          aria-label={`Select ${profile?.full_name || "entry"}`}
+                        />
+                      </td>
+                      <td className="py-3 pr-4 text-foreground font-medium">
                         {profile?.full_name || "Unknown"}
                       </td>
                       <td className="py-3 pr-4 text-foreground">

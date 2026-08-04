@@ -21,7 +21,7 @@ describe("Event Attendance API Handler (/api/v1/events/[id]/attendance)", () => 
       auth: {
         getUser: vi.fn().mockResolvedValue({ data: { user: null } }),
       },
-    } as ReturnType<typeof createClient>);
+    } as unknown as Awaited<ReturnType<typeof createClient>>);
 
     const req = new NextRequest(`http://localhost/api/v1/events/${mockEventId}/attendance`);
     const params = Promise.resolve({ id: mockEventId });
@@ -62,7 +62,7 @@ describe("Event Attendance API Handler (/api/v1/events/[id]/attendance)", () => 
         }
         return {};
       }),
-    } as ReturnType<typeof createClient>);
+    } as unknown as Awaited<ReturnType<typeof createClient>>);
 
     const req = new NextRequest(`http://localhost/api/v1/events/${mockEventId}/attendance`);
     const params = Promise.resolve({ id: mockEventId });
@@ -80,7 +80,7 @@ describe("Event Attendance API Handler (/api/v1/events/[id]/attendance)", () => 
       auth: {
         getUser: vi.fn().mockResolvedValue({ data: { user: { id: mockUserId } } }),
       },
-    } as ReturnType<typeof createClient>);
+    } as unknown as Awaited<ReturnType<typeof createClient>>);
 
     const req = new NextRequest(`http://localhost/api/v1/events/${mockEventId}/attendance`, {
       method: "POST",
@@ -126,7 +126,7 @@ describe("Event Attendance API Handler (/api/v1/events/[id]/attendance)", () => 
         }
         return {};
       }),
-    } as ReturnType<typeof createClient>);
+    } as unknown as Awaited<ReturnType<typeof createClient>>);
 
     const req = new NextRequest(`http://localhost/api/v1/events/${mockEventId}/attendance`, {
       method: "POST",

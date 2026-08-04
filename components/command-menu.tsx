@@ -242,7 +242,7 @@ export function CommandMenu() {
 
           {users.length > 0 && (
             <>
-              <CommandGroup heading="Users">
+              <CommandGroup heading="Users & Members">
                 {users.map((user) => (
                   <CommandItem
                     key={user.id}
@@ -262,6 +262,56 @@ export function CommandMenu() {
                     </span>
                   </CommandItem>
                 ))}
+              </CommandGroup>
+              <CommandSeparator />
+            </>
+          )}
+
+          {searchQuery.trim().length > 0 && (
+            <>
+              <CommandGroup heading="Global Content Search">
+                <CommandItem
+                  onSelect={() =>
+                    runCommand(() =>
+                      router.push(
+                        `/dashboard/resources?search=${encodeURIComponent(
+                          searchQuery.trim(),
+                        )}`,
+                      ),
+                    )
+                  }
+                >
+                  <BookOpen className="mr-2 h-4 w-4 text-primary" />
+                  <span>Search Resources for &quot;{searchQuery}&quot;</span>
+                </CommandItem>
+                <CommandItem
+                  onSelect={() =>
+                    runCommand(() =>
+                      router.push(
+                        `/dashboard/wiki?q=${encodeURIComponent(
+                          searchQuery.trim(),
+                        )}`,
+                      ),
+                    )
+                  }
+                >
+                  <FolderOpen className="mr-2 h-4 w-4 text-emerald-500" />
+                  <span>Search Wiki for &quot;{searchQuery}&quot;</span>
+                </CommandItem>
+                <CommandItem
+                  onSelect={() =>
+                    runCommand(() =>
+                      router.push(
+                        `/dashboard/forums?q=${encodeURIComponent(
+                          searchQuery.trim(),
+                        )}`,
+                      ),
+                    )
+                  }
+                >
+                  <Search className="mr-2 h-4 w-4 text-blue-500" />
+                  <span>Search Forums for &quot;{searchQuery}&quot;</span>
+                </CommandItem>
               </CommandGroup>
               <CommandSeparator />
             </>

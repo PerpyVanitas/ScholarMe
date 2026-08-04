@@ -78,11 +78,13 @@ describe("Navigation & Information Architecture Audit", () => {
 
     const journeyItem = growGroup?.items.find((i) => i.title === "My Journey");
     const leaderboardItem = growGroup?.items.find((i) => i.title === "Leaderboard");
+    const roadmapItem = growGroup?.items.find((i) => i.title === "Public Roadmap");
 
     expect(journeyItem?.href).toBe("/dashboard/journey");
     expect(journeyItem?.icon).toBe(Globe);
     expect(leaderboardItem?.href).toBe("/dashboard/leaderboard");
     expect(leaderboardItem?.icon).toBe(Trophy);
+    expect(roadmapItem?.href).toBe("/dashboard/roadmap");
   });
 
   it("matches icon family for My Timesheet and Payroll & Timesheets (Clock)", () => {

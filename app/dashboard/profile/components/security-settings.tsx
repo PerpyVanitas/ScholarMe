@@ -13,6 +13,7 @@ import {
   Loader2,
   Trash2,
   ShieldOff,
+  Laptop,
 } from "lucide-react";
 import {
   Card,
@@ -339,6 +340,43 @@ export function SecuritySettings() {
             <Download className="mr-2 h-4 w-4" />
             Download My Data (JSON)
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Laptop className="h-5 w-5" />
+            Devices & Active Sessions
+          </CardTitle>
+          <CardDescription>
+            Manage active device sessions authorized to access your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between p-3 rounded-lg border border-primary/20 bg-primary/5">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-primary/10 text-primary">
+                <Laptop className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Current Browser Session</p>
+                <p className="text-xs text-muted-foreground">
+                  Active now — Windows / Chrome
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                await supabase.auth.signOut({ scope: "others" });
+                toast.success("Other active sessions logged out");
+              }}
+            >
+              Log Out Other Devices
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

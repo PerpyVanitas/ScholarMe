@@ -37,6 +37,7 @@ import {
   Receipt,
   FileSpreadsheet,
   Activity,
+  Map,
   type LucideIcon
 } from "lucide-react";
 
@@ -75,6 +76,7 @@ export function getNavItems(role: UserRole, profile: Profile) {
   const growItems = [
     { title: "My Journey", href: "/dashboard/journey", icon: Globe },
     { title: "Leaderboard", href: "/dashboard/leaderboard", icon: Trophy },
+    { title: "Public Roadmap", href: "/dashboard/roadmap", icon: Map },
   ];
 
   const connectItems = [

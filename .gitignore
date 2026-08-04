@@ -69,4 +69,10 @@ gcp-*.json
 PRIMER*
 .gemini/
 
+# Scratch & Temporary Agent Artifacts
+scratch*.ts
+scratch*.js
+scratch_*
+
+
 

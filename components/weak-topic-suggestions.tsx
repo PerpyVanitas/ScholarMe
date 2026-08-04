@@ -13,7 +13,7 @@ interface StudySet {
 }
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, BookOpen, X } from "lucide-react";
+import { Sparkles, BookOpen, Users, X } from "lucide-react";
 import Link from "next/link";
 
 interface WeakTopicSuggestionsProps {
@@ -91,6 +91,11 @@ export function WeakTopicSuggestions({ weakTopics }: WeakTopicSuggestionsProps) 
               <Button asChild size="sm" variant="default" className="h-7 text-xs gap-1">
                 <Link href={`/dashboard/study-sets/${set.id}`}>
                   <BookOpen className="h-3.5 w-3.5" /> Study
+                </Link>
+              </Button>
+              <Button asChild size="sm" variant="outline" className="h-7 text-xs gap-1">
+                <Link href={`/dashboard/network?search=${encodeURIComponent(set.subject || set.title)}`}>
+                  <Users className="h-3.5 w-3.5" /> Find Tutor
                 </Link>
               </Button>
               <Button

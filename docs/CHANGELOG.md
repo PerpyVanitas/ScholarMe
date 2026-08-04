@@ -5,8 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-- **Sidebar Navigation Deduplication (`lib/navigation.ts`, `__tests__/unit/navigation.test.ts`)**:
-  - Removed duplicate `Settings` link from the `Home` sidebar group so `Settings` is uniquely accessed from the user profile popover at the bottom of the sidebar.
+## [2026-08-04] — AI Development Ruleset v2 Update
+
+### Added
+- **AI Development Ruleset v2 (`.agents/AGENTS.md`)**:
+  - Updated repository-specific guardrails to **Ruleset v2** (Categories A through J).
+  - Merged all 21 original rules and added new guardrails:
+    - **Category A**: Pre-build checks & system state verification (A1, A2).
+    - **Category B**: Schema integrity, bounded endpoints, and removing dead schema (B1, B2, B3).
+    - **Category C**: Colocated route testing & anti-gaming coverage standards (C1, C2).
+    - **Category D**: Trustworthy CI gates & pipeline safety enforcement (D1, D2).
+    - **Category E**: Derivable documentation generation & operational usability (E1, E2).
+    - **Category F**: Repo hygiene & single canonical location patterns (F1, F2).
+    - **Category G**: Error handling boundaries & structured logging (G1).
+    - **Category H**: UI & navigation consistency (icon/label agreement, no duplicate/orphaned routes, dialog/toast rules) (H1, H2, H3).
+    - **Category I**: Security baseline (MFA, session visibility, strict security gates) (I1, I2).
+    - **Category J**: Performance & caching headers for read-heavy resources (J1).
+
+- **Navigation & Architecture Audit Completion (`lib/navigation.ts`, `app/`, `components/`)**:
+  - Redirected `/dashboard/events` to `/dashboard/calendar`.
+  - Linked Public Roadmap (`/dashboard/roadmap`) under **Grow** navigation group.
+  - Added `AlertDialog` confirmation modals to Resource, Study Set, and User Designation deletes.
+  - Added multi-select checkbox selection and Bulk Approve/Reject toolbar to Admin Timesheets table.
+  - Enhanced Cmd+K Command Menu with unified Global Content Search for Resources, Wiki, and Forums.
+  - Implemented Service Hour Goal Progress bar and printable Completion Certificate in personal timesheet page.
+  - Added "Devices & Active Sessions" management with session revocation in Security Settings.
+  - Added Star resource bookmarking and weak-topic human tutor recommendations.
+  - Added `Cache-Control` headers for read-heavy API routes (`/api/v1/wiki/search`).
+  - Added cleanup migration (`20260804190000_drop_unused_tables.sql`) dropping 9 unused DB tables.
 
 ## [2026-08-03] — AI Tutor Persona & History, Private Local Progress, Settings AI Mode & Dashboard UX Refinements
 

@@ -18,6 +18,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import {
   Loader2,
@@ -59,6 +69,7 @@ export function UserDesignationsDialog({
   const [desigAcademicYear, setDesigAcademicYear] = useState("");
   const [desigIsCurrent, setDesigIsCurrent] = useState(true);
   const [savingDesignation, setSavingDesignation] = useState(false);
+  const [deleteDesigId, setDeleteDesigId] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -357,7 +368,7 @@ export function UserDesignationsDialog({
                           variant="ghost"
                           size="sm"
                           className="h-7 px-2 text-destructive hover:text-destructive"
-                          onClick={() => handleDeleteDesignation(d.id)}
+                          onClick={() => setDeleteDesigId(d.id)}
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
@@ -369,6 +380,33 @@ export function UserDesignationsDialog({
             </div>
           </div>
         )}
+        <AlertDialog
+          open={!!deleteDesigId}
+          onOpenChange={(open) => !open && setDeleteDesigId(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remove Designation</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to remove this designation status? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  if (deleteDesigId) {
+                    handleDeleteDesignation(deleteDesigId);
+                    setDeleteDesigId(null);
+                  }
+                }}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Remove Status
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );
