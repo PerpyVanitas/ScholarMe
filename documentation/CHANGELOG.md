@@ -6,3 +6,4 @@
 - Updated Quiz and Flashcard Creation sheets to parse AI output directly to state instead of string parsing.
 - Added "Randomize Choices" toggle to Quiz Study Page for advanced difficulty.
 - Enhanced Quiz/Flashcard UI to render block properties directly (options via RadioGroup, explanations).
+- Fixed TypeScript build type error in `create-quiz-sheet.tsx` by updating `StructuredQuizItem` interface to permit nullable `options`/`accepted_answers`/`responses` and sanitizing `options` property mapping.

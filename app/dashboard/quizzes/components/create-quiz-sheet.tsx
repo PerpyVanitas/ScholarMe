@@ -308,22 +308,30 @@ export function CreateQuizSheet({
       let items: StructuredQuizItem[] = [];
 
       if (structuredItems.length > 0) {
-        items = structuredItems.map((item) => ({
-          question: item.question || item.instructions || "Matching Type",
-          answer:
-            item.correct_answer ||
-            item.answer ||
-            item.back ||
-            JSON.stringify(item.correct_matches || []),
-          options:
+        items = structuredItems.map((item) => {
+          const rawOptions =
             item.choices?.map((c: { text: string }) => c.text) ||
             item.accepted_answers ||
             item.responses ||
-            null,
-          item_type: item.type || formData.type,
-          image_url: item.image_url,
-          occlusion_masks: item.occlusion_masks,
-        }));
+            item.options;
+          const options =
+            rawOptions && Array.isArray(rawOptions) && rawOptions.length > 0
+              ? rawOptions
+              : undefined;
+
+          return {
+            question: item.question || item.instructions || "Matching Type",
+            answer:
+              item.correct_answer ||
+              item.answer ||
+              item.back ||
+              JSON.stringify(item.correct_matches || []),
+            options,
+            item_type: item.type || formData.type,
+            image_url: item.image_url,
+            occlusion_masks: item.occlusion_masks,
+          };
+        });
       } else {
         const lines = formData.content
           .split("\n")

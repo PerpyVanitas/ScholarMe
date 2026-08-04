@@ -13,10 +13,10 @@ export interface StructuredQuizItem {
   answer?: string;
   back?: string;
   correct_matches?: string[];
-  options?: string[];
+  options?: string[] | null;
   choices?: { text: string }[];
-  accepted_answers?: string[];
-  responses?: string[];
+  accepted_answers?: string[] | null;
+  responses?: string[] | null;
   type?: string;
   item_type?: string;
   image_url?: string;
