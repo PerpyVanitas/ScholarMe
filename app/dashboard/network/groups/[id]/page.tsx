@@ -143,43 +143,75 @@ export default function StudyGroupDetailPage({
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Members ({members.length})
+            Members & Internal Roles ({members.length})
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {members.map((member) => (
-            <div
-              key={member.user_id}
-              className="flex items-center justify-between rounded-lg border p-3"
-            >
-              <div className="flex items-center gap-3">
-                <Avatar className="h-9 w-9">
-                  <AvatarImage
-                    src={getAvatarUrl(member.profiles?.avatar_url)}
-                  />
-                  <AvatarFallback>
-                    {member.profiles?.full_name?.charAt(0) || "?"}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-sm font-medium">
-                    {member.profiles?.full_name || "Unknown"}
-                  </p>
-                  <p className="text-xs text-muted-foreground capitalize">
-                    {member.role}
-                  </p>
+          {members.map((member) => {
+            const memberRole = member.role || "member";
+            const isGroupAdmin = members.find((m) => m.user_id === currentUserId)?.role === "admin";
+
+            return (
+              <div
+                key={member.user_id}
+                className="flex items-center justify-between rounded-lg border p-3 flex-wrap gap-2"
+              >
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-9 w-9">
+                    <AvatarImage
+                      src={getAvatarUrl(member.profiles?.avatar_url)}
+                    />
+                    <AvatarFallback>
+                      {member.profiles?.full_name?.charAt(0) || "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium">
+                        {member.profiles?.full_name || "Unknown"}
+                      </p>
+                      <Badge
+                        className={
+                          memberRole === "admin"
+                            ? "bg-purple-600 text-white text-[10px]"
+                            : memberRole === "moderator"
+                              ? "bg-blue-600 text-white text-[10px]"
+                              : "bg-muted text-muted-foreground text-[10px]"
+                        }
+                      >
+                        {memberRole.toUpperCase()}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {isGroupAdmin && member.user_id !== currentUserId && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs"
+                      onClick={() => {
+                        const newRole = memberRole === "member" ? "moderator" : memberRole === "moderator" ? "admin" : "member";
+                        setMembers((prev) =>
+                          prev.map((m) => (m.user_id === member.user_id ? { ...m, role: newRole } : m)),
+                        );
+                      }}
+                    >
+                      Cycle Role
+                    </Button>
+                  )}
+                  {member.user_id !== currentUserId && (
+                    <Button size="sm" variant="outline" asChild className="h-7 text-xs">
+                      <Link href={`/dashboard/messages?user=${member.user_id}`}>
+                        <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
+                        Message
+                      </Link>
+                    </Button>
+                  )}
                 </div>
               </div>
-              {member.user_id !== currentUserId && (
-                <Button size="sm" variant="outline" asChild>
-                  <Link href={`/dashboard/messages?user=${member.user_id}`}>
-                    <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
-                    Message
-                  </Link>
-                </Button>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </CardContent>
       </Card>
     </div>

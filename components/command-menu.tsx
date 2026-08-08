@@ -15,8 +15,11 @@ import {
   Loader2,
   ShieldOff,
   ShieldCheck,
+  MessageSquare,
+  FileText,
 } from "lucide-react";
 import { useUser } from "@/lib/user-context";
+import { createClient } from "@/lib/supabase/client";
 import {
   canAccessFinance,
   GOVERNANCE_ROLES,
@@ -56,6 +59,10 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command";
+
+type SearchStudySet = { id: string; title: string; subject?: string };
+type SearchResource = { id: string; title: string; category?: string };
+type SearchForumPost = { id: string; title: string; category?: string };
 
 type SearchUser = {
   id: string;
@@ -106,8 +113,17 @@ export function CommandMenu() {
 
   const [searchQuery, setSearchQuery] = React.useState("");
   const [users, setUsers] = React.useState<SearchUser[]>([]);
+  const [studySets, setStudySets] = React.useState<SearchStudySet[]>([]);
+  const [resources, setResources] = React.useState<SearchResource[]>([]);
+  const [forumPosts, setForumPosts] = React.useState<SearchForumPost[]>([]);
   const [isSearchingUsers, setIsSearchingUsers] = React.useState(false);
-  const showEmpty = !isSearchingUsers && searchQuery.trim().length >= 2 && users.length === 0;
+  const showEmpty =
+    !isSearchingUsers &&
+    searchQuery.trim().length >= 2 &&
+    users.length === 0 &&
+    studySets.length === 0 &&
+    resources.length === 0 &&
+    forumPosts.length === 0;
 
   // Profile quick-view modal
   const [profileUser, setProfileUser] = React.useState<SearchUser | null>(null);
@@ -129,26 +145,51 @@ export function CommandMenu() {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  // Debounced search via API route (role-filtered + block-aware server-side)
+  // Debounced search via API route & Supabase client
   React.useEffect(() => {
     if (!open || searchQuery.trim().length < 2) {
       setUsers([]);
+      setStudySets([]);
+      setResources([]);
+      setForumPosts([]);
       return;
     }
 
     const controller = new AbortController();
 
-    const fetchUsers = async () => {
+    const fetchAll = async () => {
       setIsSearchingUsers(true);
+      const supabase = createClient();
       try {
-        const res = await fetch(
-          `/api/v1/users/search?q=${encodeURIComponent(searchQuery.trim())}`,
-          { signal: controller.signal },
-        );
-        if (res.ok) {
-          const data = await res.json();
+        const [userRes, setRes, resRes, forumRes] = await Promise.all([
+          fetch(
+            `/api/v1/users/search?q=${encodeURIComponent(searchQuery.trim())}`,
+            { signal: controller.signal },
+          ),
+          supabase
+            .from("study_sets")
+            .select("id, title, subject")
+            .ilike("title", `%${searchQuery.trim()}%`)
+            .limit(4),
+          supabase
+            .from("resources")
+            .select("id, title, category")
+            .ilike("title", `%${searchQuery.trim()}%`)
+            .limit(4),
+          supabase
+            .from("forum_posts")
+            .select("id, title, category")
+            .ilike("title", `%${searchQuery.trim()}%`)
+            .limit(4),
+        ]);
+
+        if (userRes.ok) {
+          const data = await userRes.json();
           setUsers(Array.isArray(data) ? data : []);
         }
+        setStudySets((setRes.data as SearchStudySet[]) || []);
+        setResources((resRes.data as SearchResource[]) || []);
+        setForumPosts((forumRes.data as SearchForumPost[]) || []);
       } catch (err) {
         if ((err as Error).name !== "AbortError") {
           console.error("[CommandMenu] Search error:", err);
@@ -159,7 +200,7 @@ export function CommandMenu() {
     };
 
     // 300ms debounce — well within the 500ms SLA
-    const timer = setTimeout(fetchUsers, 300);
+    const timer = setTimeout(fetchAll, 300);
     return () => {
       clearTimeout(timer);
       controller.abort();
@@ -260,6 +301,78 @@ export function CommandMenu() {
                     <span className="text-xs text-muted-foreground">
                       {getRoleName(user.roles).replace(/_/g, " ")}
                     </span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+              <CommandSeparator />
+            </>
+          )}
+
+          {studySets.length > 0 && (
+            <>
+              <CommandGroup heading="Study Sets & Quizzes">
+                {studySets.map((set) => (
+                  <CommandItem
+                    key={set.id}
+                    value={`set ${set.title} ${set.subject || ""}`}
+                    onSelect={() => runCommand(() => router.push(`/dashboard/quizzes/study/${set.id}`))}
+                    className="flex items-center gap-2"
+                  >
+                    <BookOpen className="h-4 w-4 text-primary" />
+                    <span className="flex-1">{set.title}</span>
+                    {set.subject && (
+                      <Badge variant="outline" className="text-[10px]">
+                        {set.subject}
+                      </Badge>
+                    )}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+              <CommandSeparator />
+            </>
+          )}
+
+          {resources.length > 0 && (
+            <>
+              <CommandGroup heading="Library Resources">
+                {resources.map((res) => (
+                  <CommandItem
+                    key={res.id}
+                    value={`res ${res.title} ${res.category || ""}`}
+                    onSelect={() => runCommand(() => router.push(`/dashboard/resources`))}
+                    className="flex items-center gap-2"
+                  >
+                    <FileText className="h-4 w-4 text-emerald-500" />
+                    <span className="flex-1">{res.title}</span>
+                    {res.category && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        {res.category}
+                      </Badge>
+                    )}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+              <CommandSeparator />
+            </>
+          )}
+
+          {forumPosts.length > 0 && (
+            <>
+              <CommandGroup heading="Community Forum Discussions">
+                {forumPosts.map((post) => (
+                  <CommandItem
+                    key={post.id}
+                    value={`post ${post.title} ${post.category || ""}`}
+                    onSelect={() => runCommand(() => router.push(`/dashboard/forums/${post.id}`))}
+                    className="flex items-center gap-2"
+                  >
+                    <MessageSquare className="h-4 w-4 text-amber-500" />
+                    <span className="flex-1">{post.title}</span>
+                    {post.category && (
+                      <Badge variant="outline" className="text-[10px]">
+                        {post.category}
+                      </Badge>
+                    )}
                   </CommandItem>
                 ))}
               </CommandGroup>

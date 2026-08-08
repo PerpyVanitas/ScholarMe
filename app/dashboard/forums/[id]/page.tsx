@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 import { ForumPost, ForumReply } from "@/lib/types";
 import { formatDistanceToNow } from "date-fns";
-import { ArrowLeft, Loader2, MessageSquare, Pin } from "lucide-react";
+import { ArrowLeft, Loader2, MessageSquare, Pin, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { createForumReply } from "@/features/forums/api/actions";
 import { ReportDialog } from "../components/report-dialog";
@@ -28,6 +28,7 @@ export default function ForumPostPage({
   const { id: postId } = use(params);
   const [post, setPost] = useState<ForumPost | null>(null);
   const [replies, setReplies] = useState<ForumReply[]>([]);
+  const [bestAnswerId, setBestAnswerId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -149,26 +150,54 @@ export default function ForumPostPage({
             No replies yet. Be the first to respond.
           </p>
         ) : (
-          replies.map((reply) => (
-            <Card key={reply.id}>
-              <CardContent className="pt-4 space-y-2">
-                <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-foreground">
-                      {reply.profiles?.full_name || "Unknown"}
-                    </span>
-                    <span>•</span>
-                    <span>
-                      {formatDistanceToNow(new Date(reply.created_at), {
-                        addSuffix: true,
-                      })}
-                    </span>
-                  </div>
-                </div>
-                <p className="text-sm whitespace-pre-wrap">{reply.content}</p>
-              </CardContent>
-            </Card>
-          ))
+          [...replies]
+            .sort((a, b) => (a.id === bestAnswerId ? -1 : b.id === bestAnswerId ? 1 : 0))
+            .map((reply) => {
+              const isBest = reply.id === bestAnswerId;
+              return (
+                <Card
+                  key={reply.id}
+                  className={isBest ? "border-emerald-500/50 bg-emerald-500/5 ring-1 ring-emerald-500/30" : ""}
+                >
+                  <CardContent className="pt-4 space-y-2">
+                    <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-foreground">
+                          {reply.profiles?.full_name || "Unknown"}
+                        </span>
+                        <span>•</span>
+                        <span>
+                          {formatDistanceToNow(new Date(reply.created_at), {
+                            addSuffix: true,
+                          })}
+                        </span>
+                        {isBest && (
+                          <Badge className="bg-emerald-600 text-white flex items-center gap-1 text-[10px]">
+                            <CheckCircle2 className="h-3 w-3" /> Best Answer
+                          </Badge>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant={isBest ? "secondary" : "ghost"}
+                        className="h-7 text-xs gap-1"
+                        onClick={() => {
+                          const newId = isBest ? null : reply.id;
+                          setBestAnswerId(newId);
+                          toast.success(
+                            newId ? "Marked as Best Answer" : "Unmarked Best Answer",
+                          );
+                        }}
+                      >
+                        <CheckCircle2 className={`h-3.5 w-3.5 ${isBest ? "text-emerald-600 font-bold" : ""}`} />
+                        {isBest ? "Accepted" : "Mark Best Answer"}
+                      </Button>
+                    </div>
+                    <p className="text-sm whitespace-pre-wrap">{reply.content}</p>
+                  </CardContent>
+                </Card>
+              );
+            })
         )}
       </div>
 

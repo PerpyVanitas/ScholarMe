@@ -29,6 +29,7 @@ export default function TutorsPage() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
   const [selectedSpec, setSelectedSpec] = useState("all");
+  const [availability, setAvailability] = useState("all");
   const [selectedTutor, setSelectedTutor] = useState<Tutor | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [page, setPage] = useState(1);
@@ -105,6 +106,16 @@ export default function TutorsPage() {
                 {s.name}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+        <Select value={availability} onValueChange={setAvailability}>
+          <SelectTrigger className="w-full sm:w-44">
+            <SelectValue placeholder="All Availability" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Availability</SelectItem>
+            <SelectItem value="available_today">Available Today</SelectItem>
+            <SelectItem value="has_open_slots">Has Open Slots</SelectItem>
           </SelectContent>
         </Select>
       </div>

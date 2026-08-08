@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 
 export async function searchUsers(query: string) {
   const supabase = await createClient();
@@ -34,11 +35,11 @@ export async function searchUsers(query: string) {
   const { data, error } = await dbQuery.limit(50);
 
   if (error) {
-    console.error("Search users error:", error);
+    logger.error({ error }, "Search users error");
     return { success: false, error: error.message };
   }
 
-  console.log("DB returned users count:", data?.length);
+  logger.debug({ count: data?.length }, "DB returned users count");
 
   // Filter out private profiles in memory (unless they are tutors or we change the policy later)
   const filteredData = data.filter((profile: Record<string, unknown>) => {
@@ -76,7 +77,7 @@ export async function searchUsers(query: string) {
     (profile: unknown) => !blockedUserIds.has(profile.id),
   );
 
-  console.log("Filtered users count:", nonBlockedData.length);
+  logger.debug({ count: nonBlockedData.length }, "Filtered users count");
 
   return { success: true, data: nonBlockedData };
 }

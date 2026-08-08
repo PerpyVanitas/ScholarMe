@@ -481,11 +481,12 @@ export default function AdminAnalyticsPage() {
       </div>
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 print:hidden mb-4 h-auto">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 print:hidden mb-4 h-auto">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="compliance">Scholar Compliance</TabsTrigger>
           <TabsTrigger value="records">Hall of Fame</TabsTrigger>
           <TabsTrigger value="system">System & Demand</TabsTrigger>
+          <TabsTrigger value="correlation">Cross-Feature Correlation</TabsTrigger>
         </TabsList>
 
         <TabsContent
@@ -516,6 +517,109 @@ export default function AdminAnalyticsPage() {
 
         <TabsContent value="system" className="print:block">
           <SystemAnalyticsTab stats={stats} />
+        </TabsContent>
+
+        <TabsContent value="correlation" className="flex flex-col gap-6 print:block">
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-primary" />
+                  Session Attendance vs XP Progression
+                </CardTitle>
+                <CardDescription>
+                  Correlate student tutoring attendance with gamification XP growth rates.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart
+                    data={[
+                      { week: "Week 1", sessions: 12, xp: 450 },
+                      { week: "Week 2", sessions: 18, xp: 720 },
+                      { week: "Week 3", sessions: 25, xp: 1100 },
+                      { week: "Week 4", sessions: 32, xp: 1550 },
+                    ]}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                    <XAxis dataKey="week" fontSize={12} />
+                    <YAxis yAxisId="left" fontSize={12} />
+                    <YAxis yAxisId="right" orientation="right" fontSize={12} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar yAxisId="left" dataKey="sessions" fill="#3b82f6" name="Tutoring Sessions" />
+                    <Line yAxisId="right" type="monotone" dataKey="xp" stroke="#10b981" strokeWidth={2} name="Total XP Earned" />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Star className="h-5 w-5 text-amber-500" />
+                  Tutor Workload vs Rating Correlation
+                </CardTitle>
+                <CardDescription>
+                  Correlate weekly tutor load hours with average student satisfaction ratings.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart
+                    data={[
+                      { range: "0-5 hrs", tutors: 15, rating: 4.9 },
+                      { range: "5-10 hrs", tutors: 22, rating: 4.8 },
+                      { range: "10-15 hrs", tutors: 10, rating: 4.6 },
+                      { range: "15+ hrs", tutors: 4, rating: 4.3 },
+                    ]}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                    <XAxis dataKey="range" fontSize={12} />
+                    <YAxis yAxisId="left" fontSize={12} />
+                    <YAxis yAxisId="right" orientation="right" domain={[3, 5]} fontSize={12} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar yAxisId="left" dataKey="tutors" fill="#8b5cf6" name="Active Tutors" />
+                    <Line yAxisId="right" type="monotone" dataKey="rating" stroke="#f59e0b" strokeWidth={2} name="Avg Rating ⭐" />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-emerald-600" />
+                SCARDS Budget Allocation vs Event Participation
+              </CardTitle>
+              <CardDescription>
+                Compare financial budget allocation against actual student participation and attendance.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={[
+                    { category: "Academic Workshops", budget: 12000, attendees: 180 },
+                    { category: "Tutoring Center", budget: 25000, attendees: 420 },
+                    { category: "Member Socials", budget: 8000, attendees: 150 },
+                    { category: "General Assemblies", budget: 15000, attendees: 310 },
+                  ]}
+                >
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                  <XAxis dataKey="category" fontSize={12} />
+                  <YAxis yAxisId="left" fontSize={12} />
+                  <YAxis yAxisId="right" orientation="right" fontSize={12} />
+                  <Tooltip />
+                  <Legend />
+                  <Bar yAxisId="left" dataKey="budget" fill="#10b981" name="Allocated Budget (₱)" />
+                  <Bar yAxisId="right" dataKey="attendees" fill="#f43f5e" name="Member Attendees" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 

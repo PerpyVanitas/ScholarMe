@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2026-08-08] — Cross-Codebase Sweep & Core Operational Enhancements
+
+### Added
+- **Custom PWA Install Prompt Component (`pwa-install-prompt.tsx` & `client-layout.tsx`)**: Captured `beforeinstallprompt` browser event to render a custom 1-click install banner with offline access details, mounted globally.
+- **Institutional Wiki Version History & Revert Path (`app/dashboard/wiki/page.tsx`)**: Added revision history badges (`v1`, `v2`), edit attribution timestamps, and 1-click revision revert path (`RotateCcw`) for retrieved wiki source documents.
+- **Admin Cross-Feature Analytics Correlation View (`app/dashboard/admin/analytics/page.tsx`)**: Added **Cross-Feature Correlation** tab combining:
+  - Tutoring Attendance vs XP Progression rates (`ComposedChart`)
+  - Tutor Workload vs Rating correlation (`ComposedChart`)
+  - SCARDS Budget Allocation vs Member Event Attendance (`BarChart`)
+- **Leaderboard Join-Date Normalization ("Velocity: XP/Day") (`app/dashboard/leaderboard/page.tsx`)**: Added a sort toggle for Total XP vs Velocity (`XP / Day`), computing per-day XP gain based on member join date to equalize rankings for newer active members.
+- **Notification Preferences & Digest Settings (`app/dashboard/settings/page.tsx`)**: Added 5th tab `Notifications` with per-category alert toggles (Tutoring, Finance, Gamification, Community, System), Digest Frequency selector (Instant, Daily, Weekly, Off), and Quiet Hours controls.
+- **Tutor Availability Filter (`app/dashboard/network/tutors/page.tsx`)**: Added Availability Select filter (`All Availability`, `Available Today`, `Has Open Slots`) to filter tutor listings.
+- **Unified Global Search Expansion (`components/command-menu.tsx`)**: Expanded `CommandMenu` (`Cmd+K`) to query across Study Sets/Quizzes, Library Resources, and Forum Posts alongside users and navigation.
+- **Resource Versioning Badging (`app/dashboard/resources/`)**: Added version tracking badges (`v1`, `v2`) to resource cards in `page.tsx`.
+- **Forum Best Answer Marking (`app/dashboard/forums/[id]/page.tsx`)**: Added "Mark as Best Answer" toggle for post authors/moderators with green check badge and top-of-thread sorting.
+- **Support Ticket Priority & SLA Triage (`app/dashboard/admin/support/page.tsx`)**: Added priority badges (`Urgent`, `High`, `Medium`, `Low`) and dynamic SLA countdown/breach timer badges (`⚠️ SLA BREACHED`).
+- **Group Internal Roles (`app/dashboard/network/groups/[id]/page.tsx`)**: Rendered group-scoped role badges (`ADMIN`, `MODERATOR`, `MEMBER`) and added role cycling controls for group admins.
+
+### Fixed
+- **README Coverage Badge (`README.md`)**: Updated static coverage badge to accurately reflect 70% threshold.
+- **Production `console.log` Cleanup (`lib/user-context.tsx`, `calendar-actions.tsx`, `network/users/actions.ts`)**: Replaced raw `console.log`/`console.error` with structured `logger` calls and user toast notifications.
+- **React 19 Impure Render Warnings (`admin/support/page.tsx`, `leaderboard/page.tsx`)**: Resolved React 19 ESLint compiler purity violations for `Date.now()` during component renders.
+
 ## [2026-08-08] — Finance System Audit & Core Compliance Controls Implementation
 
 ### Added

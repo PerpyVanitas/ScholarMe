@@ -1,7 +1,7 @@
 # ScholarMe — Enterprise Academic & Honor Society Management Platform
 
 [![CI Pipeline](https://github.com/PerpyVanitas/ScholarMe/actions/workflows/ci.yml/badge.svg)](https://github.com/PerpyVanitas/ScholarMe/actions)
-[![Coverage Status](https://img.shields.io/badge/coverage-CI--gated-blue.svg)]()
+[![Coverage Status](https://img.shields.io/badge/coverage-70%25%20CI--gated-blue.svg)]()
 ScholarMe is a full-stack, enterprise-grade academic management and peer-learning platform built for honor society organizations. It serves as a unified digital infrastructure for managing tutoring operations, organizational finances, AI-powered spaced repetition learning, digital member identity, physical and digital library cataloging, real-time community engagement, and executive administration.
 
 ---

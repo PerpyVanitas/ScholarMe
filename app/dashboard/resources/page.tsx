@@ -509,6 +509,12 @@ export default function ResourcesPage() {
                                       >
                                         {info.label}
                                       </Badge>
+                                      <Badge
+                                        variant="outline"
+                                        className="text-[10px] shrink-0 border-blue-500/30 text-blue-600 bg-blue-500/5"
+                                      >
+                                        v{resource.version_number || 1}
+                                      </Badge>
                                     </div>
                                     {resource.description && (
                                       <p className="text-xs text-muted-foreground truncate mt-0.5">

@@ -14,6 +14,7 @@ import type { Profile, UserRole } from "@/lib/types";
 import { DEMO_USERS, getDemoUserFromCookie } from "@/scripts/demo";
 import { resolveRoleId, roleNameFromUser } from "@/features/profiles/api/db";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 interface UserContextType {
   profile: Profile | null;
@@ -267,7 +268,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
               filter: `id=eq.${user.id}`,
             },
             (payload) => {
-              console.log("Role updated in real-time", payload);
+              logger.info({ payload }, "Role updated in real-time");
               loadUserData();
             },
           )

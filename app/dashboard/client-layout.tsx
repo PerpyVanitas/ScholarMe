@@ -29,6 +29,7 @@ import { PageTutorialButton } from "@/components/page-tutorial-button";
 import { AnalyticsPageTracker } from "@/components/analytics-page-tracker";
 import { SuperAdminBanner } from "@/components/admin/super-admin-banner";
 import { ChatHeadsContainer } from "@/features/messaging/components/chat-heads-container";
+import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 
 
 
@@ -205,6 +206,7 @@ function DashboardLayoutContent({
 
       <ChatHeadsContainer currentUserId={profile?.id || ""} />
       <ScrollToTopFab />
+      <PWAInstallPrompt />
     </SidebarProvider>
   );
 }

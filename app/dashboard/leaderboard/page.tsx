@@ -38,6 +38,7 @@ interface LeaderboardEntry {
   totalXp: number;
   currentLevel: number;
   isCurrentUser: boolean;
+  createdAt?: string;
 }
 
 type Period = "all" | "monthly" | "weekly";
@@ -49,6 +50,7 @@ function LeaderboardContent() {
   const [loading, setLoading] = useState(true);
   const [limit, setLimit] = useState(20);
   const [period, setPeriod] = useState<Period>("all");
+  const [sortBy, setSortBy] = useState<"xp" | "velocity">("xp");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -96,6 +98,8 @@ function LeaderboardContent() {
 
   const podium = leaderboard.slice(0, 3);
   const rest = leaderboard.slice(3);
+  // eslint-disable-next-line react-hooks/purity
+  const nowTimestamp = Date.now();
 
   if (loading) {
     return (
@@ -209,71 +213,98 @@ function LeaderboardContent() {
 
           {/* Rankings Table */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5 text-primary" />
-                Rankings
-              </CardTitle>
-              <CardDescription>
-                {period === "all"
-                  ? "All-time leaderboard"
-                  : period === "monthly"
-                    ? "This month's leaders"
-                    : "This week's leaders"}{" "}
-                · Top {leaderboard.length} shown
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-primary" />
+                  Rankings & Member Velocity
+                </CardTitle>
+                <CardDescription>
+                  {period === "all"
+                    ? "All-time leaderboard"
+                    : period === "monthly"
+                      ? "This month's leaders"
+                      : "This week's leaders"}{" "}
+                  · Top {leaderboard.length} shown
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-1 bg-muted p-1 rounded-lg text-xs">
+                <Button
+                  size="sm"
+                  variant={sortBy === "xp" ? "secondary" : "ghost"}
+                  className="h-7 text-xs"
+                  onClick={() => setSortBy("xp")}
+                >
+                  Total XP
+                </Button>
+                <Button
+                  size="sm"
+                  variant={sortBy === "velocity" ? "secondary" : "ghost"}
+                  className="h-7 text-xs"
+                  onClick={() => setSortBy("velocity")}
+                >
+                  ⚡ Velocity (XP/Day)
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y">
-                {rest.map((entry) => (
-                  <div
-                    key={entry.id}
-                    className={`flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors ${
-                      entry.isCurrentUser
-                        ? "bg-primary/5 border-l-4 border-l-primary"
-                        : ""
-                    }`}
-                  >
-                    <div className="w-8 text-center font-black text-muted-foreground">
-                      {entry.rank}
-                    </div>
-                    <Avatar
-                      className={`h-10 w-10 border-2 ${getLevelColor(entry.currentLevel)}`}
+                {[...rest]
+                  .map((entry) => {
+                    const daysActive = Math.max(1, Math.floor((nowTimestamp - new Date(entry.createdAt || nowTimestamp - 30 * 86400000).getTime()) / (1000 * 60 * 60 * 24)));
+                    const velocity = Math.round(entry.totalXp / daysActive);
+                    return { ...entry, velocity };
+                  })
+                  .sort((a, b) => (sortBy === "velocity" ? b.velocity - a.velocity : a.rank - b.rank))
+                  .map((entry) => (
+                    <div
+                      key={entry.id}
+                      className={`flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors ${
+                        entry.isCurrentUser
+                          ? "bg-primary/5 border-l-4 border-l-primary"
+                          : ""
+                      }`}
                     >
-                      <AvatarImage
-                        src={
-                          getAvatarUrl(entry.avatarUrl) ||
-                          `https://api.dicebear.com/7.x/avataaars/svg?seed=${entry.fullName}`
-                        }
-                      />
-                      <AvatarFallback>
-                        {entry.fullName.slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <p className="font-bold flex items-center gap-2">
-                        {entry.fullName}
-                        {entry.isCurrentUser && (
-                          <Badge variant="secondary" className="text-[10px]">
-                            YOU
-                          </Badge>
-                        )}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Level {entry.currentLevel} ·{" "}
-                        {getLevelTitle(entry.currentLevel)}
-                      </p>
+                      <div className="w-8 text-center font-black text-muted-foreground">
+                        {entry.rank}
+                      </div>
+                      <Avatar
+                        className={`h-10 w-10 border-2 ${getLevelColor(entry.currentLevel)}`}
+                      >
+                        <AvatarImage
+                          src={
+                            getAvatarUrl(entry.avatarUrl) ||
+                            `https://api.dicebear.com/7.x/avataaars/svg?seed=${entry.fullName}`
+                          }
+                        />
+                        <AvatarFallback>
+                          {entry.fullName.slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <p className="font-bold flex items-center gap-2">
+                          {entry.fullName}
+                          {entry.isCurrentUser && (
+                            <Badge variant="secondary" className="text-[10px]">
+                              YOU
+                            </Badge>
+                          )}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Level {entry.currentLevel} ·{" "}
+                          {getLevelTitle(entry.currentLevel)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-black text-primary">
+                          {sortBy === "velocity" ? `${entry.velocity} XP/day` : entry.totalXp.toLocaleString()}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground uppercase">
+                          {sortBy === "velocity" ? "Velocity" : "Total XP"}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-black text-primary">
-                        {entry.totalXp.toLocaleString()}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground uppercase">
-                        Total XP
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                  ))}
 
                 {/* Load More */}
                 {leaderboard.length >= limit && (

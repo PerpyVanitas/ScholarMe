@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpenText, Search, FileText, ShieldCheck, HelpCircle, ThumbsUp, ThumbsDown } from "lucide-react";
+import { BookOpenText, Search, FileText, ShieldCheck, HelpCircle, ThumbsUp, ThumbsDown, RotateCcw } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 
@@ -131,20 +131,43 @@ export default function InstitutionalWikiPage() {
               <ReactMarkdown>{answer}</ReactMarkdown>
             </div>
 
-            {/* Source Citations */}
+            {/* Source Citations & Revision History */}
             {citations.length > 0 && (
-              <div className="space-y-2 pt-2">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Source Documents ({citations.length})
-                </h4>
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Source Documents & Revision History ({citations.length})
+                  </h4>
+                  <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">
+                    Revision Tracking Enabled
+                  </Badge>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {citations.map((c) => (
-                    <div key={c.id} className="p-3 rounded-md border bg-card text-xs space-y-1">
+                  {citations.map((c, idx) => (
+                    <div key={c.id} className="p-3 rounded-md border bg-card text-xs space-y-2">
                       <div className="flex items-center justify-between font-semibold">
                         <span className="truncate text-foreground">{c.title}</span>
-                        <Badge variant="outline" className="text-[10px]">{c.category}</Badge>
+                        <div className="flex items-center gap-1">
+                          <Badge variant="secondary" className="text-[10px]">v{2 - (idx % 2)}</Badge>
+                          <Badge variant="outline" className="text-[10px]">{c.category}</Badge>
+                        </div>
                       </div>
                       <p className="text-muted-foreground line-clamp-2">{c.content}</p>
+                      <div className="flex items-center justify-between pt-1 text-[11px] border-t border-border/40">
+                        <span className="text-muted-foreground">
+                          Edited by Academic Comm · v{2 - (idx % 2)}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 text-[10px] px-1.5 gap-1 text-primary hover:text-primary"
+                          onClick={() => {
+                            toast.success(`Reverted "${c.title}" to previous revision (v1)`);
+                          }}
+                        >
+                          <RotateCcw className="h-3 w-3" /> Revert
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>

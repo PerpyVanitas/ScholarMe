@@ -22,6 +22,10 @@ import {
   Laptop,
   Bot,
   Zap,
+  Clock,
+  VolumeX,
+  Mail,
+  Layers,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -39,8 +43,15 @@ export default function SiteSettingsPage() {
     reducedMotion: false,
     shareAnalytics: true,
     publicProfile: true,
+    notifyTutoring: true,
+    notifyFinance: true,
+    notifyGamification: true,
+    notifyCommunity: true,
+    notifySystem: true,
+    quietHours: false,
   });
 
+  const [digestFrequency, setDigestFrequency] = useState<"instant" | "daily" | "weekly" | "off">("daily");
   const [aiMode, setAiMode] = useState<"server" | "local">("server");
 
   // Load from local storage on mount
@@ -94,8 +105,9 @@ export default function SiteSettingsPage() {
       <Separator />
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="mb-6 grid w-full grid-cols-4 max-w-[520px]">
+        <TabsList className="mb-6 grid w-full grid-cols-5 max-w-[650px]">
           <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="display">Display</TabsTrigger>
           <TabsTrigger value="privacy">Privacy</TabsTrigger>
           <TabsTrigger value="ai">AI Tutor</TabsTrigger>
@@ -160,6 +172,124 @@ export default function SiteSettingsPage() {
             </div>
           </CardContent>
         </Card>
+        </TabsContent>
+
+        {/* Notifications Tab Content */}
+        <TabsContent value="notifications" className="mt-0 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5" />
+                Category Alert Channels
+              </CardTitle>
+              <CardDescription>
+                Choose which types of system activity send notifications to your account.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm font-medium">Tutoring & Sessions</Label>
+                  <p className="text-xs text-muted-foreground">Bookings, reminders, and feedback notifications</p>
+                </div>
+                <Switch
+                  checked={settings.notifyTutoring}
+                  onCheckedChange={(c) => updateSetting("notifyTutoring", c)}
+                />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm font-medium">Executive Finance</Label>
+                  <p className="text-xs text-muted-foreground">Budget request approvals, liquidations, and petty cash alerts</p>
+                </div>
+                <Switch
+                  checked={settings.notifyFinance}
+                  onCheckedChange={(c) => updateSetting("notifyFinance", c)}
+                />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm font-medium">Gamification & XP</Label>
+                  <p className="text-xs text-muted-foreground">Level-ups, badge unlocks, and weekly streak reminders</p>
+                </div>
+                <Switch
+                  checked={settings.notifyGamification}
+                  onCheckedChange={(c) => updateSetting("notifyGamification", c)}
+                />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm font-medium">Community & Forums</Label>
+                  <p className="text-xs text-muted-foreground">Group activity, forum replies, and direct messages</p>
+                </div>
+                <Switch
+                  checked={settings.notifyCommunity}
+                  onCheckedChange={(c) => updateSetting("notifyCommunity", c)}
+                />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm font-medium">Quiet Hours / Mute</Label>
+                  <p className="text-xs text-muted-foreground">Pause all non-critical notifications between 10 PM and 7 AM</p>
+                </div>
+                <Switch
+                  checked={settings.quietHours}
+                  onCheckedChange={(c) => updateSetting("quietHours", c)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                Notification Digest Frequency
+              </CardTitle>
+              <CardDescription>
+                Consolidate activity notifications into scheduled email summaries.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RadioGroup
+                value={digestFrequency}
+                onValueChange={(val) => {
+                  setDigestFrequency(val as "instant" | "daily" | "weekly" | "off");
+                  toast.success(`Notification digest set to ${val}`);
+                }}
+                className="space-y-3"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="instant" id="digest-instant" />
+                  <Label htmlFor="digest-instant" className="text-sm font-normal">
+                    <span className="font-semibold">Instant</span> — Deliver notifications immediately as events occur
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="daily" id="digest-daily" />
+                  <Label htmlFor="digest-daily" className="text-sm font-normal">
+                    <span className="font-semibold">Daily Digest</span> — Send one summary email at 8:00 AM daily
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="weekly" id="digest-weekly" />
+                  <Label htmlFor="digest-weekly" className="text-sm font-normal">
+                    <span className="font-semibold">Weekly Summary</span> — Send a weekly digest every Monday morning
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="off" id="digest-off" />
+                  <Label htmlFor="digest-off" className="text-sm font-normal">
+                    <span className="font-semibold">Disabled</span> — Do not send email summaries
+                  </Label>
+                </div>
+              </RadioGroup>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Display Card */}

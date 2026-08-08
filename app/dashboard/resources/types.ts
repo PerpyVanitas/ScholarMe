@@ -123,6 +123,8 @@ export interface ResourceRow {
   file_type: string;
   uploaded_by: string;
   created_at: string;
+  version_number?: number;
+  superseded_by_id?: string | null;
   profiles?: unknown;
 }
 
