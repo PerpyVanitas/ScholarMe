@@ -180,6 +180,10 @@ Every rule here traces back to a specific, real problem found in this repo — n
 - When two features share identical database tables (e.g. `study_sets` and `study_set_items`), consolidate creation sheets, item editors, and import utilities around the unified data layer.
 - Study experience (Flashcards, Test, Learn) should be a post-creation mode choice rendered on the set page rather than requiring separate creation UIs.
 
+#### H5. UI Reachability Guardrail for Actions and Workflows
+- A backend server action, dialog component, or financial workflow (e.g. `requestPettyCashReplenishment()`, COI modals, approval dialogs) isn't done until it is demonstrably reachable from a real page UI in `app/`.
+- Never consider a feature complete if the server logic exists but no button or form on any page actually triggers it. Always wire the UI trigger in the same commit.
+
 ---
 
 ### Category I. Security baseline

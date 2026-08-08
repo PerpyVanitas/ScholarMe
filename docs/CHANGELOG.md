@@ -17,13 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Flag Escalation Cron Endpoint (`/api/cron/finance-escalate-flags`)**: Automated cron endpoint checking for active Yellow flags > 48 hours old and escalating them to Orange flags per Policy Section XII.
 - **3-Day Appeal Deadline Enforcement (`/api/v1/finance/investigations`)**: Rejection gate blocking investigation appeals submitted past 3 calendar days from flag issuance date per Section XIV.
 - **SCARDS Read-Only Locking (`finance-actions.ts`)**: Automatic `is_locked: true` flag on co-signing SCARDS reports, blocking overwrites and requiring new version records.
-- **Petty Cash Revolving Fund Replenishment (`finance-actions.ts`)**: ₱1,500 revolving fund replenishment flow restoring fund balance upon CoF verification.
-- **Wired Orphaned UI Components**:
-  - `SupplementalRequestDialog`: Integrated into `app/dashboard/finance/page.tsx` header for over-budget requests.
-  - `CoiDeclarationModal`: Integrated into budget request approval flow in `budget-requests-tab.tsx` with conflict abstention logic.
-  - `PinConfirmationModal`: Integrated into budget fund release flow requiring 4-digit PIN authentication.
-  - `WorkflowProgressTracker`: Integrated into request cards in `budget-requests-tab.tsx` rendering Section V lifecycle stages.
-- **Persisted Project Rules (`.agents/AGENTS.md`)**: Appended Rule C3 (Comprehensive Table Coverage in Supabase Unit Test Mocks) and Rule I3 (Strict Anti-Self-Approval & Anti-Self-Auditing Controls).
+- **Petty Cash Revolving Fund Replenishment UI (`petty-cash-tab.tsx`)**: Wired `requestPettyCashReplenishment()` server action into a dedicated replenishment request card inside `PettyCashTab` for treasurers/officers per Policy Section VI.
+- **Test Mode Distractor Deduplication & Minimum-Items Safeguard (`study-mode-tabs.tsx`)**:
+  - Added distractor deduplication against correct answer and other choices using `Set`.
+  - Added minimum 4-card requirement banner for Test mode to prevent degrading into self-answering single-choice questions.
+- **Persisted Project Rules (`.agents/AGENTS.md`)**: Appended Rule C3 (Supabase Test Mocks), Rule I3 (Anti-Self-Approval Controls), and Rule H5 (UI Reachability Guardrail for Actions and Workflows).
 - **Automated Test Suite (`features/finance/__tests__/finance-compliance.test.ts`)**: Vitest unit test suite validating amount validation, document numbering, and appeal window expiry.
 
 ## [2026-08-08] — Quiz/Flashcard Bug Fixes, Documentation Correction & Quizlet Unification

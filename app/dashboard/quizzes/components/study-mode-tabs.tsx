@@ -24,6 +24,7 @@ import {
   Shuffle,
   Sparkles,
   Trophy,
+  AlertCircle,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
@@ -181,14 +182,28 @@ export function StudyModeTabs({ studySet, onDuplicate }: StudyModeTabsProps) {
   // ----------------------------------------------------
   const generatedQuestions = useMemo(() => {
     return items.map((item, idx) => {
-      // Create distractor options from other cards' answers
-      const distractors = items
-        .filter((_, i) => i !== idx)
-        .map((other) => other.answer)
+      // Create deduplicated distractor options from other cards' answers
+      const uniqueDistractorPool = Array.from(
+        new Set(
+          items
+            .filter((_, i) => i !== idx)
+            .map((other) => other.answer.trim())
+            .filter(
+              (ans) =>
+                ans.length > 0 &&
+                ans.toLowerCase() !== item.answer.trim().toLowerCase(),
+            ),
+        ),
+      );
+
+      const shuffledDistractors = uniqueDistractorPool
         .sort(() => 0.5 - Math.random())
         .slice(0, 3);
 
-      const options = [item.answer, ...distractors].sort(() => 0.5 - Math.random());
+      const options = Array.from(
+        new Set([item.answer.trim(), ...shuffledDistractors]),
+      ).sort(() => 0.5 - Math.random());
+
       return {
         id: item.id,
         question: item.question,
@@ -549,7 +564,15 @@ export function StudyModeTabs({ studySet, onDuplicate }: StudyModeTabsProps) {
         {/* TAB 2: TEST MODE */}
         {/* ==================================================== */}
         <TabsContent value="test" className="space-y-6 pt-4">
-          {testSubmitted ? (
+          {items.length < 4 ? (
+            <Card className="p-8 text-center space-y-3 max-w-md mx-auto border-amber-500/30 bg-amber-500/5">
+              <AlertCircle className="h-10 w-10 text-amber-500 mx-auto" />
+              <h3 className="text-lg font-semibold">Test Mode Requires at Least 4 Cards</h3>
+              <p className="text-xs text-muted-foreground">
+                This study set currently has {items.length} {items.length === 1 ? "card" : "cards"}. Add at least {4 - items.length} more {4 - items.length === 1 ? "card" : "cards"} to generate a 4-option practice test.
+              </p>
+            </Card>
+          ) : testSubmitted ? (
             <Card className="p-8 text-center space-y-4 max-w-lg mx-auto">
               <Trophy className="h-12 w-12 text-amber-500 mx-auto animate-bounce" />
               <div className="space-y-1">

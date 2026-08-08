@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Receipt, FileText } from "lucide-react";
+import { Receipt, FileText, RefreshCw } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { ExportFinanceCsv } from "@/features/finance/components/finance-export-csv";
 import { PettyCash } from "../types";
@@ -18,6 +18,7 @@ import {
   createPettyCash,
   submitPettyCashForReview,
   approvePettyCash,
+  requestPettyCashReplenishment,
 } from "@/features/finance/actions/finance-actions";
 
 import { FinanceVendor } from "@/lib/types";
@@ -101,6 +102,49 @@ export function PettyCashTab({ canSubmit, canReview, pettyCash, vendors }: Props
                   Save Draft
                 </SubmitButton>
               </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {canSubmit && (
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <RefreshCw className="h-4 w-4 text-amber-600" />
+              Revolving Fund Replenishment (Policy Section VI)
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Request replenishment to restore the Petty Cash Revolving Fund back to the ₱1,500 maximum cap upon CoF verification.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form action={requestPettyCashReplenishment} className="flex flex-col sm:flex-row items-end gap-3 max-w-lg">
+              <div className="flex-1 w-full space-y-1">
+                <Label htmlFor="spent_amount" className="text-xs">
+                  Spent Amount to Replenish (₱ Max: 1,500)
+                </Label>
+                <Input
+                  id="spent_amount"
+                  type="number"
+                  name="spent_amount"
+                  placeholder="Enter total spent..."
+                  max="1500"
+                  min="1"
+                  step="0.01"
+                  className="h-9 text-xs font-mono"
+                  required
+                />
+              </div>
+              <SubmitButton
+                type="submit"
+                variant="default"
+                size="sm"
+                loadingText="Requesting..."
+                className="bg-amber-600 hover:bg-amber-700 text-white w-full sm:w-auto"
+              >
+                Request Replenishment
+              </SubmitButton>
             </form>
           </CardContent>
         </Card>
