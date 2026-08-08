@@ -5,6 +5,56 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2026-08-08] — Finance System Audit & Core Compliance Controls Implementation
+
+### Added
+- **Anti-Self-Approval Enforcement (`finance-actions.ts`)**: Strict anti-fraud check blocking officers from approving budget requests, petty cash requests, or co-signing SCARDS reports they submitted or prepared (`existing.submitted_by === user.id`), regardless of holding `administrator` or `super_admin` permissions.
+- **Mandatory Liquidation Receipt Check (`finance-actions.ts`)**: Mandatory validation requiring `receiptUrls.length > 0` on liquidation submissions, blocking zero-receipt submissions and instructing submitters to file a Lost Receipt Affidavit.
+- **Monetary Amount Validation Utility (`features/finance/utils/document-number.ts`)**: `isValidAmount(amount)` validator blocking negative, zero, NaN, or non-numeric monetary amounts across all financial submit server actions.
+- **Policy Document Number Generator (`features/finance/utils/document-number.ts`)**: `generateDocumentNumber` utility generating policy-compliant document IDs (`[TYPE]_[PROJECT]_[SUBMITTER]_[DATE]`) for Budget Requests, Petty Cash, Liquidations, and SCARDS reports.
+- **Executive Approval PIN Verification (`finance-pin-actions.ts`)**: Server actions providing bcrypt-hashed 4-digit Executive PIN authorization fallback to default `1234` for critical fund releases.
+- **Surprise Cash Verification Audit (`surprise-verification-modal.tsx` & `/api/v1/finance/surprise-verification`)**: Modal and API route allowing Auditors to conduct unannounced physical cash counts for Petty Cash and Revenue Collections per Policy Spec 11.1, auto-flagging variances.
+- **Flag Escalation Cron Endpoint (`/api/cron/finance-escalate-flags`)**: Automated cron endpoint checking for active Yellow flags > 48 hours old and escalating them to Orange flags per Policy Section XII.
+- **3-Day Appeal Deadline Enforcement (`/api/v1/finance/investigations`)**: Rejection gate blocking investigation appeals submitted past 3 calendar days from flag issuance date per Section XIV.
+- **SCARDS Read-Only Locking (`finance-actions.ts`)**: Automatic `is_locked: true` flag on co-signing SCARDS reports, blocking overwrites and requiring new version records.
+- **Petty Cash Revolving Fund Replenishment (`finance-actions.ts`)**: ₱1,500 revolving fund replenishment flow restoring fund balance upon CoF verification.
+- **Wired Orphaned UI Components**:
+  - `SupplementalRequestDialog`: Integrated into `app/dashboard/finance/page.tsx` header for over-budget requests.
+  - `CoiDeclarationModal`: Integrated into budget request approval flow in `budget-requests-tab.tsx` with conflict abstention logic.
+  - `PinConfirmationModal`: Integrated into budget fund release flow requiring 4-digit PIN authentication.
+  - `WorkflowProgressTracker`: Integrated into request cards in `budget-requests-tab.tsx` rendering Section V lifecycle stages.
+- **Persisted Project Rules (`.agents/AGENTS.md`)**: Appended Rule C3 (Comprehensive Table Coverage in Supabase Unit Test Mocks) and Rule I3 (Strict Anti-Self-Approval & Anti-Self-Auditing Controls).
+- **Automated Test Suite (`features/finance/__tests__/finance-compliance.test.ts`)**: Vitest unit test suite validating amount validation, document numbering, and appeal window expiry.
+
+## [2026-08-08] — Quiz/Flashcard Bug Fixes, Documentation Correction & Quizlet Unification
+
+### Fixed
+- **True/False Question Type Overwriting Bug (`create-quiz-sheet.tsx`)**: Fixed operator precedence logic `type: item.type || (derivedType === "mixed" ? "multiple_choice" : derivedType)` so `true_false` questions retain their correct item type.
+- **Flashcard Validation & Naming Bug (`create-flashcards-sheet.tsx`)**: Renamed `handleCreateQuiz` handler to `handleCreateFlashcards` and added validation to prevent submitting empty questions/answers.
+- **Documentation Path Regression (`.agents/AGENTS.md`)**: Updated all stale `documentation/` path references in `.agents/AGENTS.md` to point to `docs/`. Merged `documentation/CHANGELOG.md` and moved `web-llm-setup.md` to `docs/`, removing the redundant `documentation/` folder.
+
+### Added
+- **Unified Quizlet-Style Study Set Creator (`create-study-set-sheet.tsx`)**: Unified sheet consolidating Quiz and Flashcard creation into a single workflow with manual grid entry, AI prompt generation, and document resource extraction.
+- **Bulk Quizlet Paste Importer (`paste-import-dialog.tsx`)**: Added bulk text paste parser supporting Quizlet standard tab/newline formatting as well as custom card/row delimiters.
+- **Unified Study Set Item Editor (`study-set-items-editor.tsx`)**: Shared editor supporting inline card editing, per-card deletion, reordering handles, search filtering within sets, distractor options editing, and image occlusion integration.
+- **Unified Interactive Study Suite (`study-mode-tabs.tsx`)**: Seamless mode switcher for Study Sets offering 3 modes:
+  - **Flashcards**: Interactive flip-card viewer with full keyboard shortcuts (Space, Arrows, S to star), touch swipe support, speech synthesis reader, and position auto-save.
+  - **Test Mode**: Client-side practice test generator using set items as distractor choices with instant feedback and score reporting.
+  - **Learn Mode**: Adaptive spaced repetition cycle where missed cards repeat until 100% mastered, syncing weak topics into student profiles.
+  - **Study Tools**: Set cloning and printable study sheet exporter.
+- **Automated Regression Coverage (`quiz-type-preservation.test.ts`)**: Colocated Vitest regression tests asserting `true_false` item preservation.
+
+## [2026-08-05]
+
+### Added
+- Added comprehensive Web LLM / AI Configuration guide (`docs/web-llm-setup.md`) to document Vertex AI troubleshooting, IAM roles, fallback logic, and global endpoints.
+- Refactored Quiz and Flashcard generation to use block-based structured output.
+- Added Candidate Models Fallback for Quiz/Flashcard generation endpoints (gemini-3.6-flash gracefully failing over to 3.5-flash).
+- Updated Quiz and Flashcard Creation sheets to parse AI output directly to state instead of string parsing.
+- Added "Randomize Choices" toggle to Quiz Study Page for advanced difficulty.
+- Enhanced Quiz/Flashcard UI to render block properties directly (options via RadioGroup, explanations).
+- Fixed TypeScript build type error in `create-quiz-sheet.tsx` by updating `StructuredQuizItem` interface to permit nullable `options`/`accepted_answers`/`responses` and sanitizing `options` property mapping.
+
 ## [2026-08-04] — AI Development Ruleset v2 Update
 
 ### Added

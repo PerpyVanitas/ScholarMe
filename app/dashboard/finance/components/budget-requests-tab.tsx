@@ -24,6 +24,10 @@ import {
 } from "@/features/finance/actions/finance-actions";
 
 import { FinanceVendor } from "@/lib/types";
+import { CoiDeclarationModal } from "@/features/finance/components/coi-declaration-modal";
+import { PinConfirmationModal } from "@/features/finance/components/pin-confirmation-modal";
+import { WorkflowProgressTracker, WorkflowStage } from "@/features/finance/components/workflow-progress-tracker";
+import { toast } from "sonner";
 
 interface Props {
   canSubmit: boolean;
@@ -31,6 +35,24 @@ interface Props {
   canApprove: boolean;
   budgetReqs: BudgetRequest[] | null;
   vendors?: FinanceVendor[];
+}
+
+function getWorkflowStage(status: string): WorkflowStage {
+  switch (status) {
+    case "draft":
+    case "pending":
+      return "submission";
+    case "finance_review":
+      return "cof_review";
+    case "president_approved":
+      return "president_approval";
+    case "released":
+      return "fund_release";
+    case "rejected":
+      return "archived";
+    default:
+      return "submission";
+  }
 }
 
 export function BudgetRequestsTab({
@@ -42,6 +64,16 @@ export function BudgetRequestsTab({
 }: Props) {
   const [isDirty, setIsDirty] = useState(false);
 
+  // Modal States
+  const [coiOpen, setCoiOpen] = useState(false);
+  const [pinOpen, setPinOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{
+    requestId: string;
+    title: string;
+    amount: number;
+    nextStatus: string;
+  } | null>(null);
+
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDirty) {
@@ -52,6 +84,45 @@ export function BudgetRequestsTab({
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty]);
+
+  const handleStartApprovalFlow = (
+    requestId: string,
+    title: string,
+    amount: number,
+    nextStatus: string,
+  ) => {
+    setPendingAction({ requestId, title, amount, nextStatus });
+    setCoiOpen(true);
+  };
+
+  const handleCoiConfirm = (hasConflict: boolean, reason?: string) => {
+    if (hasConflict) {
+      toast.warning(
+        `Conflict declared (${reason || "Personal conflict"}). You have been abstained from approving this transaction. Reassigned to next officer.`,
+      );
+      setPendingAction(null);
+      return;
+    }
+    // Proceed to Executive PIN Confirmation
+    setPinOpen(true);
+  };
+
+  const handlePinConfirm = async () => {
+    if (!pendingAction) return;
+    try {
+      await updateBudgetRequestStatus(
+        pendingAction.requestId,
+        pendingAction.nextStatus,
+      );
+      toast.success("Transaction approval confirmed with digital signature");
+      setPendingAction(null);
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to approve request",
+      );
+      throw err;
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -174,8 +245,13 @@ export function BudgetRequestsTab({
                   </a>
                 )}
 
+                {/* Lifecycle Progress Tracker */}
+                <div className="pt-2 border-t mt-4">
+                  <WorkflowProgressTracker currentStage={getWorkflowStage(req.status)} />
+                </div>
+
                 {req.status === "draft" && (
-                  <div className="flex gap-2 mt-4">
+                  <div className="flex gap-2 mt-2">
                     <form
                       action={async () => {
                         await submitBudgetRequestForReview(req.id);
@@ -192,23 +268,21 @@ export function BudgetRequestsTab({
                   </div>
                 )}
                 {canReview && req.status === "pending" && (
-                  <div className="flex gap-2 mt-4">
-                    <form
-                      action={async () => {
-                        await updateBudgetRequestStatus(
+                  <div className="flex gap-2 mt-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        handleStartApprovalFlow(
                           req.id,
+                          req.activity_title,
+                          Number(req.amount),
                           "finance_review",
-                        );
-                      }}
+                        )
+                      }
                     >
-                      <SubmitButton
-                        size="sm"
-                        variant="outline"
-                        loadingText="Starting..."
-                      >
-                        Start Review
-                      </SubmitButton>
-                    </form>
+                      Start CoF Review
+                    </Button>
                     <form
                       action={async () => {
                         await updateBudgetRequestStatus(req.id, "rejected");
@@ -225,23 +299,21 @@ export function BudgetRequestsTab({
                   </div>
                 )}
                 {canApprove && req.status === "finance_review" && (
-                  <div className="flex gap-2 mt-4">
-                    <form
-                      action={async () => {
-                        await updateBudgetRequestStatus(
+                  <div className="flex gap-2 mt-2">
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() =>
+                        handleStartApprovalFlow(
                           req.id,
+                          req.activity_title,
+                          Number(req.amount),
                           "president_approved",
-                        );
-                      }}
+                        )
+                      }
                     >
-                      <SubmitButton
-                        size="sm"
-                        variant="default"
-                        loadingText="Approving..."
-                      >
-                        President Approve
-                      </SubmitButton>
-                    </form>
+                      President Approve
+                    </Button>
                     <form
                       action={async () => {
                         await updateBudgetRequestStatus(req.id, "rejected");
@@ -258,20 +330,21 @@ export function BudgetRequestsTab({
                   </div>
                 )}
                 {canReview && req.status === "president_approved" && (
-                  <div className="flex gap-2 mt-4">
-                    <form
-                      action={async () => {
-                        await updateBudgetRequestStatus(req.id, "released");
-                      }}
+                  <div className="flex gap-2 mt-2">
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() =>
+                        handleStartApprovalFlow(
+                          req.id,
+                          req.activity_title,
+                          Number(req.amount),
+                          "released",
+                        )
+                      }
                     >
-                      <SubmitButton
-                        size="sm"
-                        variant="default"
-                        loadingText="Releasing..."
-                      >
-                        Release Funds
-                      </SubmitButton>
-                    </form>
+                      Sign & Release Funds
+                    </Button>
                   </div>
                 )}
               </CardContent>
@@ -279,6 +352,25 @@ export function BudgetRequestsTab({
           ))}
         </div>
       )}
+
+      {/* COI & Executive PIN Modals */}
+      <CoiDeclarationModal
+        isOpen={coiOpen}
+        onClose={() => {
+          setCoiOpen(false);
+          setPendingAction(null);
+        }}
+        onConfirm={handleCoiConfirm}
+        transactionTitle={pendingAction?.title || "Budget Request"}
+      />
+
+      <PinConfirmationModal
+        open={pinOpen}
+        onOpenChange={setPinOpen}
+        title={pendingAction?.title || "Budget Request"}
+        amount={pendingAction?.amount || 0}
+        onConfirm={handlePinConfirm}
+      />
     </div>
   );
 }

@@ -195,8 +195,8 @@ export function CreateQuizSheet({
         question: item.question || "",
         answer: item.answer || "",
         options: item.options || [],
-        type: item.type || derivedType === "mixed" ? "multiple_choice" : derivedType,
-        item_type: item.type || derivedType === "mixed" ? "multiple_choice" : derivedType,
+        type: item.type || (derivedType === "mixed" ? "multiple_choice" : derivedType),
+        item_type: item.type || (derivedType === "mixed" ? "multiple_choice" : derivedType),
       }));
 
       setStructuredItems((prev) => [...prev, ...newItems]);

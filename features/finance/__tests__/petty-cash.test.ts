@@ -52,6 +52,16 @@ describe("Finance Actions - Petty Cash", () => {
           insert: insertMock,
         };
       }
+      if (table === "profiles") {
+        return {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          single: vi.fn().mockResolvedValue({
+            data: { full_name: "Test User" },
+            error: null,
+          }),
+        };
+      }
       return {};
     });
 

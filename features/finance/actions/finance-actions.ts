@@ -11,6 +11,10 @@ import {
   PRESIDENT_APPROVAL_ROLES,
 } from "@/lib/utils/roles";
 import { isValidFileType, roundCurrency } from "../utils";
+import {
+  generateDocumentNumber,
+  isValidAmount,
+} from "../utils/document-number";
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
@@ -109,6 +113,11 @@ export async function createBudgetRequest(formData: FormData) {
   const activity_title = formData.get("activity_title") as string;
   const objectives = formData.get("objectives") as string;
   const amount = parseFloat(formData.get("amount") as string);
+
+  if (!isValidAmount(amount)) {
+    throw new Error("Invalid monetary amount. Amount must be a positive number.");
+  }
+
   const breakdownStr = formData.get("breakdown") as string;
   const attachment = formData.get("attachment") as File | null;
   const vendor_id = formData.get("vendor_id") as string | null;
@@ -137,6 +146,18 @@ export async function createBudgetRequest(formData: FormData) {
   const actionType = formData.get("action_type") as string;
   const status = actionType === "draft" ? "draft" : "pending";
 
+  const { data: userProfile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .single();
+
+  const docNumber = generateDocumentNumber(
+    "BUDGET",
+    activity_title,
+    userProfile?.full_name || "Officer",
+  );
+
   const { error } = await supabase.from("finance_budget_requests").insert({
     activity_title,
     objectives,
@@ -146,6 +167,7 @@ export async function createBudgetRequest(formData: FormData) {
     vendor_id: vendor_id || null,
     submitted_by: user.id,
     status,
+    document_number: docNumber,
   });
 
   if (error) throw new Error(error.message);
@@ -167,11 +189,18 @@ export async function updateBudgetRequestStatus(
 
   const { data: existing, error: fetchError } = await supabase
     .from("finance_budget_requests")
-    .select("status, amount, activity_title, profiles(email)")
+    .select("status, amount, activity_title, submitted_by, profiles(email)")
     .eq("id", requestId)
     .single();
   if (fetchError || !existing) {
     throw new Error(fetchError?.message || "Budget request not found");
+  }
+
+  // Anti-self-approval check (Section IV compliance control)
+  if (existing.submitted_by === user.id && status !== "draft") {
+    throw new Error(
+      "Self-approval is strictly prohibited. An officer cannot approve their own budget request.",
+    );
   }
 
   const currentStatus = existing.status as string;
@@ -273,6 +302,10 @@ export async function createPettyCash(formData: FormData) {
   if (!canSubmit) throw new Error("Unauthorized to submit petty cash");
 
   const amount = parseFloat(formData.get("amount") as string);
+  if (!isValidAmount(amount)) {
+    throw new Error("Invalid monetary amount. Amount must be a positive number.");
+  }
+
   let justification = formData.get("justification") as string;
   const attachment = formData.get("attachment") as File | null;
   const vendor_id = formData.get("vendor_id") as string | null;
@@ -305,13 +338,24 @@ export async function createPettyCash(formData: FormData) {
     recentRequests?.reduce((sum, req) => sum + Number(req.amount), 0) || 0;
 
   const actionType = formData.get("action_type") as string;
-  const initialStatus = actionType === "draft" ? "draft" : "pending";
-  const status = recentTotal + amount > 300 ? initialStatus : initialStatus; // Logic to flag could be modified if needed, but we keep the status as is, justification already flagged.
+  const status = actionType === "draft" ? "draft" : "pending";
 
   if (recentTotal + amount > 300) {
     // Flag for auditor by prepending to justification
     justification = `[FLAGGED: >300 within 24h] ` + justification;
   }
+
+  const { data: userProfile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .single();
+
+  const docNumber = generateDocumentNumber(
+    "PETTYCASH",
+    justification.slice(0, 20),
+    userProfile?.full_name || "Officer",
+  );
 
   const { error } = await supabase.from("finance_petty_cash").insert({
     amount,
@@ -320,6 +364,7 @@ export async function createPettyCash(formData: FormData) {
     vendor_id: vendor_id || null,
     submitted_by: user.id,
     status,
+    document_number: docNumber,
   });
 
   if (error) throw new Error(error.message);
@@ -338,6 +383,18 @@ export async function approvePettyCash(
 
   const canReview = await checkCanReviewFinance(supabase, user.id);
   if (!canReview) throw new Error("Unauthorized");
+
+  const { data: existing } = await supabase
+    .from("finance_petty_cash")
+    .select("submitted_by")
+    .eq("id", id)
+    .single();
+
+  if (existing && existing.submitted_by === user.id) {
+    throw new Error(
+      "Self-approval is strictly prohibited. An officer cannot approve their own petty cash request.",
+    );
+  }
 
   const { error } = await supabase
     .from("finance_petty_cash")
@@ -406,7 +463,7 @@ export async function submitLiquidation(formData: FormData) {
   // Check if it's late (e.g. > 7 days since request created or released)
   const { data: reqData } = await supabase
     .from("finance_budget_requests")
-    .select("created_at, status")
+    .select("created_at, status, activity_title")
     .eq("id", requestId)
     .single();
 
@@ -457,6 +514,25 @@ export async function submitLiquidation(formData: FormData) {
     }
   }
 
+  // Mandatory Receipt Check (Section VI Compliance Rule)
+  if (receiptUrls.length === 0) {
+    throw new Error(
+      "At least one receipt is required for liquidation, or file a Lost Receipt Affidavit instead.",
+    );
+  }
+
+  const { data: userProfile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .single();
+
+  const docNumber = generateDocumentNumber(
+    "LIQUIDATION",
+    reqData.activity_title || "Activity",
+    userProfile?.full_name || "Officer",
+  );
+
   const { error } = await supabase.from("finance_liquidations").insert({
     request_id: requestId,
     receipt_urls: receiptUrls,
@@ -464,6 +540,7 @@ export async function submitLiquidation(formData: FormData) {
     submitted_by: user.id,
     is_late: isLate,
     returned_amount: returnedAmount,
+    document_number: docNumber,
   });
 
   if (error) throw new Error(error.message);
@@ -478,6 +555,11 @@ export async function saveScards(formData: FormData) {
   const receipts = parseFloat(formData.get("receipts_total") as string) || 0;
   const disbursements =
     parseFloat(formData.get("disbursements_total") as string) || 0;
+
+  if (receipts < 0 || disbursements < 0) {
+    throw new Error("SCARDS totals must be non-negative monetary amounts.");
+  }
+
   const attachment = formData.get("attachment") as File | null;
   let attachmentUrl = null;
   const status = "draft";
@@ -505,16 +587,34 @@ export async function saveScards(formData: FormData) {
   // Check existing version
   const { data: existing } = await supabase
     .from("finance_scards")
-    .select("version")
+    .select("version, is_locked, status")
     .eq("event_id", eventId)
     .order("version", { ascending: false })
     .limit(1)
     .single();
 
+  if (existing?.is_locked || existing?.status === "cosigned") {
+    throw new Error(
+      "Co-signed SCARDS reports are locked and cannot be overwritten. A new version must be created.",
+    );
+  }
+
   let newVersion = 1;
   if (existing) {
     newVersion = existing.version + 1;
   }
+
+  const { data: userProfile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .single();
+
+  const docNumber = generateDocumentNumber(
+    "SCARDS",
+    eventId,
+    userProfile?.full_name || "Auditor",
+  );
 
   const { error } = await supabase.from("finance_scards").insert({
     event_id: eventId,
@@ -524,6 +624,8 @@ export async function saveScards(formData: FormData) {
     status,
     attachment_url: attachmentUrl,
     version: newVersion,
+    document_number: docNumber,
+    is_locked: false,
   });
 
   if (error) throw new Error(error.message);
@@ -583,9 +685,25 @@ export async function updateScardsReport(formData: FormData) {
   if (!canReview) throw new Error("Unauthorized to update SCARDS");
 
   const scardId = formData.get("scard_id") as string;
+
+  const { data: existing } = await supabase
+    .from("finance_scards")
+    .select("is_locked, status")
+    .eq("id", scardId)
+    .single();
+
+  if (existing?.is_locked || existing?.status === "cosigned") {
+    throw new Error("Co-signed SCARDS reports are read-only and locked from edits.");
+  }
+
   const receipts = parseFloat(formData.get("receipts_total") as string) || 0;
   const disbursements =
     parseFloat(formData.get("disbursements_total") as string) || 0;
+
+  if (receipts < 0 || disbursements < 0) {
+    throw new Error("SCARDS totals must be non-negative monetary amounts.");
+  }
+
   const attachment = formData.get("attachment") as File | null;
   const balance = roundCurrency(receipts - disbursements);
 
@@ -627,14 +745,72 @@ export async function cosignScards(scardId: string) {
   const canAudit = await checkCanAuditFinance(supabase, user.id);
   if (!canAudit) throw new Error("Unauthorized to co-sign");
 
+  const { data: scard } = await supabase
+    .from("finance_scards")
+    .select("submitted_by, prepared_by")
+    .eq("id", scardId)
+    .single();
+
+  if (scard && (scard.submitted_by === user.id || scard.prepared_by === user.id)) {
+    throw new Error(
+      "Self-auditing is strictly prohibited. You cannot co-sign a SCARDS report you prepared or submitted.",
+    );
+  }
+
   const { error } = await supabase
     .from("finance_scards")
     .update({
       status: "cosigned",
+      is_locked: true,
       cosigned_by: user.id,
       cosigned_at: new Date().toISOString(),
     })
     .eq("id", scardId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/dashboard/finance");
+}
+
+/**
+ * Petty Cash Revolving Fund Replenishment (Policy Section VI)
+ * Replenishes fund to exactly ₱1,500 upon CoF verification of submitted liquidations.
+ */
+export async function requestPettyCashReplenishment(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const canSubmit = await checkCanSubmitFinance(supabase, user.id);
+  if (!canSubmit) throw new Error("Unauthorized");
+
+  const spentAmount = parseFloat(formData.get("spent_amount") as string);
+  if (!isValidAmount(spentAmount) || spentAmount > 1500) {
+    throw new Error("Replenishment amount cannot exceed revolving fund cap of ₱1,500.");
+  }
+
+  const justification = `[PETTY CASH REPLENISHMENT] Restore fund by ₱${spentAmount.toFixed(2)} (Cap: ₱1,500)`;
+
+  const { data: userProfile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .single();
+
+  const docNumber = generateDocumentNumber(
+    "PETTYCASH",
+    "REPLENISHMENT",
+    userProfile?.full_name || "Treasurer",
+  );
+
+  const { error } = await supabase.from("finance_petty_cash").insert({
+    amount: spentAmount,
+    justification,
+    submitted_by: user.id,
+    status: "pending",
+    document_number: docNumber,
+  });
 
   if (error) throw new Error(error.message);
   revalidatePath("/dashboard/finance");

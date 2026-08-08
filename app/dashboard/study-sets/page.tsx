@@ -40,18 +40,10 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { ErrorBoundary } from "@/components/error-boundary";
 import dynamic from "next/dynamic";
 
-const CreateQuizSheet = dynamic(
+const CreateStudySetSheet = dynamic(
   () =>
-    import("../quizzes/components/create-quiz-sheet").then(
-      (mod) => mod.CreateQuizSheet,
-    ),
-  { ssr: false },
-);
-
-const CreateFlashcardsSheet = dynamic(
-  () =>
-    import("../flashcards/components/create-flashcards-sheet").then(
-      (mod) => mod.CreateFlashcardsSheet,
+    import("../quizzes/components/create-study-set-sheet").then(
+      (mod) => mod.CreateStudySetSheet,
     ),
   { ssr: false },
 );
@@ -396,14 +388,13 @@ function StudySetsContent() {
         ))}
       </Tabs>
 
-      <CreateQuizSheet
-        open={createQuizOpen}
-        onOpenChange={setCreateQuizOpen}
-        onSuccess={loadStudySets}
-      />
-      <CreateFlashcardsSheet
-        open={createFlashcardsOpen}
-        onOpenChange={setCreateFlashcardsOpen}
+      <CreateStudySetSheet
+        open={createQuizOpen || createFlashcardsOpen}
+        onOpenChange={(open) => {
+          setCreateQuizOpen(open);
+          setCreateFlashcardsOpen(open);
+        }}
+        defaultType={createFlashcardsOpen ? "flashcard" : "multiple_choice"}
         onSuccess={loadStudySets}
       />
 

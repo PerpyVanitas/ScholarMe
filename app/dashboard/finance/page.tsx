@@ -24,6 +24,8 @@ import { InvestigationsTab } from "./components/investigations-tab";
 
 import { EmergencyReimbursementDialog } from "@/features/finance/components/emergency-reimbursement-dialog";
 import { FinancialReportExporter } from "@/features/finance/components/financial-report-exporter";
+import { SupplementalRequestDialog } from "@/features/finance/components/supplemental-request-dialog";
+import { SurpriseVerificationModal } from "@/features/finance/components/surprise-verification-modal";
 
 // Types
 import {
@@ -166,6 +168,12 @@ export default async function FinanceDashboard() {
 
         <div className="flex flex-wrap items-center gap-3">
           {canSubmit && <EmergencyReimbursementDialog />}
+          {canSubmit && (
+            <SupplementalRequestDialog
+              approvedRequests={(approvedRequests || []) as BudgetRequest[]}
+            />
+          )}
+          {(canAudit || canReview) && <SurpriseVerificationModal />}
           <FinancialReportExporter
             budgetReqs={budgetReqs as BudgetRequest[] | null}
             scards={scards as Scard[] | null}

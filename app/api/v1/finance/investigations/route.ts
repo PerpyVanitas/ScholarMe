@@ -62,6 +62,30 @@ export async function POST(req: NextRequest) {
     }
 
     const { flag_id, report_id, investigator_id, recommendation, meeting_notes, status } = parseResult.data;
+
+    // Enforce Policy Section XIV: Appeals must be submitted within 3 calendar days of flag issuance
+    if (flag_id) {
+      const { data: flagData } = await supabase
+        .from("finance_compliance_flags")
+        .select("date_issued, created_at")
+        .eq("id", flag_id)
+        .single();
+
+      if (flagData) {
+        const flagTime = new Date(flagData.date_issued || flagData.created_at).getTime();
+        const diffDays = (Date.now() - flagTime) / (1000 * 60 * 60 * 24);
+        if (diffDays > 3) {
+          return NextResponse.json(
+            {
+              error:
+                "Appeal window expired. Section XIV requires appeals to be filed within three (3) calendar days of flag issuance.",
+            },
+            { status: 400 },
+          );
+        }
+      }
+    }
+
     const case_number = `INV-${Date.now().toString().slice(-6)}`;
 
     const { data: investigationCase, error } = await supabase

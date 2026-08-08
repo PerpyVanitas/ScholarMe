@@ -2,8 +2,8 @@
 
 ## CHANGELOG Management
 
-- **Always Read the Changelog:** At the start of every new chat or when investigating the state of the project, you MUST read the `documentation/CHANGELOG.md` file located in the workspace to understand recent updates.
-- **Always Update the Changelog:** Whenever you complete a feature, fix a bug, or make significant changes to the codebase, you MUST append a detailed entry to `documentation/CHANGELOG.md` before finishing your task. Format it cleanly with the date and a summary of what was accomplished.
+- **Always Read the Changelog:** At the start of every new chat or when investigating the state of the project, you MUST read the `docs/CHANGELOG.md` file located in the workspace to understand recent updates.
+- **Always Update the Changelog:** Whenever you complete a feature, fix a bug, or make significant changes to the codebase, you MUST append a detailed entry to `docs/CHANGELOG.md` before finishing your task. Format it cleanly with the date and a summary of what was accomplished.
 
 ## Task Iteration
 
@@ -13,9 +13,9 @@
 
 At the end of every instruction implementation cycle (e.g., when finishing a task, fixing a bug, or implementing a new feature), you MUST maintain and review these documentation files:
 
-- **documentation/map.md**: This file contains a comprehensive list of all possible interactions a user has. You must review this list to ensure all interactions are still working according to expectations.
-- **documentation/schema.md**: This file contains the current expected version of the database schema. You must keep this updated so it can be easily compared against the actual schema in the database.
-- **documentation/rbac.md**: This file contains the authoritative access control rules. Keep it updated if roles change.
+- **docs/map.md**: This file contains a comprehensive list of all possible interactions a user has. You must review this list to ensure all interactions are still working according to expectations.
+- **docs/schema.md**: This file contains the current expected version of the database schema. You must keep this updated so it can be easily compared against the actual schema in the database.
+- **docs/rbac.md**: This file contains the authoritative access control rules. Keep it updated if roles change.
 
 Always review and update these documentation files before concluding your work and presenting the final walkthrough.
 
@@ -96,6 +96,10 @@ Every rule here traces back to a specific, real problem found in this repo — n
 - If a coverage threshold change is needed, state explicitly in the PR why the number is changing — don't silently bump it.
 - Finance, auth, security, and AI-generation code should be held to a materially higher bar than the global average.
 
+#### C3. Comprehensive Table Coverage in Supabase Unit Test Mocks
+- When modifying server actions or routes that fetch auxiliary table data (e.g. `profiles` for submitter metadata, `finance_compliance_flags` for deadlines), update corresponding unit test mocks (`mockSupabase.from`) to handle all queried table names.
+- Supabase test mocks should either explicitly handle each queried table or provide a safe chainable default mock (`select().eq().single()`) to prevent `TypeError: supabase.from(...).select is not a function` during test runs.
+
 ---
 
 ### Category D. CI/CD must be trustworthy
@@ -140,6 +144,10 @@ Every rule here traces back to a specific, real problem found in this repo — n
 - Before naming a new top-level directory, check whether the name is already used elsewhere for something different — pick something unambiguous on its own.
 - Follow the existing migration filename pattern (`YYYYMMDDHHMMSS_description.sql`) exactly.
 
+#### F3. Canonical documentation directory is `docs/`
+- All documentation, runbooks, schemas, and changelogs MUST reside strictly in `docs/` (e.g. `docs/CHANGELOG.md`, `docs/map.md`, `docs/schema.md`).
+- NEVER create or write to a top-level `documentation/` directory. If found, merge its contents into `docs/` and remove the directory immediately.
+
 ---
 
 ### Category G. Error handling & resilience
@@ -168,6 +176,10 @@ Every rule here traces back to a specific, real problem found in this repo — n
 - Any delete/remove action must go through a confirmation dialog before executing — reuse the existing `AlertDialog` pattern already implemented correctly in `user-delete-dialog.tsx`.
 - For lower-stakes, easily-reversible actions (archiving, leaving a group, dismissing a notification), prefer a toast-with-undo over a blocking confirmation dialog.
 
+#### H4. Unified creation for shared data structures
+- When two features share identical database tables (e.g. `study_sets` and `study_set_items`), consolidate creation sheets, item editors, and import utilities around the unified data layer.
+- Study experience (Flashcards, Test, Learn) should be a post-creation mode choice rendered on the set page rather than requiring separate creation UIs.
+
 ---
 
 ### Category I. Security baseline
@@ -179,6 +191,11 @@ Every rule here traces back to a specific, real problem found in this repo — n
 #### I2. Don't downgrade a working security or validation gate to make a build pass
 - If a CI security gate (dependency audit, secret scan, schema validation) is blocking a merge, fix the actual issue it's flagging — never loosen the gate itself as a shortcut.
 
+#### I3. Strict Anti-Self-Approval & Anti-Self-Auditing Controls
+- In financial, approval, or auditing workflows, role checks alone (`administrator`, `super_admin`, `finance_manager`) are NOT sufficient to authorize a mutation.
+- Every server action or API handler approving budgets, releasing funds, authorizing petty cash, or co-signing audit reports MUST perform an explicit identity check comparing `user.id` against `submitted_by` / `prepared_by`.
+- If `existing.submitted_by === user.id` or `existing.prepared_by === user.id`, the action MUST be rejected with a policy error, regardless of the user's role tier.
+
 ---
 
 ### Category J. Performance & caching
@@ -186,4 +203,19 @@ Every rule here traces back to a specific, real problem found in this repo — n
 #### J1. Cache read-heavy, low-churn responses
 - When building or touching a route that serves shared, infrequently-changing data, add appropriate `Cache-Control`/`revalidate` headers.
 - Never cache anything user-specific or frequently-mutating (finance, messages, timesheets) — this rule is specifically for shared, low-churn reads.
+
+---
+
+### Category K. Code logic & precedence
+
+#### K1. Parenthesize ternary expressions when combined with logical OR
+- When using logical OR (`||`) with a conditional ternary operator (`? :`) for property fallback logic, ALWAYS parenthesize the ternary expression:
+  ```ts
+  // CORRECT:
+  type: item.type || (derivedType === "mixed" ? "multiple_choice" : derivedType)
+  
+  // INCORRECT (evaluates as (item.type || derivedType === "mixed") ? ... which overwrites valid truthy item.type values):
+  type: item.type || derivedType === "mixed" ? "multiple_choice" : derivedType
+  ```
+
 

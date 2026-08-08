@@ -299,7 +299,7 @@ export function CreateFlashcardsSheet({
     }
   };
 
-  const handleCreateQuiz = async (e: React.FormEvent) => {
+  const handleCreateFlashcards = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (
@@ -317,8 +317,8 @@ export function CreateFlashcardsSheet({
 
       if (structuredItems.length > 0) {
         items = structuredItems.map((item) => ({
-          question: item.front || item.question || "",
-          answer: item.back || item.answer || "",
+          question: (item.front || item.question || "").trim(),
+          answer: (item.back || item.answer || "").trim(),
           item_type: "flashcard",
         }));
       } else {
@@ -342,6 +342,13 @@ export function CreateFlashcardsSheet({
 
       if (items.length === 0) {
         toast.error("Please add at least one flashcard");
+        setCreating(false);
+        return;
+      }
+
+      const invalidItem = items.find((item) => !item.question || !item.answer);
+      if (invalidItem) {
+        toast.error("Flashcards cannot have an empty question or answer");
         setCreating(false);
         return;
       }
@@ -402,7 +409,7 @@ export function CreateFlashcardsSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <form onSubmit={handleCreateQuiz} className="space-y-6">
+        <form onSubmit={handleCreateFlashcards} className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>
