@@ -39,7 +39,7 @@ export const XP_AWARDS = {
   // Profile
   PROFILE_COMPLETED: 25,
   REFERRAL_SENT: 30,
-  DAILY_LOGIN: 5,
+  DAILY_LOGIN: 50,
 
   // Secrets
   SECRET_EGG_FOUND: 100,

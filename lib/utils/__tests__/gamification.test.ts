@@ -5,6 +5,7 @@ import {
   getNextLevelXp,
   calculateLevel,
   getLevelProgress,
+  calculateDailyStreakXp,
   earnXp,
   triggerConfetti,
 } from "../gamification";
@@ -81,6 +82,32 @@ describe("Gamification Utils", () => {
       expect(progress.xpForNextLevel).toBe(300);
       expect(progress.xpRemaining).toBe(150);
       expect(progress.progressPercent).toBe(50);
+    });
+  });
+
+  describe("calculateDailyStreakXp", () => {
+    it("returns 50 XP for Day 1 streak", () => {
+      expect(calculateDailyStreakXp(1)).toBe(50);
+    });
+
+    it("increases XP for higher streaks smoothly", () => {
+      expect(calculateDailyStreakXp(2)).toBe(52);
+      expect(calculateDailyStreakXp(15)).toBe(74);
+    });
+
+    it("caps XP award at Day 30 streak (100 XP)", () => {
+      expect(calculateDailyStreakXp(30)).toBe(100);
+    });
+
+    it("maintains 100 XP cap for streak beyond Day 30", () => {
+      expect(calculateDailyStreakXp(31)).toBe(100);
+      expect(calculateDailyStreakXp(50)).toBe(100);
+      expect(calculateDailyStreakXp(100)).toBe(100);
+    });
+
+    it("handles edge cases gracefully", () => {
+      expect(calculateDailyStreakXp(0)).toBe(50);
+      expect(calculateDailyStreakXp(-5)).toBe(50);
     });
   });
 

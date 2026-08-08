@@ -8,72 +8,59 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { createClient } from "@/lib/supabase/client";
-import { tryUnlockBadge } from "@/lib/utils/badges";
+import { toast } from "sonner";
+import { calculateDailyStreakXp } from "@/lib/utils/gamification";
 
 export function StreakIndicator() {
   const [currentStreak, setCurrentStreak] = useState(0);
   const [isActive, setIsActive] = useState(false);
-  const supabase = createClient();
 
   useEffect(() => {
-    async function fetchStreak() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
+    async function checkDailyLogin() {
+      try {
+        const res = await fetch("/api/v1/gamification/daily", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
 
-      // Optimistic create or fetch
-      const { data, error } = await supabase
-        .from("user_streaks")
-        .select("current_streak, last_login_date")
-        .eq("user_id", user.id)
-        .maybeSingle();
+        if (!res.ok) return;
 
-      if (!data) {
-        // First time
-        await supabase
-          .from("user_streaks")
-          .insert({ user_id: user.id, current_streak: 1 });
-        setCurrentStreak(1);
-        setIsActive(true);
-      } else {
-        const lastLogin = new Date(data.last_login_date);
-        const today = new Date();
-        const diffTime = Math.abs(today.getTime() - lastLogin.getTime());
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        const data = await res.json();
 
-        let newStreak = data.current_streak;
-        if (diffDays === 1) {
-          // Logged in next day, increment
-          newStreak += 1;
-          await supabase
-            .from("user_streaks")
-            .update({
-              current_streak: newStreak,
-              last_login_date: today.toISOString(),
-            })
-            .eq("user_id", user.id);
-        } else if (diffDays > 1) {
-          // Streak broken
-          newStreak = 1;
-          await supabase
-            .from("user_streaks")
-            .update({ current_streak: 1, last_login_date: today.toISOString() })
-            .eq("user_id", user.id);
+        if (data.success) {
+          const streak = data.streak || 1;
+          setCurrentStreak(streak);
+          setIsActive(streak > 0);
+
+          if (data.is_first_claim_today && data.xp_earned > 0) {
+            toast.success("🔥 Daily Check-In Bonus!", {
+              description: `+${data.xp_earned} XP earned (${streak} Day Streak)`,
+            });
+
+            // Dispatch event to update UserContext live
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(
+                new CustomEvent("xp_earned", {
+                  detail: {
+                    total_xp: data.total_xp,
+                    current_level: data.current_level,
+                    xp_earned: data.xp_earned,
+                  },
+                }),
+              );
+            }
+          }
         }
-
-        setCurrentStreak(newStreak);
-        setIsActive(newStreak > 0);
-
-        if (newStreak >= 7) {
-          await tryUnlockBadge(supabase, user.id, "week_warrior");
-        }
+      } catch (err) {
+        console.error("Failed to check daily login:", err);
       }
     }
 
-    fetchStreak();
-  }, [supabase]);
+    checkDailyLogin();
+  }, []);
+
+  const todayXp = calculateDailyStreakXp(currentStreak);
+  const nextXp = calculateDailyStreakXp(currentStreak + 1);
 
   return (
     <TooltipProvider>
@@ -92,11 +79,19 @@ export function StreakIndicator() {
             <span className="font-bold text-sm">{currentStreak}</span>
           </div>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="text-sm">
-          <p>
+        <TooltipContent side="bottom" className="text-sm max-w-xs space-y-1">
+          <p className="font-semibold">
             {isActive
-              ? `You're on a ${currentStreak} day learning streak!`
-              : "Complete a study session to start your streak!"}
+              ? `🔥 ${currentStreak} Day Learning Streak!`
+              : "Log in daily to build your streak!"}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Current Bonus: <span className="font-bold text-foreground">{todayXp} XP/day</span>
+            {currentStreak < 30 ? (
+              <span> · Next: <span className="text-primary font-semibold">{nextXp} XP</span></span>
+            ) : (
+              <span> · <span className="text-amber-500 font-semibold">Max 100 XP (Day 30 Capped)</span></span>
+            )}
           </p>
         </TooltipContent>
       </Tooltip>

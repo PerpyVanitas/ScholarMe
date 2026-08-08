@@ -156,3 +156,18 @@ export async function earnXp(
     return { success: false, error: "Network error" };
   }
 }
+
+/**
+ * Calculates Daily Login XP award based on consecutive day streak.
+ * - Base XP: 50 XP (Day 1)
+ * - Streak scaling: linearly increases up to Day 30 (Day 30 = 100 XP)
+ * - Cap: streak multiplier capped at Day 30 (Day 31+ stays at 100 XP)
+ */
+export function calculateDailyStreakXp(streak: number): number {
+  const safeStreak = Math.max(1, Math.floor(streak || 1));
+  const effectiveStreak = Math.min(30, safeStreak);
+  const baseXp = XP_AWARDS.DAILY_LOGIN; // 50
+  const maxBonus = 50; // Reaches 100 XP total at Day 30
+  const streakBonus = Math.round((effectiveStreak - 1) * (maxBonus / 29));
+  return baseXp + streakBonus;
+}

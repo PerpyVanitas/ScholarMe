@@ -153,7 +153,9 @@ ScholarMe is divided into several primary domains, each governed by the access c
 ## 🏆 Gamification and Customization
 
 - **Leveling System**: XP is awarded securely via backend triggers (e.g., +50 XP per hour tutored).
-- **Badges**: Auto-unlocked for milestones (e.g., 7-day streak, perfect quiz score).
+- **Daily Login & Streak Scaling**: Automatic first-login claim yields base 50 XP (Day 1) with linearly scaling streak bonus up to 100 XP at Day 30 (`Math.min(30, streak)` cap, Day 31+ stays at 100 XP). Fires live toast notifications and updates total XP/level live.
+- **Streak Flame Indicator**: Header component displaying active learning streak count, current XP rate, next streak milestone XP, and Day 30 cap indicators.
+- **Badges**: Auto-unlocked for milestones (e.g., `week_warrior` for 7-day streak, perfect quiz score).
 - **Accessibility and Display**: High Contrast Mode and Dyslexia Font toggles in the header. Full Dark/Light/System theme toggling and Reduced Motion preferences available via the Settings panel.
 
 ---

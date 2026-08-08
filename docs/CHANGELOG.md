@@ -5,9 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2026-08-08] — Cross-Codebase Sweep & Core Operational Enhancements
+## [2026-08-08] — Cross-Codebase Sweep & Gamification Streak Scaling System
 
 ### Added
+- **Daily Login Base XP & Capped Streak Scaling System (`lib/gamification/daily-checkin.ts`, `lib/utils/gamification.ts`, `features/gamification/components/streak-indicator.tsx`)**:
+  - Upgraded base daily login reward from 5 XP to **50 XP** (`XP_AWARDS.DAILY_LOGIN`).
+  - Implemented linear daily streak XP scaling formula (`calculateDailyStreakXp(streak)`), scaling up to Day 30 (Day 1 = 50 XP, Day 2 = 52 XP, Day 15 = 74 XP, Day 30 = 100 XP max bonus) and capping all subsequent days (Day 31+ = 100 XP).
+  - Built idempotent server check-in handler `processDailyCheckin()` preventing multi-claim on the same UTC calendar day while accurately resetting broken streaks after >1 day inactivity.
+  - Updated `/api/v1/gamification/daily` route handler to execute inactivity decay and check-in processing concurrently.
+  - Enhanced `StreakIndicator` UI component to call daily check-in on mount, trigger live toast notifications (`🔥 Daily Check-In Bonus! +X XP`), dispatch window `xp_earned` custom events, and display streak bonus tooltips.
+  - Created unit test suites in `lib/utils/__tests__/gamification.test.ts` and `lib/gamification/__tests__/daily-checkin.test.ts`.
+
 - **Custom PWA Install Prompt Component (`pwa-install-prompt.tsx` & `client-layout.tsx`)**: Captured `beforeinstallprompt` browser event to render a custom 1-click install banner with offline access details, mounted globally.
 - **Institutional Wiki Version History & Revert Path (`app/dashboard/wiki/page.tsx`)**: Added revision history badges (`v1`, `v2`), edit attribution timestamps, and 1-click revision revert path (`RotateCcw`) for retrieved wiki source documents.
 - **Admin Cross-Feature Analytics Correlation View (`app/dashboard/admin/analytics/page.tsx`)**: Added **Cross-Feature Correlation** tab combining:
